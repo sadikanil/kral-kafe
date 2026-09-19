@@ -19,8 +19,10 @@ class ActiveSubscription
 
         $user = auth()->user();
 
-        // Admins bypass subscription check
-        if ($user->isAdmin()) {
+        // Abonelik yalnizca ogrenciyi ilgilendirir. Koc/ogretmen/veli/gorevli
+        // icin abonelik kavrami yok; subscription_status'a guvenmek birinin
+        // durumu degistigi an personeli kendi panelinden kilitler.
+        if (! $user->needsActiveSubscription()) {
             return $next($request);
         }
 

@@ -206,10 +206,10 @@ yeniden yazılmasın.
 
 | Dalga | Durum |
 |---|---|
-| 0-A · PostgresSecurity | 🔄 Başlanıyor |
-| 0-B · Zaman + IP temeli | ⬜ |
-| 0-C · Rol enum + Policy iskeleti | ⬜ |
-| 0-D · CSS bileşenleri | ⬜ |
+| 0-A · PostgresSecurity | ✅ Bitti |
+| 0-B · Zaman + IP temeli | ✅ Bitti |
+| 0-C · Rol enum + yetki reddi testi | ✅ Bitti |
+| 0-D · CSS bileşenleri | 🔄 Sırada |
 | 1 · Roller | ⬜ |
 | 2 · Masa | ⬜ |
 | 3 · Oturum + canlı ekran | ⬜ |
