@@ -77,7 +77,7 @@ if ($sunucu !== '-') {
         );
         $baglanti = 'ok';
     } catch (Throwable $e) {
-        $baglanti = substr((string) preg_replace('/\s+/', ' ', $e->getMessage()), 0, 130);
+        $baglanti = substr((string) preg_replace('/\s+/', ' ', $e->getMessage()), 0, 200);
     }
 }
 
@@ -85,7 +85,9 @@ header('X-Kk-Cfg: key=' . ($anahtar === '-' ? 'yok' : (str_starts_with($anahtar,
     . ' len=' . strlen($anahtar)
     . ' env=' . $oku('APP_ENV')
     . ' host=' . $sunucu
-    . ' port=' . $oku('DB_PORT'));
+    . ' port=' . $oku('DB_PORT')
+    . ' user=' . $oku('DB_USERNAME')
+    . ' pwlen=' . strlen($oku('DB_PASSWORD')));
 header('X-Kk-Db: ' . (string) preg_replace('/[^\x20-\x7E]/', ' ', $baglanti));
 
 require __DIR__ . '/../public/index.php';
