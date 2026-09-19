@@ -27,11 +27,14 @@ return [
     | bu istisna, ASIL hatayi raporlamaya calisirken atiliyor, yani gercek
     | hatayi tamamen gizliyor.
     |
-    | LOG_CHANNEL tanimliysa o kazanir; tanimli degilse yazilabilir bir log
-    | dizini varsa 'stack', yoksa 'stderr'. Vercel loglari stderr'den zaten
-    | topluyor.
+    | Log dizini yazilabilir DEGILSE kanal stderr'e ZORLANIR, LOG_CHANNEL ne
+    | derse desin: salt-okunur bir dosya sisteminde hicbir dosya tabanli kanal
+    | calisamaz, ve calismaya calismasi asil hatayi gizler. Yazilabilir
+    | oldugunda LOG_CHANNEL normal sekilde gecerlidir.
     */
-    'default' => env('LOG_CHANNEL', is_writable(storage_path('logs')) ? 'stack' : 'stderr'),
+    'default' => is_writable(storage_path('logs'))
+        ? env('LOG_CHANNEL', 'stack')
+        : 'stderr',
 
     /*
     |--------------------------------------------------------------------------
