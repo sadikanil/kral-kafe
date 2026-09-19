@@ -26,6 +26,10 @@ Vercel projesinde Settings → Environment Variables altına gir:
 | `APP_DEBUG` | `false` |
 | `APP_URL` | Vercel'in verdiği alan adı |
 | `APP_LOCALE` | `tr` |
+| `SESSION_LIFETIME` | `900` (kafe gününden uzun olmalı) |
+| `KAFE_TIMEZONE` | `Europe/Istanbul` |
+| `KAFE_ACILIS` / `KAFE_KAPANIS` | `09:00` / `23:00` |
+| `KAFE_IPLER` | Kafenin sabit çıkış IP'si — boş bırakılırsa kapı devre dışı |
 | `LOG_CHANNEL` | `stderr` |
 | `DB_CONNECTION` | `pgsql` |
 | `DB_HOST` | `aws-0-<bölge>.pooler.supabase.com` |

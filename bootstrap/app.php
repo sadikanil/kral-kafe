@@ -11,6 +11,13 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Uygulama Vercel'de bir proxy arkasinda calisiyor. Bu cagri olmadan
+        // request()->ip() platformun ic adresini doner ve her ziyaretci icin
+        // ayni cikar - QR sahteciligine karsi planlanan IP kapisi sessizce
+        // ise yaramaz hale gelir. isSecure() de yanlis doner, bu da uretilen
+        // adreslerin http olmasina yol acar.
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'subscription' => \App\Http\Middleware\ActiveSubscription::class,
