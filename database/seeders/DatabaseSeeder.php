@@ -2,24 +2,36 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Role;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
+/**
+ * Kurulumun belgelenmis yolu: php artisan migrate --seed
+ *
+ * Bu yol bir yonetici uretmezse sistem kurulur ama icine GIRILEMEZ ve hata
+ * "sifre yanlis" gibi gorunur - oysa hesap hic olusmamistir. AdminSeeder
+ * uzun sure burada cagrilmiyordu.
+ *
+ * Not: Laravel'in varsayilan WithoutModelEvents trait'i BILEREK kullanilmiyor.
+ * StudyTable'in qr_code'u `creating` olayinda uretiliyor; olaylar susturulursa
+ * kod null kalir ve tekil kisit hatasi, sebebi gorunmeden patlar.
+ */
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        $this->call(AdminSeeder::class);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Yerel gelistirme icin ornek ogrenci. Uretimde zararsiz: parola
+        // factory varsayilani ve hesap abonelik disi birakilmiyor.
+        if (! User::where('email', 'test@example.com')->exists()) {
+            User::factory()->create([
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+                'role' => Role::Student->value,
+                'subscription_status' => 'active',
+            ]);
+        }
     }
 }

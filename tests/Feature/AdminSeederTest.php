@@ -59,4 +59,25 @@ class AdminSeederTest extends TestCase
         $this->assertSame([], $suclular,
             'Bu dosyalar varsayilan yonetici sifresini aciga cikariyor; depo public');
     }
+    /**
+     * Kurulumun belgelenmis yolu `php artisan migrate --seed`. Bu yol bir
+     * yonetici uretmezse sistem kurulur ama ICINE GIRILEMEZ - ve hata "sifre
+     * yanlis" gibi gorunur, oysa hesap hic olusmamistir.
+     */
+    public function test_the_default_seeder_produces_an_admin_that_can_sign_in(): void
+    {
+        putenv('ADMIN_PASSWORD=kurulum-sifresi-123');
+
+        $this->seed();
+
+        $admin = User::where('email', 'admin@kralkafe.com')->sole();
+        $this->assertSame('admin', $admin->role);
+
+        $this->post(route('login'), [
+            'email' => 'admin@kralkafe.com',
+            'password' => 'kurulum-sifresi-123',
+        ])->assertRedirect(route('admin.dashboard'));
+
+        putenv('ADMIN_PASSWORD');
+    }
 }
