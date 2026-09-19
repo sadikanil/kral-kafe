@@ -85,6 +85,16 @@ php artisan db:seed --class=AdminSeeder --force --env=supabase
 > transaction'ları bu modda güvenilir çalışmaz. `.env.supabase` içinde
 > `DB_PORT=5432` yapıp migration'ları çalıştır, sonra Vercel ortamında `6543`
 > kullan.
+>
+> **Doğrudan bağlantı yalnızca IPv6 üzerinden geliyor.** `db.<proje-ref>.supabase.co`
+> adresinin IPv4 (A) kaydı yok, sadece AAAA kaydı var — Supabase ücretsiz katmanda
+> IPv4'ü kaldırdı. Ağınızda IPv6 çıkışı yoksa bağlantı kurulamaz; o durumda
+> migration'ları da pooler üzerinden (`6543`) çalıştırmak ya da IPv4 eklentisini
+> satın almak gerekir. Kontrol:
+>
+> ```bash
+> curl -6 -sS -o /dev/null -w '%{http_code}\n' https://ipv6.google.com
+> ```
 
 > Postgres yolu yerel makinede doğrulanamadı (Postgres/Docker kurulu değil).
 > İlk migration'da hata çıkarsa buradan devam edilmeli.
