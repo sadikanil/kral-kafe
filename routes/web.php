@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\StudyTableController;
 use App\Http\Controllers\Admin\ReportController;
 
 /*
@@ -81,6 +82,19 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     Route::get('/lokasyonlar/{location}/qr', [LocationController::class, 'showQr'])->name('locations.qr');
     Route::post('/lokasyonlar/{location}/durum', [LocationController::class, 'toggleStatus'])->name('locations.toggle-status');
     Route::get('/lokasyonlar-qr-yazdir', [LocationController::class, 'printQrCodes'])->name('locations.print-qr');
+
+    // Masalar (locations'tan ayri: raf/dolap degil, ogrencinin oturdugu yer)
+    Route::get('/masalar-qr-yazdir', [StudyTableController::class, 'printQr'])->name('tables.print-qr');
+    Route::resource('masalar', StudyTableController::class)->except(['show'])->names([
+        'index' => 'tables.index',
+        'create' => 'tables.create',
+        'store' => 'tables.store',
+        'edit' => 'tables.edit',
+        'update' => 'tables.update',
+        'destroy' => 'tables.destroy',
+    ])->parameters(['masalar' => 'table']);
+    Route::get('/masalar/{table}/qr', [StudyTableController::class, 'qr'])->name('tables.qr');
+    Route::post('/masalar/{table}/durum', [StudyTableController::class, 'toggleStatus'])->name('tables.toggle-status');
 
     // Stock Management
     Route::get('/stok', [StockController::class, 'index'])->name('stock.index');

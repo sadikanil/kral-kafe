@@ -121,7 +121,12 @@ kullanılamaz — bkz. §2.1.
 
 ---
 
-### 2.1 Kafe ağı: ölçüm ve sonuç
+### 2.1 Kafe ağı: ölçüm ve sonuç · 🗄️ RAFTA
+
+> **Rafa kaldırıldı — 19 Eylül 2026, kullanıcı kararı.** Aşağıdaki 3. madde
+> (çoğunluk IP'sine göre anomali işareti) **uygulanmayacak**. `config/kafe.php`
+> içindeki `izinli_ipler` / `ip_zorunlu` ayarlarını hiçbir kod okumuyor.
+> Ölçüm ve gerekçe, konu yeniden açılırsa diye burada duruyor.
 
 19 Eylül 2026, kafe ağından ölçüldü:
 
@@ -185,11 +190,46 @@ aynı yere gittiği test edildi. Koç/öğretmen/veli/görevli için henüz pane
 yüzden hepsi `user.dashboard`’a iner — yönetim paneline yollamak doğrudan 403 olurdu.
 Kenar çubuğu artık personele “Pasif” yazmıyor, rol adını gösteriyor.
 
-### Dalga 2 — Masa (MVP #1) · Dalga 1 ile paralel
+### Dalga 2 — Masa (MVP #1) · ✅ bitti
 
-`study_tables` + QR. Üç blade'de gömülü olan `api.qrserver.com` adresi tek bir
-yardımcıya çıkarılır (masa eklenince beş kopya olurdu). Ölü `QRCodeService`
-ya arayüze çıkarılır ya silinir.
+`study_tables` + `StudyTable` + yönetici CRUD + QR ekranı + yazdırma sayfası.
+Menüye **Masalar** eklendi.
+
+**Basılı etiket kısıtı.** Bu dalganın çıktısı duvara yapıştırılacak; `qr_code`
+bir daha değişmemeli. Alan `fillable` değil, yalnızca oluşturulurken üretiliyor
+ve testi var — kırılırsa anlamı "masa adını değiştirince duvardaki QR'lar öldü".
+
+**Kaynak belgedeki üç sütun ertelendi**, gerekçeleri migration başlığında:
+`status` (oturumdan türetilebilir, ikinci doğruluk kaynağı olurdu),
+`assigned_student_id` (anlamı Dalga 7'deki paketle geliyor),
+`location_id` (§11 #10 cevaplanmadan tasarlanamaz).
+
+**`QRCodeService` silindi.** Hiçbir yerden çağrılmıyordu: üç blade servisi atlayıp
+adresi kendi kuruyordu. Ayrıca `Location`'a bağlıydı ve istek anında
+`file_get_contents` ile dış sunucudan indirme yapıyordu. Yerine saf
+`App\Support\QrImage` geldi; üç lokasyon blade'i de ona bağlandı ve statik bir
+muhafız test elle kurulmuş adresi yakalıyor.
+
+**Yol üstünde bulunanlar:**
+
+- `is_active` `create()` sonrası modelde `null` dönüyordu (DB varsayılanı örneğe
+  yansımıyor) — "masa açık mı" sorusu sessizce yanlış cevaplanırdı.
+- `welcome.blade.php` **silindi**: tamamen Tailwind sınıflarıyla yazılmıştı, proje
+  Tailwind kullanmıyor ve `/` zaten yönlendiriyor — erişilemez, stilsiz bir sayfa.
+- `text-end`, `align-items-end`, `ml-2` bu projede tanımsızdı. Elle yazılan CSS'te
+  Bootstrap adı yazmak hata vermez, sessizce hiçbir şey yapar. `align-items-end`
+  ve `ml-2` eklendi; `text-end` → `text-right`. Buna karşı yeni muhafız test:
+  blade'lerdeki her sınıf `app.css` ya da bir `<style>` bloğunda tanımlı olmak
+  zorunda (`js-` önekli kancalar muaf). Muhafız sınandı: `float-end` enjekte
+  edildi, dosya adıyla yakalandı.
+
+**Yazdırma sayfası uyarısı:** `/masa/{kod}` adresi Dalga 3'te geliyor. O ana kadar
+yazdırma ve QR ekranları "henüz yayında değil" uyarısı gösteriyor. Uyarı rotanın
+**varlığına** bağlı — Dalga 3 rotayı ekleyince kendiliğinden kaybolur, kimsenin
+eski bir metni silmesi gerekmez.
+
+**Erişim:** §7 matrisinde masa yönetimi görevliye de açık ama `AdminMiddleware`
+yalnızca yöneticiyi geçiriyor; görevli erişimi kendi paneliyle gelecek.
 
 ### Dalga 3 — Oturum + canlı ekran (MVP #2, #9) · en büyük iş
 
@@ -257,8 +297,8 @@ yeniden yazılmasın.
 | 0-C · Rol enum + yetki reddi testi | ✅ Bitti |
 | 0-D · CSS bileşenleri | ✅ Bitti |
 | 1 · Roller | ✅ Bitti |
-| 2 · Masa | 🔄 Sırada |
-| 3 · Oturum + canlı ekran | ⬜ |
+| 2 · Masa | ✅ Bitti |
+| 3 · Oturum + canlı ekran | 🔄 Sırada |
 | 4 · Otomatik kapanış | ⬜ |
 | 5 · Süre, devamlılık, hedef | ⬜ |
 | 6 · Veli | ⬜ |

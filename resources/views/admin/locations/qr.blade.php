@@ -14,7 +14,7 @@
             <p class="text-muted">{{ $location->type_name }}</p>
 
             <div class="mb-4">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data={{ urlencode($location->qr_url) }}&format=png"
+                <img src="{{ \App\Support\QrImage::url($location->qr_url) }}"
                     alt="QR Code" style="border-radius: var(--radius);">
             </div>
 

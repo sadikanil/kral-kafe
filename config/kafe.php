@@ -46,14 +46,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Kafe agi (QR sahteciligine karsi birincil savunma)
+    | Kafe agi — RAFTA (19 Eylul 2026)
     |--------------------------------------------------------------------------
     |
-    | Bos birakilirsa kapi DEVRE DISI kalir: oturum acilir ama kafe disindan
-    | geldiyse anomali olarak isaretlenir ve yoneticide gorunur.
+    | Bu iki ayari HICBIR KOD OKUMUYOR. Bilerek: kafenin cikis IP'si olculdu ve
+    | dinamik cikti (TT ADSL havuzu), dolayisiyla beyaz liste bir kapi olarak
+    | kullanilamaz — modem her resetlendiginde butun kafe disarida kalirdi.
     |
-    | Sert blok yalnizca IP dogrulandiktan SONRA acilmalidir; yanlis bir IP ile
-    | zorlama acilirsa ilk gun hicbir ogrenci oturum acamaz.
+    | Ayarlar kurumsal sabit IP alinirsa diye duruyor. Uzerine mantik yazmadan
+    | once docs/UYGULAMA-PLANI.md §2.1 okunmali.
     |
     */
 

@@ -58,7 +58,7 @@
                 <h4>QR Kod</h4>
             </div>
             <div class="card-body text-center">
-                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={{ urlencode($location->qr_url) }}" alt="QR Code" style="border-radius: var(--radius);">
+                <img src="{{ \App\Support\QrImage::url($location->qr_url, 200) }}" alt="QR Code" style="border-radius: var(--radius);">
                 <p class="text-muted mt-2 mb-0">
                     <small>{{ $location->qr_url }}</small>
                 </p>

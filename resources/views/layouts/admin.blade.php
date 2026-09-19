@@ -50,6 +50,12 @@
                     <span>Kullanıcılar</span>
                 </a>
 
+                <a href="{{ route('admin.tables.index') }}"
+                    class="sidebar-nav-link {{ request()->routeIs('admin.tables.*') ? 'active' : '' }}">
+                    <span class="sidebar-nav-link-icon">🪑</span>
+                    <span>Masalar</span>
+                </a>
+
                 <a href="{{ route('admin.products.index') }}"
                     class="sidebar-nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
                     <span class="sidebar-nav-link-icon">📦</span>

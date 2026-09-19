@@ -1,40 +1,50 @@
 @extends('layouts.admin')
 
-@section('title', 'QR Kodları Yazdır - Kral Kafe')
-@section('page-title', 'QR Kodları Yazdır')
+@section('title', 'Masa QR Kodları - Kral Kafe')
+@section('page-title', 'Masa QR Kodlarını Yazdır')
 
 @section('topbar-actions')
     <button onclick="window.print()" class="btn btn-primary btn-sm">🖨️ Yazdır</button>
 @endsection
 
 @section('content')
+    {{-- Uyari rotanin VARLIGINA bagli: oturum ekrani yayina girince kendiliginden
+         kaybolur, kimsenin eski bir metni silmeyi hatirlamasi gerekmez. --}}
+    @unless(Route::has('table.scan'))
+        <div class="alert alert-warning no-print">
+            Bu kodların gittiği adres <strong>henüz yayında değil</strong>. Şimdi
+            basılan etiketler okutulduğunda boş sayfa gösterir. Kodlar kalıcı
+            olduğu için oturum ekranı yayına girdiğinde aynı etiketler çalışır —
+            yine de asmadan önce beklemek daha güvenli.
+        </div>
+    @endunless
+
     <div class="card no-print mb-3">
         <div class="card-body d-flex align-items-center justify-content-between gap-2">
             <div>
-                <strong>{{ $locations->count() }}</strong> lokasyonun QR kodu yazdırılmaya hazır.
+                <strong>{{ $tables->count() }}</strong> masanın QR kodu yazdırılmaya hazır.
                 <div class="text-muted" style="font-size: 0.8125rem;">
-                    Her kodu kesip ilgili rafın veya dolabın üzerine yapıştırabilirsiniz.
+                    Yalnızca kullanımdaki masalar listelenir. Her kodu kesip masaya yapıştırın.
                 </div>
             </div>
-            <a href="{{ route('admin.locations.index') }}" class="btn btn-secondary btn-sm">← Lokasyonlar</a>
+            <a href="{{ route('admin.tables.index') }}" class="btn btn-secondary btn-sm">← Masalar</a>
         </div>
     </div>
 
-    @forelse($locations as $location)
+    @forelse($tables as $table)
         @if($loop->first)
             <div class="qr-print-grid">
         @endif
 
         <div class="card qr-print-item">
             <div class="card-body text-center p-4">
-                <h4 class="mb-1">{{ $location->name }}</h4>
-                <p class="text-muted mb-3" style="font-size: 0.8125rem;">{{ $location->type_name }}</p>
+                <h4 class="mb-3">{{ $table->name }}</h4>
 
-                <img src="{{ \App\Support\QrImage::url($location->qr_url, 260) }}"
-                    alt="{{ $location->name }} QR kodu" style="border-radius: var(--radius); max-width: 100%;">
+                <img src="{{ \App\Support\QrImage::url($table->qr_url, 260) }}"
+                    alt="{{ $table->name }} QR kodu" style="border-radius: var(--radius); max-width: 100%;">
 
                 <p class="text-muted mt-3 mb-0" style="font-size: 0.6875rem; word-break: break-all;">
-                    {{ $location->qr_code }}
+                    {{ $table->qr_code }}
                 </p>
             </div>
         </div>
@@ -43,10 +53,10 @@
             </div>
         @endif
     @empty
-        <div class="card">
-            <div class="card-body text-center p-4 text-muted">
-                Yazdırılacak aktif lokasyon bulunamadı.
-            </div>
+        <div class="empty-state">
+            <div class="empty-state-icon">🪑</div>
+            <div class="empty-state-title">Yazdırılacak masa yok</div>
+            <p class="text-muted">Kullanımdaki bir masa ekleyin.</p>
         </div>
     @endforelse
 @endsection
