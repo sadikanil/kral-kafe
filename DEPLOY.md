@@ -23,7 +23,7 @@ Vercel projesinde Settings → Environment Variables altına gir:
 |---|---|
 | `APP_KEY` | `php artisan key:generate --show` çıktısı |
 | `APP_ENV` | `production` |
-| `APP_DEBUG` | `false` |
+| `APP_DEBUG` | `false` — **uretimde asla true olmasin.** Hata sayfasi TUM istek basliklarini gosteriyor; icinde `x-vercel-oidc-token` ve `x-vercel-sc-headers` altindaki `Bearer` token da var. Siteye o anda giren herkes gorur. |
 | `APP_URL` | Vercel'in verdiği alan adı |
 | `APP_LOCALE` | `tr` |
 | `SESSION_LIFETIME` | `900` (kafe gününden uzun olmalı) |
@@ -200,11 +200,14 @@ php artisan migrate --force --env=supabase
 php artisan db:seed --class=AdminSeeder --force --env=supabase
 ```
 
-> **Migration için pooler değil, doğrudan bağlantı kullan.** Uygulama çalışırken
-> port `6543` (transaction pooler) doğrudur, ancak DDL ve uzun migration
-> transaction'ları bu modda güvenilir çalışmaz. `.env.supabase` içinde
-> `DB_PORT=5432` yapıp migration'ları çalıştır, sonra Vercel ortamında `6543`
-> kullan.
+> **Her yerde `DB_PORT=5432` (session pooler).** Hem migration sırasında hem
+> uygulama çalışırken. Transaction pooler (`6543`) `PDO::ATTR_EMULATE_PREPARES`
+> gerektiriyor, o da boolean yazmalarını `SQLSTATE[42804]` ile kırıyor — gerçek
+> Supabase üzerinde görüldü. Ayrıca DDL ve uzun migration transaction'ları
+> transaction pooler'da güvenilir çalışmaz.
+>
+> (§2'deki tabloyla çelişen eski bir not buradaydı: "Vercel ortamında 6543
+> kullan". Yanlıştı, kaldırıldı.)
 >
 > **Doğrudan bağlantı yalnızca IPv6 üzerinden geliyor.** `db.<proje-ref>.supabase.co`
 > adresinin IPv4 (A) kaydı yok, sadece AAAA kaydı var — Supabase ücretsiz katmanda
