@@ -61,4 +61,22 @@ return [
     'izinli_ipler' => array_filter(explode(',', (string) env('KAFE_IPLER', ''))),
     'ip_zorunlu' => (bool) env('KAFE_IP_ZORUNLU', false),
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ilk yonetici sifresi
+    |--------------------------------------------------------------------------
+    |
+    | AdminSeeder bunu okur. Bos birakilirsa rastgele uretilip yalnizca konsola
+    | yazilir; depo public oldugu icin koda ya da README'ye yazilmaz.
+    |
+    | Seeder icinde dogrudan env() cagirmak YANLIS olurdu: config onbellege
+    | alindiginda env() bos doner ve kurulum sessizce tahmin edilemez bir sifre
+    | uretir. Ayrica env() testten override edilemiyor - .env'de bir deger
+    | varsa putenv() onu gecemiyor, testler ortama bagimli hale geliyor.
+    |
+    */
+
+    'yonetici_sifresi' => env('ADMIN_PASSWORD'),
+
 ];

@@ -18,19 +18,17 @@ class AdminSeederTest extends TestCase
 
     public function test_it_uses_the_password_from_the_environment_when_given(): void
     {
-        putenv('ADMIN_PASSWORD=cok-gizli-bir-sifre');
+        config(['kafe.yonetici_sifresi' => 'cok-gizli-bir-sifre']);
 
         $this->seed(AdminSeeder::class);
 
         $admin = User::where('email', 'admin@kralkafe.com')->sole();
         $this->assertTrue(Hash::check('cok-gizli-bir-sifre', $admin->password));
-
-        putenv('ADMIN_PASSWORD');
     }
 
     public function test_it_generates_a_random_password_when_none_is_configured(): void
     {
-        putenv('ADMIN_PASSWORD');
+        config(['kafe.yonetici_sifresi' => null]);
 
         $this->seed(AdminSeeder::class);
 
@@ -66,7 +64,7 @@ class AdminSeederTest extends TestCase
      */
     public function test_the_default_seeder_produces_an_admin_that_can_sign_in(): void
     {
-        putenv('ADMIN_PASSWORD=kurulum-sifresi-123');
+        config(['kafe.yonetici_sifresi' => 'kurulum-sifresi-123']);
 
         $this->seed();
 
@@ -77,7 +75,5 @@ class AdminSeederTest extends TestCase
             'email' => 'admin@kralkafe.com',
             'password' => 'kurulum-sifresi-123',
         ])->assertRedirect(route('admin.dashboard'));
-
-        putenv('ADMIN_PASSWORD');
     }
 }

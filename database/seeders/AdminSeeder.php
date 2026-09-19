@@ -13,12 +13,15 @@ class AdminSeeder extends Seeder
      * Run the database seeds.
      *
      * Sifre koda sabitlenmez: depo herkese acik ve bu seeder uretimde de
-     * calistiriliyor. ADMIN_PASSWORD tanimliysa o kullanilir, degilse rastgele
-     * bir sifre uretilip YALNIZCA konsola yazilir.
+     * calistiriliyor. Sifre config('kafe.yonetici_sifresi') uzerinden okunur
+     * (ADMIN_PASSWORD); tanimsizsa rastgele uretilip YALNIZCA konsola yazilir.
+     *
+     * Burada dogrudan env() cagrilmaz: config onbellege alindiginda bos doner
+     * ve testten override edilemez. Gerekcesi config/kafe.php icinde.
      */
     public function run(): void
     {
-        $password = env('ADMIN_PASSWORD') ?: Str::random(16);
+        $password = config('kafe.yonetici_sifresi') ?: Str::random(16);
 
         User::create([
             'name' => 'Admin',
