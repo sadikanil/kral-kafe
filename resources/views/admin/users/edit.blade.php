@@ -40,8 +40,9 @@
                 <div class="form-group">
                     <label for="role" class="form-label">Rol *</label>
                     <select id="role" name="role" class="form-control @error('role') is-invalid @enderror" required>
-                        <option value="student" {{ old('role', $user->role) == 'student' ? 'selected' : '' }}>Öğrenci</option>
-                        <option value="admin" {{ old('role', $user->role) == 'admin' ? 'selected' : '' }}>Yönetici</option>
+                        @foreach (\App\Enums\Role::cases() as $rol)
+                            <option value="{{ $rol->value }}" {{ old('role', $user->role) === $rol->value ? 'selected' : '' }}>{{ $rol->label() }}</option>
+                        @endforeach
                     </select>
                     @error('role')
                         <span class="invalid-feedback">{{ $message }}</span>

@@ -18,8 +18,9 @@
                 
                 <select name="role" class="form-control" style="max-width: 150px;">
                     <option value="all">Tüm Roller</option>
-                    <option value="student" {{ request('role') == 'student' ? 'selected' : '' }}>Öğrenci</option>
-                    <option value="admin" {{ request('role') == 'admin' ? 'selected' : '' }}>Yönetici</option>
+                    @foreach (\App\Enums\Role::cases() as $rol)
+                        <option value="{{ $rol->value }}" {{ request('role') === $rol->value ? 'selected' : '' }}>{{ $rol->label() }}</option>
+                    @endforeach
                 </select>
                 
                 <select name="status" class="form-control" style="max-width: 150px;">
@@ -63,8 +64,8 @@
                                 </td>
                                 <td>{{ $user->email }}</td>
                                 <td>
-                                    <span class="badge badge-{{ $user->role == 'admin' ? 'primary' : 'info' }}">
-                                        {{ $user->role == 'admin' ? 'Yönetici' : 'Öğrenci' }}
+                                    <span class="badge badge-{{ $user->role()?->badgeClass() ?? 'info' }}">
+                                        {{ $user->role()?->label() ?? $user->role }}
                                     </span>
                                 </td>
                                 <td>

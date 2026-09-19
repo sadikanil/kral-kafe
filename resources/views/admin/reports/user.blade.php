@@ -59,8 +59,8 @@
                 <tr>
                     <td class="text-muted">Rol</td>
                     <td>
-                        <span class="badge badge-{{ $user->isAdmin() ? 'primary' : 'info' }}">
-                            {{ $user->isAdmin() ? 'Yönetici' : 'Öğrenci' }}
+                        <span class="badge badge-{{ $user->role()?->badgeClass() ?? 'info' }}">
+                            {{ $user->role()?->label() ?? $user->role }}
                         </span>
                     </td>
                 </tr>

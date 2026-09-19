@@ -105,22 +105,56 @@ aşağıdaki varsayılanlarla devam ediliyor. Fikrin farklıysa söyle, dönmek 
 | Çoklu rol | MVP'de tek rol | §7 matrisi tek rollü; iki şapkalı kişiye `admin` verilir |
 | Masa tablosu adı | `study_tables` / model `StudyTable` | `Schema::create('tables', function (Blueprint $table)` okunmaz; `Table` modeli HTML tablo kavramıyla karışır |
 | Oturum bitiş sebebi | Tek sütun `end_reason` | `switched` ile `auto_closed` aynı anda olamaz; iki boolean temsil edilemez durum üretir |
-| Kafe saatleri | `config/kafe.php`, varsayılan 09:00–23:00 | Kapatma formülü değerin kendisine değil varlığına bağlı |
-| Kafe IP kapısı | Varsayılan **açık** (fail-open) + anomali işareti | IP bilinmeden sert kapatılırsa ilk gün kimse oturum açamaz |
+| Kafe saatleri | `config/kafe.php`, **09:00–21:00** (kullanıcı onayladı, 19 Eyl 2026) | Kapatma formülü değerin kendisine değil varlığına bağlı |
+| Kafe IP kapısı | Sert kapı **kalıcı olarak kapalı**; IP yalnızca anomali işareti | Kafenin IP’si ölçüldü: `88.238.46.100`, whois `TT ADSL-TTnet_dynamic_gay` → **dinamik**. Beyaz liste modem her resetlendiğinde kafeyi kilitler |
 | Otomatik kapanış | **Tembel kapatma birincil**, cron yalnızca tazelik | Bitiş `min(kapanış anı, başlangıç + 12s)` ile veriden hesaplanabiliyor; cron kaçarsa sistem kendini onarır |
-| Cron saati | `0 21 * * *` UTC | Hobby'nin ±59 dk sapması dahil yerel 00:00–00:59'a düşer, her durumda kapanıştan sonra |
+| Cron saati | `0 19 * * *` UTC | Kapanış 21:00’e çekilince 21 UTC yerel 00:00 olurdu; unutulan oturum 3 saat “açık” görünürdü. 19 UTC + Hobby sapması → yerel 22:00–22:59, her durumda kapanıştan sonra |
 | `subscription_status` | Kalır, `subscriptions` paralel yaşar | 7 çağrı noktası + 5 test buna bağlı; erişim anahtarı ile ticari gerçek ayrı kavramlar |
 | Paket kapsamı | `Consumption` **her zaman** oluşur, `covered_by_package=true` + `total_price=0` | Kayıt stok düşümünü ve 60 sn geri almayı sürüyor |
 | Limit aşımı | Engelleme, ücretlendir — ama onaydan önce ekranda yaz | Engellemek öğrenciyi kasaya yönlendirir |
 | `can_view_exams` | Varsayılan `false` | Gizliliği açıkken kapatmak, kapalıyken açmaktan pahalı |
 | Koruma yardımcısı | `App\Support\PostgresSecurity::lockDown()` | Tek imza; statik muhafız test onu arayacak |
 
-**Senin onayına değer iki tanesi:** kafe kapanış saati (23:00 varsayıldı) ve
-kafenin sabit IP'si olup olmadığı. İkisi de işi durdurmuyor ama doğru değerle
-çalışmak daha iyi.
+**İkisi de 19 Eylül 2026’da kapandı.** Kapanış 21:00 olarak onaylandı. IP kafe
+ağından ölçüldü ve **dinamik** çıktı, dolayısıyla beyaz liste bir kapı olarak
+kullanılamaz — bkz. §2.1.
 
 ---
 
+### 2.1 Kafe ağı: ölçüm ve sonuç
+
+19 Eylül 2026, kafe ağından ölçüldü:
+
+```
+IPv4      88.238.46.100
+whois     TurkTelekom → "TT ADSL-TTnet_dynamic_gay"
+ters DNS  PTR kaydı yok
+yerel     192.168.1.127 (ev tipi modem)
+```
+
+`dynamic` etiketi Türk Telekom’un havuz işareti. IP modem yeniden başlayınca,
+hat kopup gelince ve çoğu zaman kendiliğinden değişir. Sonuçlar:
+
+1. **`KAFE_IPLER` beyaz listesi sert kapı olarak kullanılamaz.** Yazıldığı gün
+   çalışır; ilk modem resetinde bütün kafe oturum açamaz hale gelir ve sebebi
+   görünmez. Alan ve `ip_zorunlu` bayrağı kodda kalıyor — kurumsal sabit IP
+   alınırsa tek satırla açılır.
+
+2. **IP yalnızca oturum başlatmayı ilgilendirir.** Giriş, panel, istatistik,
+   **veli paneli**, koç notları, paket ve ödeme akışları IP’ye hiç bakmaz. Veli
+   evden izler; bu bir istisna değil, kapının kapsamının kendisi.
+
+3. **Karşılaştırma sabit listeye değil çoğunluğa yapılır.** Oturum başlangıcında
+   IP kaydedilir ve o gün açık olan oturumların çoğunluk IP’si ile karşılaştırılır;
+   ayrık düşen oturum yönetici canlı ekranında işaretlenir. Yapılandırma
+   gerektirmez ve TT adresi değiştirdiğinde kendiliğinden uyum sağlar.
+
+4. **Sert engel yine de yok.** Öğrencinin telefonu mobil veride olabilir; masada
+   otururken ayrık düşer. Kapıda durdurmak gerçek öğrenciyi cezalandırır,
+   sahtekârı durdurmaz — basılı QR bir kez fotoğraflanıp evden okutulabilir.
+   Asıl caydırıcı canlı ekran: personel boş masayı gözüyle görür.
+
+---
 ## 3. Dalgalar
 
 Her dalga tek başına deploy edilebilir ve sistemi çalışır durumda bırakır.
@@ -134,12 +168,22 @@ Her dalga tek başına deploy edilebilir ve sistemi çalışır durumda bırakı
 | 0-C | `App\Enums\Role` + Policy iskeleti + `AdminMiddleware` red testi | Bugün tek bir 403 iddiası yok — reddetme kolu kanıtsız |
 | 0-D | CSS: `.progress`, `.session-timer`, `.empty-state` | Mevcut CSS'te ilerleme çubuğu, sayaç ve boş durum sınıfı yok |
 
-### Dalga 1 — Roller (MVP #7)
+### Dalga 1 — Roller (MVP #7) · ✅ bitti
 
-Rol genişletmesi, rol-farkındalı yönlendirme ve menü. `ActiveSubscription`
-muafiyeti tersine çevrilir (abonelik yalnızca `student`'ı ilgilendirir).
-`UserController`'daki `in:student,admin` doğrulaması genişletilir — unutulursa
-yönetici paneli koç oluşturamaz ve hata migration'a yorulur.
+Üç katman birden genişletildi; birini atlamak “rol eklendi” hissi verip yönetici
+panelini çalışmaz bırakıyordu:
+
+1. **Sütun** — `2026_09_19_180000_widen_users_role_column`: `string(20)`, Postgres’te
+   `users_role_check` açıkça düşürülüyor. SQLite’ta da CHECK vardı; test kırmızıyken
+   `SQLSTATE[23000] CHECK constraint failed: role` ile doğrulandı.
+2. **Doğrulama** — `UserController` store/update: `Rule::enum(Role::class)`.
+3. **Formlar** — create/edit/index artık `Role::cases()` üzerinde dönüyor.
+
+Ayrıca: giriş sonrası yönlendirme `routes/web.php` ile `AuthenticatedSessionController`
+içinde iki kez yazılmıştı; `Role::homeRoute()` altında birleştirildi ve ikisinin
+aynı yere gittiği test edildi. Koç/öğretmen/veli/görevli için henüz panel yok, bu
+yüzden hepsi `user.dashboard`’a iner — yönetim paneline yollamak doğrudan 403 olurdu.
+Kenar çubuğu artık personele “Pasif” yazmıyor, rol adını gösteriyor.
 
 ### Dalga 2 — Masa (MVP #1) · Dalga 1 ile paralel
 
@@ -212,8 +256,8 @@ yeniden yazılmasın.
 | 0-B · Zaman + IP temeli | ✅ Bitti |
 | 0-C · Rol enum + yetki reddi testi | ✅ Bitti |
 | 0-D · CSS bileşenleri | ✅ Bitti |
-| 1 · Roller | 🔄 Sırada |
-| 2 · Masa | ⬜ |
+| 1 · Roller | ✅ Bitti |
+| 2 · Masa | 🔄 Sırada |
 | 3 · Oturum + canlı ekran | ⬜ |
 | 4 · Otomatik kapanış | ⬜ |
 | 5 · Süre, devamlılık, hedef | ⬜ |

@@ -55,10 +55,16 @@
                     <div class="sidebar-user-info">
                         <div class="sidebar-user-name">{{ auth()->user()->name }}</div>
                         <div class="sidebar-user-role">
-                            @if(auth()->user()->hasActiveSubscription())
-                                <span class="text-success">Aktif Üye</span>
+                            {{-- Abonelik yalnizca ogrenciyi ilgilendirir; koc/veli icin
+                                 "Pasif" yazmak yanlis bir uyari olurdu. --}}
+                            @if (auth()->user()->needsActiveSubscription())
+                                @if (auth()->user()->hasActiveSubscription())
+                                    <span class="text-success">Aktif Üye</span>
+                                @else
+                                    <span class="text-danger">Pasif</span>
+                                @endif
                             @else
-                                <span class="text-danger">Pasif</span>
+                                <span>{{ auth()->user()->role()?->label() }}</span>
                             @endif
                         </div>
                     </div>

@@ -62,4 +62,38 @@ enum Role: string
     {
         return $this === self::Student;
     }
+
+    /**
+     * Giristen sonra bu rolun indigi sayfa. TEK dogruluk kaynagi.
+     *
+     * Ayni karar daha once routes/web.php ile AuthenticatedSessionController
+     * icinde iki kez yazilmisti; ayrisirlarsa kullanici girise basinca bir yere,
+     * ana sayfaya girince baska yere gider.
+     *
+     * Koc/ogretmen/veli/gorevli icin henuz ayri panel YOK - AdminMiddleware
+     * yalnizca yoneticiyi geciriyor, dolayisiyla onlari yonetim paneline
+     * yollamak dogrudan 403 demek olurdu. Panelleri geldigi dalgada bu match
+     * tek satirla genisler.
+     */
+    public function homeRoute(): string
+    {
+        return match ($this) {
+            self::Admin => 'admin.dashboard',
+            default => 'user.dashboard',
+        };
+    }
+
+    /**
+     * Listelerde rozet rengi. Roller dorde gruplanir: yetkili, egitmen,
+     * ogrenci, veli. CSS yalnizca bes rozet sinifi tanimliyor.
+     */
+    public function badgeClass(): string
+    {
+        return match ($this) {
+            self::Admin, self::Staff => 'primary',
+            self::Coach, self::Teacher => 'success',
+            self::Student => 'info',
+            self::Parent => 'warning',
+        };
+    }
 }

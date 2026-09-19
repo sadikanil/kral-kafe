@@ -75,6 +75,17 @@ class User extends Authenticatable
         return $this->role()?->needsActiveSubscription() ?? true;
     }
 
+    /**
+     * Giristen sonra bu kullanicinin indigi rota adi.
+     *
+     * Rolu taninmayan bir satir (elle duzenlenmis veri, silinmis bir rol)
+     * kullaniciyi bosluga dusurmemeli; en dar yetkili panele iner.
+     */
+    public function homeRoute(): string
+    {
+        return $this->role()?->homeRoute() ?? 'user.dashboard';
+    }
+
     public function isAdmin(): bool
     {
         return $this->role === 'admin';

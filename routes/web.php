@@ -19,11 +19,9 @@ use App\Http\Controllers\Admin\ReportController;
 // Home - redirect based on role
 Route::get('/', function () {
     if (auth()->check()) {
-        if (auth()->user()->isAdmin()) {
-            return redirect()->route('admin.dashboard');
-        }
-        return redirect()->route('user.dashboard');
+        return redirect()->route(auth()->user()->homeRoute());
     }
+
     return redirect()->route('login');
 })->name('home');
 

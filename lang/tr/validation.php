@@ -191,6 +191,8 @@ return [
 
     'attributes' => [
         'name' => 'ad',
+        'role' => 'rol',
+        'subscription_status' => 'abonelik durumu',
         'email' => 'e-posta',
         'password' => 'şifre',
         'password_confirmation' => 'şifre onayı',

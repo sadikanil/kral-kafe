@@ -28,7 +28,7 @@ return [
     */
 
     'acilis' => env('KAFE_ACILIS', '09:00'),
-    'kapanis' => env('KAFE_KAPANIS', '23:00'),
+    'kapanis' => env('KAFE_KAPANIS', '21:00'),
 
     /*
     |--------------------------------------------------------------------------

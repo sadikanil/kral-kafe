@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Support\SqlDialect;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 
 class UserController extends Controller
@@ -63,7 +65,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'in:student,admin'],
+            'role' => ['required', Rule::enum(Role::class)],
             'phone' => ['nullable', 'string', 'max:20'],
         ]);
 
@@ -98,7 +100,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'in:student,admin'],
+            'role' => ['required', Rule::enum(Role::class)],
             'subscription_status' => ['required', 'in:active,inactive,suspended'],
             'phone' => ['nullable', 'string', 'max:20'],
         ]);
