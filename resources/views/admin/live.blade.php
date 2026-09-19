@@ -32,7 +32,7 @@
     @if($anomalies->isNotEmpty())
         <div class="card mb-3">
             <div class="card-body">
-                <h4 class="mb-2">Bugünün anomalileri</h4>
+                <h4 class="mb-2">Son 7 günün anomalileri</h4>
                 <p class="text-muted mb-3" style="font-size: 0.8125rem;">
                     Bu oturumlar azami süreyi aştığı için otomatik kapatıldı. Çıkış
                     yapmayı unutmuş olabilirler; süreleri gerçek çalışmayı yansıtmayabilir.

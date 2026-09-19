@@ -76,15 +76,11 @@ class SessionCloser
                 continue;
             }
 
-            $bitis = $this->dueEnd($oturum);
-
-            $oturum->forceFill([
-                'ended_at' => $bitis,
-                'duration_minutes' => $oturum->minutesSoFar($bitis),
-                'end_reason' => $this->reasonFor($oturum),
-            ])->save();
-
-            $sayac++;
+            // Korumali yazma: get() ile save() arasinda ogrenci elle
+            // bitirmis olabilir; kosulsuz UPDATE onun kapanisini ezerdi.
+            if ($oturum->closeOnce($this->dueEnd($oturum), $this->reasonFor($oturum))) {
+                $sayac++;
+            }
         }
 
         return $sayac;

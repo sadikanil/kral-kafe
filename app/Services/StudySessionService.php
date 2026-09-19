@@ -66,15 +66,12 @@ class StudySessionService
         });
     }
 
+    /**
+     * Oturumu kapatir. Zaten kapaliysa DOKUNMAZ - bkz. StudySession::closeOnce().
+     */
     public function close(StudySession $session, SessionEndReason $reason): StudySession
     {
-        $bitis = now();
-
-        $session->forceFill([
-            'ended_at' => $bitis,
-            'duration_minutes' => $session->minutesSoFar($bitis),
-            'end_reason' => $reason,
-        ])->save();
+        $session->closeOnce(now(), $reason);
 
         return $session;
     }

@@ -8,6 +8,7 @@ use App\Models\StudySession;
 use App\Models\StudyTable;
 use App\Models\User;
 use App\Services\SessionCloser;
+use App\Services\StudySessionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -248,5 +249,80 @@ class SessionCloserTest extends TestCase
             ->assertOk()
             ->assertDontSee('Süre aşımı');
         Carbon::setTestNow();
+    }
+    /**
+     * Bir oturum IKI KEZ kapatilamaz.
+     *
+     * Senaryo: istek A acik oturumu belleğe okur; bu arada cron ya da baska bir
+     * istegin middleware'i onu 'over_limit' ile kapatir; sonra A elindeki BAYAT
+     * modelle kendi kapatmasini yazar. Sonuc: anomali SILINIR ve sure now()'a
+     * gore sisirilir. Yazma "hala acikken" sartina baglanmali.
+     */
+    public function test_a_session_cannot_be_closed_twice(): void
+    {
+        $ogrenci = $this->ogrenci();
+        $oturum = $this->oturum($ogrenci, $this->yerel('2026-09-21 08:00'));
+
+        Carbon::setTestNow($this->yerel('2026-09-21 20:30'));
+
+        // Istek A acik oturumu okudu.
+        $bayatModel = app(StudySessionService::class)->openFor($ogrenci);
+
+        // Bu arada baska biri kapatti: 08:00 + 12s = 20:00, sure asimi.
+        $this->assertSame(1, $this->kapatici()->closeStale());
+
+        // Istek A simdi elindeki bayat modelle kapatmaya calisiyor.
+        app(StudySessionService::class)->close($bayatModel, SessionEndReason::Manual);
+
+        Carbon::setTestNow();
+
+        $son = $oturum->refresh();
+        $this->assertSame(SessionEndReason::OverLimit, $son->end_reason, 'Anomali silindi');
+        $this->assertSame(720, $son->duration_minutes, 'Sure sisirildi');
+    }
+
+    /** Ters yon: ogrenci elle bitirdiyse closeStale onun uzerine yazmamali. */
+    public function test_auto_close_does_not_overwrite_a_manual_close(): void
+    {
+        $ogrenci = $this->ogrenci();
+        $oturum = $this->oturum($ogrenci, $this->yerel('2026-09-21 08:00'));
+
+        Carbon::setTestNow($this->yerel('2026-09-21 19:00'));
+
+        // closeStale acik oturumlari okudu ama henuz yazmadi diye dusun:
+        // ogrenci tam o anda elle bitirdi.
+        app(StudySessionService::class)->endFor($ogrenci);
+
+        $this->assertSame(0, $this->kapatici()->closeStale());
+        Carbon::setTestNow();
+
+        $this->assertSame(SessionEndReason::Manual, $oturum->refresh()->end_reason);
+    }
+
+    /**
+     * "Yoneticiye anomali olarak duser" - ertesi gun bakarsa da duser.
+     *
+     * Pencere yalnizca "bugun" olsaydi hafta sonu ya da izin gunu dusen her
+     * anomali hic gorulmeden kaybolurdu.
+     */
+    public function test_an_anomaly_is_still_visible_on_later_days(): void
+    {
+        $ogrenci = $this->ogrenci();
+        $this->oturum($ogrenci, $this->yerel('2026-09-21 08:00'));
+
+        Carbon::setTestNow($this->yerel('2026-09-21 22:00'));
+        $this->kapatici()->closeStale();
+        Carbon::setTestNow();
+
+        $yonetici = User::factory()->create(['role' => Role::Admin->value]);
+
+        foreach (['2026-09-21 23:00', '2026-09-22 09:00', '2026-09-24 10:00'] as $bakisAni) {
+            Carbon::setTestNow($this->yerel($bakisAni));
+            $this->actingAs($yonetici)
+                ->get(route('admin.live'))
+                ->assertOk()
+                ->assertSee('Süre aşımı');
+            Carbon::setTestNow();
+        }
     }
 }
