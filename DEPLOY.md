@@ -22,7 +22,7 @@ Vercel projesinde Settings → Environment Variables altına gir:
 | Değişken | Değer |
 |---|---|
 | `APP_KEY` | `php artisan key:generate --show` çıktısı |
-| `APP_ENV` | `production` |
+| `APP_ENV` | `production` (bir kez `local` kalmıştı) |
 | `APP_DEBUG` | `false` — **uretimde asla true olmasin.** Hata sayfasi TUM istek basliklarini gosteriyor; icinde `x-vercel-oidc-token` ve `x-vercel-sc-headers` altindaki `Bearer` token da var. Siteye o anda giren herkes gorur. |
 | `APP_URL` | Vercel'in verdiği alan adı |
 | `APP_LOCALE` | `tr` |
@@ -32,10 +32,10 @@ Vercel projesinde Settings → Environment Variables altına gir:
 | `KAFE_IPLER` | **Boş bırak.** IP kapısı rafta: kafenin IP'si dinamik ölçüldü (bkz. UYGULAMA-PLANI §2.1) |
 | `LOG_CHANNEL` | `stderr` |
 | `DB_CONNECTION` | `pgsql` |
-| `DB_HOST` | `aws-0-<bölge>.pooler.supabase.com` |
+| `DB_HOST` | `aws-0-ap-southeast-1.pooler.supabase.com` — **yer tutucu değil, birebir bu.** Bir kez `<bölge>` olduğu gibi yapıştırıldı ve site `could not translate host name` ile 500 verdi |
 | `DB_PORT` | `5432` (session pooler) |
 | `DB_DATABASE` | `postgres` |
-| `DB_USERNAME` | Supabase'in verdiği kullanıcı |
+| `DB_USERNAME` | `postgres.hxlklrwbeeddbajiectt` — **pooler kullanıcı adı proje referansını içerir.** Düz `postgres` yalnızca doğrudan bağlantıda geçerli; pooler onu reddeder |
 | `DB_PASSWORD` | Supabase veritabanı şifresi |
 | `SESSION_DRIVER` | `database` |
 | `CACHE_STORE` | `database` |
