@@ -5,7 +5,11 @@
 @section('content')
     <h2 class="auth-title">Hoş Geldiniz</h2>
     <p class="auth-subtitle">Devam etmek için giriş yapın</p>
-    
+
+    @if(session('status'))
+        <div class="alert alert-success mb-3">{{ session('status') }}</div>
+    @endif
+
     <form method="POST" action="{{ route('login') }}">
         @csrf
         
@@ -51,6 +55,7 @@
                     {{ old('remember') ? 'checked' : '' }}
                 >
                 <label for="remember" class="form-check-label">Beni hatırla</label>
+                <a href="{{ route('password.request') }}" class="form-check-link">Şifremi unuttum</a>
             </div>
         </div>
         

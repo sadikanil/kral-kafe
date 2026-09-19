@@ -320,6 +320,12 @@ select.form-control {
     cursor: pointer;
 }
 
+/* Satirin sagina yaslanan yardimci baglanti (orn. "Sifremi unuttum") */
+.form-check-link {
+    margin-left: auto;
+    font-size: 0.875rem;
+}
+
 /* Kartlar */
 .card {
     background: white;
