@@ -149,6 +149,35 @@ The /tmp/bootstrap/cache directory must be present and writable.
 Dizinler önce açılınca keşif sorunsuz koşuyor ve `packages.php` + `services.php`
 üretiliyor.
 
+### Yönlendirme: `index.php` neden indiriliyordu
+
+İlk dağıtımda alan adına girince tarayıcı `index.php` dosyasını **indirdi**.
+Sebep, `outputDirectory: "public"` ile `{ "handle": "filesystem" }` birleşimi:
+`public/` statik çıktı olarak yayınlanınca `public/index.php` de statik bir
+varlık haline geliyor, filesystem aşaması onu buluyor ve ham metin olarak
+servis ediyor. PHP fonksiyonuna hiç ulaşılmıyor.
+
+Çözüm: kök isteği ve **her** `.php` isteğini, filesystem aşamasına *varmadan*
+fonksiyona yönlendirmek.
+
+```json
+"routes": [
+    { "src": "^/$",              "dest": "/api/index.php" },
+    { "src": "^/(.+\\.php)$",    "dest": "/api/index.php" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)",            "dest": "/api/index.php" }
+]
+```
+
+Sıra önemli ve her satırın işi ayrı:
+
+1. `^/$` — ana sayfa. Doğrudan fonksiyona; aksi halde filesystem `index.php`'yi
+   bulup indirtiyor.
+2. `^/(.+\.php)$` — birinin `/index.php` ya da başka bir `.php` yolunu doğrudan
+   istemesi. Kaynak kodun ham servis edilmesi sadece çirkin değil, **sızıntıdır**.
+3. `handle: filesystem` — buraya yalnızca gerçek varlıklar ulaşır:
+   `/css/app.css`, `/favicon.ico`, `/robots.txt`, `/build/*`.
+4. Kalan her şey Laravel'e.
 ### npm neden yok
 
 Hiçbir blade `@vite` kullanmıyor; `vite build` kimsenin yüklemediği varlıklar
