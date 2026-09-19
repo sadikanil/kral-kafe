@@ -43,23 +43,48 @@ Vercel projesinde Settings → Environment Variables altına gir:
 | `AWS_DEFAULT_REGION` | Supabase projesinin bölgesi |
 | `AWS_USE_PATH_STYLE_ENDPOINT` | `true` |
 | `VIEW_COMPILED_PATH` | `/tmp/storage/framework/views` |
+| `APP_PACKAGES_CACHE` | `/tmp/bootstrap/cache/packages.php` |
+| `APP_SERVICES_CACHE` | `/tmp/bootstrap/cache/services.php` |
+| `APP_CONFIG_CACHE` | `/tmp/bootstrap/cache/config.php` |
+| `APP_EVENTS_CACHE` | `/tmp/bootstrap/cache/events.php` |
+| `APP_ROUTES_CACHE` | `/tmp/bootstrap/cache/routes-v7.php` |
+| `AWS_URL` | `https://<proje-ref>.supabase.co/storage/v1/object/public/<bucket>` |
+| `DB_SSLMODE` | `require` |
 | `OPENAI_API_KEY` | Yapay zekâ stok analizi için (boş bırakılırsa analiz devre dışı kalır) |
 
 `QUEUE_CONNECTION=sync` bilinçli: uygulama kuyruğa iş atmıyor ve Vercel'de
 arka plan işçisi çalıştırılamaz.
+
+`APP_*_CACHE` değişkenleri **zorunlu**. Vercel'in PHP runtime'ı Composer'ı
+`--no-scripts` ile çalıştırdığı için `artisan package:discover` hiç koşmuyor ve
+`bootstrap/cache` lambda'ya boş gidiyor. `/var/task` salt-okunur olduğundan
+Laravel bu dosyaları üretemez ve ilk istekte *"directory must be present and
+writable"* hatasıyla düşer. Bu değişkenler yazımı `/tmp` altına alır.
+
+`AWS_URL` de **zorunlu**. Boş bırakılırsa Laravel adresi S3 protokol ucundan
+türetir (`.../storage/v1/s3/...`); o adres SigV4 imzası ister ve `<img src>` ile
+açılmaz. Yüklenen hiçbir görsel görünmez. Bucket, Supabase panelinde **Public**
+işaretlenmiş olmalı; private kalacaksa `Storage::temporaryUrl()` kullanılmalı.
 
 ## 3. Migration'lar
 
 Vercel build adımında migration çalıştırmak güvenli değil (her dağıtımda
 tetiklenir). Yerelden bir kez çalıştır:
 
-```bash
-DB_CONNECTION=pgsql DB_HOST=... DB_PORT=6543 DB_DATABASE=postgres \
-DB_USERNAME=... DB_PASSWORD=... php artisan migrate --force
+Bağlantı bilgilerini `.env.supabase` dosyasına yaz (bu dosya `.gitignore`'da,
+şablonu `.env.supabase.example`), sonra:
 
-# Yönetici kullanıcıyı oluştur
-DB_CONNECTION=pgsql ... php artisan db:seed --class=AdminSeeder --force
+```bash
+cp .env.supabase.example .env.supabase   # doldur
+php artisan migrate --force --env=supabase
+php artisan db:seed --class=AdminSeeder --force --env=supabase
 ```
+
+> **Migration için pooler değil, doğrudan bağlantı kullan.** Uygulama çalışırken
+> port `6543` (transaction pooler) doğrudur, ancak DDL ve uzun migration
+> transaction'ları bu modda güvenilir çalışmaz. `.env.supabase` içinde
+> `DB_PORT=5432` yapıp migration'ları çalıştır, sonra Vercel ortamında `6543`
+> kullan.
 
 > Postgres yolu yerel makinede doğrulanamadı (Postgres/Docker kurulu değil).
 > İlk migration'da hata çıkarsa buradan devam edilmeli.

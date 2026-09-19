@@ -3,17 +3,29 @@
 /**
  * Vercel giris noktasi.
  *
- * Vercel'in dosya sistemi salt-okunur; yazilabilir tek yer /tmp ve orasi da
- * cagrilar arasinda silinebiliyor. Laravel'in calisma aninda yazmasi gereken
- * tek dizin derlenmis Blade sablonlari; onu /tmp altina aliyoruz.
+ * Vercel'de /var/task salt-okunur; yazilabilir tek yer /tmp. Laravel'in
+ * calisma aninda yazmasi gereken iki yer var:
  *
- * Oturum, onbellek ve kuyruk veritabanina (Supabase) yazar; yuklenen dosyalar
- * nesne depolamaya (UPLOAD_DISK=s3) gider. Log'lar stderr'e akar.
+ *  1. Derlenmis Blade sablonlari (VIEW_COMPILED_PATH).
+ *  2. bootstrap/cache - paket ve servis bildirimleri. Runtime composer'i
+ *     --no-scripts ile calistirdigi icin "artisan package:discover" hic
+ *     kosmuyor ve bu dosyalar lambda'ya hic girmiyor; Laravel ilk istekte
+ *     bunlari uretmeye calisip "directory must be present and writable"
+ *     istisnasi atiyor.
+ *
+ * Ikisi de asagida olusturuluyor. Hangi dosyanin nereye yazilacagini
+ * APP_*_CACHE ortam degiskenleri belirler (bkz. DEPLOY.md).
  */
-$compiledViews = $_SERVER['VIEW_COMPILED_PATH'] ?? '/tmp/storage/framework/views';
+$dizinler = [
+    $_SERVER['VIEW_COMPILED_PATH'] ?? '/tmp/storage/framework/views',
+    '/tmp/bootstrap/cache',
+];
 
-if (! is_dir($compiledViews)) {
-    mkdir($compiledViews, 0755, true);
+foreach ($dizinler as $dizin) {
+    if (! is_dir($dizin) && ! mkdir($dizin, 0755, true) && ! is_dir($dizin)) {
+        http_response_code(500);
+        exit("Yazilabilir dizin olusturulamadi: {$dizin}");
+    }
 }
 
 require __DIR__ . '/../public/index.php';

@@ -1,3 +1,11 @@
+# Yerel sirlar - .vercelignore varken Vercel CLI .gitignore'a BAKMAZ ve
+# duz ".env" dosyasini kendiliginden elemez.
+.env
+.env.*
+
+# Runtime kendi composer install --no-dev calistirir
+/vendor
+
 # Dagitima girmesi gereksiz olanlar
 /node_modules
 /tests
