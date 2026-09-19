@@ -58,4 +58,17 @@ foreach (array_unique($dizinler) as $dizin) {
     }
 }
 
+// GECICI TESHIS - SIR ICERMEZ, yalnizca "var mi / hangi surucu".
+// Uygulama 500 verse bile bu baslik gider, cunku Laravel bootlanmadan once yazilir.
+// Sebep bulununca kaldirilacak.
+$oku = static fn (string $k): string => (string) ($_SERVER[$k] ?? $_ENV[$k] ?? getenv($k) ?: '-');
+$anahtar = $oku('APP_KEY');
+header('X-Kk-Cfg: key=' . ($anahtar === '-' ? 'yok' : (str_starts_with($anahtar, 'base64:') ? 'base64' : 'hamdeger'))
+    . ' len=' . strlen($anahtar)
+    . ' db=' . $oku('DB_CONNECTION')
+    . ' port=' . $oku('DB_PORT')
+    . ' env=' . $oku('APP_ENV')
+    . ' sess=' . $oku('SESSION_DRIVER')
+    . ' cache=' . $oku('CACHE_STORE'));
+
 require __DIR__ . '/../public/index.php';
