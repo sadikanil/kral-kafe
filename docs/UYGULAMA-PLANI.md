@@ -311,6 +311,29 @@ serverless olduğu için ayrı bir HTTP ucu gerekirdi; deterministik tasarım
 sayesinde **gerekmediği** için açılmadı — sırf tazelik uğruna kimliği kontrol
 edilmesi gereken yeni bir dış uç eklemek, kazandırdığından fazlasını riske atar.
 
+**Bağımsız analizin bulduğu iki hata (sonradan düzeltildi).** Dalga 4 için arka
+planda çalıştırılan çok ajanlı analiz, adversaryal doğrulamayı geçen iki gerçek
+kusur buldu:
+
+1. **Bir oturum iki kez kapatılabiliyordu.** İki kapatma yolu da açık oturumu
+   önce okuyup sonra yazıyordu. Arada diğeri kapatmış olabilir; koşulsuz UPDATE
+   onun kapanışını eziyordu. Manuel kapanış otomatiği ezerse **anomali kaydı
+   siliniyor** ve süre şişiyordu (20:00'de kapanmış 720 dakikalık bir süre
+   aşımı, 20:30'da gelen bayat modelle 750 dakikalık *normal* kapanışa
+   dönüşüyordu). İkisi de sessiz: hata yok, yalnızca yanlış sayı. Karar
+   veritabanına taşındı — `StudySession::closeOnce()` yalnızca
+   `whereNull('ended_at')` iken yazıyor.
+
+2. **Anomali ertesi gün görünmüyordu.** Süre aşımı bölümü yalnızca *bugün*
+   kapanmış oturumları listeliyordu. Yönetici her gün canlı ekrana bakmak
+   zorunda değil; hafta sonuna düşen her anomali hiç görülmeden kayboluyordu —
+   yani "yöneticiye anomali olarak düşer" kuralı aslında uygulanmıyordu. Pencere
+   yedi güne çıkarıldı.
+
+   *Daha doğrusu:* anomaliye "gördüm" işareti koyulabilen bir akış. Yedi günlük
+   pencere de sessizce kapanabilir. Kalıcı çözüm Dalga 7 sonrasına bırakıldı;
+   mevcut `discrepancy_logs` çözümleme akışı örnek alınabilir.
+
 ### Dalga 5 — Süre, devamlılık, hedef (MVP #4, #6, #5)
 
 "Gelinen gün" tanımı: *o yerel güne ≥ `config('kafe.sayilabilir_dakika')`
