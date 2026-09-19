@@ -95,67 +95,67 @@ türetir (`.../storage/v1/s3/...`); o adres SigV4 imzası ister ve `<img src>` i
 açılmaz. Yüklenen hiçbir görsel görünmez. Bucket, Supabase panelinde **Public**
 işaretlenmiş olmalı; private kalacaksa `Storage::temporaryUrl()` kullanılmalı.
 
-## 2.1 Vercel derleme komutları
+## 2.1 Derleme ayarları: hepsi boş kalmalı
 
-Bunlar `vercel.json` içinde yazılı; panelde ayrıca girmene gerek yok. Panelde
-**Settings → Build & Development Settings** alanları **boş** kalmalı — dolu
-olurlarsa `vercel.json`'u ezerler.
+Vercel panelinde **Settings → Build & Development Settings** altındaki üç alanı
+da **boş / kapalı (gri)** bırak. Install Command'a bir şey yazma.
 
 | Alan | Değer |
 |---|---|
-| Install Command | `composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts` |
-| Build Command | `mkdir -p bootstrap/cache /tmp/bootstrap/cache && php artisan package:discover --ansi` |
+| Framework Preset | Other (`vercel.json`'daki `"framework": null` bunu zorluyor) |
+| Build Command | boş |
 | Output Directory | `public` |
+| Install Command | **boş** |
 
-### Her parçanın nedeni
+### Neden Install Command yazılmıyor
 
-**`--no-dev`** — PHPUnit, Faker ve Collision üretime girmesin. Lambda boyutu
-küçülür, cold start kısalır.
+Denendi ve derleme çöktü:
 
-**`--optimize-autoloader`** — sınıf haritası derlenir. Serverless'ta her cold
-start autoload dosyasını baştan okur; bu, ölçülebilir tek kazanç.
+```
+Running "install" command: `composer install --no-dev ...`
+sh: line 1: composer: command not found
+Error: Command "composer install ..." exited with 127
+```
 
-**`--no-scripts` — ZORUNLU.** Composer'ın `post-autoload-dump` kancası
-`artisan package:discover` çalıştırır. `APP_PACKAGES_CACHE` `/tmp/...`'i
-gösteriyorsa ve o dizin derleme makinesinde yoksa Laravel şu hatayı atıp
-**derlemeyi komple çökertir**:
+Vercel'in derleme konteynerinde **composer yok**. `vercel-php` builder'ı PHP'yi
+ve composer'ı kendi adımında kuruyor; Install Command aşaması ondan **önce**
+çalışıyor ve o aşamada PATH'te ne `composer` var ne `php`. Yani bu runtime'da
+Install Command'a PHP dünyasına ait hiçbir komut yazılamaz.
+
+Bağımlılık kurulumunu runtime kendisi yapıyor (`--no-dev` ile) — bu yüzden
+`.vercelignore` `/vendor` dizinini dağıtımdan çıkarıyor.
+
+### Derleme zamanı kancası: `composer.json` → `scripts.vercel`
+
+Bu runtime'ın desteklediği tek derleme kancası, `composer.json` içinde
+**`vercel`** adlı composer script'i. Bizimki şunu yapıyor:
+
+```json
+"vercel": [
+    "@php -r \"... eksik onbellek dizinlerini olustur ...\"",
+    "@php artisan package:discover --ansi"
+]
+```
+
+`mkdir` adımı şart ve sebebi çalıştırılarak doğrulandı: `APP_PACKAGES_CACHE`
+`/tmp/bootstrap/cache/packages.php`'yi gösteriyor, o dizin derleme makinesinde
+yok ve Laravel şunu atıp **derlemeyi komple çökertiyor**:
 
 ```
 PackageManifest.php line 179:
 The /tmp/bootstrap/cache directory must be present and writable.
 ```
 
-Bu tahmin değil, çalıştırılarak doğrulandı. Scripts kapalı olunca sorun
-ortadan kalkar; keşif, bir sonraki adımda kontrollü şekilde yapılır.
+Dizinler önce açılınca keşif sorunsuz koşuyor ve `packages.php` + `services.php`
+üretiliyor.
 
-**Build Command'daki `mkdir -p`** — iki dizini birden açar, çünkü `package:discover`'ın
-nereye yazacağını `APP_PACKAGES_CACHE` belirler ve bu değişken ayarlı da
-olabilir ayarsız da. İkisini de açmak komutu **her iki yapılandırmada da**
-çalışır kılar.
+### npm neden yok
 
-**npm yok.** Panelde Install Command'ı doldurursan Vercel varsayılan `npm install`'ı
-çalıştırmaz — ve burada bu bir kayıp değil, kazanç: **hiçbir blade `@vite`
-kullanmıyor.** `vite build` kimsenin yüklemediği varlıklar üretiyordu. Stiller
-elle yazılmış `public/css/app.css`'te ve `outputDirectory: public` sayesinde
-doğrudan servis ediliyor. `vite.config.js` ile `package.json` yerinde duruyor —
-ileride arayüz yenilenirse kullanılabilir, sadece dağıtımda çalıştırılmıyor.
-
-### Bilerek yapılmayan: derleme zamanı config/route önbelleği
-
-`php artisan config:cache` ve `route:cache` cold start'ı kısaltırdı. Ama
-`APP_CONFIG_CACHE` ve `APP_ROUTES_CACHE` şu an `/tmp/...`'i gösteriyor; derleme
-makinesinin `/tmp`'si lambda'ya **girmez**, yani üretilen önbellek çöpe gider.
-
-İstersen mimari şöyle değiştirilebilir: `APP_PACKAGES_CACHE`, `APP_SERVICES_CACHE`,
-`APP_CONFIG_CACHE`, `APP_EVENTS_CACHE`, `APP_ROUTES_CACHE` değişkenleri
-**silinir** (varsayılan `bootstrap/cache/`'e düşerler, orası dağıtıma dahildir
-ve çalışma anında yalnızca OKUNUR), `VIEW_COMPILED_PATH` `/tmp`'de kalır —
-derlenmiş Blade'ler gerçekten yazma ister. Sonra Build Command'a
-`&& php artisan config:cache && php artisan route:cache` eklenir.
-
-Bunun bir bedeli var ve bilerek alınmalı: **config önbelleğe alınınca bir ortam
-değişkenini değiştirmek için yeniden dağıtım gerekir.** Panelden değeri
-değiştirmek tek başına etki etmez. Şu anki yapı bu bedeli ödemiyor.
+Hiçbir blade `@vite` kullanmıyor; `vite build` kimsenin yüklemediği varlıklar
+üretiyordu. Stiller elle yazılan `public/css/app.css`'te ve `outputDirectory: public`
+sayesinde doğrudan servis ediliyor. `vite.config.js` ve `package.json` yerinde
+duruyor — ileride arayüz yenilenirse kullanılabilir, sadece dağıtımda
+çalıştırılmıyor.
 
 ## 3. Migration'lar
 

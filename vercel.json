@@ -1,8 +1,6 @@
 {
     "$schema": "https://openapi.vercel.sh/vercel.json",
     "framework": null,
-    "installCommand": "composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts",
-    "buildCommand": "mkdir -p bootstrap/cache /tmp/bootstrap/cache && php artisan package:discover --ansi",
     "outputDirectory": "public",
     "functions": {
         "api/index.php": {
