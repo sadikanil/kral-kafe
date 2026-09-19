@@ -1,0 +1,11 @@
+# Dagitima girmesi gereksiz olanlar
+/node_modules
+/tests
+/.git
+/storage/logs
+/storage/framework/cache
+/storage/framework/sessions
+/storage/framework/views
+/database/database.sqlite
+cloudflared.tgz
+composer.phar
