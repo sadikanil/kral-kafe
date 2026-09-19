@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration {
@@ -19,6 +20,15 @@ return new class extends Migration {
         Schema::table('products', function (Blueprint $table) {
             $table->string('unit_type', 50)->default('paket')->change();
         });
+
+        // Postgres'te enum(), varchar + CHECK kisiti olarak olusuyor ve change()
+        // bu kisiti oldugu yerde birakiyor. Arayuz serbest metin birim adlari
+        // ('paket', 'teneke kutu', 'pet sise') sundugu icin kisit kalirsa her urun
+        // ekleme/guncelleme SQLSTATE[23514] ile duser. SQLite ve MySQL'de change()
+        // sutunu bastan yazdigi icin boyle bir kalinti olusmuyor.
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE products DROP CONSTRAINT IF EXISTS products_unit_type_check');
+        }
     }
 
     /**

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Support\SqlDialect;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
@@ -33,7 +35,8 @@ class ProductController extends Controller
         // Search
         if ($request->has('search') && $request->search) {
             $search = $request->search;
-            $query->where('name', 'like', "%{$search}%");
+            $like = SqlDialect::likeOperator(DB::connection()->getDriverName());
+            $query->where('name', $like, "%{$search}%");
         }
 
         $products = $query->orderBy('name')->paginate(20);
