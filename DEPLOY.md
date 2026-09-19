@@ -28,8 +28,8 @@ Vercel projesinde Settings → Environment Variables altına gir:
 | `APP_LOCALE` | `tr` |
 | `SESSION_LIFETIME` | `900` (kafe gününden uzun olmalı) |
 | `KAFE_TIMEZONE` | `Europe/Istanbul` |
-| `KAFE_ACILIS` / `KAFE_KAPANIS` | `09:00` / `23:00` |
-| `KAFE_IPLER` | Kafenin sabit çıkış IP'si — boş bırakılırsa kapı devre dışı |
+| `KAFE_ACILIS` / `KAFE_KAPANIS` | `09:00` / `21:00` |
+| `KAFE_IPLER` | **Boş bırak.** IP kapısı rafta: kafenin IP'si dinamik ölçüldü (bkz. UYGULAMA-PLANI §2.1) |
 | `LOG_CHANNEL` | `stderr` |
 | `DB_CONNECTION` | `pgsql` |
 | `DB_HOST` | `aws-0-<bölge>.pooler.supabase.com` |
@@ -94,6 +94,68 @@ writable"* hatasıyla düşer. Bu değişkenler yazımı `/tmp` altına alır.
 türetir (`.../storage/v1/s3/...`); o adres SigV4 imzası ister ve `<img src>` ile
 açılmaz. Yüklenen hiçbir görsel görünmez. Bucket, Supabase panelinde **Public**
 işaretlenmiş olmalı; private kalacaksa `Storage::temporaryUrl()` kullanılmalı.
+
+## 2.1 Vercel derleme komutları
+
+Bunlar `vercel.json` içinde yazılı; panelde ayrıca girmene gerek yok. Panelde
+**Settings → Build & Development Settings** alanları **boş** kalmalı — dolu
+olurlarsa `vercel.json`'u ezerler.
+
+| Alan | Değer |
+|---|---|
+| Install Command | `composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts` |
+| Build Command | `mkdir -p bootstrap/cache /tmp/bootstrap/cache && php artisan package:discover --ansi` |
+| Output Directory | `public` |
+
+### Her parçanın nedeni
+
+**`--no-dev`** — PHPUnit, Faker ve Collision üretime girmesin. Lambda boyutu
+küçülür, cold start kısalır.
+
+**`--optimize-autoloader`** — sınıf haritası derlenir. Serverless'ta her cold
+start autoload dosyasını baştan okur; bu, ölçülebilir tek kazanç.
+
+**`--no-scripts` — ZORUNLU.** Composer'ın `post-autoload-dump` kancası
+`artisan package:discover` çalıştırır. `APP_PACKAGES_CACHE` `/tmp/...`'i
+gösteriyorsa ve o dizin derleme makinesinde yoksa Laravel şu hatayı atıp
+**derlemeyi komple çökertir**:
+
+```
+PackageManifest.php line 179:
+The /tmp/bootstrap/cache directory must be present and writable.
+```
+
+Bu tahmin değil, çalıştırılarak doğrulandı. Scripts kapalı olunca sorun
+ortadan kalkar; keşif, bir sonraki adımda kontrollü şekilde yapılır.
+
+**Build Command'daki `mkdir -p`** — iki dizini birden açar, çünkü `package:discover`'ın
+nereye yazacağını `APP_PACKAGES_CACHE` belirler ve bu değişken ayarlı da
+olabilir ayarsız da. İkisini de açmak komutu **her iki yapılandırmada da**
+çalışır kılar.
+
+**npm yok.** Panelde Install Command'ı doldurursan Vercel varsayılan `npm install`'ı
+çalıştırmaz — ve burada bu bir kayıp değil, kazanç: **hiçbir blade `@vite`
+kullanmıyor.** `vite build` kimsenin yüklemediği varlıklar üretiyordu. Stiller
+elle yazılmış `public/css/app.css`'te ve `outputDirectory: public` sayesinde
+doğrudan servis ediliyor. `vite.config.js` ile `package.json` yerinde duruyor —
+ileride arayüz yenilenirse kullanılabilir, sadece dağıtımda çalıştırılmıyor.
+
+### Bilerek yapılmayan: derleme zamanı config/route önbelleği
+
+`php artisan config:cache` ve `route:cache` cold start'ı kısaltırdı. Ama
+`APP_CONFIG_CACHE` ve `APP_ROUTES_CACHE` şu an `/tmp/...`'i gösteriyor; derleme
+makinesinin `/tmp`'si lambda'ya **girmez**, yani üretilen önbellek çöpe gider.
+
+İstersen mimari şöyle değiştirilebilir: `APP_PACKAGES_CACHE`, `APP_SERVICES_CACHE`,
+`APP_CONFIG_CACHE`, `APP_EVENTS_CACHE`, `APP_ROUTES_CACHE` değişkenleri
+**silinir** (varsayılan `bootstrap/cache/`'e düşerler, orası dağıtıma dahildir
+ve çalışma anında yalnızca OKUNUR), `VIEW_COMPILED_PATH` `/tmp`'de kalır —
+derlenmiş Blade'ler gerçekten yazma ister. Sonra Build Command'a
+`&& php artisan config:cache && php artisan route:cache` eklenir.
+
+Bunun bir bedeli var ve bilerek alınmalı: **config önbelleğe alınınca bir ortam
+değişkenini değiştirmek için yeniden dağıtım gerekir.** Panelden değeri
+değiştirmek tek başına etki etmez. Şu anki yapı bu bedeli ödemiyor.
 
 ## 3. Migration'lar
 
