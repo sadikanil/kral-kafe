@@ -12,16 +12,34 @@ use Tests\TestCase;
  */
 class PostgresReadinessTest extends TestCase
 {
-    public function test_pgsql_connection_emulates_prepared_statements(): void
+    public function test_prepared_statement_emulation_is_off_by_default(): void
     {
         $options = config('database.connections.pgsql.options');
 
         $this->assertIsArray($options, 'pgsql baglantisinda options anahtari yok');
-        $this->assertTrue(
-            $options[PDO::ATTR_EMULATE_PREPARES] ?? false,
-            'Supabase transaction pooler (6543) sunucu tarafi prepared statement tasimiyor; '
-            . 'emulasyon acik olmazsa her istek SQLSTATE[42P05] ile duser'
+        $this->assertArrayNotHasKey(
+            PDO::ATTR_EMULATE_PREPARES,
+            $options,
+            'Emulasyon acikken PDO, Laravel\'in int\'e cevirdigi boolean\'lari ciplak 1/0 '
+            . 'olarak gomuyor ve Postgres "column is of type boolean but expression is of '
+            . 'type integer" (42804) veriyor. Gercek Supabase uzerinde dogrulandi: '
+            . 'is_active yazan her migration ve her kayit duser.'
         );
+    }
+
+    public function test_emulation_can_still_be_enabled_when_a_deployment_needs_it(): void
+    {
+        // Transaction pooler (6543) sunucu tarafi prepared statement tasimadigi
+        // icin orada emulasyon gerekir; ama o zaman boolean sorunu da birlikte
+        // gelir. Bu yuzden acik bir tercih olarak birakildi, varsayilan degil.
+        putenv('DB_EMULATE_PREPARES=true');
+        $this->refreshApplication();
+
+        $options = config('database.connections.pgsql.options');
+
+        $this->assertTrue($options[PDO::ATTR_EMULATE_PREPARES] ?? false);
+
+        putenv('DB_EMULATE_PREPARES');
     }
 
     public function test_postgres_search_uses_a_case_insensitive_operator(): void

@@ -96,7 +96,7 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
-            'options' => extension_loaded('pdo_pgsql') ? [
+            'options' => extension_loaded('pdo_pgsql') && env('DB_EMULATE_PREPARES', false) ? [
                 // Supabase'in transaction pooler'i (port 6543) sunucu tarafi
                 // prepared statement'lari oturumlar arasinda tasimiyor; emulasyon
                 // acilmazsa istekler SQLSTATE[42P05] "duplicate prepared statement"

@@ -8,9 +8,10 @@ Her ikisi de Supabase'in ücretsiz katmanıyla karşılanabiliyor.
 
 1. [supabase.com](https://supabase.com) üzerinde yeni bir proje aç.
 2. **Veritabanı**: Project Settings → Database → Connection string.
-   Serverless'tan bağlanırken **connection pooler** (port `6543`) kullan,
-   doğrudan bağlantı (`5432`) değil — serverless her istekte yeni bağlantı
-   açar ve doğrudan bağlantı kotası hızla dolar.
+   Uygulama için **Session pooler** kullan: `aws-0-<bölge>.pooler.supabase.com`
+   port `5432`. Doğrudan bağlantı (`db.<ref>.supabase.co`) yalnızca IPv6
+   üzerinden geliyor, transaction pooler (`6543`) ise aşağıda anlatılan
+   boolean sorununa yol açıyor.
 3. **Depolama**: Storage → yeni bir bucket oluştur (örn. `kral-kafe`).
    Ardından Project Settings → Storage → S3 access keys'ten bir anahtar üret.
 
@@ -27,8 +28,8 @@ Vercel projesinde Settings → Environment Variables altına gir:
 | `APP_LOCALE` | `tr` |
 | `LOG_CHANNEL` | `stderr` |
 | `DB_CONNECTION` | `pgsql` |
-| `DB_HOST` | Supabase pooler host'u |
-| `DB_PORT` | `6543` |
+| `DB_HOST` | `aws-0-<bölge>.pooler.supabase.com` |
+| `DB_PORT` | `5432` (session pooler) |
 | `DB_DATABASE` | `postgres` |
 | `DB_USERNAME` | Supabase'in verdiği kullanıcı |
 | `DB_PASSWORD` | Supabase veritabanı şifresi |
@@ -54,6 +55,30 @@ Vercel projesinde Settings → Environment Variables altına gir:
 
 `QUEUE_CONNECTION=sync` bilinçli: uygulama kuyruğa iş atmıyor ve Vercel'de
 arka plan işçisi çalıştırılamaz.
+
+### Hangi havuz, neden
+
+Supabase üç bağlantı yolu sunuyor ve üçü de aynı değil:
+
+| Yol | Port | Durum |
+|---|---|---|
+| Doğrudan (`db.<ref>.supabase.co`) | 5432 | Çalışır, ama **yalnızca IPv6**. Migration için yerelden kullanılabilir; Vercel'de güvenilir değil. |
+| **Session pooler** (`aws-0-*.pooler.supabase.com`) | 5432 | **Önerilen.** IPv4 var, sunucu tarafı prepared statement'lar çalışır. |
+| Transaction pooler | 6543 | Serverless için ideal görünür ama prepared statement taşımaz. |
+
+Transaction pooler'ı kullanmak için `DB_EMULATE_PREPARES=true` gerekiyor, aksi
+halde istekler `SQLSTATE[42P05]` ile düşer. **Ancak emülasyon açıkken Postgres'te
+boolean yazmaları kırılıyor:** Laravel binding'lerde `true` değerini `1`'e
+çeviriyor, emülasyon bunu çıplak bir integer olarak gömüyor ve Postgres
+`column is of type boolean but expression is of type integer` (42804) veriyor.
+Bu gerçek Supabase üzerinde doğrulandı — `is_active` yazan her migration ve her
+kayıt düşüyor.
+
+Bu yüzden emülasyon varsayılan olarak **kapalı** ve önerilen yol session
+pooler. Trafik artıp session pooler'ın bağlantı sınırına dayanırsanız,
+transaction pooler'a geçmeden önce boolean binding'ini çözmeniz gerekir
+(`Connection::resolverFor('pgsql', ...)` ile `prepareBindings` override edilip
+boolean'lar `'true'`/`'false'` metni olarak bağlanmalı).
 
 `APP_*_CACHE` değişkenleri **zorunlu**. Vercel'in PHP runtime'ı Composer'ı
 `--no-scripts` ile çalıştırdığı için `artisan package:discover` hiç koşmuyor ve
