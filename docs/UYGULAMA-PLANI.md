@@ -77,7 +77,9 @@ telefonunu açar — giriş çerezi 11:00'de ölmüştür ve `/masa/{qr}` `auth`
 arkasındadır. Öğrenci giriş ekranına düşer, oturumunu kapatamaz, kayıt
 otomatik kapanmaya kalır.
 
-**Karar:** `SESSION_LIFETIME=720` (12 saat) ve `DEPLOY.md` tablosuna eklenir.
+**Karar:** `SESSION_LIFETIME=900` (15 saat — kafe günü 840 dakika, biraz pay).
+`DEPLOY.md` tablosuna eklendi ve bu ilişkiyi koruyan bir test yazıldı:
+kafe saatleri uzarsa test uyarır.
 
 ### 1.5 Kaynak belgede iki düzeltme gerekiyor
 
@@ -209,8 +211,8 @@ yeniden yazılmasın.
 | 0-A · PostgresSecurity | ✅ Bitti |
 | 0-B · Zaman + IP temeli | ✅ Bitti |
 | 0-C · Rol enum + yetki reddi testi | ✅ Bitti |
-| 0-D · CSS bileşenleri | 🔄 Sırada |
-| 1 · Roller | ⬜ |
+| 0-D · CSS bileşenleri | ✅ Bitti |
+| 1 · Roller | 🔄 Sırada |
 | 2 · Masa | ⬜ |
 | 3 · Oturum + canlı ekran | ⬜ |
 | 4 · Otomatik kapanış | ⬜ |
