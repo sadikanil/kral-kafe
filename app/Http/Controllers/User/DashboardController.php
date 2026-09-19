@@ -7,6 +7,7 @@ use App\Models\Consumption;
 use App\Services\BillingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -87,7 +88,7 @@ class DashboardController extends Controller
 
         // Get available months
         $availableMonths = Consumption::where('user_id', $user->id)
-            ->selectRaw('YEAR(consumed_at) as year, MONTH(consumed_at) as month')
+            ->selectRaw($this->yearMonthSelect())
             ->groupBy('year', 'month')
             ->orderByDesc('year')
             ->orderByDesc('month')
@@ -101,5 +102,20 @@ class DashboardController extends Controller
             'month' => $month,
             'availableMonths' => $availableMonths,
         ]);
+    }
+
+    /**
+     * Year/month extraction for the "available months" filter.
+     *
+     * SQLite has no YEAR()/MONTH(), so the expression has to follow the driver.
+     */
+    private function yearMonthSelect(): string
+    {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            return "CAST(strftime('%Y', consumed_at) AS INTEGER) as year, "
+                . "CAST(strftime('%m', consumed_at) AS INTEGER) as month";
+        }
+
+        return 'YEAR(consumed_at) as year, MONTH(consumed_at) as month';
     }
 }

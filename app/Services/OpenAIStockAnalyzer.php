@@ -8,7 +8,7 @@ use App\Models\Product;
 
 class OpenAIStockAnalyzer
 {
-    private string $apiKey;
+    private ?string $apiKey;
     private string $model = 'gpt-4o';
 
     public function __construct()
@@ -25,6 +25,12 @@ class OpenAIStockAnalyzer
      */
     public function analyzeStockPhoto(string $imagePath, array $expectedProducts = []): array
     {
+        if (empty($this->apiKey)) {
+            Log::warning('Stock analysis skipped: OPENAI_API_KEY is not configured');
+
+            return $this->getEmptyResult('Yapay zeka analizi kullanılamıyor: OPENAI_API_KEY tanımlı değil.');
+        }
+
         try {
             // Convert image to base64
             $imageData = base64_encode(file_get_contents($imagePath));
