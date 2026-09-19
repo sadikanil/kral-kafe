@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class StockPhoto extends Model
@@ -97,7 +98,7 @@ class StockPhoto extends Model
      */
     public function getPhotoUrlAttribute(): string
     {
-        return asset('storage/' . $this->photo_path);
+        return Storage::disk(config('filesystems.uploads'))->url($this->photo_path);
     }
 
     /**
@@ -111,4 +112,5 @@ class StockPhoto extends Model
             default => $this->record_type,
         };
     }
+
 }

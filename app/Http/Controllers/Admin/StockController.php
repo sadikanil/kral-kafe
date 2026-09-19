@@ -129,6 +129,14 @@ class StockController extends Controller
         $allResults = [];
 
         foreach ($photos as $photo) {
+            // Zaten analiz edilmis fotografi yeniden gondermeyiz: sayfa yenileme,
+            // geri tusu ve dogrulama hatasi sonrasi donus her seferinde yeniden
+            // faturalandiriyordu.
+            if ($photo->processed_at && $photo->ai_analysis) {
+                $allResults[] = $photo->ai_analysis;
+                continue;
+            }
+
             if (! $disk->exists($photo->photo_path)) {
                 continue;
             }

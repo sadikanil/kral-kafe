@@ -263,6 +263,7 @@ class OpenAIStockAnalyzer
         ];
 
         $productQuantities = [];
+        $gorulenAnomaliler = [];
         $totalConfidence = 0;
         $successCount = 0;
 
@@ -290,7 +291,17 @@ class OpenAIStockAnalyzer
                 $productQuantities[$key]['confidence_sum'] += $product['confidence'];
             }
 
-            $merged['anomalies'] = array_merge($merged['anomalies'], $result['anomalies'] ?? []);
+            // Ayni anomali her fotograftan tekrar geliyor; tur + aciklama
+            // ciftine gore teklestirilir, yoksa 5 fotografta ayni uyari 5 kez
+            // listelenir ve rozetteki sayi sisirilir.
+            foreach ($result['anomalies'] ?? [] as $anomaly) {
+                $anahtar = json_encode($anomaly);
+
+                if (! isset($gorulenAnomaliler[$anahtar])) {
+                    $gorulenAnomaliler[$anahtar] = true;
+                    $merged['anomalies'][] = $anomaly;
+                }
+            }
         }
 
         // Average the quantities

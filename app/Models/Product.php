@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Product extends Model
 {
@@ -91,5 +92,20 @@ class Product extends Model
             'pet_bottle' => 'Pet Şişe',
             default => $this->unit_type,
         };
+    }
+
+    /**
+     * Yuklenen gorselin adresi.
+     *
+     * Adres yapilandirilmis yukleme diskinden uretilir; sabit "/storage/..."
+     * yolu yazmak nesne depolamaya (Supabase Storage) gecince kirilir.
+     */
+    public function getImageSrcAttribute(): ?string
+    {
+        if (! $this->image_url) {
+            return null;
+        }
+
+        return Storage::disk(config('filesystems.uploads'))->url($this->image_url);
     }
 }
