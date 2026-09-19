@@ -60,8 +60,17 @@ class StudyTableController extends Controller
             ->with('success', 'Masa güncellendi.');
     }
 
+    /**
+     * Gecmis kayit, masayi silmek icin feda edilmemeli. Yabanci anahtar zaten
+     * engelliyor ama yakalanmazsa 500 doner ve yonetici sebebini goremez;
+     * kullanimdan kalkan masa silinmez, KAPATILIR.
+     */
     public function destroy(StudyTable $table)
     {
+        if ($table->sessions()->exists()) {
+            return back()->with('error', 'Bu masada çalışma kaydı var; silinemez. Masayı kapatabilirsiniz.');
+        }
+
         $table->delete();
 
         return redirect()->route('admin.tables.index')

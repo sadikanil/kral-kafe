@@ -231,11 +231,42 @@ eski bir metni silmesi gerekmez.
 **Erişim:** §7 matrisinde masa yönetimi görevliye de açık ama `AdminMiddleware`
 yalnızca yöneticiyi geçiriyor; görevli erişimi kendi paneliyle gelecek.
 
-### Dalga 3 — Oturum + canlı ekran (MVP #2, #9) · en büyük iş
+### Dalga 3 — Oturum + canlı ekran (MVP #2, #9) · ✅ bitti
 
-`study_sessions`, `/masa/{qr}` akışı, yönetici canlı ekranı. Uç durumlar
-FEATURE 1 tablosundaki gibi. Çift başlatmaya karşı **kısmi tekil indeks**
-(uygulama katmanı yetmez: öğrenci iki kez basar, mobilde POST yeniden gönderilir).
+`study_sessions`, `StudySessionService`, `/masa/{kod}` okutma akışı, öğrenci
+panelinde canlı kart, yönetici canlı ekranı (`/yonetim/canli`).
+
+**Çift başlatma veritabanında engellendi.** Uygulama katmanı tek başına yetmez:
+iki eşzamanlı istek ikisi de "açık oturum yok" görüp ikisi de insert eder.
+Kısmi tekil indeks — `UNIQUE (student_id) WHERE ended_at IS NULL` — hem SQLite
+hem Postgres'te çalışıyor. **Kısmi** olması şart: koşulsuz bir tekil indeks
+öğrencinin günde yalnızca bir kez çalışmasına izin verirdi. İkisinin de testi
+var, ikincisi indeksin tanımını okuyup `ended_at` şartını arıyor.
+
+**Uç durumlar (FEATURE 1 tablosu):**
+
+| Durum | Uygulanan davranış |
+|---|---|
+| Aynı masada tekrar başlat | Mevcut oturum döner, yeni kayıt yok, hata yok |
+| Başka masada QR okutma | Eski kapanır `switched`, yeni açılır — **tek transaction** |
+| Yarışı kaybeden eşzamanlı istek | Kısıt hatası yakalanır, kazananın oturumu gösterilir |
+| 2 dakikadan kısa oturum | Kaydedilir, `countable()` kapsamı dışında kalır |
+| Kapalı masa | Başlatılamaz, hata mesajı |
+| Oturumu olan masayı silme | Engellenir; masa silinmez, **kapatılır** |
+
+**Bitiş sebebi tek sütun** (`end_reason`), iki boolean değil: `switched` ile
+`auto_closed` aynı anda olamaz, iki bayrak temsil edilemeyen durumlar üretirdi.
+`App\Enums\SessionEndReason` dört değeri de tanımlıyor; `auto_closed` ve
+`over_limit` Dalga 4'te yazılacak.
+
+**Bitirme masaya bağlı değil** (`POST /oturum/bitir`): spec "aynı QR **veya
+panelden**" diyor. İki ayrı rota iki ayrı kural demek olurdu.
+
+Kaynak belgedeki `source` ve `note` sütunları ertelendi — bu dalgada hiçbir şey
+yazmıyor ve okumuyor.
+
+**Dalga 2'nin yazdırma uyarısı kendiliğinden kalktı:** `table.scan` rotası
+doğunca `@unless(Route::has(...))` sustu. Etiketler artık basılabilir.
 
 ### Dalga 4 — Otomatik kapanış (MVP #3)
 
@@ -298,8 +329,8 @@ yeniden yazılmasın.
 | 0-D · CSS bileşenleri | ✅ Bitti |
 | 1 · Roller | ✅ Bitti |
 | 2 · Masa | ✅ Bitti |
-| 3 · Oturum + canlı ekran | 🔄 Sırada |
-| 4 · Otomatik kapanış | ⬜ |
+| 3 · Oturum + canlı ekran | ✅ Bitti |
+| 4 · Otomatik kapanış | 🔄 Sırada |
 | 5 · Süre, devamlılık, hedef | ⬜ |
 | 6 · Veli | ⬜ |
 | 7 · Paket ve ödeme | ⬜ |

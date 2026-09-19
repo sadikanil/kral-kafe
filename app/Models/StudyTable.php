@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 /**
@@ -50,6 +51,11 @@ class StudyTable extends Model
     public function getQrUrlAttribute(): string
     {
         return url("/masa/{$this->qr_code}");
+    }
+
+    public function sessions(): HasMany
+    {
+        return $this->hasMany(StudySession::class);
     }
 
     public function scopeActive(Builder $query): Builder

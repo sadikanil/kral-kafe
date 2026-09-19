@@ -1,0 +1,65 @@
+@extends('layouts.admin')
+
+@section('title', 'Canlı Ekran - Kral Kafe')
+@section('page-title', 'Canlı Ekran')
+
+@section('topbar-actions')
+    <button onclick="window.location.reload()" class="btn btn-secondary btn-sm">↻ Yenile</button>
+@endsection
+
+@section('content')
+    <div class="d-flex gap-2 mb-3" style="flex-wrap: wrap;">
+        <div class="card" style="flex: 1; min-width: 150px;">
+            <div class="card-body text-center">
+                <div class="session-timer">{{ $sessions->count() }}</div>
+                <div class="text-muted">İçeride</div>
+            </div>
+        </div>
+        <div class="card" style="flex: 1; min-width: 150px;">
+            <div class="card-body text-center">
+                <div class="session-timer">{{ $freeTables }}</div>
+                <div class="text-muted">Boş masa</div>
+            </div>
+        </div>
+        <div class="card" style="flex: 1; min-width: 150px;">
+            <div class="card-body text-center">
+                <div class="session-timer">{{ $tableCount }}</div>
+                <div class="text-muted">Kullanımdaki masa</div>
+            </div>
+        </div>
+    </div>
+
+    @forelse($sessions as $session)
+        @php $dakika = $session->minutesSoFar(); @endphp
+
+        <div class="session-card mb-2">
+            <div class="d-flex align-items-center justify-content-between gap-2">
+                <div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="live-dot"></span>
+                        <strong>{{ $session->student->name }}</strong>
+                    </div>
+                    <div class="text-muted">
+                        {{ $session->table->name }} ·
+                        {{ $session->started_at->timezone(config('kafe.timezone'))->format('H:i') }}'den beri
+                    </div>
+                </div>
+
+                <div class="text-right">
+                    <div class="session-timer">
+                        {{ sprintf('%02d:%02d', intdiv($dakika, 60), $dakika % 60) }}
+                    </div>
+                    @if($dakika >= config('kafe.azami_saat') * 60)
+                        <span class="badge badge-danger">Süre aşımı</span>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @empty
+        <div class="empty-state">
+            <div class="empty-state-icon">🪑</div>
+            <div class="empty-state-title">Şu anda içeride kimse yok</div>
+            <p class="text-muted">Bir öğrenci masadaki QR'ı okutunca burada görünür.</p>
+        </div>
+    @endforelse
+@endsection

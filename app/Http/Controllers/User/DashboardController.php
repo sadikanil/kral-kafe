@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Consumption;
 use App\Services\BillingService;
+use App\Services\StudySessionService;
 use App\Support\SqlDialect;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,6 +48,8 @@ class DashboardController extends Controller
 
         return view('user.dashboard', [
             'user' => $user,
+            // Acik calisma oturumu: ogrenci masaya donmeden panelden bitirebilsin.
+            'openSession' => app(StudySessionService::class)->openFor($user),
             'currentMonthTotal' => $currentMonthTotal,
             'currentMonthItems' => $currentMonthItems,
             'recentConsumptions' => $recentConsumptions,

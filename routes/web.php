@@ -8,7 +8,10 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\LiveController;
 use App\Http\Controllers\Admin\StudyTableController;
+use App\Http\Controllers\Study\SessionController;
+use App\Http\Controllers\Study\TableSessionController;
 use App\Http\Controllers\Admin\ReportController;
 
 /*
@@ -30,6 +33,14 @@ Route::get('/', function () {
 Route::get('/tuketim/{qrCode}', [ConsumptionController::class, 'showLocation'])
     ->middleware(['auth', 'subscription'])
     ->name('consume.location');
+
+// Masa QR okutma ve calisma oturumu.
+// {table:qr_code} bagi kodu dogrudan sutunla eslestirir; bilinmeyen kod 404.
+Route::middleware(['auth', 'subscription'])->group(function () {
+    Route::get('/masa/{table:qr_code}', [TableSessionController::class, 'show'])->name('table.scan');
+    Route::post('/masa/{table:qr_code}/basla', [TableSessionController::class, 'start'])->name('table.session.start');
+    Route::post('/oturum/bitir', [SessionController::class, 'end'])->name('session.end');
+});
 
 // Authenticated User Routes
 Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')->group(function () {
@@ -82,6 +93,9 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     Route::get('/lokasyonlar/{location}/qr', [LocationController::class, 'showQr'])->name('locations.qr');
     Route::post('/lokasyonlar/{location}/durum', [LocationController::class, 'toggleStatus'])->name('locations.toggle-status');
     Route::get('/lokasyonlar-qr-yazdir', [LocationController::class, 'printQrCodes'])->name('locations.print-qr');
+
+    // Canli ekran: su an iceride kim, hangi masada, ne kadardir
+    Route::get('/canli', [LiveController::class, 'index'])->name('live');
 
     // Masalar (locations'tan ayri: raf/dolap degil, ogrencinin oturdugu yer)
     Route::get('/masalar-qr-yazdir', [StudyTableController::class, 'printQr'])->name('tables.print-qr');

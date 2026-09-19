@@ -50,6 +50,12 @@
                     <span>Kullanıcılar</span>
                 </a>
 
+                <a href="{{ route('admin.live') }}"
+                    class="sidebar-nav-link {{ request()->routeIs('admin.live') ? 'active' : '' }}">
+                    <span class="sidebar-nav-link-icon">🟢</span>
+                    <span>Canlı Ekran</span>
+                </a>
+
                 <a href="{{ route('admin.tables.index') }}"
                     class="sidebar-nav-link {{ request()->routeIs('admin.tables.*') ? 'active' : '' }}">
                     <span class="sidebar-nav-link-icon">🪑</span>

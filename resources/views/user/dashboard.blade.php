@@ -4,6 +4,28 @@
 @section('page-title', 'Hoş Geldin, {{ auth()->user()->name }}!')
 
 @section('content')
+    @if($openSession)
+        <div class="session-card mb-3">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="live-dot"></span>
+                <strong>Çalışma sürüyor — {{ $openSession->table->name }}</strong>
+            </div>
+
+            @php $dakika = $openSession->minutesSoFar(); @endphp
+            <div class="session-timer" data-started-at="{{ $openSession->started_at->toIso8601String() }}">
+                {{ sprintf('%02d:%02d', intdiv($dakika, 60), $dakika % 60) }}
+            </div>
+
+            <p class="text-muted mb-3">
+                {{ $openSession->started_at->timezone(config('kafe.timezone'))->format('H:i') }}'den beri
+            </p>
+
+            <form action="{{ route('session.end') }}" method="POST">
+                @csrf
+                <button type="submit" class="btn btn-danger">Çalışmayı Bitir</button>
+            </form>
+        </div>
+    @endif
     <!-- Bu Ay Özeti -->
     <div class="stats-grid">
         <div class="stat-card animate-slide-up">
