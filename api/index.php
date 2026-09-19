@@ -58,10 +58,4 @@ foreach (array_unique($dizinler) as $dizin) {
     }
 }
 
-// GECICI TESHIS: bu giris noktasinin canlida calisip calismadigini ve
-// hangi log kanalini gordugunu soyler. Dagitim dogrulanınca kaldirilacak.
-header('X-Kk-Entry: 1');
-header('X-Kk-Log: ' . (string) ($_SERVER['LOG_CHANNEL'] ?? 'unset'));
-header('X-Kk-View: ' . (string) ($_SERVER['VIEW_COMPILED_PATH'] ?? 'unset'));
-
 require __DIR__ . '/../public/index.php';
