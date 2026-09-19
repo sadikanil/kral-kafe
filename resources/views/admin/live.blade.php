@@ -29,6 +29,33 @@
         </div>
     </div>
 
+    @if($anomalies->isNotEmpty())
+        <div class="card mb-3">
+            <div class="card-body">
+                <h4 class="mb-2">Bugünün anomalileri</h4>
+                <p class="text-muted mb-3" style="font-size: 0.8125rem;">
+                    Bu oturumlar azami süreyi aştığı için otomatik kapatıldı. Çıkış
+                    yapmayı unutmuş olabilirler; süreleri gerçek çalışmayı yansıtmayabilir.
+                </p>
+
+                @foreach($anomalies as $anomali)
+                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                        <div>
+                            <strong>{{ $anomali->student->name }}</strong>
+                            <div class="text-muted" style="font-size: 0.8125rem;">
+                                {{ $anomali->table->name }} ·
+                                {{ $anomali->started_at->timezone(config('kafe.timezone'))->format('H:i') }}
+                                –
+                                {{ $anomali->ended_at->timezone(config('kafe.timezone'))->format('H:i') }}
+                            </div>
+                        </div>
+                        <span class="badge badge-danger">Süre aşımı</span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     @forelse($sessions as $session)
         @php $dakika = $session->minutesSoFar(); @endphp
 

@@ -268,11 +268,48 @@ yazmıyor ve okumuyor.
 **Dalga 2'nin yazdırma uyarısı kendiliğinden kalktı:** `table.scan` rotası
 doğunca `@unless(Route::has(...))` sustu. Etiketler artık basılabilir.
 
-### Dalga 4 — Otomatik kapanış (MVP #3)
+### Dalga 4 — Otomatik kapanış (MVP #3) · ✅ bitti
 
-`SessionCloser::closeStale()` — deterministik ve idempotent
-(`whereNull('ended_at')->update(...)`). Aynı servis hem tembel kapatma, hem
-artisan komutu, hem cron ucu tarafından çağrılır.
+`SessionCloser`, `SettleStaleSessions` middleware, `oturum:kapat` komutu,
+yönetici canlı ekranında anomali bölümü.
+
+**Tasarımın tek kritik özelliği:** bitiş anı, işin ne zaman çalıştığına değil
+oturumun kendi verisine bağlı — `min(kapanış anı, başlangıç + azami saat)`.
+Üç sonucu var: iki kez çalıştırmak ikinci kez hiçbir şey değiştirmez; Vercel
+Hobby cron'unun ±59 dk sapması süreyi etkilemez; cron **hiç** çalışmasa bile
+bakan ilk kişi aynı sonuca varır. `ended_at = now()` olsaydı üçü de bozulurdu —
+öğrencinin süresi işin çalışma anına göre uzardı.
+
+**Planın bir maddesi yanlıştı ve düzeltildi.** Plan `whereNull('ended_at')->update(...)`
+diyordu, yani tek toplu UPDATE. Mümkün değil: her satırın bitiş anı kendi
+`started_at`'ine bağlı ve "yerel saatle bir sonraki 21:00" ifadesi SQLite ile
+Postgres'te bambaşka yazılır. PHP tarafında satır satır hesaplanıyor; açık
+oturum sayısı kafe kapasitesiyle sınırlı olduğu için maliyeti yok.
+
+**Testin yakaladığı gerçek hata:** Eloquent bir `Carbon`'u yazarken **UTC'ye
+çevirmez**, kendi saat diliminin duvar saatini biçimleyip saklar. `dueEnd()`
+kafe saatinde dönüyordu; Istanbul 21:00 taşıyan bir Carbon veritabanına
+"21:00" diye yazılıp UTC 21:00 (yerel 00:00) olarak geri okunuyordu — **üç
+saatlik sessiz kayma.** `dueEnd()` artık açıkça UTC dönüyor. Dalga 5'te zaman
+yazan her yerde aynı tuzak var.
+
+**Tembel kapatma middleware ile,** üç ayrı kontrolcü çağrısıyla değil: açık
+oturum okuyan yol sayısı artıyor (canlı ekran, öğrenci paneli, QR ekranı,
+Dalga 5'te raporlar) ve biri unutulursa kullanıcı bayat veri görür — hata
+mesajı yok, yalnızca yanlış sayı. Middleware ayrıca oturum **başlatmayı**
+kurtarıyor: kısmi tekil indeks yüzünden unutulmuş bir oturum öğrencinin yeni
+oturum açmasını engelliyordu, ve `start()` onu masa değişimi sanıp `switched`
+etiketliyordu. Artık doğru şekilde `auto_closed` oluyor — testi var.
+
+**Anomali sessiz kalmıyor:** `over_limit` kapanışlar canlı ekranda ayrı bir
+bölümde. Sessizce kapatmak kuralı uygulamak sayılmaz. Normal kapanışlar orada
+görünmüyor — her gün uyarı göstermek uyarıyı öldürür.
+
+**Cron zorunlu değil.** `Schedule::command('oturum:kapat')` yazıldı (`0 19 * * *`
+UTC, kafe saatiyle 22:00). Gerçek cron'u olan her sunucuda çalışır. Vercel'de
+serverless olduğu için ayrı bir HTTP ucu gerekirdi; deterministik tasarım
+sayesinde **gerekmediği** için açılmadı — sırf tazelik uğruna kimliği kontrol
+edilmesi gereken yeni bir dış uç eklemek, kazandırdığından fazlasını riske atar.
 
 ### Dalga 5 — Süre, devamlılık, hedef (MVP #4, #6, #5)
 
@@ -330,8 +367,8 @@ yeniden yazılmasın.
 | 1 · Roller | ✅ Bitti |
 | 2 · Masa | ✅ Bitti |
 | 3 · Oturum + canlı ekran | ✅ Bitti |
-| 4 · Otomatik kapanış | 🔄 Sırada |
-| 5 · Süre, devamlılık, hedef | ⬜ |
+| 4 · Otomatik kapanış | ✅ Bitti |
+| 5 · Süre, devamlılık, hedef | 🔄 Sırada |
 | 6 · Veli | ⬜ |
 | 7 · Paket ve ödeme | ⬜ |
 | 8 · Tüketim bağlama | ⬜ |

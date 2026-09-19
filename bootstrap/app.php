@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // adreslerin http olmasina yol acar.
         $middleware->trustProxies(at: '*');
 
+        // Bayat calisma oturumlarini, biri onlara bakmadan once kapatir.
+        // "Tembel kapatma birincil" karari: cron kacsa da veri dogru gorunur.
+        $middleware->appendToGroup('web', \App\Http\Middleware\SettleStaleSessions::class);
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'subscription' => \App\Http\Middleware\ActiveSubscription::class,
