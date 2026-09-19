@@ -18,7 +18,20 @@ return [
     |
     */
 
-    'default' => env('LOG_CHANNEL', 'stack'),
+    /*
+    | Varsayilan kanal DOSYA SISTEMINE bakarak secilir.
+    |
+    | Cerceve varsayilani 'stack' -> 'single' -> storage/logs/laravel.log.
+    | Vercel'de /var/task salt-okunur ve storage/logs dagitima hic girmiyor;
+    | orada loglamaya calismak UnexpectedValueException uretir. Daha kotusu:
+    | bu istisna, ASIL hatayi raporlamaya calisirken atiliyor, yani gercek
+    | hatayi tamamen gizliyor.
+    |
+    | LOG_CHANNEL tanimliysa o kazanir; tanimli degilse yazilabilir bir log
+    | dizini varsa 'stack', yoksa 'stderr'. Vercel loglari stderr'den zaten
+    | topluyor.
+    */
+    'default' => env('LOG_CHANNEL', is_writable(storage_path('logs')) ? 'stack' : 'stderr'),
 
     /*
     |--------------------------------------------------------------------------
