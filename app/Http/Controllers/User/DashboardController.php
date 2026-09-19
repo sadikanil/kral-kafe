@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Consumption;
 use App\Services\BillingService;
+use App\Support\SqlDialect;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -106,16 +107,9 @@ class DashboardController extends Controller
 
     /**
      * Year/month extraction for the "available months" filter.
-     *
-     * SQLite has no YEAR()/MONTH(), so the expression has to follow the driver.
      */
     private function yearMonthSelect(): string
     {
-        if (DB::connection()->getDriverName() === 'sqlite') {
-            return "CAST(strftime('%Y', consumed_at) AS INTEGER) as year, "
-                . "CAST(strftime('%m', consumed_at) AS INTEGER) as month";
-        }
-
-        return 'YEAR(consumed_at) as year, MONTH(consumed_at) as month';
+        return SqlDialect::yearMonth(DB::connection()->getDriverName(), 'consumed_at');
     }
 }

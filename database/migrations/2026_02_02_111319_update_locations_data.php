@@ -1,10 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
-use App\Models\Location;
 use Illuminate\Support\Str;
 
 return new class extends Migration {
@@ -13,17 +10,17 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        // Disable foreign key constraints to allow truncation
-        Schema::disableForeignKeyConstraints();
-
-        // Clear existing data related to locations
-        // Note: This will delete stock records and product assignments!
-        DB::table('product_locations')->truncate();
-        DB::table('stock_records')->truncate();
-        DB::table('discrepancy_logs')->truncate();
-        DB::table('locations')->truncate();
-
-        Schema::enableForeignKeyConstraints();
+        // Lokasyona bagli mevcut veriler temizleniyor.
+        // Not: bu, stok kayitlarini ve urun atamalarini siler!
+        //
+        // TRUNCATE yerine DELETE kullaniliyor: Postgres'te yabanci anahtarla
+        // referans verilen bir tabloyu TRUNCATE etmek CASCADE ya da yetki
+        // yukseltmesi gerektiriyor. Bagimlilik sirasina gore silmek her
+        // surucude ayni sekilde calisir.
+        DB::table('product_locations')->delete();
+        DB::table('stock_records')->delete();
+        DB::table('discrepancy_logs')->delete();
+        DB::table('locations')->delete();
 
         $locations = [
             [
