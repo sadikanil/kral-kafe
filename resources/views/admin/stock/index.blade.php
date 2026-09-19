@@ -67,7 +67,7 @@
                                             {{ $discrepancy->discrepancy_type_name }}
                                         </span>
                                     </td>
-                                    <td>{{ $discrepancy->quantity_difference }}</td>
+                                    <td>{{ $discrepancy->difference }}</td>
                                     <td>
                                         <a href="{{ route('admin.stock.discrepancy', $discrepancy) }}" class="btn btn-sm btn-primary">
                                             İncele

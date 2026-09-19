@@ -7,6 +7,7 @@ use App\Models\Consumption;
 use App\Models\MonthlyBill;
 use App\Models\User;
 use App\Services\BillingService;
+use App\Support\Period;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
@@ -102,8 +103,7 @@ class ReportController extends Controller
      */
     public function monthly(Request $request)
     {
-        $year = $request->get('year', now()->year);
-        $month = $request->get('month', now()->month);
+        [$year, $month] = Period::normalize($request->get('year'), $request->get('month'));
 
         $bills = MonthlyBill::with('user')
             ->whereYear('bill_month', $year)
@@ -133,8 +133,7 @@ class ReportController extends Controller
      */
     public function exportSummary(Request $request)
     {
-        $year = $request->get('year', now()->year);
-        $month = $request->get('month', now()->month);
+        [$year, $month] = Period::normalize($request->get('year'), $request->get('month'));
 
         $csv = $this->billingService->exportToCsv($year, $month);
 
@@ -150,8 +149,7 @@ class ReportController extends Controller
      */
     public function exportDetailed(Request $request)
     {
-        $year = $request->get('year', now()->year);
-        $month = $request->get('month', now()->month);
+        [$year, $month] = Period::normalize($request->get('year'), $request->get('month'));
 
         $csv = $this->billingService->exportDetailedToCsv($year, $month);
 
@@ -167,8 +165,7 @@ class ReportController extends Controller
      */
     public function userReport(User $user, Request $request)
     {
-        $year = $request->get('year', now()->year);
-        $month = $request->get('month', now()->month);
+        [$year, $month] = Period::normalize($request->get('year'), $request->get('month'));
 
         $summary = $this->billingService->getUserMonthlySummary($user, $year, $month);
 

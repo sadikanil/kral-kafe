@@ -35,11 +35,14 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="type" class="form-label">Sayım Tipi *</label>
-                    <select id="type" name="type" class="form-control" required>
-                        <option value="full">Tam Sayım</option>
-                        <option value="partial">Kısmi Sayım</option>
+                    <label for="record_type" class="form-label">Sayım Tipi *</label>
+                    <select id="record_type" name="record_type" class="form-control" required>
+                        <option value="opening" {{ $recordType === 'opening' ? 'selected' : '' }}>Açılış Sayımı</option>
+                        <option value="closing" {{ $recordType === 'closing' ? 'selected' : '' }}>Kapanış Sayımı</option>
                     </select>
+                    @error('record_type')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
                 </div>
 
                 <div class="form-group">

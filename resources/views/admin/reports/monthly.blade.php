@@ -91,7 +91,7 @@
                             <tr>
                                 <td>
                                     @if($bill->user)
-                                        <a href="{{ route('admin.reports.user', $bill->user) }}">{{ $bill->user->name }}</a>
+                                        <a href="{{ route('admin.reports.user', ['user' => $bill->user, 'year' => $year, 'month' => $month]) }}">{{ $bill->user->name }}</a>
                                     @else
                                         <span class="text-muted">Silinmiş kullanıcı</span>
                                     @endif
