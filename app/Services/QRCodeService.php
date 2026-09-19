@@ -21,7 +21,7 @@ class QRCodeService
         // Download and save the QR code
         $contents = file_get_contents($qrUrl);
         $filename = "qrcodes/{$location->qr_code}.png";
-        Storage::disk('public')->put($filename, $contents);
+        Storage::disk(config('filesystems.uploads'))->put($filename, $contents);
 
         return $filename;
     }

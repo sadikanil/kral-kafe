@@ -28,6 +28,19 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Yukleme Diski
+    |--------------------------------------------------------------------------
+    |
+    | Kullanicidan gelen dosyalar (stok fotograflari, QR gorselleri, urun
+    | gorselleri) bu diske yazilir. Yerelde "public" yeterli; serverless bir
+    | ortamda disk kalici olmadigi icin "s3" (Supabase Storage) kullanilir.
+    |
+    */
+
+    'uploads' => env('UPLOAD_DISK', 'public'),
+
     'disks' => [
 
         'local' => [

@@ -19,11 +19,15 @@ class OpenAIStockAnalyzer
     /**
      * Analyze a stock photo and detect products with quantities.
      *
-     * @param string $imagePath Path to the image file
+     * Ham goruntu verisi alir, dosya yolu degil: fotograflar yerelde diskte,
+     * uretimde nesne depolamada (Supabase Storage) duruyor.
+     *
+     * @param string $imageData Ham goruntu icerigi
+     * @param string $mimeType Goruntunun MIME tipi
      * @param array $expectedProducts Products expected at this location
      * @return array Analysis result
      */
-    public function analyzeStockPhoto(string $imagePath, array $expectedProducts = []): array
+    public function analyzeStockPhoto(string $imageData, string $mimeType, array $expectedProducts = []): array
     {
         if (empty($this->apiKey)) {
             Log::warning('Stock analysis skipped: OPENAI_API_KEY is not configured');
@@ -32,9 +36,7 @@ class OpenAIStockAnalyzer
         }
 
         try {
-            // Convert image to base64
-            $imageData = base64_encode(file_get_contents($imagePath));
-            $mimeType = mime_content_type($imagePath);
+            $encodedImage = base64_encode($imageData);
 
             // Build product list for the prompt
             $productList = collect($expectedProducts)->map(function ($product) {
@@ -63,7 +65,7 @@ class OpenAIStockAnalyzer
                                     [
                                         'type' => 'image_url',
                                         'image_url' => [
-                                            'url' => "data:{$mimeType};base64,{$imageData}",
+                                            'url' => "data:{$mimeType};base64,{$encodedImage}",
                                             'detail' => 'high'
                                         ]
                                     ]
@@ -91,7 +93,6 @@ class OpenAIStockAnalyzer
         } catch (\Exception $e) {
             Log::error('Stock analysis failed', [
                 'error' => $e->getMessage(),
-                'image' => $imagePath
             ]);
 
             return $this->getEmptyResult($e->getMessage());
@@ -237,15 +238,13 @@ class OpenAIStockAnalyzer
     /**
      * Analyze multiple photos for a batch.
      */
-    public function analyzeBatch(array $imagePaths, array $expectedProducts = []): array
+    /**
+     * Birden fazla fotografin analiz sonucunu tek sonuca indirger.
+     *
+     * Sonuclar disaridan verilir; bu metot API'ye istek atmaz.
+     */
+    public function mergeResults(array $results): array
     {
-        $results = [];
-
-        foreach ($imagePaths as $path) {
-            $results[] = $this->analyzeStockPhoto($path, $expectedProducts);
-        }
-
-        // Merge results from multiple photos
         return $this->mergeBatchResults($results);
     }
 

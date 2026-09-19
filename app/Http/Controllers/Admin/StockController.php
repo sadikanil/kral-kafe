@@ -11,6 +11,7 @@ use App\Models\DiscrepancyLog;
 use App\Services\OpenAIStockAnalyzer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class StockController extends Controller
@@ -80,7 +81,7 @@ class StockController extends Controller
         $uploadedPhotos = [];
 
         foreach ($request->file('photos') as $photo) {
-            $path = $photo->store('stock_photos/' . $location->id, 'public');
+            $path = $photo->store('stock_photos/' . $location->id, config('filesystems.uploads'));
 
             $stockPhoto = StockPhoto::create([
                 'location_id' => $location->id,
@@ -122,28 +123,31 @@ class StockController extends Controller
             ];
         })->toArray();
 
-        // Analyze each photo
+        // Her fotograf bir kez analiz edilir; birlesik sonuc bu sonuclardan
+        // uretilir, fotograflar API'ye ikinci kez gonderilmez.
+        $disk = Storage::disk(config('filesystems.uploads'));
         $allResults = [];
+
         foreach ($photos as $photo) {
-            $imagePath = storage_path('app/public/' . $photo->photo_path);
-
-            if (file_exists($imagePath)) {
-                $result = $this->analyzer->analyzeStockPhoto($imagePath, $expectedProducts);
-
-                $photo->update([
-                    'ai_analysis' => $result,
-                    'processed_at' => now(),
-                ]);
-
-                $allResults[] = $result;
+            if (! $disk->exists($photo->photo_path)) {
+                continue;
             }
+
+            $result = $this->analyzer->analyzeStockPhoto(
+                $disk->get($photo->photo_path),
+                $disk->mimeType($photo->photo_path) ?: 'image/jpeg',
+                $expectedProducts
+            );
+
+            $photo->update([
+                'ai_analysis' => $result,
+                'processed_at' => now(),
+            ]);
+
+            $allResults[] = $result;
         }
 
-        // Merge results
-        $mergedResult = $this->analyzer->analyzeBatch(
-            $photos->map(fn($p) => storage_path('app/public/' . $p->photo_path))->toArray(),
-            $expectedProducts
-        );
+        $mergedResult = $this->analyzer->mergeResults($allResults);
 
         return view('admin.stock.review', [
             'location' => $location,

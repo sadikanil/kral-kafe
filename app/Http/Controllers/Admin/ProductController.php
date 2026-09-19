@@ -140,7 +140,7 @@ class ProductController extends Controller
     {
         // Delete image if exists
         if ($product->image_url) {
-            Storage::disk('public')->delete($product->image_url);
+            Storage::disk(config('filesystems.uploads'))->delete($product->image_url);
         }
 
         $product->delete();
