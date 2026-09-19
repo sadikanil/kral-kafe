@@ -172,7 +172,7 @@ class StockController extends Controller
     public function confirm(Request $request, Location $location)
     {
         $validated = $request->validate([
-            'batch_id' => ['required', 'string'],
+            'batch_id' => ['required', 'uuid'],
             'record_type' => ['required', 'in:opening,closing'],
             'products' => ['required', 'array'],
             'products.*.product_id' => ['required', 'exists:products,id'],

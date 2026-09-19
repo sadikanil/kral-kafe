@@ -115,4 +115,30 @@ class StockCaptureFlowTest extends TestCase
         $this->assertSame([], $offenders,
             'Bu modeller yuklenen dosya adresini elle kuruyor; nesne depolamada kirilir');
     }
+
+    public function test_a_malformed_batch_in_the_url_does_not_reach_the_database(): void
+    {
+        // batch_id Postgres'te gercek uuid tipi; gecersiz bir deger sorguya
+        // ulasirsa SQLSTATE[22P02] ile 500 doner. Rota kisiti sorguyu hic
+        // baslatmamali.
+        $location = $this->stockedLocation();
+
+        $this->actingAs($this->admin())
+            ->get("/yonetim/stok/{$location->id}/analiz/gecersiz-parti")
+            ->assertNotFound();
+    }
+
+    public function test_confirm_rejects_a_batch_id_that_is_not_a_uuid(): void
+    {
+        $location = $this->stockedLocation();
+
+        $this->actingAs($this->admin())
+            ->from("/yonetim/stok/{$location->id}/kayit")
+            ->post("/yonetim/stok/{$location->id}/onayla", [
+                'batch_id' => 'gecersiz-parti',
+                'record_type' => 'opening',
+                'products' => [['product_id' => 1, 'verified_quantity' => 3]],
+            ])
+            ->assertSessionHasErrors('batch_id');
+    }
 }

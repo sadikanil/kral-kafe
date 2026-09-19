@@ -88,7 +88,11 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     Route::get('/stok', [StockController::class, 'index'])->name('stock.index');
     Route::get('/stok/{location}/kayit', [StockController::class, 'capture'])->name('stock.capture');
     Route::post('/stok/{location}/yukle', [StockController::class, 'uploadPhotos'])->name('stock.upload');
-    Route::get('/stok/{location}/analiz/{batch}', [StockController::class, 'analyze'])->name('stock.analyze');
+    // batch_id Postgres'te uuid tipi; gecersiz bir deger sorguya ulasirsa
+    // SQLSTATE[22P02] ile 500 doner.
+    Route::get('/stok/{location}/analiz/{batch}', [StockController::class, 'analyze'])
+        ->whereUuid('batch')
+        ->name('stock.analyze');
     Route::post('/stok/{location}/onayla', [StockController::class, 'confirm'])->name('stock.confirm');
     Route::get('/stok/tutarsizlik/{discrepancy}', [StockController::class, 'discrepancy'])->name('stock.discrepancy');
     Route::post('/stok/tutarsizlik/{discrepancy}/coz', [StockController::class, 'resolveDiscrepancy'])->name('stock.resolve-discrepancy');
