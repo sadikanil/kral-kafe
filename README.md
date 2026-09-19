@@ -36,8 +36,11 @@ npm install && npm run build
 php artisan serve
 ```
 
-`http://127.0.0.1:8000` adresinden `admin@kralkafe.com` / `admin123` ile
-girilir.
+Seeder, `admin@kralkafe.com` hesabını oluşturur ve **şifreyi rastgele üretip
+konsola yazar** — şifre koda gömülü değildir. Kendi şifrenizi belirlemek için
+`ADMIN_PASSWORD=... php artisan db:seed --class=AdminSeeder` kullanın.
+
+Ardından `http://127.0.0.1:8000` adresinden giriş yapabilirsiniz.
 
 ### İsteğe bağlı ayarlar
 
@@ -57,14 +60,11 @@ php artisan test
 
 Vercel + Supabase kurulumu için [DEPLOY.md](DEPLOY.md).
 
-## Bilinen eksikler
+## Katkı ve bakım
 
-Üç sayfanın controller'ı yazılmış ancak Blade şablonu henüz yok; bu rotalar
-hata veriyor:
-
-- `admin.stock.review` — yapay zekâ analiz sonucunu inceleme ekranı
-- `admin.stock.discrepancy` — tutarsızlık detayı
-- `admin.reports.user` — kullanıcı bazlı rapor
+Bu deponun geçmişi bir kez yeniden yazıldı; eski remote'la ilgili bilinmesi
+gereken tuzaklar ve kurtarma reçeteleri için
+[docs/GIT-GECMISI.md](docs/GIT-GECMISI.md).
 
 ## Lisans
 
