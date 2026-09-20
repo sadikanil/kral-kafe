@@ -112,6 +112,7 @@ tek ekranda görüyor.*
 | 10 | Paket tanımı (admin panelinden) + öğrenciye paket atama | E | ⬜ Planlandı |
 | 11 | Ödeme durumu takibi (ödendi/bekliyor/gecikmiş) | E | ⬜ Planlandı |
 | 12 | Mevcut tüketim akışının masa/paket kapsamına bağlanması | E | ⬜ Planlandı |
+| 29 | Deneme sınavı takvimi: yönetici planlar, öğrenci/veli takvim görünümü + panel hatırlatıcısı | C | ✅ Yapıldı (20 Eylül 2026) |
 
 ### V1 (MVP'den ~1–2 ay sonra)
 
@@ -272,6 +273,22 @@ koç açıkça "veliyle paylaş" işaretlerse veli panelinde görünür.
 
 ---
 
+### FEATURE 6b — Deneme Sınavı Takvimi ve Hatırlatıcı (eklendi: 20 Eylül 2026)
+
+- **Problem:** Denemenin ne zaman olduğu WhatsApp'ta kayboluyor; öğrenci ve
+  veli "bu hafta deneme var mıydı" sorusunu kafeye soruyor.
+- **Çözüm:** Kafe geneli deneme takvimi + panelde "sıradaki deneme, N gün kaldı".
+- **Nasıl çalışır:** Yönetici ad, tür (TYT/AYT/TYT+AYT/LGS/Diğer), tarih, saat
+  ve not girer. Öğrenci ve veli aynı aylık takvimi görür (`/kullanici/denemeler`,
+  `/veli/denemeler`); panellerin en üstünde sıradaki deneme hatırlatıcısı çıkar,
+  7 gün ve altı kaldıysa uyarı rengine döner (`kafe.deneme_hatirlatma_gun`).
+- **Kim kullanır:** Yönetici (planlar), öğrenci ve veli (görür).
+- **Sınır:** Sonuç tutmaz — FEATURE 6'nın `mock_exams` tablosundan ayrı
+  (`exam_events`). E-posta/WhatsApp gönderimi yok; hatırlatıcı panel içi.
+- **Durum:** ✅ Yapıldı.
+
+---
+
 ### FEATURE 7 — Görev Sistemi
 
 - **Problem:** Koçluk süreci WhatsApp'ta/kâğıtta kalıyor, takibi yok.
@@ -373,6 +390,9 @@ coach_notes               -- koç notları
 tasks                     -- görevler
   id, student_id, assigned_by, subject_id (null), title, description,
   due_date, status (open|done|cancelled), completed_at
+
+exam_events               -- deneme takvimi (kafe geneli, sonuç yok) ✅
+  id, title, exam_type (tyt|ayt|tyt_ayt|lgs|other), exam_date, starts_at, note, created_by
 
 mock_exams                -- denemeler
   id, student_id, exam_type (tyt|ayt), name, taken_on, entered_by

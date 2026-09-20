@@ -4,6 +4,8 @@
 @section('page-title', 'Çocuklarım')
 
 @section('content')
+    @include('exams._hatirlatici', ['calendarRoute' => 'parent.exams'])
+
     @if($students->isEmpty())
         <div class="card">
             <div class="card-body">

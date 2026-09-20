@@ -396,6 +396,23 @@ policy, listeler için açık scope, ikisi de `accessibleStudentIds()`'e delege 
   "bölüm yoktu"yu ayırır; bölüm yoksa bağa dokunulmaz. `sync()` yerine
   attach/detach: mevcut satırın `created_by`'ı ezilmesin.
 
+### Dalga 6b — Deneme sınavı takvimi (eklendi: 20 Eylül 2026)
+
+Kullanıcı isteği: "deneme sınavı takvimi hatırlatıcı ve takvim görünümü".
+
+- `exam_events` kafe geneli, **sonuç tutmaz** (FEATURE 6'nın `mock_exams`'i
+  ayrı gelecek). `exam_date` DATE + `starts_at` "HH:MM" string: deneme bir UTC
+  anı değil, bir gün ve duvar saati; timestamp olsaydı gün sınırı kayardı.
+- "Kaç gün kaldı" kafe gününe göre (`LocalDay::today()`); test UTC 21:30 →
+  Istanbul ertesi gün durumunu kapsıyor.
+- Yönetici CRUD `/yonetim/denemeler`; öğrenci ve veli **tek kontrolcü, tek
+  view** (`exams.calendar`, `@extends($layout)`), iki rota. Takvim ızgarası
+  `ExamCalendar::weeks()` — üç ekranda aynı.
+- Hatırlatıcı panel içi (`exams._hatirlatici`): deneme yoksa hiç çizilmez;
+  `kafe.deneme_hatirlatma_gun` (7) ve altı uyarı rengi. E-posta/WhatsApp yok.
+- Bu dalgada `StudyGoalTest` UTC 21:00 sonrası kızarıyordu (`now()` ile kafe
+  günü ayrışıyor); test `LocalDay::today()`'e çevrildi.
+
 ### Dalga 7 — Paket ve ödeme (MVP #10, #11) · 1–6 hattına paralel
 
 `packages`, `package_items`, `subscriptions`, `payments`. Fatura
@@ -443,5 +460,6 @@ yeniden yazılmasın.
 | 4 · Otomatik kapanış | ✅ Bitti |
 | 5 · Süre, devamlılık, hedef | ✅ Bitti |
 | 6 · Veli | ✅ Bitti |
+| 6b · Deneme takvimi | ✅ Bitti |
 | 7 · Paket ve ödeme | 🔄 Sırada |
 | 8 · Tüketim bağlama | ⬜ |

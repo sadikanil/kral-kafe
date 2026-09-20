@@ -46,6 +46,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Deneme takvimi hatirlaticisi
+    |--------------------------------------------------------------------------
+    |
+    | Siradaki denemeye bu kadar gun ya da daha az kaldiysa panel hatirlaticisi
+    | uyari rengine doner. Deneme her zaman gosterilir; bu yalnizca vurgu esigi.
+    |
+    */
+
+    'deneme_hatirlatma_gun' => (int) env('KAFE_DENEME_HATIRLATMA_GUN', 7),
+
+    /*
+    |--------------------------------------------------------------------------
     | Kafe agi — RAFTA (19 Eylul 2026)
     |--------------------------------------------------------------------------
     |

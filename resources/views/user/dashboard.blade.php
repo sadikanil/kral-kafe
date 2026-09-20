@@ -4,6 +4,8 @@
 @section('page-title', 'Hoş Geldin, {{ auth()->user()->name }}!')
 
 @section('content')
+    @include('exams._hatirlatici', ['calendarRoute' => 'user.exams'])
+
     @if($openSession)
         <div class="session-card mb-3">
             <div class="d-flex align-items-center gap-2 mb-2">

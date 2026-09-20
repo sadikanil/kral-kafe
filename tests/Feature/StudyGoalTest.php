@@ -8,6 +8,7 @@ use App\Models\StudyGoal;
 use App\Models\StudySession;
 use App\Models\StudyTable;
 use App\Models\User;
+use App\Support\LocalDay;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -120,7 +121,7 @@ class StudyGoalTest extends TestCase
             ])
             ->assertSessionHasNoErrors();
 
-        $this->assertSame(1200, StudyGoal::activeFor($ogrenci->fresh(), now()->toDateString())?->target_minutes);
+        $this->assertSame(1200, StudyGoal::activeFor($ogrenci->fresh(), LocalDay::today())?->target_minutes);
     }
 
     public function test_changing_the_goal_closes_the_previous_one_instead_of_editing_it(): void
@@ -140,7 +141,7 @@ class StudyGoalTest extends TestCase
 
         $this->assertSame(2, StudyGoal::where('student_id', $ogrenci->id)->count(),
             'Hedef guncellenirken uzerine yazilmis; gecmis kaybolur');
-        $this->assertSame(1500, StudyGoal::activeFor($ogrenci, now()->toDateString())?->target_minutes);
+        $this->assertSame(1500, StudyGoal::activeFor($ogrenci, LocalDay::today())?->target_minutes);
     }
 
     public function test_the_dashboard_shows_time_streak_and_goal_progress(): void

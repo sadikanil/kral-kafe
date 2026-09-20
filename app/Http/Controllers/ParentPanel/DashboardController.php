@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\ParentPanel;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExamEvent;
 use App\Models\StudyGoal;
 use App\Models\StudySession;
 use App\Models\User;
@@ -47,6 +48,7 @@ class DashboardController extends Controller
 
         return view('parent.dashboard', [
             'students' => $ogrenciler,
+            'upcomingExams' => ExamEvent::upcoming()->limit(3)->get(),
         ]);
     }
 

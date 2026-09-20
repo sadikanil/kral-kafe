@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\StudyTableController;
 use App\Http\Controllers\Study\SessionController;
 use App\Http\Controllers\Study\TableSessionController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\ExamEventController;
+use App\Http\Controllers\Study\ExamCalendarController;
 use App\Http\Controllers\ParentPanel\DashboardController as ParentDashboardController;
 
 /*
@@ -47,6 +49,7 @@ Route::middleware(['auth', 'subscription'])->group(function () {
 Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')->group(function () {
     Route::get('/panel', [UserDashboardController::class, 'index'])->name('dashboard');
     Route::get('/gecmis', [UserDashboardController::class, 'history'])->name('history');
+    Route::get('/denemeler', [ExamCalendarController::class, 'student'])->name('exams');
 
     // Consumption API
     Route::post('/tuketim', [ConsumptionController::class, 'store'])->name('consume.store');
@@ -59,6 +62,7 @@ Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')-
 Route::middleware(['auth', 'role:parent'])->prefix('veli')->name('parent.')->group(function () {
     Route::get('/', [ParentDashboardController::class, 'index'])->name('dashboard');
     Route::get('/ogrenci/{student}', [ParentDashboardController::class, 'show'])->name('student');
+    Route::get('/denemeler', [ExamCalendarController::class, 'parent'])->name('exams');
 });
 
 // Admin Routes
@@ -117,6 +121,16 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     ])->parameters(['masalar' => 'table']);
     Route::get('/masalar/{table}/qr', [StudyTableController::class, 'qr'])->name('tables.qr');
     Route::post('/masalar/{table}/durum', [StudyTableController::class, 'toggleStatus'])->name('tables.toggle-status');
+
+    // Deneme sinavi takvimi (kafe geneli)
+    Route::resource('denemeler', ExamEventController::class)->except(['show'])->names([
+        'index' => 'exams.index',
+        'create' => 'exams.create',
+        'store' => 'exams.store',
+        'edit' => 'exams.edit',
+        'update' => 'exams.update',
+        'destroy' => 'exams.destroy',
+    ])->parameters(['denemeler' => 'exam']);
 
     // Stock Management
     Route::get('/stok', [StockController::class, 'index'])->name('stock.index');

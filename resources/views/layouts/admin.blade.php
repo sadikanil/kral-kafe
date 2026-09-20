@@ -62,6 +62,12 @@
                     <span>Masalar</span>
                 </a>
 
+                <a href="{{ route('admin.exams.index') }}"
+                    class="sidebar-nav-link {{ request()->routeIs('admin.exams.*') ? 'active' : '' }}">
+                    <span class="sidebar-nav-link-icon">📝</span>
+                    <span>Deneme Takvimi</span>
+                </a>
+
                 <a href="{{ route('admin.products.index') }}"
                     class="sidebar-nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
                     <span class="sidebar-nav-link-icon">📦</span>

@@ -45,6 +45,12 @@
                     <span class="sidebar-nav-link-icon">📜</span>
                     <span>Tüketim Geçmişi</span>
                 </a>
+
+                <a href="{{ route('user.exams') }}"
+                    class="sidebar-nav-link {{ request()->routeIs('user.exams') ? 'active' : '' }}">
+                    <span class="sidebar-nav-link-icon">📝</span>
+                    <span>Deneme Takvimi</span>
+                </a>
             </nav>
 
             <div class="sidebar-footer">

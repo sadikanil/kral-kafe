@@ -121,6 +121,10 @@ canlıda uygulandı (batch 6, RLS + REVOKE, ledger satırı var). Kararlar
 rolü "Veli" olan bir kullanıcı aç → düzenle → "Bağlı Öğrenciler" işaretle. Veli
 girişte `/veli`'ye iner.
 
+**Dalga 6b — Deneme takvimi — BİTTİ (aynı oturum).** `exam_events` canlıda
+uygulandı (batch 7). Yönetici: Deneme Takvimi menüsünden ekler; öğrenci ve veli
+panelinde hatırlatıcı + takvim. Kararlar `UYGULAMA-PLANI.md` Dalga 6b.
+
 **Sıradaki: Dalga 7 (paket/ödeme)** — `packages`, `package_items`,
 `subscriptions`, `payments`; fatura tutarı **her zaman** `subscriptions.price`.
 Sonra Dalga 8 (tüketimi masaya ve pakete bağlama; `Consumption::boot`

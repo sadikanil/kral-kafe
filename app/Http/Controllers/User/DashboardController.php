@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Consumption;
+use App\Models\ExamEvent;
 use App\Services\BillingService;
 use App\Models\StudyGoal;
 use App\Services\StudySessionService;
@@ -61,6 +62,8 @@ class DashboardController extends Controller
             'monthMinutes' => $istatistik->monthMinutes($user),
             'streak' => $istatistik->streak($user),
             'weeklyGoal' => StudyGoal::activeFor($user, LocalDay::today()),
+            // Deneme takvimi hatirlaticisi: siradaki deneme(ler).
+            'upcomingExams' => ExamEvent::upcoming()->limit(3)->get(),
             'currentMonthTotal' => $currentMonthTotal,
             'currentMonthItems' => $currentMonthItems,
             'recentConsumptions' => $recentConsumptions,

@@ -40,8 +40,14 @@
                     <span>Çocuklarım</span>
                 </a>
 
-                {{-- Salt okunur panel: burada baska baglanti yok. Veli tuketim
-                     gecmisini ve ogrenci panelini gormez. --}}
+                <a href="{{ route('parent.exams') }}"
+                    class="sidebar-nav-link {{ request()->routeIs('parent.exams') ? 'active' : '' }}">
+                    <span class="sidebar-nav-link-icon">📝</span>
+                    <span>Deneme Takvimi</span>
+                </a>
+
+                {{-- Salt okunur panel: baska baglanti yok. Veli tuketim gecmisini
+                     ve ogrenci panelini gormez. --}}
             </nav>
 
             <div class="sidebar-footer">
