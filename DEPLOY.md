@@ -34,9 +34,9 @@ Vercel projesinde Settings → Environment Variables altına gir:
 | `DB_CONNECTION` | `pgsql` |
 | `DB_HOST` | `aws-0-ap-southeast-1.pooler.supabase.com` — **yer tutucu değil, birebir bu.** Bir kez `<bölge>` olduğu gibi yapıştırıldı ve site `could not translate host name` ile 500 verdi |
 | `DB_PORT` | `5432` (session pooler) |
-| `DB_DATABASE` | `postgres` |
+| `DB_DATABASE` | `postgres` — **tamamı küçük harf.** Postgres veritabanı adları büyük/küçük harfe duyarlı; `POSTGRES` yazılınca havuz `database "POSTGRES" does not exist` (3D000) ile düşüyor. 20 Eylül 2026'da yaşandı |
 | `DB_USERNAME` | `postgres.hxlklrwbeeddbajiectt` — **pooler kullanıcı adı proje referansını içerir.** Düz `postgres` yalnızca doğrudan bağlantıda geçerli; pooler onu reddeder |
-| `DB_PASSWORD` | Supabase veritabanı şifresi |
+| `DB_PASSWORD` | Supabase veritabanı şifresi. Bilinmiyorsa Supabase → Project Settings → Database → **Reset database password**; sıfırlama projeyi yeniden başlatır (~2 dk) ve havuzun sakladığı şifreyi de günceller. Şifre panel dışından (`ALTER USER`) değiştirilirse havuz eski şifreyle kalır: istemci doğrulanır ama arka plan `DbHandler: Auth error 28P01` verir — çözüm yine panelden sıfırlamak |
 | `SESSION_DRIVER` | `database` |
 | `CACHE_STORE` | `database` |
 | `QUEUE_CONNECTION` | `sync` |
@@ -185,6 +185,47 @@ Hiçbir blade `@vite` kullanmıyor; `vite build` kimsenin yüklemediği varlıkl
 sayesinde doğrudan servis ediliyor. `vite.config.js` ve `package.json` yerinde
 duruyor — ileride arayüz yenilenirse kullanılabilir, sadece dağıtımda
 çalıştırılmıyor.
+
+## 2.2 Sorun çıkınca: önce Supabase logları, sonra tahmin
+
+`APP_DEBUG=false` iken Laravel'in 500 sayfası hiçbir şey söylemez. Vercel'in
+çalışma anı loglarına erişim yoksa bile iki kaynak var ve ikisi 20 Eylül 2026'da
+sorunu tahminsiz çözdü:
+
+1. **Supabase → Logs → Pooler (Supavisor).** Uygulamanın veritabanına ulaşıp
+   ulaşmadığını ve nerede düştüğünü satır satır söyler:
+
+   | Log satırı | Anlamı |
+   |---|---|
+   | hiç kayıt yok | İstek havuza hiç ulaşmıyor: `DB_HOST` yanlış/boş, DNS, ya da hata bağlantıdan önce (APP_KEY, oturum sürücüsü, PHP hatası) |
+   | `ClientHandler: Exchange error: password authentication failed` | Vercel'deki `DB_PASSWORD` yanlış |
+   | `ClientHandler: Connection authenticated` + `DbHandler: Auth error 28P01` | Şifre doğru ama havuzun sakladığı şifre eski → panelden sıfırla |
+   | `DbHandler: Auth error 3D000 database "X" does not exist` | `DB_DATABASE` yanlış (büyük harf dahil) |
+   | `ClientHandler: Connection authenticated` + `DbHandler: Backend authenticated` | Bağlantı tamam; sorun varsa artık uygulama katmanında |
+
+   Havuz **başarılı** bağlantıları da logluyor; "kayıt yok" ile "başarısız"
+   farklı teşhislerdir.
+
+2. **Jetonla kilitli teşhis sayfası** (gerekirse geçici olarak eklenir, iş
+   bitince kaldırılır — `690e0f1` commit'inde örneği var): `api/index.php`
+   içinde, sha256 özeti depoda duran bir jetonla `/?teshis=<jeton>` isteğine
+   düz metin rapor döner: sır içermeyen ortam özeti (sırlar yalnızca uzunluk
+   ve "satır sonu var mı"), ham PDO bağlantı sonucu ve Laravel'in aynı isteği
+   işlerken ürettiği istisna (sınıf, mesaj, dosya:satır). `curl -sI` ile başlık
+   okumaktan üstün: kullanıcı tarayıcıdan açıp çıktıyı yapıştırabilir ve
+   Laravel'in kendi istisnası da görünür.
+
+**Önizleme (preview) dağıtımlarına dikkat:** Vercel'de değişkenler ortam
+başına tanımlanır. Yalnızca Production için girilen `DB_*` değerleri bir dalın
+önizleme dağıtımında **tanımsızdır**; oradan alınan rapor üretimi anlatmaz.
+Raporun `APP_URL` satırına değil, hangi adresten açıldığına bakın.
+
+**Satır sonu kırpma:** `api/index.php`, Laravel bootlanmadan önce bütün ortam
+değişkenlerinin baş ve sonundaki `\r\n`'i kırpar (`App\Support\OrtamTemizligi`).
+Vercel alanına yapıştırıp Enter'a basmak değerin sonuna satır sonu ekliyor ve
+`DB_PASSWORD`'de 13 karakterlik şifre canlıda 15 ölçüldü. Kırpma bu sınıf
+hatanın tamamını kapatır; ama büyük/küçük harf ya da yanlış değer gibi
+hataları kapatmaz.
 
 ## 3. Migration'lar
 

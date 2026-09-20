@@ -1,62 +1,65 @@
-# Devir notu — 20 Eylül 2026
+# Devir notu — 20 Eylül 2026 (güncellendi: ikinci oturum)
 
-Bir sohbet oturumunun sonunda yazıldı. Yeni oturum **önce bunu**, sonra
+Bir sohbet oturumunun sonunda yazıldı, ikinci oturumda §1 yeniden yazıldı. Yeni oturum **önce bunu**, sonra
 `docs/UYGULAMA-PLANI.md`'yi okumalı.
 
-Kod durumu: `main` = `dcf443b`, yerel ve uzak eşit. **159 test, 399 doğrulama,
-hepsi yeşil.**
+Kod durumu §1'de.
 
 ---
 
-## 1. Tek açık iş: Vercel dağıtımı
+## 1. Vercel dağıtımı — ÇÖZÜLDÜ (20 Eylül 2026, ikinci oturum)
 
-Uygulama **hazır ve çalışıyor** — aynı kod yerelden Supabase'e karşı çalıştırıldığında
-`/` isteği 302 ile `/giris`'e gidiyor. Vercel'de hâlâ 500 var ve sebebi **kod değil,
-tek bir ortam değişkeni.**
+Canlı site açılıyor: `https://kral-kafe-ten.vercel.app/` → giriş ekranı,
+havuz logunda `DbHandler: Backend authenticated`, `sessions` tablosuna canlıdan
+satır yazılıyor.
 
-### Kalan hata
+**Sebep tek değildi, üçtü** ve önceki oturumun "DB_PASSWORD'de satır sonu"
+teşhisi üçünden yalnızca birincisiydi:
 
-`DB_PASSWORD` içinde **satır sonu var**. Kanıt: teşhis başlığı şifre uzunluğunu 15
-gösterdi, yerelde çalışan şifre 13 karakter; ayrıca `header()` "new line detected"
-uyarısı verdi — yani değerin içinde gerçekten `\n`/`\r` var. Vercel alanına
-yapıştırırken satır sonu birlikte gelmiş.
+1. `DB_PASSWORD` sonunda satır sonu → artık `api/index.php` Laravel bootlanmadan
+   tüm değişkenleri kırpıyor (`App\Support\OrtamTemizligi`, 2 test).
+2. Şifre düzeltildikten sonra havuz istemciyi doğruladı ama arka plana eski
+   şifreyle gitti (`DbHandler: Auth error 28P01`) → panelden **Reset database
+   password** ile çözüldü; sıfırlama projeyi yeniden başlatıyor.
+3. `DB_DATABASE=POSTGRES` (büyük harf) → `3D000 database "POSTGRES" does not
+   exist` → `postgres` yapıldı.
 
-**Yapılacak:** Vercel → Settings → Environment Variables → `DB_PASSWORD` alanını
-temizle, şifreyi tırnaksız ve sonunda Enter'a basmadan yapıştır → Deployments →
-⋯ → Redeploy (**build cache kapalı**).
+**Nasıl bulundu — bir dahaki sefere ilk yapılacak:** Supabase **Pooler
+(Supavisor) logları**. Uygulama havuza ulaşıyor mu, hangi adımda düşüyor,
+satır satır yazıyor; başarılı bağlantıları da logluyor. Tablo ve jetonlu
+teşhis sayfası yöntemi `DEPLOY.md §2.2`'de. Vercel bağlayıcısı takım
+kapsamına yetkili değil (env/log uçları 403) — Vercel tarafı yalnızca
+kullanıcı eliyle ya da bağlayıcı yeniden yetkilendirilerek okunabilir.
 
-### Doğrulanmış değerler (bunlar kesin, tahmin değil)
+**Bu oturumda ayrıca:** Dalga 5'in `study_goals` migration'ı canlıda
+uygulanmamıştı (18/19). Laravel'in üreteceği birebir SQL (`Blueprint::toSql`)
+Supabase MCP ile uygulandı, RLS açık, `migrations` defterine batch 5 yazıldı.
+**Bundan sonra her migration'dan sonra canlıda `migrations` tablosu ile
+`database/migrations/` karşılaştırılmalı** — Dalga 6+ tabloları da aynı
+şekilde unutulabilir.
+
+Kod durumu: `main` = dal = son commit, yerel ve uzak eşit. Test takımı **161
+test, 406 doğrulama, yeşil** (159 + OrtamTemizligi'nin 2'si). Yerel `.env`
+yok; testler için `cp .env.example .env && php artisan key:generate` yeterli,
+`.env`'den `DB_EMULATE_PREPARES` satırı silinmeli (PostgresReadinessTest onu
+putenv ile geçemiyor — DEVIR §2'deki env() notuyla aynı sebep).
+
+### Doğrulanmış canlı değerler
 
 | Değişken | Değer |
 |---|---|
 | `DB_HOST` | `aws-0-ap-southeast-1.pooler.supabase.com` |
 | `DB_PORT` | `5432` (session pooler) |
+| `DB_DATABASE` | `postgres` — **küçük harf** |
 | `DB_USERNAME` | `postgres.hxlklrwbeeddbajiectt` |
 | `DB_CONNECTION` | `pgsql` |
-| `APP_ENV` | `production` |
-| `APP_DEBUG` | `false` — **açma** |
+| `APP_ENV` / `APP_DEBUG` | `production` / `false` — **açma** |
 
-Bölge bağlanarak bulundu (`ap-southeast-1`, Singapur). DNS işe yaramaz, tüm bölge
-uçları çözülüyor. `DB_USERNAME` proje referansını içermek **zorunda**: pooler düz
-`postgres`'i reddeder, bu kural yalnızca doğrudan bağlantıda geçerli.
-
-### Migration'lar Supabase'de koştu
-
-Hepsi uygulandı ve Dalga 1–3 gerçek Postgres'te doğrulandı: rol sütunu genişledi
-(`coach` yazılabiliyor → CHECK düştü), kısmi tekil indeks gerçekten kısmi,
-RLS `study_tables` ve `study_sessions`'ta açık. `.env.supabase` yerelde dolu ve
-çalışıyor; migration'lar oradan çalıştırıldı.
-
-### Nasıl teşhis edildi (yöntem işe yaradı, tekrar kullanılabilir)
-
-`APP_DEBUG=false` iken canlı hata görünmüyor. Çözüm: `api/index.php`'ye **sır
-içermeyen** geçici bir yanıt başlığı koyup (hangi sürücü, anahtar var mı, host ne,
-ham PDO bağlantısı ne diyor) `curl -sI` ile okumak. Laravel bootlanmadan önce
-yazıldığı için uygulama 500 verse bile ulaşıyor.
-
-**Uyarı:** başlık değeri satır sonu içeremez. Ortam değişkenini doğrudan başlığa
-yazarken `preg_replace('/[^\x20-\x7E]/', ' ', $deger)` ile temizle — aksi halde
-teşhis aracının kendisi sayfayı kırar (bu oturumda oldu).
+Üretim ortamının tam dökümü (LOG_CHANNEL, UPLOAD_DISK, AWS_*) bu oturumda
+doğrulanamadı; önizleme raporunda `LOG_CHANNEL=stack`, `UPLOAD_DISK=public`
+görüldü ama o rapor önizleme ortamındı. `api/index.php` LOG_CHANNEL'ı yalnızca
+tanımsızsa `stderr` yapar; panelde `stack` **tanımlıysa** ilk log yazımı
+salt-okunur diskte 500 üretir. İlk fırsatta üretimde kontrol edilmeli.
 
 ---
 
