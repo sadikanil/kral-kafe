@@ -65,4 +65,41 @@ class LocalDayTest extends TestCase
 
         Carbon::setTestNow();
     }
+    /**
+     * Sinirlar UTC dondurulmeli.
+     *
+     * Sebep Eloquent'in davranisi: bir Carbon'u sorgu baglamasina koyarken UTC'ye
+     * CEVIRMEZ, kendi saat diliminin duvar saatini bicimler. Kafe saatindeki
+     * "2026-09-14 00:00+03:00" sorguya "2026-09-14 00:00:00" diye gider ve UTC
+     * sutunuyla karsilastirilir - uc saatlik sessiz kayma.
+     *
+     * An ayni kaliyor; yalnizca tasidigi saat dilimi UTC. Gosterim gerektiginde
+     * ->timezone(config('kafe.timezone')) ile geri cevrilir.
+     */
+    public function test_bounds_are_returned_in_utc_so_queries_are_not_shifted(): void
+    {
+        [$bas, $son] = LocalDay::bounds('2026-09-14');
+
+        $this->assertSame('UTC', $bas->timezoneName);
+        $this->assertSame('UTC', $son->timezoneName);
+
+        // Istanbul UTC+3: yerel gun 21:00 UTC'de baslar.
+        $this->assertSame('2026-09-13 21:00:00', $bas->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-09-14 20:59:59', $son->format('Y-m-d H:i:s'));
+    }
+
+    public function test_week_and_month_bounds_are_also_utc(): void
+    {
+        [$haftaBas, $haftaSon] = LocalDay::weekBounds('2026-09-16');
+        [$ayBas, $aySon] = LocalDay::monthBounds(2026, 9);
+
+        foreach ([$haftaBas, $haftaSon, $ayBas, $aySon] as $an) {
+            $this->assertSame('UTC', $an->timezoneName);
+        }
+
+        // Hafta pazartesi baslar: 14 Eylul 00:00 yerel = 13 Eylul 21:00 UTC.
+        $this->assertSame('2026-09-13 21:00:00', $haftaBas->format('Y-m-d H:i:s'));
+        // Ay: 1 Eylul 00:00 yerel = 31 Agustos 21:00 UTC.
+        $this->assertSame('2026-08-31 21:00:00', $ayBas->format('Y-m-d H:i:s'));
+    }
 }

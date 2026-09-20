@@ -14,6 +14,14 @@ use Illuminate\Support\Carbon;
  *
  * Bu sinifin dondurdugu sinirlar whereBetween ile kullanilir; boylece
  * sorgu sutuna fonksiyon uygulamaz ve indeks kullanilabilir kalir.
+ *
+ * Sinirlar UTC olarak dondurulur. An degismez, yalnizca tasidigi saat dilimi.
+ * Sebep: Eloquent bir Carbon'u sorgu baglamasina koyarken UTC'ye CEVIRMEZ,
+ * kendi saat diliminin duvar saatini bicimler. Kafe saatindeki
+ * "2026-09-14 00:00+03:00" sorguya "2026-09-14 00:00:00" diye gider ve UTC
+ * sutunuyla karsilastirilir - uc saatlik sessiz kayma, hata yok.
+ *
+ * Gosterim gerektiginde ->timezone(config('kafe.timezone')) ile geri cevrilir.
  */
 class LocalDay
 {
@@ -47,7 +55,7 @@ class LocalDay
     {
         $gun = Carbon::parse($date, self::timezone())->startOfDay();
 
-        return [$gun, $gun->copy()->endOfDay()];
+        return [$gun->copy()->utc(), $gun->copy()->endOfDay()->utc()];
     }
 
     /**
@@ -60,8 +68,8 @@ class LocalDay
         $gun = Carbon::parse($date, self::timezone());
 
         return [
-            $gun->copy()->startOfWeek(Carbon::MONDAY),
-            $gun->copy()->endOfWeek(Carbon::SUNDAY),
+            $gun->copy()->startOfWeek(Carbon::MONDAY)->utc(),
+            $gun->copy()->endOfWeek(Carbon::SUNDAY)->utc(),
         ];
     }
 
@@ -74,6 +82,6 @@ class LocalDay
     {
         $bas = Carbon::create($year, $month, 1, 0, 0, 0, self::timezone());
 
-        return [$bas, $bas->copy()->endOfMonth()];
+        return [$bas->copy()->utc(), $bas->copy()->endOfMonth()->utc()];
     }
 }
