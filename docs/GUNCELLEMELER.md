@@ -113,6 +113,8 @@ tek ekranda görüyor.*
 | 11 | Ödeme durumu takibi (ödendi/bekliyor/gecikmiş) | E | ⬜ Planlandı |
 | 12 | Mevcut tüketim akışının masa/paket kapsamına bağlanması | E | ⬜ Planlandı |
 | 29 | Deneme sınavı takvimi: yönetici planlar, öğrenci/veli takvim görünümü + panel hatırlatıcısı | C | ✅ Yapıldı (20 Eylül 2026) |
+| 30 | Self adisyon: öğrenci panelden tanımlı ürünü kendi hesabına ekler (QR'siz) | E | ✅ Yapıldı (20 Eylül 2026) |
+| 31 | Deneme sonuç PDF'i: yönetici yükler, yapay zeka başarılı/zayıf alanları raporlar | C | ✅ Yapıldı (20 Eylül 2026) |
 
 ### V1 (MVP'den ~1–2 ay sonra)
 

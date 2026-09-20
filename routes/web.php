@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\User\ConsumptionController;
+use App\Http\Controllers\User\TabController;
+use App\Http\Controllers\User\ExamReportController as UserExamReportController;
+use App\Http\Controllers\Admin\ExamReportController as AdminExamReportController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
@@ -50,6 +53,16 @@ Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')-
     Route::get('/panel', [UserDashboardController::class, 'index'])->name('dashboard');
     Route::get('/gecmis', [UserDashboardController::class, 'history'])->name('history');
     Route::get('/denemeler', [ExamCalendarController::class, 'student'])->name('exams');
+
+    // Deneme sonuc raporlari (PDF + yapay zeka analizi), salt okunur
+    Route::get('/deneme-raporlari', [UserExamReportController::class, 'index'])->name('exam-reports.index');
+    Route::get('/deneme-raporlari/{report}', [UserExamReportController::class, 'show'])->name('exam-reports.show');
+    Route::get('/deneme-raporlari/{report}/pdf', [UserExamReportController::class, 'pdf'])->name('exam-reports.pdf');
+
+    // Self adisyon: QR'siz, panelden urun ekleme
+    Route::get('/adisyon', [TabController::class, 'index'])->name('tab');
+    Route::post('/adisyon', [TabController::class, 'store'])->name('tab.store');
+    Route::post('/adisyon/{consumption}/geri-al', [TabController::class, 'undo'])->name('tab.undo');
 
     // Consumption API
     Route::post('/tuketim', [ConsumptionController::class, 'store'])->name('consume.store');
@@ -121,6 +134,13 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     ])->parameters(['masalar' => 'table']);
     Route::get('/masalar/{table}/qr', [StudyTableController::class, 'qr'])->name('tables.qr');
     Route::post('/masalar/{table}/durum', [StudyTableController::class, 'toggleStatus'])->name('tables.toggle-status');
+
+    // Deneme sonuc raporlari: ogrenci basina PDF yukleme + yapay zeka analizi
+    Route::get('/kullanicilar/{user}/deneme-raporlari', [AdminExamReportController::class, 'index'])->name('exam-reports.index');
+    Route::post('/kullanicilar/{user}/deneme-raporlari', [AdminExamReportController::class, 'store'])->name('exam-reports.store');
+    Route::post('/deneme-raporlari/{report}/analiz', [AdminExamReportController::class, 'analyze'])->name('exam-reports.analyze');
+    Route::delete('/deneme-raporlari/{report}', [AdminExamReportController::class, 'destroy'])->name('exam-reports.destroy');
+    Route::get('/deneme-raporlari/{report}/pdf', [AdminExamReportController::class, 'pdf'])->name('exam-reports.pdf');
 
     // Deneme sinavi takvimi (kafe geneli)
     Route::resource('denemeler', ExamEventController::class)->except(['show'])->names([

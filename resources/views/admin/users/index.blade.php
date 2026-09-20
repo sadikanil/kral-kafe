@@ -88,6 +88,9 @@
                                 <td>
                                     <div class="d-flex gap-1">
                                         <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-secondary">✏️</a>
+                                        @if($user->isStudent())
+                                            <a href="{{ route('admin.exam-reports.index', $user) }}" class="btn btn-sm btn-secondary" title="Deneme raporları">📄</a>
+                                        @endif
                                         
                                         @if($user->id !== auth()->id())
                                             <form action="{{ route('admin.users.toggle-status', $user) }}" method="POST" class="d-inline-block">

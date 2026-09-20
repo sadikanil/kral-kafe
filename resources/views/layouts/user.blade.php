@@ -40,10 +40,22 @@
                     <span>Ana Sayfa</span>
                 </a>
 
+                <a href="{{ route('user.tab') }}"
+                    class="sidebar-nav-link {{ request()->routeIs('user.tab*') ? 'active' : '' }}">
+                    <span class="sidebar-nav-link-icon">🧾</span>
+                    <span>Adisyonum</span>
+                </a>
+
                 <a href="{{ route('user.history') }}"
                     class="sidebar-nav-link {{ request()->routeIs('user.history') ? 'active' : '' }}">
                     <span class="sidebar-nav-link-icon">📜</span>
                     <span>Tüketim Geçmişi</span>
+                </a>
+
+                <a href="{{ route('user.exam-reports.index') }}"
+                    class="sidebar-nav-link {{ request()->routeIs('user.exam-reports.*') ? 'active' : '' }}">
+                    <span class="sidebar-nav-link-icon">📄</span>
+                    <span>Deneme Raporlarım</span>
                 </a>
 
                 <a href="{{ route('user.exams') }}"

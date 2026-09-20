@@ -125,6 +125,12 @@ girişte `/veli`'ye iner.
 uygulandı (batch 7). Yönetici: Deneme Takvimi menüsünden ekler; öğrenci ve veli
 panelinde hatırlatıcı + takvim. Kararlar `UYGULAMA-PLANI.md` Dalga 6b.
 
+**Dalga 6c (self adisyon) ve 6d (deneme PDF + yapay zeka) — BİTTİ (aynı
+oturum).** `exam_reports` canlıda (batch 8). Self adisyon tablo istemez;
+`Location::selfService()` ilk kullanımda sanal lokasyonu açar. 6d canlıda
+çalışması için Vercel'de `OPENAI_API_KEY` ve `UPLOAD_DISK=s3` dolu olmalı
+(stok analiziyle aynı anahtar). Takip dosyası: `YOL-HARITASI.md`.
+
 **Sıradaki: Dalga 7 (paket/ödeme)** — `packages`, `package_items`,
 `subscriptions`, `payments`; fatura tutarı **her zaman** `subscriptions.price`.
 Sonra Dalga 8 (tüketimi masaya ve pakete bağlama; `Consumption::boot`

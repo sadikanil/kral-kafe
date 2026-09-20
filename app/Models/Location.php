@@ -23,6 +23,39 @@ class Location extends Model
     ];
 
     /**
+     * Self adisyon icin sanal lokasyonun QR kodu. Hicbir duvarda basili degil.
+     */
+    public const SELF_SERVICE_QR = 'SELF-ADISYON';
+
+    /**
+     * Panelden eklenen tuketimlerin baglandigi sanal lokasyon.
+     *
+     * consumptions.location_id NOT NULL ve butun raporlar/ekranlar
+     * location->name okuyor; sutunu nullable yapmak yerine tek bir sistem
+     * lokasyonu kullaniliyor. is_active=false BILEREK: stok sayimi, QR
+     * yazdirma ve panel sayaclari yalnizca acik lokasyonlari aldigi icin bu
+     * satir oralara hic girmez. Self adisyon stok dusmez (ProductLocation
+     * yok), yalnizca hesaba yazar.
+     */
+    public static function selfService(): self
+    {
+        return static::firstOrCreate(
+            ['qr_code' => self::SELF_SERVICE_QR],
+            [
+                'name' => 'Self Adisyon',
+                'type' => 'shelf',
+                'description' => 'Sistem lokasyonu: öğrencinin panelden kendi eklediği tüketimler. Kapalı kalmalı; QR ile okutulmaz.',
+                'is_active' => false,
+            ]
+        );
+    }
+
+    public function isSelfService(): bool
+    {
+        return $this->qr_code === self::SELF_SERVICE_QR;
+    }
+
+    /**
      * Boot the model.
      */
     protected static function boot()

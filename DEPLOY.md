@@ -95,6 +95,15 @@ türetir (`.../storage/v1/s3/...`); o adres SigV4 imzası ister ve `<img src>` i
 açılmaz. Yüklenen hiçbir görsel görünmez. Bucket, Supabase panelinde **Public**
 işaretlenmiş olmalı; private kalacaksa `Storage::temporaryUrl()` kullanılmalı.
 
+### Deneme raporu analizi ve süre sınırı
+
+`vercel.json` içinde `maxDuration: 60`: deneme PDF'inin yapay zeka analizi
+yükleme isteğinin içinde çalışır ve 10 saniyelik varsayılan sınırı aşabilir.
+Analiz `OPENAI_API_KEY` ister (stok analiziyle aynı anahtar); anahtar yoksa
+dosya yine kaydedilir, durum "Analiz başarısız" olur ve panelden yeniden
+denenebilir. PDF'ler `UPLOAD_DISK` üzerinde `deneme-raporlari/<öğrenci>/<uuid>.pdf`
+yolunda durur.
+
 ## 2.1 Derleme ayarları: hepsi boş kalmalı
 
 Vercel panelinde **Settings → Build & Development Settings** altındaki üç alanı

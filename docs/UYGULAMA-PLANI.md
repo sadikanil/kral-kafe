@@ -413,6 +413,35 @@ Kullanıcı isteği: "deneme sınavı takvimi hatırlatıcı ve takvim görünü
 - Bu dalgada `StudyGoalTest` UTC 21:00 sonrası kızarıyordu (`now()` ile kafe
   günü ayrışıyor); test `LocalDay::today()`'e çevrildi.
 
+### Dalga 6c — Self adisyon (eklendi: 20 Eylül 2026)
+
+Öğrenci QR okutmadan panelden sistemde tanımlı ürünü kendi hesabına ekler.
+
+- `consumptions.location_id` NOT NULL ve her ekran `location->name` okuyor;
+  sütunu nullable yapmak yerine **sanal lokasyon** `Location::selfService()`
+  (`qr_code = SELF-ADISYON`, `is_active = false`). Kapalı olduğu için stok
+  sayımı, QR yazdırma ve panel sayaçları onu hiç görmez.
+- Self adisyon **stok düşmez** (ProductLocation'a dokunmaz), yalnızca hesaba
+  yazar. Aylık fatura, geçmiş, raporlar değişiklik olmadan bunu da sayar.
+- Form tabanlı (JSON değil); geri alma `Consumption::canUndo()` (60 sn) ve
+  sahiplik kontrolüyle.
+
+### Dalga 6d — Deneme sonuç PDF'i + yapay zeka analizi (eklendi: 20 Eylül 2026)
+
+- `exam_reports`: öğrenci başına PDF (nesne depolamada, uuid yol) + `analysis`
+  JSON + `status` (pending|done|failed). Takvimdeki denemeye isteğe bağlı bağ.
+- `ExamReportAnalyzer`: PDF'i OpenAI Chat Completions'a **dosya olarak**
+  gönderir (metin çıkarımı yok; tablolar ve taranmış sayfalar için). JSON şema
+  zorunlu; `normalize()` view'ın her anahtarı varsayabilmesini sağlar. Prompt
+  kişilik/motivasyon yorumunu açıkça yasaklar.
+- Analiz yükleme isteğinin içinde çalışır (kuyruk sync); başarısızsa dosya
+  kalır, durum `failed`, "Yeniden analiz et" ile tekrar. `vercel.json`
+  `maxDuration: 60` bu yüzden.
+- Öğrenci salt okunur görür; yetki `ExamReportPolicy::view` →
+  `User::canViewStudent`. Veli rotası yok (karar #2: `can_view_exams` gelince).
+- İndirme controller üzerinden (`Storage::response`); bucket herkese açık olsa
+  bile yol tahmin edilemez.
+
 ### Dalga 7 — Paket ve ödeme (MVP #10, #11) · 1–6 hattına paralel
 
 `packages`, `package_items`, `subscriptions`, `payments`. Fatura
@@ -461,5 +490,7 @@ yeniden yazılmasın.
 | 5 · Süre, devamlılık, hedef | ✅ Bitti |
 | 6 · Veli | ✅ Bitti |
 | 6b · Deneme takvimi | ✅ Bitti |
+| 6c · Self adisyon | ✅ Bitti |
+| 6d · Deneme PDF + yapay zeka | ✅ Bitti |
 | 7 · Paket ve ödeme | 🔄 Sırada |
 | 8 · Tüketim bağlama | ⬜ |
