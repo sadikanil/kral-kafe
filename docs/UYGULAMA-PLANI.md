@@ -378,6 +378,24 @@ seri her sabah sıfırlanır ve özellik anlamını yitirirdi.
 kurulmayacak** — görünmez şekilde admin toplamlarına sızar. Tekil kayıt için
 policy, listeler için açık scope, ikisi de `accessibleStudentIds()`'e delege eder.
 
+**Yapıldı (20 Eylül 2026).** Uygulanan kararlar:
+
+- `student_parent` çoka çok (anne + baba). `UNIQUE (student_id, parent_id)`,
+  `created_by` nullable. Pivot modeli `StudentParent` yalnızca factory için var.
+- `User::accessibleStudentIds()` tek kaynak: yönetici `null` (sınırsız), veli
+  bağlı öğrenciler, öğrenci kendisi, koç/öğretmen/görevli **boş** (panelleri
+  gelince genişler). `UserPolicy::viewStudy` ve `User::visibleTo()` buna
+  delege eder; ikisi de kuralı tekrar yazmaz.
+- `/veli` yalnızca GET; `role:parent` middleware'i (`EnsureRole`, genel).
+  Abonelik middleware'i yok — abonelik öğrencinin. Bir test rotaların hiçbirinde
+  yazma yöntemi olmadığını doğrular.
+- Panelde tüketim/para **yok**; FEATURE 4'ün MVP listesi (geliş/çıkış,
+  gün/hafta/ay, seri, hedef). Esikten kısa oturumlar veliye gösterilmez.
+- Bağ yönetici formunda kurulur (veli tarafında öğrenci listesi, öğrenci
+  tarafında veli listesi). Gizli `student_ids` alanı "hiçbiri seçili" ile
+  "bölüm yoktu"yu ayırır; bölüm yoksa bağa dokunulmaz. `sync()` yerine
+  attach/detach: mevcut satırın `created_by`'ı ezilmesin.
+
 ### Dalga 7 — Paket ve ödeme (MVP #10, #11) · 1–6 hattına paralel
 
 `packages`, `package_items`, `subscriptions`, `payments`. Fatura
@@ -424,6 +442,6 @@ yeniden yazılmasın.
 | 3 · Oturum + canlı ekran | ✅ Bitti |
 | 4 · Otomatik kapanış | ✅ Bitti |
 | 5 · Süre, devamlılık, hedef | ✅ Bitti |
-| 6 · Veli | 🔄 Sırada |
-| 7 · Paket ve ödeme | ⬜ |
+| 6 · Veli | ✅ Bitti |
+| 7 · Paket ve ödeme | 🔄 Sırada |
 | 8 · Tüketim bağlama | ⬜ |

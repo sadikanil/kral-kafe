@@ -35,7 +35,7 @@ kullanıcı eliyle ya da bağlayıcı yeniden yetkilendirilerek okunabilir.
 uygulanmamıştı (18/19). Laravel'in üreteceği birebir SQL (`Blueprint::toSql`)
 Supabase MCP ile uygulandı, RLS açık, `migrations` defterine batch 5 yazıldı.
 **Bundan sonra her migration'dan sonra canlıda `migrations` tablosu ile
-`database/migrations/` karşılaştırılmalı** — Dalga 6+ tabloları da aynı
+`database/migrations/` karşılaştırılmalı** — Dalga 7+ tabloları da aynı
 şekilde unutulabilir.
 
 Kod durumu: `main` = dal = son commit, yerel ve uzak eşit. Test takımı **161
@@ -115,9 +115,16 @@ Kural: **veritabanına giden her `Carbon` UTC olmalı.** Gösterim için
 
 ## 4. Sıradaki iş
 
-**Dalga 6 — Veli (MVP #8):** `student_parent` bağı + salt okunur veli paneli.
-Plan notu: **global scope kullanma.** Sonra Dalga 7 (paket/ödeme), Dalga 8
-(tüketimi masaya ve pakete bağlama).
+**Dalga 6 — Veli — BİTTİ (20 Eylül 2026, ikinci oturum).** `student_parent`
+canlıda uygulandı (batch 6, RLS + REVOKE, ledger satırı var). Kararlar
+`UYGULAMA-PLANI.md` Dalga 6 altında. Canlıda kullanmak için: yönetici panelinde
+rolü "Veli" olan bir kullanıcı aç → düzenle → "Bağlı Öğrenciler" işaretle. Veli
+girişte `/veli`'ye iner.
+
+**Sıradaki: Dalga 7 (paket/ödeme)** — `packages`, `package_items`,
+`subscriptions`, `payments`; fatura tutarı **her zaman** `subscriptions.price`.
+Sonra Dalga 8 (tüketimi masaya ve pakete bağlama; `Consumption::boot`
+`total_price`'ı koşulsuz eziyor, kapsam mantığı oraya girmeli).
 
 Açık kalan, kullanıcıya sorulması gereken bir şey yok. İki şey rafta:
 - **IP kapısı** — kafenin IP'si ölçüldü, **dinamik** (TT ADSL havuzu). Beyaz

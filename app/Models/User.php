@@ -3,7 +3,9 @@
 namespace App\Models;
 
 use App\Enums\Role;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -105,6 +107,75 @@ class User extends Authenticatable
     public function hasActiveSubscription(): bool
     {
         return $this->subscription_status === 'active';
+    }
+
+    /**
+     * Velinin bagli oldugu ogrenciler (student_parent).
+     */
+    public function students(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'student_parent', 'parent_id', 'student_id')
+            ->using(StudentParent::class)
+            ->withPivot('created_by')
+            ->withTimestamps();
+    }
+
+    /**
+     * Ogrencinin velileri (student_parent).
+     */
+    public function parents(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'student_parent', 'student_id', 'parent_id')
+            ->using(StudentParent::class)
+            ->withPivot('created_by')
+            ->withTimestamps();
+    }
+
+    /**
+     * Bu kullanicinin calisma verisini GOREBILDIGI ogrencilerin kimlikleri.
+     *
+     * Veli sinirinin tek kaynagi burasi. Tekil kayit (UserPolicy::viewStudy)
+     * ve listeler (scopeVisibleTo) ikisi de buraya delege eder; iki yerde
+     * ayri yazilirsa biri gunun birinde digerinden fazlasini gosterir.
+     *
+     * Global scope BILEREK kullanilmiyor: gorunmez bir scope yonetici
+     * toplamlarina ve raporlara sizar, "kac ogrenci geldi" sorusu bakan
+     * kisiye gore degisir.
+     *
+     * null: sinir yok (yonetici). Bos dizi: hicbiri. Koc/ogretmen/gorevli
+     * icin henuz panel yok; panelleri geldigi dalgada burasi genisler, o
+     * gune kadar hicbir ogrenciyi gormezler.
+     *
+     * @return list<int>|null
+     */
+    public function accessibleStudentIds(): ?array
+    {
+        return match ($this->role()) {
+            Role::Admin => null,
+            Role::Parent => $this->students()->pluck('users.id')->all(),
+            Role::Student => [$this->id],
+            default => [],
+        };
+    }
+
+    public function canViewStudent(User $student): bool
+    {
+        $ids = $this->accessibleStudentIds();
+
+        return $ids === null || in_array($student->id, $ids, strict: true);
+    }
+
+    /**
+     * Bakan kisinin gorebildigi ogrenciler. Acik scope: cagiran yerde
+     * gorunur, gizli bir filtre degil.
+     */
+    public function scopeVisibleTo(Builder $query, User $viewer): Builder
+    {
+        $ids = $viewer->accessibleStudentIds();
+
+        $query->where('role', Role::Student->value);
+
+        return $ids === null ? $query : $query->whereIn('id', $ids);
     }
 
     /**

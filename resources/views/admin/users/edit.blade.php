@@ -64,6 +64,67 @@
                     </small>
                 </div>
 
+                @if($user->hasRole(\App\Enums\Role::Parent))
+                    <div class="form-group">
+                        <label class="form-label">Bağlı Öğrenciler</label>
+                        {{-- Gizli alan: hicbir kutu isaretli degilse de anahtar gitsin,
+                             kontrolcu "hepsini kaldir" ile "bolum yoktu"yu ayirt edebilsin. --}}
+                        <input type="hidden" name="student_ids" value="">
+                        @if($linkableStudents->isEmpty())
+                            <p class="text-muted mb-0">Sistemde kayıtlı öğrenci yok.</p>
+                        @else
+                            <div class="rounded p-2" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--gray-200, #e5e7eb);">
+                                @foreach($linkableStudents as $ogrenci)
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="student_{{ $ogrenci->id }}"
+                                            name="student_ids[]" value="{{ $ogrenci->id }}"
+                                            {{ in_array($ogrenci->id, old('student_ids', $linkedStudentIds) ?: []) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="student_{{ $ogrenci->id }}">
+                                            {{ $ogrenci->name }} <span class="text-muted">({{ $ogrenci->email }})</span>
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                        @error('student_ids')
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
+                        @enderror
+                        @error('student_ids.*')
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
+                        @enderror
+                        <small class="text-muted">Veli, yalnızca burada işaretli öğrencilerin çalışma bilgilerini görür.</small>
+                    </div>
+                @endif
+
+                @if($user->hasRole(\App\Enums\Role::Student))
+                    <div class="form-group">
+                        <label class="form-label">Velileri</label>
+                        <input type="hidden" name="parent_ids" value="">
+                        @if($linkableParents->isEmpty())
+                            <p class="text-muted mb-0">Sistemde kayıtlı veli yok.</p>
+                        @else
+                            <div class="rounded p-2" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--gray-200, #e5e7eb);">
+                                @foreach($linkableParents as $veli)
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="parent_{{ $veli->id }}"
+                                            name="parent_ids[]" value="{{ $veli->id }}"
+                                            {{ in_array($veli->id, old('parent_ids', $linkedParentIds) ?: []) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="parent_{{ $veli->id }}">
+                                            {{ $veli->name }} <span class="text-muted">({{ $veli->email }})</span>
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                        @error('parent_ids')
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
+                        @enderror
+                        @error('parent_ids.*')
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
+                        @enderror
+                    </div>
+                @endif
+
                 <div class="form-group">
                     <label for="subscription_status" class="form-label">Abonelik Durumu *</label>
                     <select id="subscription_status" name="subscription_status"

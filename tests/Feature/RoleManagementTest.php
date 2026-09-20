@@ -131,7 +131,11 @@ class RoleManagementTest extends TestCase
                 'subscription_status' => 'active',
             ]);
 
-            $beklenen = route($rol === Role::Admin ? 'admin.dashboard' : 'user.dashboard');
+            $beklenen = route(match ($rol) {
+                Role::Admin => 'admin.dashboard',
+                Role::Parent => 'parent.dashboard',
+                default => 'user.dashboard',
+            });
 
             $this->post(route('login'), [
                 'email' => $kullanici->email,

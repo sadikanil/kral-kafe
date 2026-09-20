@@ -67,6 +67,9 @@
                                     <span class="badge badge-{{ $user->role()?->badgeClass() ?? 'info' }}">
                                         {{ $user->role()?->label() ?? $user->role }}
                                     </span>
+                                    @if($user->role() === \App\Enums\Role::Parent)
+                                        <small class="text-muted d-block">{{ $user->students_count }} öğrenci</small>
+                                    @endif
                                 </td>
                                 <td>
                                     @switch($user->subscription_status)

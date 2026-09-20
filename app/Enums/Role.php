@@ -70,15 +70,16 @@ enum Role: string
      * icinde iki kez yazilmisti; ayrisirlarsa kullanici girise basinca bir yere,
      * ana sayfaya girince baska yere gider.
      *
-     * Koc/ogretmen/veli/gorevli icin henuz ayri panel YOK - AdminMiddleware
+     * Koc/ogretmen/gorevli icin henuz ayri panel YOK - AdminMiddleware
      * yalnizca yoneticiyi geciriyor, dolayisiyla onlari yonetim paneline
      * yollamak dogrudan 403 demek olurdu. Panelleri geldigi dalgada bu match
-     * tek satirla genisler.
+     * tek satirla genisler. Veli paneli Dalga 6'da geldi.
      */
     public function homeRoute(): string
     {
         return match ($this) {
             self::Admin => 'admin.dashboard',
+            self::Parent => 'parent.dashboard',
             default => 'user.dashboard',
         };
     }

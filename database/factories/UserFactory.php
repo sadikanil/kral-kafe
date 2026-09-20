@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\Role;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -40,5 +41,24 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    /**
+     * Rol durumlari. Testler 'role' ve 'subscription_status' ciftini elle
+     * kuruyordu; ikisini bir arada veren tek yer burasi olsun.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn () => ['role' => Role::Admin->value, 'subscription_status' => 'active']);
+    }
+
+    public function student(): static
+    {
+        return $this->state(fn () => ['role' => Role::Student->value, 'subscription_status' => 'active']);
+    }
+
+    public function parent(): static
+    {
+        return $this->state(fn () => ['role' => Role::Parent->value, 'subscription_status' => 'active']);
     }
 }

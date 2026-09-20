@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\StudyTableController;
 use App\Http\Controllers\Study\SessionController;
 use App\Http\Controllers\Study\TableSessionController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\ParentPanel\DashboardController as ParentDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -51,6 +52,13 @@ Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')-
     Route::post('/tuketim', [ConsumptionController::class, 'store'])->name('consume.store');
     Route::post('/tuketim/{consumption}/geri-al', [ConsumptionController::class, 'undo'])->name('consume.undo');
     Route::get('/tuketim/ozet', [ConsumptionController::class, 'getCurrentMonthSummary'])->name('consume.summary');
+});
+
+// Veli paneli - salt okunur, yalnizca GET (Dalga 6).
+// Abonelik middleware'i YOK: abonelik ogrencinin, velinin degil.
+Route::middleware(['auth', 'role:parent'])->prefix('veli')->name('parent.')->group(function () {
+    Route::get('/', [ParentDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/ogrenci/{student}', [ParentDashboardController::class, 'show'])->name('student');
 });
 
 // Admin Routes

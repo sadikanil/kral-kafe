@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\StudyGoal;
 use App\Models\User;
 use App\Support\LocalDay;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Support\SqlDialect;
@@ -43,7 +44,8 @@ class UserController extends Controller
             });
         }
 
-        $users = $query->orderBy('name')->paginate(20);
+        // Veli satirinda bagli ogrenci sayisi gorunur (Dalga 6).
+        $users = $query->withCount('students')->orderBy('name')->paginate(20);
 
         return view('admin.users.index', [
             'users' => $users,
@@ -93,6 +95,17 @@ class UserController extends Controller
         return view('admin.users.edit', [
             'user' => $user,
             'weeklyGoal' => StudyGoal::activeFor($user, LocalDay::today()),
+            // Veli-ogrenci bagi (Dalga 6). Liste yalnizca KAYITLI role gore
+            // gelir: veliye ogrenci listesi, ogrenciye veli listesi. Rol bu
+            // formda degistiriliyorsa bag bir sonraki duzenlemede kurulur.
+            'linkableStudents' => $user->hasRole(Role::Parent)
+                ? User::where('role', Role::Student->value)->orderBy('name')->get()
+                : collect(),
+            'linkableParents' => $user->hasRole(Role::Student)
+                ? User::where('role', Role::Parent->value)->orderBy('name')->get()
+                : collect(),
+            'linkedStudentIds' => $user->students()->pluck('users.id')->all(),
+            'linkedParentIds' => $user->parents()->pluck('users.id')->all(),
         ]);
     }
 
@@ -109,6 +122,13 @@ class UserController extends Controller
             'subscription_status' => ['required', 'in:active,inactive,suspended'],
             'phone' => ['nullable', 'string', 'max:20'],
             'weekly_goal_hours' => ['nullable', 'integer', 'min:1', 'max:120'],
+            // Bag yalnizca dogru rollere kurulabilir: bir veliyi "ogrenci"
+            // diye baglamak paneli bos birakir, hata vermez. exists kurali
+            // rolu de kontrol ediyor ki yanlis bag hic dogmasin.
+            'student_ids' => ['sometimes', 'nullable', 'array'],
+            'student_ids.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Student->value)],
+            'parent_ids' => ['sometimes', 'nullable', 'array'],
+            'parent_ids.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Parent->value)],
         ]);
 
         $user->update([
@@ -125,8 +145,39 @@ class UserController extends Controller
 
         $this->syncWeeklyGoal($user, $validated['weekly_goal_hours'] ?? null);
 
+        // Anahtar formda yoksa baga DOKUNULMAZ (bolum o rol icin cizilmemistir).
+        // Anahtar var ama bos ise hepsi kaldirilir: formdaki gizli alan bunu
+        // saglar, yoksa "hicbirini secme" ile "bolum yoktu" ayirt edilemezdi.
+        if ($request->has('student_ids')) {
+            $this->syncLinks($user->students(), $validated['student_ids'] ?? []);
+        }
+
+        if ($request->has('parent_ids')) {
+            $this->syncLinks($user->parents(), $validated['parent_ids'] ?? []);
+        }
+
         return redirect()->route('admin.users.index')
             ->with('success', 'Kullanıcı başarıyla güncellendi.');
+    }
+
+    /**
+     * Bagi verilen listeyle eslestirir.
+     *
+     * sync() yerine attach/detach: sync mevcut satirlarin created_by'ini da
+     * ezerdi; bagi ilk kuran kisi kayitta kalmali.
+     *
+     * @param  list<int|string>  $ids
+     */
+    private function syncLinks(BelongsToMany $bag, array $ids): void
+    {
+        $istenen = array_values(array_unique(array_map('intval', $ids)));
+        $mevcut = $bag->pluck('users.id')->all();
+
+        $bag->detach(array_values(array_diff($mevcut, $istenen)));
+        $bag->attach(
+            array_values(array_diff($istenen, $mevcut)),
+            ['created_by' => auth()->id()]
+        );
     }
 
     /**
