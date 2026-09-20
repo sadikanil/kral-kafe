@@ -58,36 +58,4 @@ foreach (array_unique($dizinler) as $dizin) {
     }
 }
 
-// GECICI TESHIS - SIR ICERMEZ. Sebep bulununca kaldirilacak.
-$oku = static fn (string $k): string => (string) ($_SERVER[$k] ?? $_ENV[$k] ?? getenv($k) ?: '-');
-
-$anahtar = $oku('APP_KEY');
-$sunucu = $oku('DB_HOST');
-
-// Baglantiyi burada deneyip hatayi bildiriyoruz: uygulama 500 verince
-// Laravel'in mesaji APP_DEBUG=false yuzunden gorunmuyor.
-$baglanti = '-';
-if ($sunucu !== '-') {
-    try {
-        new PDO(
-            sprintf('pgsql:host=%s;port=%s;dbname=%s;sslmode=require', $sunucu, $oku('DB_PORT'), $oku('DB_DATABASE')),
-            $oku('DB_USERNAME'),
-            $oku('DB_PASSWORD'),
-            [PDO::ATTR_TIMEOUT => 6]
-        );
-        $baglanti = 'ok';
-    } catch (Throwable $e) {
-        $baglanti = substr((string) preg_replace('/\s+/', ' ', $e->getMessage()), 0, 200);
-    }
-}
-
-header('X-Kk-Cfg: key=' . ($anahtar === '-' ? 'yok' : (str_starts_with($anahtar, 'base64:') ? 'base64' : 'hamdeger'))
-    . ' len=' . strlen($anahtar)
-    . ' env=' . $oku('APP_ENV')
-    . ' host=' . $sunucu
-    . ' port=' . $oku('DB_PORT')
-    . ' user=' . $oku('DB_USERNAME')
-    . ' pwlen=' . strlen($oku('DB_PASSWORD')));
-header('X-Kk-Db: ' . (string) preg_replace('/[^\x20-\x7E]/', ' ', $baglanti));
-
 require __DIR__ . '/../public/index.php';
