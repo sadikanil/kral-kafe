@@ -6,6 +6,7 @@ use App\Enums\Role;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -176,6 +177,22 @@ class User extends Authenticatable
         $query->where('role', Role::Student->value);
 
         return $ids === null ? $query : $query->whereIn('id', $ids);
+    }
+
+    /**
+     * Ogrencinin paket gecmisi (Dalga 7).
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class, 'student_id');
+    }
+
+    /**
+     * Bugun yururlukteki abonelik (iptal haric); birden fazlaysa en yenisi.
+     */
+    public function currentSubscription(): ?Subscription
+    {
+        return $this->subscriptions()->activeOn()->with('package')->orderByDesc('starts_on')->first();
     }
 
     /**

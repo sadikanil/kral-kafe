@@ -109,8 +109,8 @@ tek ekranda görüyor.*
 | 7 | Rol genişletmesi: coach, parent, staff, teacher | F | ⬜ Planlandı |
 | 8 | Veli–öğrenci bağı + veli paneli (salt okunur) | D | ⬜ Planlandı |
 | 9 | Yönetici canlı ekran: içeride kim, hangi masada, ne kadardır | A | ⬜ Planlandı |
-| 10 | Paket tanımı (admin panelinden) + öğrenciye paket atama | E | ⬜ Planlandı |
-| 11 | Ödeme durumu takibi (ödendi/bekliyor/gecikmiş) | E | ⬜ Planlandı |
+| 10 | Paket tanımı (admin panelinden) + öğrenciye paket atama | E | ✅ Yapıldı (21 Eylül 2026) |
+| 11 | Ödeme durumu takibi (ödendi/bekliyor/gecikmiş) | E | ✅ Yapıldı (21 Eylül 2026) |
 | 12 | Mevcut tüketim akışının masa/paket kapsamına bağlanması | E | ⬜ Planlandı |
 | 29 | Deneme sınavı takvimi: yönetici planlar, öğrenci/veli takvim görünümü + panel hatırlatıcısı | C | ✅ Yapıldı (20 Eylül 2026) |
 | 30 | Self adisyon: öğrenci panelden tanımlı ürünü kendi hesabına ekler (QR'siz) | E | ✅ Yapıldı (20 Eylül 2026) |

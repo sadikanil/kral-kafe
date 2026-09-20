@@ -131,10 +131,13 @@ oturum).** `exam_reports` canlıda (batch 8). Self adisyon tablo istemez;
 çalışması için Vercel'de `OPENAI_API_KEY` ve `UPLOAD_DISK=s3` dolu olmalı
 (stok analiziyle aynı anahtar). Takip dosyası: `YOL-HARITASI.md`.
 
-**Sıradaki: Dalga 7 (paket/ödeme)** — `packages`, `package_items`,
-`subscriptions`, `payments`; fatura tutarı **her zaman** `subscriptions.price`.
-Sonra Dalga 8 (tüketimi masaya ve pakete bağlama; `Consumption::boot`
-`total_price`'ı koşulsuz eziyor, kapsam mantığı oraya girmeli).
+**Dalga 7 (paket/ödeme) — BİTTİ (21 Eylül 2026).** Dört tablo + fatura
+sütunu canlıda (batch 9). Kararlar `UYGULAMA-PLANI.md` Dalga 7.
+
+**Sıradaki: Dalga 9** (sınava geri sayım + haftalık veli raporu), sonra 10
+(koç). Dalga 8 (tüketimi pakete bağlama; `Consumption::boot` `total_price`'ı
+koşulsuz eziyor, kapsam mantığı oraya girmeli) koçluk hattından sonra —
+sıra `YOL-HARITASI.md`.
 
 Açık kalan, kullanıcıya sorulması gereken bir şey yok. İki şey rafta:
 - **IP kapısı** — kafenin IP'si ölçüldü, **dinamik** (TT ADSL havuzu). Beyaz

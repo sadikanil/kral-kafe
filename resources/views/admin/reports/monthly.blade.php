@@ -81,7 +81,9 @@
                             <th>Kullanıcı</th>
                             <th>E-posta</th>
                             <th class="text-center">Ürün</th>
-                            <th>Tutar</th>
+                            <th>Tüketim</th>
+                            <th>Paket</th>
+                            <th>Genel Toplam</th>
                             <th>Durum</th>
                             <th>Oluşturulma</th>
                         </tr>
@@ -98,7 +100,9 @@
                                 </td>
                                 <td class="text-muted">{{ $bill->user?->email ?? '—' }}</td>
                                 <td class="text-center">{{ number_format($bill->total_items) }}</td>
-                                <td><strong>{{ $bill->formatted_amount }}</strong></td>
+                                <td>{{ $bill->formatted_amount }}</td>
+                                <td>{{ $bill->formatted_package }}</td>
+                                <td><strong>{{ $bill->formatted_total }}</strong></td>
                                 <td>
                                     <span class="badge badge-{{ $bill->status === 'pending' ? 'warning' : ($bill->status === 'sent' ? 'success' : 'info') }}">
                                         {{ $bill->status_name }}
@@ -108,7 +112,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center p-4 text-muted">
+                                <td colspan="8" class="text-center p-4 text-muted">
                                     {{ $periodLabel }} için fatura bulunamadı.
                                     Raporlar sayfasından bu ayın faturalarını oluşturabilirsiniz.
                                 </td>

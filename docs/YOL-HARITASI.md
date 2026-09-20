@@ -1,6 +1,6 @@
 # Kral Kafe — Yol Haritası (takip dosyası)
 
-_Son güncelleme: 20 Eylül 2026. Kararların gerekçesi `YKS-CALISMASI.md`,
+_Son güncelleme: 21 Eylül 2026. Kararların gerekçesi `YKS-CALISMASI.md`,
 uygulama ayrıntısı `UYGULAMA-PLANI.md`, oturum devri `DEVIR.md`._
 
 Durum işaretleri: ✅ canlıda · 🔄 sırada/üzerinde çalışılıyor · ⬜ planlı · ⏸ rafta
@@ -19,6 +19,7 @@ Durum işaretleri: ✅ canlıda · 🔄 sırada/üzerinde çalışılıyor · �
 | 6b | Deneme sınavı takvimi + panel hatırlatıcısı | ✅ |
 | 6c | Self adisyon: panelden ürün ekleme (QR'siz), 60 sn geri alma | ✅ |
 | 6d | Deneme sonuç PDF'i: yönetici yükler, yapay zeka başarılı/zayıf alanları çıkarır, öğrenci görür | ✅ |
+| 7 | Paket kataloğu + kapsam kalemleri, öğrenciye paket atama (fiyat kopyalanır), ödeme kayıtları, vade/gecikmiş takibi, faturada paket tutarı | ✅ |
 
 ## 2. Kabul edilen sıra
 
@@ -28,14 +29,14 @@ Durum işaretleri: ✅ canlıda · 🔄 sırada/üzerinde çalışılıyor · �
 
 | Sıra | Dalga | İçerik | Büyüklük | Durum |
 |---|---|---|---|---|
-| 1 | 7 | Paket tanımı, öğrenciye paket atama (`subscriptions.price`), ödeme kayıtları, ödendi/bekliyor/gecikmiş | L | 🔄 sırada |
-| 2 | 8 | Tüketimi masaya ve pakete bağlama (`covered_by_package`); `Consumption::boot` fiyat ezmesi düzelir | M | ⬜ |
+| 1 | 7 | Paket tanımı, öğrenciye paket atama (`subscriptions.price`), ödeme kayıtları, ödendi/bekliyor/gecikmiş | L | ✅ |
+| 2 | 8 | Tüketimi masaya ve pakete bağlama (`covered_by_package`, `package_items` kapsamı); `Consumption::boot` fiyat ezmesi düzelir | M | ⬜ |
 
 ### Koçluk hattı (YKS değeri)
 
 | Sıra | Dalga | İçerik | Büyüklük | Bağımlılık | Durum |
 |---|---|---|---|---|---|
-| 1 | 9 | Sınava geri sayım (resmî sınav türü) + haftalık veli raporu (tembel üretim, koç yorumu alanı) | M | 6, 6b | ⬜ |
+| 1 | 9 | Sınava geri sayım (resmî sınav türü) + haftalık veli raporu (tembel üretim, koç yorumu alanı) | M | 6, 6b | 🔄 sırada |
 | 2 | 10 | Koç rolü aktif: koç–öğrenci atama, koç paneli, notlar (özel / veli / öğrenci+veli), görüşme kaydı | L | 6 | ⬜ |
 | 3 | 11 | `subjects` + yapılandırılmış deneme sonucu girişi (öğrenci girer, koç doğrular) + net grafiği + `can_view_exams` | L | 6b, 6d, 10 | ⬜ |
 | 4 | 12 | Görevler + haftalık tamamlama oranı | M | 10 | ⬜ |

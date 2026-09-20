@@ -14,6 +14,7 @@ class MonthlyBill extends Model
         'bill_month',
         'total_items',
         'total_amount',
+        'package_amount',
         'status',
         'generated_at',
     ];
@@ -21,6 +22,7 @@ class MonthlyBill extends Model
     protected $casts = [
         'bill_month' => 'date',
         'total_amount' => 'decimal:2',
+        'package_amount' => 'decimal:2',
         'generated_at' => 'datetime',
     ];
 
@@ -38,6 +40,29 @@ class MonthlyBill extends Model
     public function getFormattedAmountAttribute(): string
     {
         return number_format($this->total_amount, 2, ',', '.') . ' ₺';
+    }
+
+    /** Paket + tuketim. */
+    public function grandTotal(): float
+    {
+        return round((float) $this->total_amount + (float) $this->package_amount, 2);
+    }
+
+    public function getFormattedPackageAttribute(): string
+    {
+        return number_format((float) $this->package_amount, 2, ',', '.') . ' ₺';
+    }
+
+    /** Raporlar sayfasi bu adla okuyordu ama accessor yoktu; genel toplam. */
+    public function getFormattedTotalAttribute(): string
+    {
+        return number_format($this->grandTotal(), 2, ',', '.') . ' ₺';
+    }
+
+    /** Raporlar sayfasi bu adla okuyordu ama accessor yoktu. */
+    public function getPeriodNameAttribute(): string
+    {
+        return $this->month_name;
     }
 
     /**
@@ -97,6 +122,11 @@ class MonthlyBill extends Model
             [
                 'total_items' => $consumptions->sum('quantity'),
                 'total_amount' => $consumptions->sum('total_price'),
+                // Paket tutari HER ZAMAN subscriptions.price'tan; katalog
+                // fiyati degisince gecmis fatura degismesin (Dalga 7).
+                'package_amount' => Subscription::where('student_id', $user->id)
+                    ->startingIn($year, $month)
+                    ->sum('price'),
                 'generated_at' => now(),
             ]
         );

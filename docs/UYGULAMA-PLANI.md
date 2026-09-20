@@ -442,12 +442,33 @@ Kullanıcı isteği: "deneme sınavı takvimi hatırlatıcı ve takvim görünü
 - İndirme controller üzerinden (`Storage::response`); bucket herkese açık olsa
   bile yol tahmin edilemez.
 
-### Dalga 7 — Paket ve ödeme (MVP #10, #11) · 1–6 hattına paralel
+### Dalga 7 — Paket ve ödeme (MVP #10, #11) · ✅ bitti (21 Eylül 2026)
 
-`packages`, `package_items`, `subscriptions`, `payments`. Fatura
-`package_amount` değerini **her zaman `subscriptions.price`'tan** okur,
-`packages.monthly_price`'tan değil — katalog fiyatı değişince geçmiş faturalar
-yeniden yazılmasın.
+`packages`, `package_items`, `subscriptions`, `payments`,
+`monthly_bills.package_amount`. Uygulanan kararlar:
+
+- **Fiyat kopyalanır.** Atama anında `packages.monthly_price` →
+  `subscriptions.price`; yönetici formda değiştirebilir. Katalog sonradan
+  değişince abonelik ve fatura değişmez (test var).
+- **Fatura paket tutarı = o ayda BAŞLAYAN aboneliklerin fiyat toplamı.**
+  Aylara bölme yok; çok aylık abonelik başladığı ayda yazılır. `total_amount`
+  tüketim toplamı olarak kaldı (CSV ve ekranlar öyle okuyordu); genel toplam
+  `grandTotal()`. Raporlar sayfasının okuduğu ama var olmayan
+  `formatted_total` / `period_name` accessor'ları eklendi.
+- **Ödeme durumu türetilir.** `paid` (bakiye 0), `overdue` (bakiye var ve
+  bugün > başlangıç + `kafe.odeme_vadesi_gun`), yoksa `pending`;
+  `Subscription::syncPaymentStatus()` liste ve panel açılışında çalışır.
+  `cancelled` elle verilir ve dokunulmaz; iptal aboneliğe ödeme yazılmaz.
+- **Paket atanan öğrenci içeri alınır:** `users.subscription_status = active`,
+  `subscription_start/end` abonelik tarihleri. İptal öğrencinin durumunu
+  otomatik kapatmaz; yönetici kullanıcı formundan kapatır.
+- **Kapsam kalemleri yalnızca tanım.** `package_items` (ürün, adet, dönem;
+  adet boş = sınırsız) Dalga 8'de tüketime uygulanır. `usage_window`
+  ertelendi.
+- Paket silinmez, kapatılır (`restrictOnDelete`, masalarla aynı karar).
+- Öğrenci panelinde paket + ödeme rozeti; veli kartında da (ödemeyi veli
+  yapar). Yönetici: Paketler, Ödemeler (durum filtreli), öğrenci başına
+  💳 sayfası.
 
 ### Dalga 8 — Tüketimin masa ve pakete bağlanması (MVP #12) · en son
 
@@ -492,5 +513,6 @@ yeniden yazılmasın.
 | 6b · Deneme takvimi | ✅ Bitti |
 | 6c · Self adisyon | ✅ Bitti |
 | 6d · Deneme PDF + yapay zeka | ✅ Bitti |
-| 7 · Paket ve ödeme | 🔄 Sırada |
+| 7 · Paket ve ödeme | ✅ Bitti |
 | 8 · Tüketim bağlama | ⬜ |
+| 9 · Geri sayım + haftalık veli raporu | 🔄 Sırada |

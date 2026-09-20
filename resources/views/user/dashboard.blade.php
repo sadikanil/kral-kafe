@@ -28,6 +28,21 @@
             </form>
         </div>
     @endif
+    @if($subscription)
+        @php $subscription->syncPaymentStatus(); @endphp
+        <div class="card mb-3">
+            <div class="card-body d-flex justify-content-between align-items-center" style="flex-wrap: wrap; gap: 8px;">
+                <div>
+                    🎫 <strong>{{ $subscription->package->name }}</strong>
+                    <span class="text-muted">· {{ $subscription->starts_on->format('d.m.Y') }} – {{ $subscription->ends_on->format('d.m.Y') }}</span>
+                </div>
+                <span class="badge badge-{{ $subscription->payment_status->badgeClass() }}">
+                    Ödeme: {{ $subscription->payment_status->label() }}
+                </span>
+            </div>
+        </div>
+    @endif
+
     <!-- Bu Ay Özeti -->
     <div class="stats-grid">
         <div class="stat-card animate-slide-up">
