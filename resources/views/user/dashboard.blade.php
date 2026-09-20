@@ -118,6 +118,58 @@
         </div>
     @endif
 
+    @php
+        use App\Support\Duration;
+        $hedefDakika = $weeklyGoal?->target_minutes;
+        $yuzde = $hedefDakika ? min(100, (int) round($weekMinutes / $hedefDakika * 100)) : null;
+    @endphp
+
+    <div class="d-flex gap-2 mb-3" style="flex-wrap: wrap;">
+        <div class="card" style="flex: 1; min-width: 140px;">
+            <div class="card-body text-center">
+                <div class="session-timer">{{ Duration::human($todayMinutes) }}</div>
+                <div class="text-muted">Bugün</div>
+            </div>
+        </div>
+        <div class="card" style="flex: 1; min-width: 140px;">
+            <div class="card-body text-center">
+                <div class="session-timer">{{ Duration::human($weekMinutes) }}</div>
+                <div class="text-muted">Bu hafta</div>
+            </div>
+        </div>
+        <div class="card" style="flex: 1; min-width: 140px;">
+            <div class="card-body text-center">
+                <div class="session-timer">{{ Duration::human($monthMinutes) }}</div>
+                <div class="text-muted">Bu ay</div>
+            </div>
+        </div>
+        <div class="card" style="flex: 1; min-width: 140px;">
+            <div class="card-body text-center">
+                <div class="session-timer">{{ $streak }} gün</div>
+                <div class="text-muted">Üst üste</div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Hedef yoksa cubuk HIC cizilmez: bos bir cubuk "hedefin yok" demez,
+         "hedefin var ama hic calismadin" der. --}}
+    @if($hedefDakika)
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="progress-label">
+                    <span>Haftalık hedef</span>
+                    <span>{{ Duration::human($weekMinutes) }} / {{ Duration::human($hedefDakika) }}</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar" style="width: {{ $yuzde }}%;"></div>
+                </div>
+                @if($yuzde >= 100)
+                    <p class="text-success mb-0 mt-2">Bu haftanın hedefi tamam. 👏</p>
+                @endif
+            </div>
+        </div>
+    @endif
+
     <!-- Bilgilendirme -->
     <div class="alert alert-info mt-4 animate-slide-up" style="animation-delay: 200ms">
         💡 <strong>Nasıl tüketim eklerim?</strong><br>

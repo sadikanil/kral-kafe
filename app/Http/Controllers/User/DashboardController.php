@@ -5,7 +5,10 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Consumption;
 use App\Services\BillingService;
+use App\Models\StudyGoal;
 use App\Services\StudySessionService;
+use App\Services\StudyStats;
+use App\Support\LocalDay;
 use App\Support\SqlDialect;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +26,7 @@ class DashboardController extends Controller
     /**
      * Show user dashboard.
      */
-    public function index()
+    public function index(StudyStats $istatistik)
     {
         $user = Auth::user();
 
@@ -50,6 +53,14 @@ class DashboardController extends Controller
             'user' => $user,
             // Acik calisma oturumu: ogrenci masaya donmeden panelden bitirebilsin.
             'openSession' => app(StudySessionService::class)->openFor($user),
+            // Calisma istatistikleri (Dalga 5). Hedef yoksa null gecer ve
+            // ilerleme cubugu hic cizilmez - bos bir cubuk "hedefin yok" demez,
+            // "hedefin var ama hic calismadin" der.
+            'todayMinutes' => $istatistik->todayMinutes($user),
+            'weekMinutes' => $istatistik->weekMinutes($user),
+            'monthMinutes' => $istatistik->monthMinutes($user),
+            'streak' => $istatistik->streak($user),
+            'weeklyGoal' => StudyGoal::activeFor($user, LocalDay::today()),
             'currentMonthTotal' => $currentMonthTotal,
             'currentMonthItems' => $currentMonthItems,
             'recentConsumptions' => $recentConsumptions,

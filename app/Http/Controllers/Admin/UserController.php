@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Models\StudyGoal;
 use App\Models\User;
+use App\Support\LocalDay;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Support\SqlDialect;
@@ -88,7 +90,10 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return view('admin.users.edit', ['user' => $user]);
+        return view('admin.users.edit', [
+            'user' => $user,
+            'weeklyGoal' => StudyGoal::activeFor($user, LocalDay::today()),
+        ]);
     }
 
     /**
@@ -103,6 +108,7 @@ class UserController extends Controller
             'role' => ['required', Rule::enum(Role::class)],
             'subscription_status' => ['required', 'in:active,inactive,suspended'],
             'phone' => ['nullable', 'string', 'max:20'],
+            'weekly_goal_hours' => ['nullable', 'integer', 'min:1', 'max:120'],
         ]);
 
         $user->update([
@@ -116,6 +122,8 @@ class UserController extends Controller
         if (!empty($validated['password'])) {
             $user->update(['password' => Hash::make($validated['password'])]);
         }
+
+        $this->syncWeeklyGoal($user, $validated['weekly_goal_hours'] ?? null);
 
         return redirect()->route('admin.users.index')
             ->with('success', 'Kullanıcı başarıyla güncellendi.');
@@ -135,6 +143,38 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')
             ->with('success', 'Kullanıcı başarıyla silindi.');
+    }
+
+    /**
+     * Haftalik hedefi gunceller.
+     *
+     * Mevcut hedefin UZERINE YAZMAZ: eskisini bugunden kapatip yenisini acar.
+     * Uzerine yazmak gecmisi sessizce degistirirdi - gecen hafta 10 saatlik
+     * hedefi tutturan ogrenci, hedef 25 saate cikinca "tutturamamis" gorunur.
+     */
+    private function syncWeeklyGoal(User $user, ?int $hours): void
+    {
+        if ($hours === null) {
+            return;
+        }
+
+        $dakika = $hours * 60;
+        $bugun = LocalDay::today();
+        $mevcut = StudyGoal::activeFor($user, $bugun);
+
+        if ($mevcut && $mevcut->target_minutes === $dakika) {
+            return;
+        }
+
+        $mevcut?->supersedeOn($bugun);
+
+        StudyGoal::create([
+            'student_id' => $user->id,
+            'period' => 'weekly',
+            'target_minutes' => $dakika,
+            'effective_from' => $bugun,
+            'created_by' => auth()->id(),
+        ]);
     }
 
     /**

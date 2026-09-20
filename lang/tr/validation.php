@@ -192,6 +192,7 @@ return [
     'attributes' => [
         'name' => 'ad',
         'role' => 'rol',
+        'weekly_goal_hours' => 'haftalık hedef',
         'subscription_status' => 'abonelik durumu',
         'email' => 'e-posta',
         'password' => 'şifre',

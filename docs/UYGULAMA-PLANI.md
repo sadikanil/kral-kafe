@@ -334,11 +334,43 @@ kusur buldu:
    pencere de sessizce kapanabilir. Kalıcı çözüm Dalga 7 sonrasına bırakıldı;
    mevcut `discrepancy_logs` çözümleme akışı örnek alınabilir.
 
-### Dalga 5 — Süre, devamlılık, hedef (MVP #4, #6, #5)
+### Dalga 5 — Süre, devamlılık, hedef (MVP #4, #6, #5) · ✅ bitti
 
-"Gelinen gün" tanımı: *o yerel güne ≥ `config('kafe.sayilabilir_dakika')`
-düşen en az bir oturum.* Gece yarısını aşan oturum tek satır kalır, güne bölme
-**hesap tarafında** yapılır.
+`StudyStats`, `study_goals` + `StudyGoal`, `Duration`, öğrenci panelinde süre /
+seri / hedef ilerlemesi, yönetici formunda haftalık hedef alanı.
+
+**Gece yarısını aşan oturum tek satır kalıyor**, güne bölme hesap tarafında:
+22:00–01:30 arası bir oturum birinci güne 120, ikinci güne 90 dakika yazıyor.
+Veriyi bölerek saklamak oturumu parçalar ve "kaç oturum açtın" sorusunu
+cevaplanamaz hale getirirdi.
+
+**Hedefin geçerlilik aralığı var.** Tek satırlık bir `users.haftalik_hedef`
+sütununun yapamayacağı şey: koç hedefi yükseltince geçmiş haftaların "tuttu mu"
+cevabı değişmemeli. Hedef değiştirilmiyor, **yenisiyle değiştiriliyor** — eski
+satır bugünden kapanır, yeni satır açılır. Testi var.
+
+**Yol üstünde bulunan hata — mevcut kodu da etkiliyordu.**
+
+`LocalDay` sınırları kafe saatinde dönüyordu. Eloquent bir `Carbon`'u sorgu
+bağlamasına koyarken UTC'ye **çevirmez**, kendi saat diliminin duvar saatini
+biçimler: `2026-09-14 00:00+03:00` sorguya `"2026-09-14 00:00:00"` diye gidip
+UTC sütunuyla karşılaştırılıyordu — üç saatlik sessiz kayma, hata yok.
+
+Yerel 01:00'de biten bir oturum bu yüzden hiçbir güne sayılmıyordu. Aynı hata
+Dalga 4'te gönderilen `LiveController`'ın anomali penceresinde de vardı; orada
+yedi günlük pencere maskelediği için fark edilmemişti. Sınırlar artık UTC
+dönüyor ve iki test bunu zorunlu kılıyor.
+
+Bu, aynı tuzağın **üçüncü** ortaya çıkışı (Dalga 4'te `dueEnd()`, burada sorgu
+bağlamaları). Zaman yazan ya da sorgulayan her yeni kodda önce bu kontrol
+edilmeli.
+
+İkinci kusur: sınırlar kapalı aralıktı ve `endOfDay()` 23:59:59 verdiği için
+her gün bir dakika eksik sayılıyordu. Pencereler artık yarı açık `[baş, sonraki baş)`
+ve sınırlar `LocalDay` üzerinden alındığı için hesap DST'ye de dayanıklı.
+
+**Seri (devamlılık):** bugün henüz gelinmemiş olması seriyi bozmaz — aksi halde
+seri her sabah sıfırlanır ve özellik anlamını yitirirdi.
 
 ### Dalga 6 — Veli (MVP #8)
 
@@ -391,7 +423,7 @@ yeniden yazılmasın.
 | 2 · Masa | ✅ Bitti |
 | 3 · Oturum + canlı ekran | ✅ Bitti |
 | 4 · Otomatik kapanış | ✅ Bitti |
-| 5 · Süre, devamlılık, hedef | 🔄 Sırada |
-| 6 · Veli | ⬜ |
+| 5 · Süre, devamlılık, hedef | ✅ Bitti |
+| 6 · Veli | 🔄 Sırada |
 | 7 · Paket ve ödeme | ⬜ |
 | 8 · Tüketim bağlama | ⬜ |

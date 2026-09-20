@@ -50,6 +50,21 @@
                 </div>
 
                 <div class="form-group">
+                    <label for="weekly_goal_hours" class="form-label">Haftalık Çalışma Hedefi (saat)</label>
+                    <input type="number" id="weekly_goal_hours" name="weekly_goal_hours" min="1" max="120"
+                        class="form-control @error('weekly_goal_hours') is-invalid @enderror"
+                        value="{{ old('weekly_goal_hours', $weeklyGoal ? intdiv($weeklyGoal->target_minutes, 60) : '') }}"
+                        placeholder="Örn. 20">
+                    @error('weekly_goal_hours')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
+                    <small class="text-muted">
+                        Değiştirince eski hedef kapatılır, yenisi bugünden başlar — geçmiş
+                        haftaların sonucu olduğu gibi kalır. Boş bırakılırsa mevcut hedef korunur.
+                    </small>
+                </div>
+
+                <div class="form-group">
                     <label for="subscription_status" class="form-label">Abonelik Durumu *</label>
                     <select id="subscription_status" name="subscription_status"
                         class="form-control @error('subscription_status') is-invalid @enderror" required>
