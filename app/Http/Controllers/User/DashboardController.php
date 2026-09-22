@@ -96,6 +96,9 @@ class DashboardController extends Controller
                 ->get(),
             // Deneme takvimi hatirlaticisi: siradaki deneme(ler).
             'upcomingExams' => ExamEvent::upcoming()->limit(3)->get(),
+            // Resmi sinav geri sayimi (Dalga 15b). Hatirlaticidan AYRI:
+            // YKS bir deneme degil, hedefin kendisi.
+            'officialExam' => ExamEvent::upcomingOfficial()->first(),
             // Bildirimler (Dalga 11): teslim kanali su an yalnizca panel.
             'notifications' => \App\Models\Notification::for($user)
                 ->latest()

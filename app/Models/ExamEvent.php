@@ -34,12 +34,27 @@ class ExamEvent extends Model
         'exam_type' => ExamType::class,
     ];
 
-    /** Bugun ve sonrasi, yakindan uzaga. */
+    /**
+     * Bugun ve sonrasi, yakindan uzaga - YALNIZCA DENEMELER.
+     *
+     * Resmi sinav (YKS/LGS) disarida: "siradaki deneme" hatirlaticisi onu
+     * gosterseydi kutu "Sıradaki deneme: YKS" derdi. Resmi sinavin kendi
+     * geri sayimi var (scopeNextOfficial), takvimde ise ikisi de duruyor.
+     */
     public function scopeUpcoming(Builder $query): Builder
     {
         return $query->where('exam_date', '>=', LocalDay::today())
+            ->where('exam_type', '!=', ExamType::Official->value)
             ->orderBy('exam_date')
             ->orderBy('starts_at');
+    }
+
+    /** Siradaki resmi sinav (YKS/LGS). Yoksa null. */
+    public function scopeUpcomingOfficial(Builder $query): Builder
+    {
+        return $query->where('exam_date', '>=', LocalDay::today())
+            ->where('exam_type', ExamType::Official->value)
+            ->orderBy('exam_date');
     }
 
     /** Bugunden onceki denemeler, yeniden eskiye. */

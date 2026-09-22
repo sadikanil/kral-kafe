@@ -15,7 +15,10 @@
             @csrf
             <input type="text" name="name" class="form-control" placeholder="Ders adı" maxlength="60" required>
             <select name="exam_type" class="form-control" required>
-                @foreach(\App\Enums\ExamType::cases() as $tur)
+                {{-- "Resmî Sınav" bir DERS turu degil: subjects.exam_type
+                     dersin hangi sinavda ciktigini soyluyor. Dalga 15b'de
+                     eklenen enum degerinin sessiz yan etkisi. --}}
+                @foreach(array_filter(\App\Enums\ExamType::cases(), fn ($t) => $t->isPractice()) as $tur)
                     <option value="{{ $tur->value }}">{{ $tur->label() }}</option>
                 @endforeach
             </select>

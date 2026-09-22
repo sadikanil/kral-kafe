@@ -49,6 +49,9 @@ class DashboardController extends Controller
         return view('parent.dashboard', [
             'students' => $ogrenciler,
             'upcomingExams' => ExamEvent::upcoming()->limit(3)->get(),
+            // Resmi sinav geri sayimi (Dalga 15b). Hatirlaticidan AYRI:
+            // YKS bir deneme degil, hedefin kendisi.
+            'officialExam' => ExamEvent::upcomingOfficial()->first(),
             // Bildirimler (Dalga 11): teslim kanali su an yalnizca panel.
             // E-posta gelince ayni kayitlarin uzerine binecek.
             'notifications' => \App\Models\Notification::for(auth()->user())

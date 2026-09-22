@@ -7,6 +7,8 @@
 
     @include('_bildirimler')
 
+    @include('exams._geri-sayim')
+
     @include('exams._hatirlatici', ['calendarRoute' => 'parent.exams'])
 
     @if($students->isEmpty())

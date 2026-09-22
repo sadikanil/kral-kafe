@@ -190,7 +190,7 @@ oturduktan sonra.
 | 4 | **14a** | **Koç rolü + çalışma planı sayfası** — koç–öğrenci atama, `/koc/plan`, haftalık **ve aylık** dönem, veli görünürlüğü (§7-B, §7-D) | M | 6 ✅ | ✅ |
 | 4b | **14b** | **Koç notları ve görüşme kaydı** — `coach_notes`, `visibility` (parent/private), görüşme özeti (§7-B, §7-I) | M | 14a ✅ | ✅ |
 | 5 | **15a** | **Haftalık veli raporu** — tembel üretim, dondurulmuş payload, koç yorumu (§7-A) | M | 9 ✅, 12 ✅ | ✅ |
-| 5b | **15b** | **Sınava geri sayım** — `ExamType::Official`, panelde geri sayım (§7-G) | S | 6b ✅ | ⬜ |
+| 5b | **15b** | **Sınava geri sayım** — `ExamType::Official`, panelde geri sayım (§7-G) | S | 6b ✅ | ✅ |
 | 6 | **16** | **Devamlılık düşüş sinyalleri** — önce koça (§7-E) | S | 14 | ⬜ |
 | 7 | **17** | **Ders etiketi + zayıf konu listesi** (§7-F, §7-H) | M | 12 | ⬜ |
 
@@ -505,11 +505,16 @@ Deneme sonucundan (düşük net) ya da yönetici/koç girişiyle konu listesi; h
 konuya plan maddesi bağlanır, konu "kapandı" işaretlenir. 6d'nin PDF analizinden
 de beslenebilir.
 
-### G · Sınava geri sayım — Dalga 15b ⬜
+### G · Sınava geri sayım — Dalga 15b · ✅ bitti (22 Eylül 2026)
 
-Deneme takvimine "resmî sınav" türü (YKS, LGS tarihi); panelde büyük geri sayım,
-takvimde işaretli. `ExamType::Official` yeter; `exam_events` üstüne bayrak
-gerekmez. Dalga 6b altyapısıyla bir günlük iş.
+`ExamType::Official`; öğrenci ve veli panosunda büyük geri sayım, takvimde
+işaretli. Ayrı tablo ya da bayrak gerekmedi.
+
+**Resmî sınav "sıradaki deneme" hatırlatıcısına girmez.** YKS bir deneme değil,
+hedefin kendisi; kutu "Sıradaki deneme: YKS" deseydi öğrencinin hafta sonu
+çözeceği denemeyle gireceği sınavı aynı kefeye koyardı. `scopeUpcoming()` artık
+resmî sınavı dışarıda bırakıyor, `scopeUpcomingOfficial()` ayrı — takvimde ise
+ikisi de duruyor.
 
 ---
 
@@ -1041,6 +1046,22 @@ dalında yazıldı ve şeması canlıya uygulandı (batch 9), ama `main`'e alın
 taşımıyordu. 22 Eylül'de merge edildi. Migration gerekmedi, defter zaten
 doluydu. Bu, §10.4'teki defter/dosya karşılaştırmasının **ters yönde** ısırması:
 canlı depodan ileri gidebiliyor.
+
+#### Dalga 15b — Sınava geri sayım · ✅ bitti (22 Eylül 2026)
+
+`ExamType::Official` + `_geri-sayim` parçası. Migration gerekmedi: `exam_type`
+düz string ve üzerinde **CHECK kısıtı yok** (§10.2'nin kararı bu sayede yeni
+değeri bedava yaptı — canlıda da doğrulandı).
+
+- **Resmî sınav deneme hatırlatıcısından ayrıldı.** `scopeUpcoming()` bu ana
+  kadar her türü döndürüyordu; ayrım olmasa kutu "Sıradaki deneme: YKS" derdi.
+  `ExamType::isPractice()` tek karar noktası.
+- **Takvimde ikisi de duruyor** — ayrılan yalnızca hatırlatıcı.
+- **Yan etki yakalandı:** yeni bir enum değeri eklemek, `ExamType::cases()`
+  üzerinden dönen **her** formu etkiliyor. Ders formu (`subjects.exam_type`)
+  "Resmî Sınav"ı bir ders türü olarak sunmaya başlamıştı; `isPractice()` ile
+  süzüldü ve teste bağlandı. Enum genişletirken `cases()` çağrılarını aramak
+  gerekiyor.
 
 #### Dalga 15a — Haftalık veli raporu · ✅ bitti (22 Eylül 2026)
 

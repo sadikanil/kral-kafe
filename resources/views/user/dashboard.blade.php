@@ -4,6 +4,8 @@
 @section('page-title', 'Hoş Geldin, {{ auth()->user()->name }}!')
 
 @section('content')
+    @include('exams._geri-sayim')
+
     @include('exams._hatirlatici', ['calendarRoute' => 'user.exams'])
 
     @unless($openSession)
