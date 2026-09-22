@@ -70,16 +70,18 @@ enum Role: string
      * icinde iki kez yazilmisti; ayrisirlarsa kullanici girise basinca bir yere,
      * ana sayfaya girince baska yere gider.
      *
-     * Koc/ogretmen/gorevli icin henuz ayri panel YOK - AdminMiddleware
-     * yalnizca yoneticiyi geciriyor, dolayisiyla onlari yonetim paneline
-     * yollamak dogrudan 403 demek olurdu. Panelleri geldigi dalgada bu match
-     * tek satirla genisler. Veli paneli Dalga 6'da geldi.
+     * Koc Dalga 14'te kendi sayfasina kavustu; ogretmen/gorevli icin hala
+     * ayri panel YOK - AdminMiddleware yalnizca yoneticiyi geciriyor,
+     * dolayisiyla onlari yonetim paneline yollamak dogrudan 403 demek
+     * olurdu. Panelleri geldigi dalgada bu match tek satirla genisler.
+     * Veli paneli Dalga 6'da geldi.
      */
     public function homeRoute(): string
     {
         return match ($this) {
             self::Admin => 'admin.dashboard',
             self::Parent => 'parent.dashboard',
+            self::Coach => 'coach.plan.index',
             default => 'user.dashboard',
         };
     }

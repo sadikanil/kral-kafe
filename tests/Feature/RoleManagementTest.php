@@ -131,9 +131,12 @@ class RoleManagementTest extends TestCase
                 'subscription_status' => 'active',
             ]);
 
+            // Beklenti BILEREK elle yaziliyor: Role::homeRoute()'u cagirsaydi
+            // test kendi kendini dogrular ve iki yerin ayrismasini yakalayamazdi.
             $beklenen = route(match ($rol) {
                 Role::Admin => 'admin.dashboard',
                 Role::Parent => 'parent.dashboard',
+                Role::Coach => 'coach.plan.index',
                 default => 'user.dashboard',
             });
 

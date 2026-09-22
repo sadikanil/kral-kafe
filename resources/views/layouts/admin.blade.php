@@ -56,6 +56,14 @@
                     <span>Canlı Ekran</span>
                 </a>
 
+                {{-- Koc sayfasi (Dalga 14). Yonetici ayni zamanda koctur
+                     (karar 11) ve buraya atanma gerektirmeden girer. --}}
+                <a href="{{ route('coach.plan.index') }}"
+                    class="sidebar-nav-link {{ request()->routeIs('coach.plan.*') ? 'active' : '' }}">
+                    <span class="sidebar-nav-link-icon">🗓️</span>
+                    <span>Çalışma Planı</span>
+                </a>
+
                 <a href="{{ route('admin.subjects.index') }}"
                     class="sidebar-nav-link {{ request()->routeIs('admin.subjects.*') ? 'active' : '' }}">
                     <span class="sidebar-nav-link-icon">📚</span>

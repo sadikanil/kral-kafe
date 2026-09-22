@@ -95,13 +95,18 @@ class UserController extends Controller
         return view('admin.users.edit', [
             'user' => $user,
             'weeklyGoal' => StudyGoal::activeFor($user, LocalDay::today()),
-            // Haftalik calisma plani (Dalga 13). Hedefin ("ne kadar")
-            // hemen yaninda duruyor cunku plan "ne" sorusunu cevapliyor.
-            'planItems' => \App\Models\StudyPlanItem::forWeek($user, LocalDay::weekStart(LocalDay::today()))
-                ->with('subject')
-                ->orderBy('id')
-                ->get(),
-            'planSubjects' => \App\Models\Subject::active()->orderBy('sort_order')->orderBy('name')->get(),
+            // Koc atamasi (Dalga 14). Plan formu bu ekrandan /koc/plan
+            // altina TASINDI; burada kalan yalnizca "kim izliyor" sorusu.
+            // Ayni formu iki yerde tutmak, birinin gunun birinde
+            // digerinden farkli davranmasi demekti.
+            'assignedCoaches' => $user->hasRole(Role::Student)
+                ? $user->coaches()->orderBy('name')->get()
+                : collect(),
+            'assignableCoaches' => $user->hasRole(Role::Student)
+                ? User::whereIn('role', [Role::Coach->value, Role::Admin->value])
+                    ->orderBy('name')
+                    ->get()
+                : collect(),
             // Veli-ogrenci bagi (Dalga 6). Liste yalnizca KAYITLI role gore
             // gelir: veliye ogrenci listesi, ogrenciye veli listesi. Rol bu
             // formda degistiriliyorsa bag bir sonraki duzenlemede kurulur.

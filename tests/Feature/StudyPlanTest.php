@@ -18,7 +18,9 @@ use Tests\TestCase;
  * Haftalik HEDEF (Dalga 5) "ne kadar", plan "NE" sorusunu cevapliyor. Ikisi
  * birlikte anlamli: 20 saat calisip hic matematik yapmamak bugun gorunmuyor.
  *
- * Plani yonetici belirliyor (karar 10).
+ * Plani yonetici belirliyor (karar 10). Dalga 14'te koc da yaziyor ve
+ * form /koc/plan altina tasindi; buradaki testler o adrese bakar.
+ * Koc yetkisinin kendisi CoachPlanTest'te.
  */
 class StudyPlanTest extends TestCase
 {
@@ -78,9 +80,10 @@ class StudyPlanTest extends TestCase
         $this->haftayaGit();
 
         $this->actingAs($this->yonetici())
-            ->post(route('admin.study-plan.store', $ogrenci), [
+            ->post(route('coach.plan.store', $ogrenci), [
                 'title' => 'Türev 40 soru',
                 'subject_id' => $ders->id,
+                'period' => 'week',
             ])
             ->assertRedirect();
 
@@ -97,7 +100,10 @@ class StudyPlanTest extends TestCase
         $this->haftayaGit();
 
         $this->actingAs($ogrenci)
-            ->post(route('admin.study-plan.store', $ogrenci), ['title' => 'Kendime görev'])
+            ->post(route('coach.plan.store', $ogrenci), [
+                'title' => 'Kendime görev',
+                'period' => 'week',
+            ])
             ->assertForbidden();
     }
 

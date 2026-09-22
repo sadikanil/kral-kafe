@@ -72,11 +72,24 @@ class DashboardController extends Controller
             'sessions' => $this->sonOturumlar($student, 30),
             // Deneme sonuclari (Dalga 12). Karar 2: profile islenen her sey
             // veliye acik - netler, siralamalar ve yoneticinin notu dahil.
-            // Haftalik plan ilerlemesi (Dalga 13): veli oran gorur.
-            'planProgress' => \App\Models\StudyPlanItem::weeklyProgress(
-                $student,
-                \App\Support\LocalDay::weekStart(\App\Support\LocalDay::today()),
-            ),
+            // Calisma plani (Dalga 13, Dalga 14'te aylik eklendi).
+            //
+            // Veli artik yalnizca ORANI degil MADDELERI de goruyor: karar 2
+            // (profile islenen her sey veliye acik) oran icin de maddeler
+            // icin de gecerli, ve "3/5" tek basina velinin cocuguyla
+            // konusmasina yetmiyor - neyin yapildigi da gorunmeli.
+            'planPeriods' => collect(\App\Enums\PlanPeriod::cases())
+                ->map(fn (\App\Enums\PlanPeriod $donem) => [
+                    'period' => $donem,
+                    'start' => $donem->startFor(\App\Support\LocalDay::today()),
+                    'items' => \App\Models\StudyPlanItem::forPeriod(
+                        $student,
+                        $donem,
+                        $donem->startFor(\App\Support\LocalDay::today()),
+                    )->with('subject')->orderBy('id')->get(),
+                ])
+                ->filter(fn (array $blok) => $blok['items']->isNotEmpty())
+                ->values(),
             'examResults' => \App\Models\ExamResult::where('student_id', $student->id)
                 ->with(['event', 'subjects.subject'])
                 ->get()

@@ -187,7 +187,8 @@ oturduktan sonra.
 |---|---|---|---|---|---|
 | 1 | **12b** | **Net gelişim grafiği** — ders bazlı net serisi, deneme türüne göre ayrı (§7-C) | S | 12 ✅ | ⬜ |
 | 3 | **8** | **Tüketim sadeleştirme** — QR tüketim akışının kaldırılması, tüketimin `package_items` kapsamına bağlanması (`covered_by_package`) | M | 7 ✅ | ⬜ |
-| 4 | **14** | **Koç rolü aktif** — koç–öğrenci atama, koç paneli, notlar, görüşme kaydı (§7-B, §7-I) | L | 6 | ⬜ |
+| 4 | **14a** | **Koç rolü + çalışma planı sayfası** — koç–öğrenci atama, `/koc/plan`, haftalık **ve aylık** dönem, veli görünürlüğü (§7-B, §7-D) | M | 6 ✅ | ✅ |
+| 4b | **14b** | **Koç notları ve görüşme kaydı** — `coach_notes`, `visibility` (parent/private), görüşme özeti (§7-B, §7-I) | M | 14a ✅ | ⬜ |
 | 5 | **15** | **Haftalık veli raporu** — tembel üretim, yönetici/koç yorumu (§7-A) + sınava geri sayım (§7-G) | M | 9, 12 | ⬜ |
 | 6 | **16** | **Devamlılık düşüş sinyalleri** — önce koça (§7-E) | S | 14 | ⬜ |
 | 7 | **17** | **Ders etiketi + zayıf konu listesi** (§7-F, §7-H) | M | 12 | ⬜ |
@@ -431,11 +432,15 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
   karşılaştırmayı yasaklar; kurum/il/TR sıralaması ise sınavın kendi verisidir,
   sistemin ürettiği bir kıyas değil.
 
-### D · Haftalık çalışma planı — Dalga 13 · ✅ bitti (22 Eylül 2026)
+### D · Çalışma planı — Dalga 13 + 14a · ✅ bitti (22 Eylül 2026)
 
-- **Ne:** Yönetici (ya da koç) öğrencinin haftalık yapması gerekenleri belirler:
-  başlık, ders, hedef gün. Öğrenci panelinde bu haftanın listesini görür,
-  tamamladıkça işaretler. Tamamlama oranı yönetici ve veli panelinde.
+- **Ne:** Koç (ya da yönetici) öğrencinin **haftalık ve aylık** yapması
+  gerekenleri belirler: başlık, ders, dönem. Öğrenci panelinde iki listeyi de
+  görür ve tamamladıkça işaretler. Veli hem oranı hem maddeleri görür.
+- **Kendi sayfasında:** `/koc/plan` — öğrenci listesi, dönem seçimi
+  (haftalık/aylık), dönem kaydırma. Dalga 13'te form yönetici kullanıcı
+  sayfasının dibindeydi; Dalga 14a'da oradan **taşındı**. Aynı formu iki yerde
+  tutmak, birinin gün gelip diğerinden farklı davranması demekti.
 - **Haftalık hedef saatten farkı:** hedef **ne kadar**, plan **ne** sorusunu
   cevaplar. İkisi birlikte anlamlı: 20 saat çalışıp hiç matematik yapmamak
   bugün görünmüyor.
@@ -454,7 +459,7 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
   Bildirim tarafı cron'a bağlı (§7-K), ama raporun kendisi paneli açan ilk kişide
   üretilebilir.
 
-### B · Koç rolü, atama ve notlar — Dalga 14
+### B · Koç rolü, atama ve notlar — Dalga 14a ✅ / 14b ⬜
 
 - **Ne:** Koç paneli: öğrenci listesi (haftalık süre, hedef %, seri, son deneme),
   düşüş gösteren öğrenci vurgusu, öğrenci detayı, not bırakma.
@@ -464,7 +469,11 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
   görür) ve `private` (yalnız koç/yönetici). Varsayılanın açık olması §6.1-2'nin
   gereği; özel seçeneğinin kalması koçun ham gözlemini yazabilmesi için
   (karar 6).
-- **Teknik:** `coach_assignments`, `coach_notes`.
+- **Teknik:** `coach_assignments` ✅ (Dalga 14a), `coach_notes` ⬜ (Dalga 14b).
+- **Koç paneli şimdilik yalnızca plan.** Öğrenci listesi + plan ekranı var;
+  haftalık süre, seri ve son deneme sütunları Dalga 16'nın düşüş sinyalleriyle
+  birlikte gelecek — ikisi aynı sorguyu paylaşıyor, ayrı ayrı yazmak iki kez
+  yazmak olurdu.
 
 ### I · Koç–veli görüşme kaydı — Dalga 14
 
@@ -1220,7 +1229,43 @@ panelinden tamamlıyor, oran veli panelinde. Kararlar:
   çağıran yerde aynı tuzağa düşmeyi önlüyor; §10.1'deki tuzağın dördüncü
   biçimi olabilirdi.
 - Plan formu yönetici kullanıcı sayfasında, ana formun **dışında**: iç içe
-  form geçersiz HTML.
+  form geçersiz HTML. *(Dalga 14a'da bu form `/koc/plan` altına taşındı.)*
+
+#### Dalga 14a — Koç rolü ve çalışma planı sayfası · ✅ bitti (22 Eylül 2026)
+
+`coach_assignments` + `study_plan_items.period`; plan kendi sayfasına çıktı
+(`/koc/plan`), koç kendi öğrencilerini yönetiyor, veli maddeleri görüyor.
+Kararlar:
+
+- **Sınır tek yerden: `accessibleStudentIds()`.** Koç için bu ana kadar boş
+  dizi dönüyordu. Atama tablosu gelince orası tek satırla genişledi; liste,
+  tekil kayıt, veli paneli ve yazma yetkisi aynı anda doğru hale geldi. Koç
+  sayfasına ayrı bir filtre yazmak, gün gelip veli panelinden farklı
+  davranması demekti.
+- **Görmek ≠ yazmak.** `canPlanFor()` önce rol kapısı (yönetici/koç), sonra
+  aynı görünürlük sınırı. Veli çocuğunun planını görür ama maddeyi koç koyar.
+  Atama kalktığında yazma yetkisi de aynı anda kapanır — ikisi tek kaynaktan.
+- **Yönetici atanmadan tüm öğrencileri görür** (karar 11). `accessibleStudentIds()`
+  ona `null` dönüyor; ayrı bir koç hesabı açması gerekmiyor.
+- **Atamayı yalnızca yönetici yapar.** Rota `admin` middleware'i altında; koçun
+  kendine öğrenci atayabilmesi atamanın bütün anlamını ortadan kaldırırdı.
+  Koç olarak yalnızca koç/yönetici atanabilir ve **rol kontrolü sorgunun
+  içinde** (`Rule::exists()->whereIn('role', ...)`): düz `exists:users,id` bir
+  öğrenciyi de geçirir, o öğrenci diğerinin verisini görür hale gelirdi.
+- **Sütun adı `week_start` olarak KALDI.** Anlamı artık "dönem başlangıcı" ama
+  yeniden adlandırma geriye uyumlu değil — bkz. §10.11.
+- **Yetki önce, doğrulama sonra.** Atanmamış öğrenci için gönderilen bozuk form
+  422 dönseydi, "bu öğrenciye yetkin yok" yerine "başlık gerekli" derdi ve
+  sınırın varlığını sızdırırdı.
+- **Yazmada tolerans yok, okumada var.** `?donem=` ve `?baslangic=` kullanıcının
+  elinde; tanınmayan değer 500 vermeyip haftalığa/bugüne düşer
+  (`PlanPeriod::fromRequest`, `startForRequest`). Yazma ucunda `Rule::enum()`
+  ile sert doğrulama.
+- **Liste sayımı tek sorgu.** Öğrenci başına `progress()` çağırmak N+1 olurdu;
+  fonksiyon–veritabanı mesafesi bu projede bir kez pahalıya mal oldu (§10.12).
+- **`LocalDay::monthStart()` eklendi.** `weekStart` ile aynı gerekçe: ay
+  sınırından UTC ile okumak "Eylül planı"nı **Ağustos'a** düşürürdü — §10.1'deki
+  tuzağın beşinci biçimi.
 
 ---
 
@@ -1393,6 +1438,62 @@ gerekti ve arkasında hâlâ temizlenmemiş bir tuzak bıraktı — bkz.
 
 ---
 
+### 10.11 `week_start` artık "dönem başlangıcı" — ad tarihsel
+
+Dalga 14a plan maddelerine `period` (`week`/`month`) ekledi. Sütunun adı
+**değiştirilmedi**, çünkü yeniden adlandırma bu projede geriye uyumlu değil:
+migration'lar koddan **önce** uygulanıyor (§12), yani sütunu yeniden
+adlandırmak o an canlıda duran eski kodu anında kırardı. Ekleme uyumlu,
+yeniden adlandırma değil.
+
+İki sonucu var:
+
+1. `week_start` artık haftalık maddede **pazartesiyi**, aylık maddede **ayın
+   1'ini** tutuyor. Dolduran tek yer `PlanPeriod::startFor()`.
+2. **Dönem süzgeci zorunlu.** Ayın 1'i pazartesiye denk geldiğinde (ör.
+   1 Haziran 2026) iki dönem **aynı** değeri taşır. `where('period', ...)`
+   olmadan aylık hedefler haftalık listeye sızar ve tamamlama oranı bozulur.
+   Bu yüzden `scopeForWeek` artık doğrudan sorgu kurmuyor, `scopeForPeriod`'a
+   delege ediyor — süzgeç tek yerde.
+
+Aynı tuzak koç listesindeki toplu sayımda da var; oradaki `selectRaw` da dönem
+süzgecini taşır ve `test_the_student_list_shows_this_weeks_progress` bunu
+aylık bir madde ekleyerek doğrular.
+
+### 10.12 Fonksiyon veritabanıyla aynı bölgede çalışmalı
+
+22 Eylül'de canlı giriş sayfası **4,5–6,7 saniye** sürüyordu. Ölçüm yerleşim
+sorununu gösterdi:
+
+```
+time_connect        0,027 s   ← ağ hızlı
+time_starttransfer  4,5   s   ← bekleme fonksiyonun İÇİNDE
+```
+
+`curl -sI` ile `X-Vercel-Id` başlığı (`fra1::iad1::...`) katmanların dağıldığını
+ortaya koydu:
+
+| Katman | Bölge | |
+|---|---|---|
+| Vercel edge | `fra1` Frankfurt | doğru |
+| Vercel fonksiyon | `iad1` Washington | **varsayılan, hiç ayarlanmamıştı** |
+| Supabase | `ap-southeast-1` Singapur | |
+
+Her sorgu Washington–Singapur gidip geliyordu (~230 ms) ve her serverless
+çağrısı bu mesafede **yeni bir TLS bağlantısı** kuruyordu; sayfa başına on
+küsur sorgu ile saniyeler birikti.
+
+**Kural:** `vercel.json` içindeki `regions`, veritabanının bölgesiyle aynı
+olmalı. Şu an `sin1`. Supabase bir projenin bölgesini **yerinde
+değiştiremiyor** — Frankfurt'a taşımak yeni proje + veri göçü demek; o
+yapılırsa `regions` da `fra1` olur, ikisi birlikte değişir.
+
+İkinci sonuç: N+1 sorgu bu projede sıradan bir performans konusu değil.
+Bölge düzeltildikten sonra bile, listede öğrenci başına sorgu açmak yerine
+tek toplu sorgu tercih ediliyor (§9, Dalga 14a).
+
+---
+
 ## 11. Kurulum ve testler
 
 ```bash
@@ -1402,6 +1503,7 @@ php artisan key:generate
 touch database/database.sqlite
 php artisan migrate
 php artisan db:seed --class=AdminSeeder
+php artisan db:seed --class=SubjectSeeder
 php artisan serve
 ```
 
@@ -1476,6 +1578,7 @@ Vercel projesinde Settings → Environment Variables altına gir:
 | `KAFE_IPLER` | **Boş bırak.** IP kapısı rafta: kafenin IP'si dinamik ölçüldü (bkz. §9.3) |
 | `LOG_CHANNEL` | `stderr` — **panelde `stack` tanımlıysa sil.** `api/index.php` bu değeri yalnızca *tanımsızsa* `stderr` yapar; panelde `stack` duruyorsa çerçeve `storage/logs`'a yazmaya çalışır, orası salt okunur ve uygulama loglarken **ikinci bir 500** üretir |
 | `DB_CONNECTION` | `pgsql` |
+| `regions` (vercel.json) | `["sin1"]` — **veritabanının bölgesiyle aynı olmalı** (§10.12). Ayarlanmadığında `iad1` olur ve her sorgu Washington–Singapur gidip gelir |
 | `DB_HOST` | `aws-0-ap-southeast-1.pooler.supabase.com` — **yer tutucu değil, birebir bu.** Bir kez `<bölge>` olduğu gibi yapıştırıldı ve site `could not translate host name` ile 500 verdi |
 | `DB_PORT` | `5432` (session pooler) |
 | `DB_DATABASE` | `postgres` — **tamamı küçük harf.** Postgres veritabanı adları büyük/küçük harfe duyarlı; `POSTGRES` yazılınca havuz `database "POSTGRES" does not exist` (3D000) ile düşüyor. 20 Eylül 2026'da yaşandı |
@@ -1684,6 +1787,13 @@ hataları kapatmaz.
 
 Vercel build adımında migration çalıştırmak güvenli değil (her dağıtımda
 tetiklenir). Yerelden bir kez çalıştır:
+
+**Yerel geliştirme SQLite kullanır, canlıya `--env=supabase` ile gidilir.**
+Bir süre `.env` doğrudan canlı Supabase'e bağlandı (yerelde canlı veriyle
+çalışmak için); Singapur mesafesi yüzünden her sorgu ~250 ms sürdü ve yerel
+geliştirme kullanılamaz hale geldi — 22 Eylül'de geri dönüldü. Şema
+değişikliği iki kez çalıştırılır: önce yerelde `php artisan migrate`, sonra
+canlıda `--env=supabase`.
 
 Bağlantı bilgilerini `.env.supabase` dosyasına yaz (bu dosya `.gitignore`'da,
 şablonu `.env.supabase.example`), sonra:

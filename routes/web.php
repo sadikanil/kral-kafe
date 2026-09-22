@@ -97,6 +97,17 @@ Route::middleware(['auth', 'role:parent'])->prefix('veli')->name('parent.')->gro
     Route::get('/denemeler', [ExamCalendarController::class, 'parent'])->name('exams');
 });
 
+// Koc paneli - calisma plani (Dalga 14).
+// Abonelik middleware'i YOK: abonelik ogrencinin, kocun degil.
+// 'admin' de kabul ediliyor cunku yonetici ayni zamanda koctur (karar 11);
+// kendisine ogrenci atanmasi gerekmez, accessibleStudentIds() ona null doner.
+Route::middleware(['auth', 'role:coach,admin'])->prefix('koc')->name('coach.')->group(function () {
+    Route::get('/plan', [\App\Http\Controllers\Coach\StudyPlanController::class, 'index'])->name('plan.index');
+    Route::get('/plan/{student}', [\App\Http\Controllers\Coach\StudyPlanController::class, 'show'])->name('plan.show');
+    Route::post('/plan/{student}', [\App\Http\Controllers\Coach\StudyPlanController::class, 'store'])->name('plan.store');
+    Route::delete('/plan/maddeler/{item}', [\App\Http\Controllers\Coach\StudyPlanController::class, 'destroy'])->name('plan.destroy');
+});
+
 // Admin Routes
 Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(function () {
     // Dashboard
@@ -138,11 +149,16 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     Route::post('/lokasyonlar/{location}/durum', [LocationController::class, 'toggleStatus'])->name('locations.toggle-status');
     Route::get('/lokasyonlar-qr-yazdir', [LocationController::class, 'printQrCodes'])->name('locations.print-qr');
 
-    // Haftalik calisma plani (Dalga 13): plani yonetici belirler
-    Route::post('/kullanicilar/{student}/plan', [\App\Http\Controllers\Admin\StudyPlanController::class, 'store'])
-        ->name('study-plan.store');
-    Route::delete('/plan/{item}', [\App\Http\Controllers\Admin\StudyPlanController::class, 'destroy'])
-        ->name('study-plan.destroy');
+    // Koc atamasi (Dalga 14). Atamayi YALNIZCA yonetici yapar; kocun kendine
+    // ogrenci atayabilmesi atamanin anlamini ortadan kaldirirdi.
+    //
+    // Plan yazma uclari Dalga 14'te buradan /koc/plan altina TASINDI: plan
+    // artik kendi sayfasinda ve koc da yaziyor. Ayni formu iki yerde
+    // tutmak, birinin gunun birinde digerinden farkli davranmasi demekti.
+    Route::post('/kullanicilar/{student}/koc', [\App\Http\Controllers\Admin\CoachAssignmentController::class, 'attach'])
+        ->name('coaches.attach');
+    Route::delete('/kullanicilar/{student}/koc/{coach}', [\App\Http\Controllers\Admin\CoachAssignmentController::class, 'detach'])
+        ->name('coaches.detach');
 
     // Dersler (Dalga 12): deneme sonucu girisinin ders listesi
     Route::get('/dersler', [SubjectController::class, 'index'])->name('subjects.index');

@@ -133,6 +133,28 @@ class User extends Authenticatable
     }
 
     /**
+     * Kocun izledigi ogrenciler (coach_assignments).
+     */
+    public function coachStudents(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'coach_assignments', 'coach_id', 'student_id')
+            ->withPivot('created_by')
+            ->withTimestamps();
+    }
+
+    /**
+     * Ogrencinin koclari (coach_assignments).
+     *
+     * Coklu koc bilerek serbest: bir ogrencinin hem TYT hem AYT kocu olabilir.
+     */
+    public function coaches(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'coach_assignments', 'student_id', 'coach_id')
+            ->withPivot('created_by')
+            ->withTimestamps();
+    }
+
+    /**
      * Bu kullanicinin calisma verisini GOREBILDIGI ogrencilerin kimlikleri.
      *
      * Veli sinirinin tek kaynagi burasi. Tekil kayit (UserPolicy::viewStudy)
@@ -143,9 +165,9 @@ class User extends Authenticatable
      * toplamlarina ve raporlara sizar, "kac ogrenci geldi" sorusu bakan
      * kisiye gore degisir.
      *
-     * null: sinir yok (yonetici). Bos dizi: hicbiri. Koc/ogretmen/gorevli
-     * icin henuz panel yok; panelleri geldigi dalgada burasi genisler, o
-     * gune kadar hicbir ogrenciyi gormezler.
+     * null: sinir yok (yonetici). Bos dizi: hicbiri. Koc Dalga 14'te
+     * eklendi ve YALNIZCA kendine atanmis ogrencileri gorur; atamasi olmayan
+     * bir koc bos dizi alir. Ogretmen/gorevli icin hala panel yok.
      *
      * @return list<int>|null
      */
@@ -154,6 +176,7 @@ class User extends Authenticatable
         return match ($this->role()) {
             Role::Admin => null,
             Role::Parent => $this->students()->pluck('users.id')->all(),
+            Role::Coach => $this->coachStudents()->pluck('users.id')->all(),
             Role::Student => [$this->id],
             default => [],
         };
@@ -164,6 +187,23 @@ class User extends Authenticatable
         $ids = $this->accessibleStudentIds();
 
         return $ids === null || in_array($student->id, $ids, strict: true);
+    }
+
+    /**
+     * Bu kullanici o ogrenciye plan YAZABILIR mi?
+     *
+     * Gormek ile yazmak ayni sey DEGIL: veli cocugunun planini gorur ama
+     * maddeyi koc/yonetici koyar. Bu yuzden once rol kapisi, sonra ayni
+     * gorunurluk siniri - sinir yine accessibleStudentIds()'den geliyor ki
+     * atama kalktiginda yazma yetkisi de ayni anda kapansin.
+     */
+    public function canPlanFor(User $student): bool
+    {
+        if (! $this->hasRole(Role::Admin, Role::Coach)) {
+            return false;
+        }
+
+        return $this->canViewStudent($student);
     }
 
     /**

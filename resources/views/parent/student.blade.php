@@ -9,12 +9,41 @@
 
 @section('content')
 
-    @if($planProgress[1] > 0)
-        <div class="session-card mb-3">
-            <strong>Bu haftanın planı</strong>
-            <div class="text-muted">{{ $planProgress[0] }} / {{ $planProgress[1] }} madde tamamlandı</div>
+    {{--
+        Calisma plani (Dalga 13; aylik donem Dalga 14).
+
+        Veli hem ORANI hem MADDELERI gorur (karar 2): "3/5" tek basina
+        velinin cocuguyla konusmasina yetmiyor, neyin yapilip neyin
+        kaldigi da gorunmeli. Madde yoksa blok hic cizilmez - bos bir
+        liste "plansiz" demez.
+    --}}
+    @foreach($planPeriods as $blok)
+        @php $biten = $blok['items']->where('status', 'done')->count(); @endphp
+
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>{{ $blok['period']->titleFor($blok['start']) }} planı</h4>
+                <span class="badge {{ $biten === $blok['items']->count() ? 'badge-success' : 'badge-info' }}">
+                    {{ $biten }} / {{ $blok['items']->count() }}
+                </span>
+            </div>
+            <div class="card-body">
+                @foreach($blok['items'] as $madde)
+                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                        <div>
+                            <strong>{{ $madde->title }}</strong>
+                            <div class="text-muted">{{ $madde->subject?->name ?? 'Genel' }}</div>
+                        </div>
+                        @if($madde->status === 'done')
+                            <span class="badge badge-success">Tamamlandı</span>
+                        @else
+                            <span class="badge badge-warning">Bekliyor</span>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
         </div>
-    @endif
+    @endforeach
 
     @include('_deneme-sonuclari')
 

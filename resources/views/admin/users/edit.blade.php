@@ -166,48 +166,57 @@
 
     @if($user->isStudent())
         {{--
-            Haftalik calisma plani (Dalga 13). Ana formun DISINDA: ic ice
-            form gecersiz HTML.
+            Koc atamasi (Dalga 14). Ana formun DISINDA: ic ice form gecersiz
+            HTML.
+
+            Plan FORMU bu ekrandan /koc/plan altina tasindi. Burada kalan
+            yalnizca "kim izliyor" sorusu; planin kendisi kendi sayfasinda,
+            cunku ayni formu iki yerde tutmak birinin gunun birinde
+            digerinden farkli davranmasi demekti.
         --}}
         <div class="card mt-3" style="max-width: 640px;">
-            <div class="card-header"><h4>Bu haftanın planı</h4></div>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>Koçlar</h4>
+                <a href="{{ route('coach.plan.show', $user) }}" class="btn btn-sm btn-secondary">
+                    Çalışma planı →
+                </a>
+            </div>
             <div class="card-body">
                 <p class="text-muted">
-                    Haftalık hedef "ne kadar" sorusunu, plan "ne" sorusunu cevaplar.
-                    Geçmiş haftalar değişmez; her hafta kendi maddelerini taşır.
+                    Koç, atandığı öğrencinin çalışma planını hazırlar ve verilerini görür.
+                    Bir öğrencinin birden fazla koçu olabilir; yönetici zaten tüm
+                    öğrencileri görür, atanması gerekmez.
                 </p>
 
-                <form method="POST" action="{{ route('admin.study-plan.store', $user) }}"
+                <form method="POST" action="{{ route('admin.coaches.attach', $user) }}"
                       class="d-flex align-items-center gap-2 mb-3">
                     @csrf
-                    <input type="text" name="title" class="form-control" placeholder="Yapılacak" maxlength="150" required>
-                    <select name="subject_id" class="form-control">
-                        <option value="">Ders (isteğe bağlı)</option>
-                        @foreach($planSubjects as $ders)
-                            <option value="{{ $ders->id }}">{{ $ders->name }}</option>
+                    <select name="coach_id" class="form-control" required>
+                        <option value="">Koç seç</option>
+                        @foreach($assignableCoaches as $aday)
+                            <option value="{{ $aday->id }}">
+                                {{ $aday->name }} ({{ $aday->role()?->label() }})
+                            </option>
                         @endforeach
                     </select>
-                    <button type="submit" class="btn btn-primary">Ekle</button>
+                    <button type="submit" class="btn btn-primary">Ata</button>
                 </form>
 
-                @forelse($planItems as $madde)
+                @forelse($assignedCoaches as $atanan)
                     <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
                         <div>
-                            <strong>{{ $madde->title }}</strong>
-                            <div class="text-muted">
-                                {{ $madde->subject?->name ?? 'Genel' }}
-                                @if($madde->status === 'done') · tamamlandı @endif
-                            </div>
+                            <strong>{{ $atanan->name }}</strong>
+                            <div class="text-muted">{{ $atanan->role()?->label() }}</div>
                         </div>
 
-                        <form method="POST" action="{{ route('admin.study-plan.destroy', $madde) }}">
+                        <form method="POST" action="{{ route('admin.coaches.detach', [$user, $atanan]) }}">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger">Sil</button>
+                            <button type="submit" class="btn btn-sm btn-danger">Kaldır</button>
                         </form>
                     </div>
                 @empty
-                    <p class="text-muted">Bu hafta için madde yok.</p>
+                    <p class="text-muted">Bu öğrenciye atanmış koç yok.</p>
                 @endforelse
             </div>
         </div>

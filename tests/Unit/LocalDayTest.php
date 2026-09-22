@@ -102,4 +102,22 @@ class LocalDayTest extends TestCase
         // Ay: 1 Eylul 00:00 yerel = 31 Agustos 21:00 UTC.
         $this->assertSame('2026-08-31 21:00:00', $ayBas->format('Y-m-d H:i:s'));
     }
+
+    /**
+     * monthStart YEREL ayin ilk gununu vermeli.
+     *
+     * monthBounds() UTC Carbon donuyor; ondan dogrudan toDateString() almak
+     * bir gun geri kayardi: yerel 1 Eylul 00:00, UTC'de 31 AGUSTOS 21:00 -
+     * yani "Eylul plani" Agustos'a dusrdu. weekStart ile ayni tuzak
+     * (bkz. README SS10.1, ayni tuzagin besinci bicimi).
+     */
+    public function test_the_month_starts_on_the_local_first_day(): void
+    {
+        $this->assertSame('2026-09-01', LocalDay::monthStart('2026-09-16'));
+        $this->assertSame('2026-09-01', LocalDay::monthStart('2026-09-01'));
+        $this->assertSame('2026-09-01', LocalDay::monthStart('2026-09-30'));
+
+        // Tuzagin kendisi: UTC sinirindan okumak Agustos verirdi.
+        $this->assertSame('2026-08-31', LocalDay::monthBounds(2026, 9)[0]->toDateString());
+    }
 }

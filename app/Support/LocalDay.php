@@ -89,6 +89,18 @@ class LocalDay
     }
 
     /**
+     * Verilen gunun icinde bulundugu ayin YEREL ilk gunu (Y-m-d).
+     *
+     * weekStart ile ayni gerekce: monthBounds() UTC Carbon donuyor ve ondan
+     * toDateString() almak bir gun geri kayardi - yerel 1 Eylul 00:00,
+     * UTC'de 31 AGUSTOS 21:00. Aylik plan bir onceki aya dusrdu.
+     */
+    public static function monthStart(string $date): string
+    {
+        return Carbon::parse($date, self::timezone())->startOfMonth()->toDateString();
+    }
+
+    /**
      * Bir yerel ayin sinirlari.
      *
      * @return array{0:Carbon,1:Carbon}

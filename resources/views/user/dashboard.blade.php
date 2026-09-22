@@ -193,16 +193,22 @@
     @endif
 
     {{--
-        Bu haftanin plani (Dalga 13). Hedef cubugunun ALTINDA: once "ne
-        kadar", sonra "ne". Madde yoksa bolum hic cizilmez - bos bir liste
-        "plansizsin" demez, "plan var ama bos" der.
+        Calisma plani (Dalga 13; aylik donem Dalga 14). Hedef cubugunun
+        ALTINDA: once "ne kadar", sonra "ne". Madde yoksa bolum hic
+        cizilmez - bos bir liste "plansizsin" demez, "plan var ama bos" der.
+
+        Iki donem ayri listeleniyor cunku farkli aciliyorlar: haftalik madde
+        bugun icin, aylik madde ayin geneli icin anlamli. Tek listede
+        birlestirmek, ay basindaki bir aylik hedefi "bugun yapilacak" gibi
+        gosterirdi.
     --}}
-    @if($planItems->isNotEmpty())
-        @php $tamamlanan = $planItems->where('status', 'done')->count(); @endphp
+    @foreach([['Bu haftanın planı', $planItems], ['Bu ayın planı', $monthlyPlanItems]] as [$baslik, $liste])
+    @if($liste->isNotEmpty())
+        @php $tamamlanan = $liste->where('status', 'done')->count(); @endphp
 
-        <h2 class="mt-4">Bu haftanın planı ({{ $tamamlanan }} / {{ $planItems->count() }})</h2>
+        <h2 class="mt-4">{{ $baslik }} ({{ $tamamlanan }} / {{ $liste->count() }})</h2>
 
-        @foreach($planItems as $madde)
+        @foreach($liste as $madde)
             <div class="session-card mb-2">
                 <div class="d-flex align-items-center justify-content-between gap-2">
                     <div>
@@ -222,6 +228,7 @@
             </div>
         @endforeach
     @endif
+    @endforeach
 
     @include('_bildirimler')
 
