@@ -77,6 +77,10 @@ class DashboardController extends Controller
         $acik = $this->oturumlar->openFor($ogrenci);
         $acik?->load('table');
 
+        // Model::tap() sorgu kurucusuna gider; acikca cagiriliyor.
+        $abonelik = $ogrenci->currentSubscription();
+        $abonelik?->syncPaymentStatus();
+
         return [
             'student' => $ogrenci,
             'openSession' => $acik,
@@ -90,6 +94,8 @@ class DashboardController extends Controller
             'monthMinutes' => $this->istatistik->monthMinutes($ogrenci),
             'streak' => $this->istatistik->streak($ogrenci),
             'weeklyGoal' => StudyGoal::activeFor($ogrenci, LocalDay::today()),
+            // Paket ve odeme durumu: odemeyi genelde veli yapar.
+            'subscription' => $abonelik,
         ];
     }
 

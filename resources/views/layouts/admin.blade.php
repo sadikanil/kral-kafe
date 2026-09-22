@@ -62,6 +62,18 @@
                     <span>Masalar</span>
                 </a>
 
+                <a href="{{ route('admin.packages.index') }}"
+                    class="sidebar-nav-link {{ request()->routeIs('admin.packages.*') ? 'active' : '' }}">
+                    <span class="sidebar-nav-link-icon">🎫</span>
+                    <span>Paketler</span>
+                </a>
+
+                <a href="{{ route('admin.subscriptions.overview') }}"
+                    class="sidebar-nav-link {{ request()->routeIs('admin.subscriptions.*') ? 'active' : '' }}">
+                    <span class="sidebar-nav-link-icon">💳</span>
+                    <span>Ödemeler</span>
+                </a>
+
                 <a href="{{ route('admin.exams.index') }}"
                     class="sidebar-nav-link {{ request()->routeIs('admin.exams.*') ? 'active' : '' }}">
                     <span class="sidebar-nav-link-icon">📝</span>

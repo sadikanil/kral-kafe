@@ -87,7 +87,7 @@ class BillingService
             ->orderBy('user_id')
             ->get();
 
-        $csv = "Kullanıcı ID,İsim,E-posta,Toplam Ürün,Toplam Tutar\n";
+        $csv = "Kullanıcı ID,İsim,E-posta,Toplam Ürün,Tüketim Tutarı,Paket Tutarı,Genel Toplam\n";
 
         foreach ($bills as $bill) {
             $csv .= implode(',', [
@@ -96,6 +96,8 @@ class BillingService
                 $bill->user->email,
                 $bill->total_items,
                 number_format($bill->total_amount, 2, '.', ''),
+                number_format((float) $bill->package_amount, 2, '.', ''),
+                number_format($bill->grandTotal(), 2, '.', ''),
             ]) . "\n";
         }
 

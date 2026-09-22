@@ -64,6 +64,7 @@ class DashboardController extends Controller
             'weeklyGoal' => StudyGoal::activeFor($user, LocalDay::today()),
             // Deneme takvimi hatirlaticisi: siradaki deneme(ler).
             'upcomingExams' => ExamEvent::upcoming()->limit(3)->get(),
+            'subscription' => $user->currentSubscription(),
             'currentMonthTotal' => $currentMonthTotal,
             'currentMonthItems' => $currentMonthItems,
             'recentConsumptions' => $recentConsumptions,

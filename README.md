@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 22 Eylül 2026 · Laravel 12 · 205 test / 652 doğrulama yeşil._
+_Son güncelleme: 22 Eylül 2026 · Laravel 12 · 213 test / 715 doğrulama yeşil._
 
 ---
 
@@ -117,6 +117,9 @@ yazar), veli salt okunur.
 | Fotoğrafla stok sayımı (OpenAI), tutarsızlık kaydı ve çözümü | Yönetici | Yönetim → Stok Sayım |
 | Aylık fatura, kullanıcı raporu, CSV dışa aktarım | Yönetici | Yönetim → Raporlar |
 | Yönetici paneli: bugünkü tüketim, ayın ürünleri, açık tutarsızlıklar | Yönetici | `/yonetim` |
+| Paket kataloğu + kapsam kalemleri | Yönetici | Yönetim → Paketler |
+| Öğrenciye paket atama (fiyat atama anında kopyalanır), ödeme kaydı, vade/gecikmiş takibi | Yönetici | Yönetim → Ödemeler |
+| Paket ve ödeme rozeti | Öğrenci, veli | Panel |
 | Giriş, şifre sıfırlama, Türkçe hata mesajları | Herkes | `/giris`, `/sifremi-unuttum` |
 
 ### Çalışma takibi (Dalga 0–6d)
@@ -150,6 +153,7 @@ Supabase Postgres (session pooler) · elle yazılmış CSS (Tailwind yok).
 | 6b | Deneme sınavı takvimi + panel hatırlatıcısı | ✅ |
 | 6c | Self adisyon: panelden ürün ekleme, 60 sn geri alma | ✅ |
 | 6d | Deneme sonuç PDF'i + yapay zekâ analizi | ✅ |
+| 7 | Paket kataloğu, abonelik, ödeme takibi, faturada paket tutarı | ✅ |
 
 ---
 
@@ -168,19 +172,19 @@ oturduktan sonra.
 | 3 | **11** | **Bildirim altyapısı** — e-posta + Vercel Cron; deneme öncesi hatırlatma, gün sonu devamsızlık bildirimi (§7-K) | L | 6b | ⬜ |
 | 4 | **12** | **Deneme sonucu ve sıralamalar** — ders bazlı D/Y/net, kurum/ilçe/il/TR sıralaması, PDF özetinin altına yönetici notu, veliye açık profil (§7-C) | L | 6b, 6d | ⬜ |
 | 5 | **13** | **Haftalık çalışma planı** — yönetici belirler, öğrenci tamamlar, tamamlama oranı (§7-D) | M | — | ⬜ |
-| 6 | **7** | **Paket ve ödeme** — `packages`, `subscriptions`, `payments`, ödendi/bekliyor/gecikmiş | L | — | ⬜ |
-| 7 | **8** | **Tüketim sadeleştirme** — QR tüketim akışının kaldırılması, tüketimin pakete bağlanması (`covered_by_package`) | M | 7 | ⬜ |
-| 8 | **14** | **Koç rolü aktif** — koç–öğrenci atama, koç paneli, notlar, görüşme kaydı (§7-B, §7-I) | L | 6 | ⬜ |
-| 9 | **15** | **Haftalık veli raporu** — tembel üretim, yönetici/koç yorumu (§7-A) + sınava geri sayım (§7-G) | M | 9, 12 | ⬜ |
-| 10 | **16** | **Devamlılık düşüş sinyalleri** — önce koça (§7-E) | S | 14 | ⬜ |
-| 11 | **17** | **Ders etiketi + zayıf konu listesi** (§7-F, §7-H) | M | 12 | ⬜ |
+| 6 | **8** | **Tüketim sadeleştirme** — QR tüketim akışının kaldırılması, tüketimin `package_items` kapsamına bağlanması (`covered_by_package`) | M | 7 ✅ | ⬜ |
+| 7 | **14** | **Koç rolü aktif** — koç–öğrenci atama, koç paneli, notlar, görüşme kaydı (§7-B, §7-I) | L | 6 | ⬜ |
+| 8 | **15** | **Haftalık veli raporu** — tembel üretim, yönetici/koç yorumu (§7-A) + sınava geri sayım (§7-G) | M | 9, 12 | ⬜ |
+| 9 | **16** | **Devamlılık düşüş sinyalleri** — önce koça (§7-E) | S | 14 | ⬜ |
+| 10 | **17** | **Ders etiketi + zayıf konu listesi** (§7-F, §7-H) | M | 12 | ⬜ |
 
 S ≈ bir oturum · M ≈ iki-üç oturum · L ≈ dört ve üzeri.
 
 **Neden bu sıra:** Dalga 9 olmadan §1.1'deki akış eksik kalıyor — bugün süre
 onaysız görünüyor. Dalga 10 akışın günlük kullanımını taşıyor (öğrenci telefonla
 okutacak). Dalga 11 olmadan §1.2'nin 2. ve 3. adımları hiç çalışmaz. Dalga 12
-denemenin sonuç tarafını kapatır. Paket (7) akışa bağlı değil, o yüzden sonra.
+denemenin sonuç tarafını kapatır. Paket ve ödeme (Dalga 7) 21 Eylül'de
+bitmişti; yan dalda kalmıştı, 22 Eylül'de main'e alındı.
 
 ### 4.2 Bakım ve teknik borç
 
@@ -480,7 +484,8 @@ gerekmez. Dalga 6b altyapısıyla bir günlük iş.
 `users` · `locations` · `products` · `product_locations` · `consumptions` ·
 `stock_records` · `stock_photos` · `monthly_bills` · `discrepancy_logs` ·
 `study_tables` · `study_sessions` · `study_goals` · `student_parent` ·
-`exam_events` · `exam_reports`
+`exam_events` · `exam_reports` · `packages` · `package_items` ·
+`subscriptions` · `payments`
 
 ### 8.2 Eklenecek sütunlar
 
@@ -490,7 +495,7 @@ gerekmez. Dalga 6b altyapısıyla bir günlük iş.
 | `study_sessions` | `latitude`, `longitude`, `accuracy` | 10 | Konum kaydı (§7-N) |
 | `study_sessions` | `subject_id` (null) | 17 | Ders etiketi |
 | `consumptions` | `covered_by_package` (bool) | 8 | Paket kapsamı faturaya yansısın |
-| `monthly_bills` | `package_amount`, `extras_amount` | 7 | Paket ücreti ile ekstra tüketim ayrı okunmalı |
+| ~~`monthly_bills`~~ | ~~`package_amount`~~ | 7 | ✅ Yapıldı — `total_amount` tüketim toplamı olarak kaldı, genel toplam `grandTotal()` |
 | `exam_events` | `exam_type`'a `official` | 15 | Sınava geri sayım |
 | `study_tables` | `status`, `assigned_student_id`, `location_id` | 7 | Dalga 2'de bilerek ertelendi |
 
@@ -532,18 +537,7 @@ weekly_reports        id, student_id, week_start, payload (json),
 
 weak_topics           id, student_id, subject_id, topic, source, status
 
-packages              id, name, monthly_price, has_reserved_table,
-                      includes_coaching, weekly_mock_exams, usage_window,
-                      description, is_active
-
-package_items         id, package_id, product_id, included_quantity,
-                      period (daily|weekly|monthly)
-
-subscriptions         id, student_id, package_id, starts_on, ends_on, price,
-                      payment_status (paid|pending|overdue|cancelled), note
-
-payments              id, subscription_id, amount, paid_at, method, note,
-                      recorded_by
+-- packages, package_items, subscriptions, payments: Dalga 7'de eklendi (§9.4)
 ```
 
 Şema kuralları §10.9'da: `enum()` yasak, her tablo `PostgresSecurity::lockDown()`
@@ -991,12 +985,40 @@ Kullanıcı isteği: "deneme sınavı takvimi hatırlatıcı ve takvim görünü
 - İndirme controller üzerinden (`Storage::response`); bucket herkese açık olsa
   bile yol tahmin edilemez.
 
-#### Dalga 7 — Paket ve ödeme (MVP #10, #11) · 1–6 hattına paralel
+#### Dalga 7 — Paket ve ödeme · ✅ bitti (21 Eylül 2026)
 
-`packages`, `package_items`, `subscriptions`, `payments`. Fatura
-`package_amount` değerini **her zaman `subscriptions.price`'tan** okur,
-`packages.monthly_price`'tan değil — katalog fiyatı değişince geçmiş faturalar
-yeniden yazılmasın.
+`packages`, `package_items`, `subscriptions`, `payments`,
+`monthly_bills.package_amount`. Uygulanan kararlar:
+
+- **Fiyat kopyalanır.** Atama anında `packages.monthly_price` →
+  `subscriptions.price`; yönetici formda değiştirebilir. Katalog sonradan
+  değişince abonelik ve geçmiş faturalar değişmez (test var).
+- **Fatura paket tutarı = o ayda BAŞLAYAN aboneliklerin fiyat toplamı.**
+  Aylara bölme yok; çok aylık abonelik başladığı ayda yazılır. `total_amount`
+  tüketim toplamı olarak kaldı (CSV ve ekranlar öyle okuyordu), genel toplam
+  `grandTotal()`. Raporlar sayfasının okuduğu ama var olmayan
+  `formatted_total` / `period_name` accessor'ları da eklendi.
+- **Ödeme durumu türetilir**, sütunda tutulmaz: `paid` (bakiye 0), `overdue`
+  (bakiye var ve bugün > başlangıç + `kafe.odeme_vadesi_gun`), yoksa
+  `pending`. `Subscription::syncPaymentStatus()` liste ve panel açılışında
+  çalışır. `cancelled` elle verilir ve dokunulmaz; iptal aboneliğe ödeme
+  yazılmaz.
+- **Paket atanan öğrenci içeri alınır:** `users.subscription_status = active`,
+  `subscription_start/end` abonelik tarihlerinden. İptal, öğrencinin durumunu
+  otomatik kapatmaz — yönetici kullanıcı formundan kapatır.
+- **Kapsam kalemleri yalnızca tanım.** `package_items` (ürün, adet, dönem;
+  adet boş = sınırsız) Dalga 8'de tüketime uygulanacak. `usage_window`
+  ertelendi.
+- Paket silinmez, kapatılır (`restrictOnDelete`) — masalarla aynı karar.
+- Öğrenci panelinde paket + ödeme rozeti; veli kartında da, çünkü ödemeyi
+  veli yapar.
+
+**Merge notu (22 Eylül):** Bu dalga 21 Eylül'de `claude/inspiring-pasteur-hul4gt`
+dalında yazıldı ve şeması canlıya uygulandı (batch 9), ama `main`'e alınmamıştı
+— canlı veritabanında tablolar ve iki paket kaydı varken canlı site o kodu
+taşımıyordu. 22 Eylül'de merge edildi. Migration gerekmedi, defter zaten
+doluydu. Bu, §10.4'teki defter/dosya karşılaştırmasının **ters yönde** ısırması:
+canlı depodan ileri gidebiliyor.
 
 #### Dalga 8 — Tüketimin masa ve pakete bağlanması (MVP #12) · en son
 
@@ -1084,6 +1106,11 @@ sürücü için elle SQL yazmayı zorunlu kılardı.
 - **Yerelde (21 Eylül 2026):** üç migration hiç çalışmamıştı; `/yonetim/kullanicilar`
   `no such table: student_parent` ile 500 verdi. Canlıda sorun yoktu, çünkü
   orada uygulanmışlardı.
+
+- **Canlı depodan ileride (22 Eylül 2026):** `migrations` defterinde 25 satır
+  vardı, depoda 22 dosya. Fazla üç satır Dalga 7'nindi — şema canlıya
+  uygulanmış ama kod `main`'e merge edilmemişti. Karşılaştırma **iki yönlü**
+  yapılmalı: eksik dosya kadar fazla defter satırı da sinyaldir.
 
 **Kural:** her migration'dan sonra canlı `migrations` tablosu ile
 `database/migrations/` karşılaştırılır. `git pull` sonrası ilk refleks:
@@ -1180,7 +1207,7 @@ Ardından `http://127.0.0.1:8000`. Hepsini birden (sunucu + kuyruk + log + vite)
 php artisan test
 ```
 
-205 test, 652 doğrulama. Testler `:memory:` SQLite kullanır, yerel veritabanına
+213 test, 715 doğrulama. Testler `:memory:` SQLite kullanır, yerel veritabanına
 dokunmaz — bu yüzden `migrate:fresh` çalıştırmak için hiçbir sebep yok (§10.3).
 
 **Stil uyarısı:** proje Tailwind ya da Bootstrap kullanmıyor; stiller elle

@@ -89,6 +89,7 @@
                                     <div class="d-flex gap-1">
                                         <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-secondary">✏️</a>
                                         @if($user->isStudent())
+                                            <a href="{{ route('admin.subscriptions.index', $user) }}" class="btn btn-sm btn-secondary" title="Paket ve ödeme">💳</a>
                                             <a href="{{ route('admin.exam-reports.index', $user) }}" class="btn btn-sm btn-secondary" title="Deneme raporları">📄</a>
                                         @endif
                                         

@@ -5,6 +5,8 @@ use App\Http\Controllers\User\ConsumptionController;
 use App\Http\Controllers\User\TabController;
 use App\Http\Controllers\User\ExamReportController as UserExamReportController;
 use App\Http\Controllers\Admin\ExamReportController as AdminExamReportController;
+use App\Http\Controllers\Admin\PackageController;
+use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
@@ -134,6 +136,22 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     ])->parameters(['masalar' => 'table']);
     Route::get('/masalar/{table}/qr', [StudyTableController::class, 'qr'])->name('tables.qr');
     Route::post('/masalar/{table}/durum', [StudyTableController::class, 'toggleStatus'])->name('tables.toggle-status');
+
+    // Paketler ve odeme (Dalga 7)
+    Route::resource('paketler', PackageController::class)->except(['show', 'destroy'])->names([
+        'index' => 'packages.index',
+        'create' => 'packages.create',
+        'store' => 'packages.store',
+        'edit' => 'packages.edit',
+        'update' => 'packages.update',
+    ])->parameters(['paketler' => 'package']);
+    Route::post('/paketler/{package}/durum', [PackageController::class, 'toggleStatus'])->name('packages.toggle-status');
+    Route::get('/odemeler', [SubscriptionController::class, 'overview'])->name('subscriptions.overview');
+    Route::get('/kullanicilar/{user}/abonelikler', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::post('/kullanicilar/{user}/abonelikler', [SubscriptionController::class, 'store'])->name('subscriptions.store');
+    Route::post('/abonelikler/{subscription}/iptal', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+    Route::post('/abonelikler/{subscription}/odeme', [SubscriptionController::class, 'storePayment'])->name('subscriptions.payments.store');
+    Route::delete('/odemeler/{payment}', [SubscriptionController::class, 'destroyPayment'])->name('subscriptions.payments.destroy');
 
     // Deneme sonuc raporlari: ogrenci basina PDF yukleme + yapay zeka analizi
     Route::get('/kullanicilar/{user}/deneme-raporlari', [AdminExamReportController::class, 'index'])->name('exam-reports.index');

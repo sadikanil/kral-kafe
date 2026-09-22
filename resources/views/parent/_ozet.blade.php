@@ -8,6 +8,14 @@
     $yuzde = $hedefDakika ? min(100, (int) round($summary['weekMinutes'] / $hedefDakika * 100)) : null;
 @endphp
 
+@if($summary['subscription'] ?? null)
+    <p class="mb-2">
+        🎫 {{ $summary['subscription']->package->name }}
+        <span class="text-muted">({{ $summary['subscription']->ends_on->format('d.m.Y') }}'e kadar)</span>
+        · <span class="badge badge-{{ $summary['subscription']->payment_status->badgeClass() }}">Ödeme: {{ $summary['subscription']->payment_status->label() }}</span>
+    </p>
+@endif
+
 @if($summary['openSession'])
     <div class="d-flex align-items-center gap-2 mb-3">
         <span class="live-dot"></span>

@@ -58,6 +58,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Odeme vadesi
+    |--------------------------------------------------------------------------
+    |
+    | Abonelik baslangicindan bu kadar gun sonra odenmemis bakiye "gecikmis"
+    | sayilir (Subscription::syncPaymentStatus).
+    |
+    */
+
+    'odeme_vadesi_gun' => (int) env('KAFE_ODEME_VADESI_GUN', 7),
+
+    /*
+    |--------------------------------------------------------------------------
     | Kafe agi — RAFTA (19 Eylul 2026)
     |--------------------------------------------------------------------------
     |
