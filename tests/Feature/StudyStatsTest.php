@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\Role;
 use App\Enums\SessionEndReason;
 use App\Models\StudySession;
@@ -41,7 +42,16 @@ class StudyStatsTest extends TestCase
         return Carbon::parse($zaman, config('kafe.timezone'));
     }
 
-    /** Kapali oturum. Saatler YEREL verilir, UTC saklanir. */
+    /**
+     * Kapali oturum. Saatler YEREL verilir, UTC saklanir.
+     *
+     * ONAYLI kuruluyor: bu dosya zaman hesabini siniyor, onay akisini degil
+     * (o SessionApprovalTest'in isi). Dalga 9'dan beri yalnizca onayli oturum
+     * toplamlara giriyor, dolayisiyla onaysiz kurmak her testi "0 dakika"
+     * yapardi ve hesabin kendisi sinanmamis kalirdi.
+     *
+     * Acik oturum (bit === null) onaysiz kalir; zaten onaylanamaz.
+     */
     private function oturum(User $ogrenci, string $bas, ?string $bit = null): StudySession
     {
         $baslangic = $this->yerel($bas);
@@ -54,6 +64,9 @@ class StudyStatsTest extends TestCase
             'ended_at' => $bitis?->copy()->utc(),
             'duration_minutes' => $bitis ? (int) $baslangic->diffInMinutes($bitis) : null,
             'end_reason' => $bitis ? SessionEndReason::Manual->value : null,
+            'approval_status' => $bitis
+                ? ApprovalStatus::Approved->value
+                : ApprovalStatus::Pending->value,
         ]);
     }
 
@@ -94,14 +107,22 @@ class StudyStatsTest extends TestCase
         $this->assertSame(90, $this->istatistik()->minutesOnDay($ogrenci, '2026-09-15'));
     }
 
-    public function test_an_open_session_counts_up_to_now(): void
+    /**
+     * Dalga 9 ile DEGISTI: acik oturum artik toplamlara girmiyor.
+     *
+     * Eskiden su ana kadarki suresi sayiliyordu. Onay akisi gelince bu
+     * savunulamaz hale geldi: ogrenci calismayi bitirdigi anda oturum
+     * "onay bekliyor"a duser ve bugunun toplami DUSERDI - calismayi birakmak
+     * sayiyi azaltirdi. Acik oturum artik panelde ayri bir canli kart.
+     */
+    public function test_an_open_session_does_not_count_until_it_is_approved(): void
     {
         $ogrenci = $this->ogrenci();
 
         Carbon::setTestNow($this->yerel('2026-09-14 16:00'));
         $this->oturum($ogrenci, '2026-09-14 14:30');
 
-        $this->assertSame(90, $this->istatistik()->minutesOnDay($ogrenci, '2026-09-14'));
+        $this->assertSame(0, $this->istatistik()->minutesOnDay($ogrenci, '2026-09-14'));
         Carbon::setTestNow();
     }
 

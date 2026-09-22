@@ -23,6 +23,11 @@ use Illuminate\Support\Carbon;
  *
  * Cok kisa oturumlar (yanlis okutma) hicbir toplama girmez - Dalga 3'teki
  * kuralin devami. Esik: config('kafe.sayilabilir_dakika').
+ *
+ * 3. YALNIZCA ONAYLI OTURUM SAYILIR (Dalga 9). Biten oturum yoneticinin onay
+ *    kuyruguna duser; onaylanana kadar sure, seri ve hedef ilerlemesi onu
+ *    gormez. Ogrencinin o anki acik oturumu da buraya girmez - o, panelde
+ *    ayri bir canli karttir.
  */
 class StudyStats
 {
@@ -162,6 +167,7 @@ class StudyStats
         $esik = (int) config('kafe.sayilabilir_dakika');
 
         return StudySession::where('student_id', $student->id)
+            ->approved()
             ->where('started_at', '<=', $to)
             ->where(function ($q) use ($from) {
                 $q->whereNull('ended_at')->orWhere('ended_at', '>=', $from);

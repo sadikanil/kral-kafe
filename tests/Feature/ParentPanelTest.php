@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\Role;
 use App\Enums\SessionEndReason;
 use App\Models\StudentParent;
@@ -34,8 +35,19 @@ class ParentPanelTest extends TestCase
         }
     }
 
-    private function oturum(User $ogrenci, string $bas, ?string $bit, string $masa = 'Masa 1'): StudySession
-    {
+    /**
+     * Kapali oturumlar ONAYLI kurulur: bu dosya velinin ne gordugunu siniyor,
+     * onay akisinin kendisini degil. Onaysiz kurmak her sureyi sifirlar ve
+     * ekranin dogru sayiyi gosterip gostermedigi sinanmamis kalirdi. Onayin
+     * veliyi nasil siniri ayri testte (asagida).
+     */
+    private function oturum(
+        User $ogrenci,
+        string $bas,
+        ?string $bit,
+        string $masa = 'Masa 1',
+        ApprovalStatus $onay = ApprovalStatus::Approved,
+    ): StudySession {
         $b = Carbon::parse($bas, config('kafe.timezone'));
         $s = $bit ? Carbon::parse($bit, config('kafe.timezone')) : null;
 
@@ -46,6 +58,7 @@ class ParentPanelTest extends TestCase
             'ended_at' => $s?->copy()->utc(),
             'duration_minutes' => $s ? (int) $b->diffInMinutes($s) : null,
             'end_reason' => $s ? SessionEndReason::Manual->value : null,
+            'approval_status' => $s ? $onay->value : ApprovalStatus::Pending->value,
         ]);
     }
 
@@ -207,6 +220,41 @@ class ParentPanelTest extends TestCase
             ->assertOk()
             ->assertDontSee('Yanlış Okutma')
             ->assertSee('Henüz kayıtlı bir çalışma yok');
+    }
+
+    /**
+     * Dalga 9: onay gelene kadar veli hicbir sey gormez.
+     *
+     * Sure zaten StudyStats uzerinden suzuluyor, ama oturum LISTESI modele
+     * dogrudan gidiyordu - onaysiz bir oturum listede gorunurse kural
+     * yalnizca yarim uygulanmis olur.
+     */
+    public function test_a_parent_does_not_see_a_session_awaiting_approval(): void
+    {
+        $veli = User::factory()->parent()->create();
+        $cocuk = User::factory()->student()->create();
+        $this->bagla($veli, $cocuk);
+
+        $this->travelTo(Carbon::parse('2026-09-16 15:00', config('kafe.timezone')));
+        $this->oturum($cocuk, '2026-09-16 10:00', '2026-09-16 13:00', 'Onaysız Masa', ApprovalStatus::Pending);
+
+        $this->actingAs($veli)->get(route('parent.student', $cocuk))
+            ->assertOk()
+            ->assertDontSee('Onaysız Masa');
+    }
+
+    public function test_a_parent_does_not_see_a_rejected_session(): void
+    {
+        $veli = User::factory()->parent()->create();
+        $cocuk = User::factory()->student()->create();
+        $this->bagla($veli, $cocuk);
+
+        $this->travelTo(Carbon::parse('2026-09-16 15:00', config('kafe.timezone')));
+        $this->oturum($cocuk, '2026-09-16 10:00', '2026-09-16 13:00', 'Reddedilen Masa', ApprovalStatus::Rejected);
+
+        $this->actingAs($veli)->get(route('parent.student', $cocuk))
+            ->assertOk()
+            ->assertDontSee('Reddedilen Masa');
     }
 
     public function test_the_weekly_goal_progress_is_shown(): void

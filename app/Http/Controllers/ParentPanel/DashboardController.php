@@ -127,18 +127,23 @@ class DashboardController extends Controller
     }
 
     /**
-     * Son oturumlar: acik olan + sayilabilir kapali olanlar.
+     * Son oturumlar: acik olan + sayilabilir (onayli) kapali olanlar.
      *
      * Esikten kisa oturumlar (yanlis okutma) listelenmez: veli "cocugum
      * 1 dakika kalmis" diye yanlis alarma girmemeli. Kayit silinmez,
      * yalnizca bu ekrana girmez - Dalga 3'teki kuralin devami.
+     *
+     * ACIK oturum onaysiz da gorunur ve bu bilincli: "su an iceride" bir
+     * VARLIK bilgisi, kredilendirilmis bir sure iddiasi degil. Veliden
+     * gizlemek panelin en cok bakilan satirini yok ederdi. Kapanan oturum
+     * ise yoneticinin onayina kadar listeye girmez (Dalga 9).
      */
     private function sonOturumlar(User $ogrenci, int $adet)
     {
         return StudySession::where('student_id', $ogrenci->id)
             ->where(function ($q) {
                 $q->whereNull('ended_at')
-                    ->orWhere('duration_minutes', '>=', (int) config('kafe.sayilabilir_dakika'));
+                    ->orWhere(fn ($onayli) => $onayli->countable());
             })
             ->with('table')
             ->orderByDesc('started_at')

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\Role;
 use App\Enums\SessionEndReason;
 use App\Models\StudyGoal;
@@ -52,6 +53,10 @@ class StudyGoalTest extends TestCase
             'ended_at' => $s->copy()->utc(),
             'duration_minutes' => (int) $b->diffInMinutes($s),
             'end_reason' => SessionEndReason::Manual->value,
+            // Onayli: bu dosya hedef hesabini siniyor, onay akisini degil
+            // (o SessionApprovalTest'in isi). Dalga 9'dan beri yalnizca
+            // onayli oturum ilerlemeye sayiliyor.
+            'approval_status' => ApprovalStatus::Approved->value,
         ]);
     }
 

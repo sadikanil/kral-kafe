@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ApprovalStatus;
 use App\Enums\SessionEndReason;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -23,12 +24,28 @@ class StudySession extends Model
         'ended_at',
         'duration_minutes',
         'end_reason',
+        'approval_status',
+        'reviewed_by',
+        'reviewed_at',
+        'rejection_reason',
     ];
 
     protected $casts = [
         'started_at' => 'datetime',
         'ended_at' => 'datetime',
         'end_reason' => SessionEndReason::class,
+        'approval_status' => ApprovalStatus::class,
+        'reviewed_at' => 'datetime',
+    ];
+
+    /**
+     * Veritabani varsayilani modele yansimaz: create() sonrasi
+     * $oturum->approval_status tazelenene kadar null doner ve "onaylandi mi"
+     * sorusu sessizce yanlis cevaplanir. Ayni tuzak Dalga 2'de StudyTable'in
+     * is_active'inde de ısırmıştı.
+     */
+    protected $attributes = [
+        'approval_status' => ApprovalStatus::Pending->value,
     ];
 
     public function student(): BelongsTo
@@ -47,14 +64,40 @@ class StudySession extends Model
     }
 
     /**
+     * Yoneticinin dogruladigi oturumlar.
+     *
+     * Toplamlara giren TEK durum. Acik oturum da buraya girmez: onay bitmis
+     * bir surenin dogrulanmasi, devam eden bir sayacin degil. Ogrencinin o
+     * anki sayaci panelde ayri bir canli kartta gorunur.
+     */
+    public function scopeApproved(Builder $query): Builder
+    {
+        return $query->where('approval_status', ApprovalStatus::Approved->value);
+    }
+
+    /**
+     * Yoneticinin bakmasi gereken oturumlar: bitmis ama karara baglanmamis.
+     */
+    public function scopeAwaitingApproval(Builder $query): Builder
+    {
+        return $query->whereNotNull('ended_at')
+            ->where('approval_status', ApprovalStatus::Pending->value);
+    }
+
+    /**
      * Istatistige giren oturumlar.
      *
      * Cok kisa oturum "yanlis okutma" sayilir: kayit SILINMEZ (veriyi yok etmek
      * denetimi imkansiz kilar) ama toplamlara katilmaz.
+     *
+     * Dalga 9'dan beri onay da bu tanimin parcasi: onaylanmamis bir sure
+     * "istatistige giren" degildir. Tanimi tek yerde tutmak, veliye sizan bir
+     * ekran kalmasini engelliyor.
      */
     public function scopeCountable(Builder $query): Builder
     {
         return $query->whereNotNull('ended_at')
+            ->approved()
             ->where('duration_minutes', '>=', config('kafe.sayilabilir_dakika'));
     }
 
@@ -83,6 +126,57 @@ class StudySession extends Model
      *
      * @return bool Kapatmayi bu cagri mi yapti (false: baskasi onceden kapatmis)
      */
+    /**
+     * Yonetici oturumu onaylar.
+     *
+     * Kosul WHERE'de, PHP'de degil - closeOnce ile ayni gerekce: karari
+     * veritabani versin. Acik bir oturum onaylanamaz; onay, bitmis bir surenin
+     * dogrulanmasidir.
+     *
+     * @return bool Yazma gerceklesti mi (false: oturum hala acik)
+     */
+    public function approve(User $reviewer): bool
+    {
+        return $this->review(ApprovalStatus::Approved, $reviewer, null);
+    }
+
+    /**
+     * Yonetici oturumu reddeder. Sebep ZORUNLU.
+     *
+     * Kayit silinmez: ogrenci reddedilen oturumu sebebiyle birlikte gorur.
+     * Sessizce silmek, ogrencinin suresinin neden kayboldugunu anlamasini
+     * imkansiz kilardi.
+     *
+     * @return bool Yazma gerceklesti mi (false: sebep bos ya da oturum acik)
+     */
+    public function reject(User $reviewer, string $reason): bool
+    {
+        $sebep = trim($reason);
+
+        if ($sebep === '') {
+            return false;
+        }
+
+        return $this->review(ApprovalStatus::Rejected, $reviewer, $sebep);
+    }
+
+    private function review(ApprovalStatus $durum, User $reviewer, ?string $sebep): bool
+    {
+        $etkilenen = static::whereKey($this->getKey())
+            ->whereNotNull('ended_at')
+            ->update([
+                'approval_status' => $durum->value,
+                'reviewed_by' => $reviewer->id,
+                'reviewed_at' => now(),
+                'rejection_reason' => $sebep,
+                'updated_at' => now(),
+            ]);
+
+        $this->refresh();
+
+        return $etkilenen === 1;
+    }
+
     public function closeOnce(Carbon $endedAt, SessionEndReason $reason): bool
     {
         $etkilenen = static::whereKey($this->getKey())
