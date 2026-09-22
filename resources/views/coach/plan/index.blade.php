@@ -52,7 +52,18 @@
                                     $sayim = $ilerleme[$ogrenci->id] ?? null;
                                 @endphp
                                 <tr>
-                                    <td><strong>{{ $ogrenci->name }}</strong></td>
+                                    <td>
+                                        <strong>{{ $ogrenci->name }}</strong>
+
+                                        {{-- Dusus sinyalleri (Dalga 16). Yorumsuz:
+                                             yalnizca sayi ve olgu. Veli ve ogrenci
+                                             bunlari GORMEZ (SS6.1-5). --}}
+                                        @foreach($sinyaller[$ogrenci->id] ?? [] as $sinyal)
+                                            <div>
+                                                <span class="badge badge-{{ $sinyal->severity }}">{{ $sinyal->label }}</span>
+                                            </div>
+                                        @endforeach
+                                    </td>
                                     <td>
                                         @if($sayim)
                                             <span class="badge {{ $sayim[0] === $sayim[1] ? 'badge-success' : 'badge-info' }}">

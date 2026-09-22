@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\StudyPlanItem;
 use App\Models\Subject;
 use App\Models\User;
+use App\Services\DeclineSignals;
 use App\Support\LocalDay;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,7 +26,7 @@ use Illuminate\View\View;
  */
 class StudyPlanController extends Controller
 {
-    public function index(): View
+    public function index(DeclineSignals $sinyaller): View
     {
         $bakan = auth()->user();
 
@@ -43,6 +44,10 @@ class StudyPlanController extends Controller
             'ogrenciler' => $ogrenciler,
             'hafta' => $hafta,
             'ilerleme' => $this->haftalikIlerleme($ogrenciler->pluck('id')->all(), $hafta),
+            // Dusus sinyalleri (Dalga 16). YALNIZCA burada: veli ve ogrenci
+            // ham sinyali gormez (SS6.1-5), onlara giden sey kocun yorumu.
+            // Ogrenci sayisindan bagimsiz olarak uc sorgu calisir.
+            'sinyaller' => $sinyaller->forStudents($ogrenciler),
         ]);
     }
 

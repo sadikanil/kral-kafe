@@ -191,7 +191,7 @@ oturduktan sonra.
 | 4b | **14b** | **Koç notları ve görüşme kaydı** — `coach_notes`, `visibility` (parent/private), görüşme özeti (§7-B, §7-I) | M | 14a ✅ | ✅ |
 | 5 | **15a** | **Haftalık veli raporu** — tembel üretim, dondurulmuş payload, koç yorumu (§7-A) | M | 9 ✅, 12 ✅ | ✅ |
 | 5b | **15b** | **Sınava geri sayım** — `ExamType::Official`, panelde geri sayım (§7-G) | S | 6b ✅ | ✅ |
-| 6 | **16** | **Devamlılık düşüş sinyalleri** — önce koça (§7-E) | S | 14 | ⬜ |
+| 6 | **16** | **Devamlılık düşüş sinyalleri** — önce koça (§7-E) | S | 14 ✅ | ✅ |
 | 7 | **17** | **Ders etiketi + zayıf konu listesi** (§7-F, §7-H) | M | 12 | ⬜ |
 
 S ≈ bir oturum · M ≈ iki-üç oturum · L ≈ dört ve üzeri.
@@ -484,13 +484,15 @@ Koç görüşme sonrası kısa özet bırakır ("Ekim planı konuşuldu, hedef 2
 Sohbet/mesajlaşma **değil** — tek yönlü kayıt; WhatsApp'ın yerini almaya
 çalışmaz, kayıt altına alır. `coach_notes` içinde `kind = meeting`; ek tablo yok.
 
-### E · Devamlılık düşüş sinyali — Dalga 16
+### E · Devamlılık düşüş sinyali — Dalga 16 · ✅ bitti (22 Eylül 2026)
 
-Kural tabanlı, **yorumsuz** sinyal: "son 7 günde 2 geliş, önceki 7 günde 5",
-"hedefin %40'ı", "3 gündür gelmedi". Koç panelinde vurgu. Tablo yok; `StudyStats`
-üzerinden hesaplanır, eşikler `config/kafe.php`. Dalga 11'in gün sonu devamsızlık
-bildiriminden farkı: o **tek güne** bakar ve veliye gider, bu **eğilime** bakar
-ve önce koça gider.
+Kural tabanlı, **yorumsuz** sinyal: "Son 7 günde 2 geliş, önceki 7 günde 5",
+"Geçen hafta hedefin %20'si", "4 gündür gelmedi". Koç öğrenci listesinde vurgu.
+Tablo yok; `StudyStats` üzerinden hesaplanır, eşikler `config/kafe.php`
+(`dusus_gelis_farki`, `dusus_hedef_orani`, `dusus_devamsiz_gun`).
+
+Dalga 11'in gün sonu devamsızlık bildiriminden farkı: o **tek güne** bakar ve
+veliye gider, bu **eğilime** bakar ve **koçta kalır**.
 
 ### F · Ders bazlı çalışma kırılımı — Dalga 17
 
@@ -1046,6 +1048,33 @@ dalında yazıldı ve şeması canlıya uygulandı (batch 9), ama `main`'e alın
 taşımıyordu. 22 Eylül'de merge edildi. Migration gerekmedi, defter zaten
 doluydu. Bu, §10.4'teki defter/dosya karşılaştırmasının **ters yönde** ısırması:
 canlı depodan ileri gidebiliyor.
+
+#### Dalga 16 — Devamlılık düşüş sinyalleri · ✅ bitti (22 Eylül 2026)
+
+`DeclineSignals` + `config/kafe.php` eşikleri. **Tablo yok.** Kararlar:
+
+- **Sinyal saklanmaz, her bakışta hesaplanır.** Saklamak "ne zaman düzeldi"
+  sorusunu da yönetmeyi gerektirirdi — çözülme akışı, bayat satırlar, temizlik.
+  Sinyal bir *durum*, bir *olay* değil.
+- **Yorumsuz** (§6.1-6): "motivasyonu düşük" demez, "son 7 günde 2 geliş,
+  önceki 7 günde 5" der. Sıfatı insan üretir.
+- **Koçta kalır** (§6.1-5). Veli ve öğrenci panelinde **yoktur**; ham bir düşüş
+  sinyali veliye doğrudan gitseydi, koç daha bakmadan evde tartışma başlardı.
+  Veliye giden şey koçun yorumu (Dalga 15a raporu). Üç ekran için de ayrı test.
+- **Bir günlük fark sinyal değil** (`dusus_gelis_farki` = 2). Küçük dalgalanma
+  sinyal sayılırsa liste gürültüye döner ve koç ona bakmayı bırakır — özellik
+  ölür.
+- **Hiç gelmemiş öğrenciye devamsızlık sinyali yok.** Yeni kayıt olmuş öğrenci
+  "düşüşte" değil, henüz başlamamış.
+- **Hedef sinyali tamamlanmış haftaya bakar.** Süren haftaya bakılsaydı her
+  öğrenci pazartesi sabahı "hedefinin %0'ı" diye işaretlenirdi — Dalga 15a'nın
+  aynı kararı.
+- **`StudyStats` toplu hesaba açıldı.** `attendedDays()` gün başına bir sorgu
+  açıyordu; koç listesinde 14 gün × N öğrenci yüzlerce sorgu demekti (§10.12).
+  Yeni `dailyMinutesForMany()` tek sorguyla öğrenci→gün→dakika döndürüyor ve
+  **`attendedDays()` artık ona delege ediyor** — iki ayrı "gelinmiş gün" tanımı,
+  gün gelip birinin diğerinden farklı cevap vermesi demekti. Öğrenci sayısından
+  bağımsız olarak toplam üç sorgu çalışır (oturumlar, son gelişler, hedefler).
 
 #### Dalga 15b — Sınava geri sayım · ✅ bitti (22 Eylül 2026)
 

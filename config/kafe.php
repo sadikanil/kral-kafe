@@ -86,6 +86,29 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Dusus sinyali esikleri (Dalga 16)
+    |--------------------------------------------------------------------------
+    |
+    | Kural tabanli, yorumsuz sinyaller. YALNIZCA koc ve yonetici gorur
+    | (SS6.1-5); veliye giden sey kocun yorumudur.
+    |
+    | dusus_gelis_farki : son 7 gunun gelis sayisi, onceki 7 gunden bu kadar
+    |                     AZSA sinyal. 1 gun bilerek yetmiyor - kucuk
+    |                     dalgalanma gurultuye doner ve koc listeye bakmayi
+    |                     birakir.
+    | dusus_hedef_orani : tamamlanmis son haftada hedefin bu yuzdesinin
+    |                     ALTINDA kalindiysa sinyal. Suren haftaya bakilsaydi
+    |                     her ogrenci pazartesi sabahi isaretlenirdi.
+    | dusus_devamsiz_gun: son gelisin uzerinden bu kadar gun gectiyse sinyal.
+    |
+    */
+
+    'dusus_gelis_farki' => (int) env('KAFE_DUSUS_GELIS_FARKI', 2),
+    'dusus_hedef_orani' => (int) env('KAFE_DUSUS_HEDEF_ORANI', 50),
+    'dusus_devamsiz_gun' => (int) env('KAFE_DUSUS_DEVAMSIZ_GUN', 3),
+
+    /*
+    |--------------------------------------------------------------------------
     | Cron anahtari (Dalga 11)
     |--------------------------------------------------------------------------
     |

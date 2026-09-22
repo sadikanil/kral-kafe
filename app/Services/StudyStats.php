@@ -108,23 +108,107 @@ class StudyStats
      */
     public function attendedDays(User $student, string $from, string $to): array
     {
+        return $this->attendedDaysForMany([$student->id], $from, $to)[$student->id] ?? [];
+    }
+
+    /**
+     * Bircok ogrenci icin araliktaki gelinmis gunler - TEK sorgu.
+     *
+     * attendedDays() eskiden gun basina bir sorgu aciyordu; koc listesinde
+     * 14 gun x N ogrenci yuzlerce sorgu demekti. Fonksiyon-veritabani
+     * mesafesi bu projede bir kez pahaliya mal oldu (README SS10.12).
+     *
+     * Tanim TEK YERDE kalsin diye attendedDays() artik buraya delege
+     * ediyor: iki ayri "gelinmis gun" tanimi, gun gelip birinin
+     * digerinden farkli cevap vermesi demekti.
+     *
+     * @param  list<int>  $studentIds
+     * @return array<int,list<string>>
+     */
+    public function attendedDaysForMany(array $studentIds, string $from, string $to): array
+    {
         $esik = (int) config('kafe.sayilabilir_dakika');
-        $gunler = [];
 
-        $gun = Carbon::parse($from, LocalDay::timezone());
-        $bitis = Carbon::parse($to, LocalDay::timezone());
+        return array_map(
+            fn (array $gunler) => array_keys(array_filter($gunler, fn (int $dk) => $dk >= $esik)),
+            $this->dailyMinutesForMany($studentIds, $from, $to),
+        );
+    }
 
-        while ($gun->lessThanOrEqualTo($bitis)) {
-            $tarih = $gun->toDateString();
-
-            if ($this->minutesOnDay($student, $tarih) >= $esik) {
-                $gunler[] = $tarih;
-            }
-
-            $gun->addDay();
+    /**
+     * Ogrenci basina gun basina dakika - TEK sorgu.
+     *
+     * Gece yarisini asan oturum IKI gune de dagitilir; bolme burada
+     * yapilir cunku veri tek satir olarak saklaniyor (bkz. sinif basligi,
+     * kural 2).
+     *
+     * @param  list<int>  $studentIds
+     * @return array<int,array<string,int>>
+     */
+    public function dailyMinutesForMany(array $studentIds, string $from, string $to): array
+    {
+        if ($studentIds === []) {
+            return [];
         }
 
-        return $gunler;
+        $esik = (int) config('kafe.sayilabilir_dakika');
+        $tz = LocalDay::timezone();
+
+        [$pencereBas] = LocalDay::bounds($from);
+        [$pencereSon] = LocalDay::bounds(
+            Carbon::parse($to, $tz)->addDay()->toDateString()
+        );
+
+        // Bos gunler de anahtar olarak dursun: cagiran taraf "o gun sifir"
+        // ile "o gun hic yok" ayrimini yapmak zorunda kalmasin.
+        $kova = [];
+        foreach ($studentIds as $id) {
+            $kova[(int) $id] = [];
+        }
+
+        $oturumlar = StudySession::whereIn('student_id', $studentIds)
+            ->approved()
+            ->where('started_at', '<=', $pencereSon)
+            ->where(function ($q) use ($pencereBas) {
+                $q->whereNull('ended_at')->orWhere('ended_at', '>=', $pencereBas);
+            })
+            ->get()
+            // Esikten kisa oturumlar burada elenir - gune bolunmus parcalari
+            // degil, oturumun KENDI toplam suresi degerlendirilir.
+            ->filter(fn (StudySession $o) => $o->minutesSoFar() >= $esik);
+
+        foreach ($oturumlar as $oturum) {
+            $bitis = $oturum->ended_at ?? now();
+            $gun = Carbon::parse(LocalDay::of($oturum->started_at), $tz);
+            $sonGun = Carbon::parse(LocalDay::of($bitis), $tz);
+
+            while ($gun->lessThanOrEqualTo($sonGun)) {
+                $tarih = $gun->toDateString();
+
+                if ($tarih >= $from && $tarih <= $to) {
+                    [$gunBas] = LocalDay::bounds($tarih);
+                    [$gunSon] = LocalDay::bounds($gun->copy()->addDay()->toDateString());
+
+                    $kesBas = $oturum->started_at->greaterThan($gunBas) ? $oturum->started_at : $gunBas;
+                    $kesSon = $bitis->lessThan($gunSon) ? $bitis : $gunSon;
+
+                    if ($kesSon->greaterThan($kesBas)) {
+                        $ogrenciId = (int) $oturum->student_id;
+                        $kova[$ogrenciId][$tarih] = ($kova[$ogrenciId][$tarih] ?? 0)
+                            + (int) $kesBas->diffInMinutes($kesSon);
+                    }
+                }
+
+                $gun->addDay();
+            }
+        }
+
+        foreach ($kova as $id => $gunler) {
+            ksort($gunler);
+            $kova[$id] = $gunler;
+        }
+
+        return $kova;
     }
 
     /**
