@@ -72,6 +72,11 @@ class DashboardController extends Controller
             'sessions' => $this->sonOturumlar($student, 30),
             // Deneme sonuclari (Dalga 12). Karar 2: profile islenen her sey
             // veliye acik - netler, siralamalar ve yoneticinin notu dahil.
+            // Haftalik plan ilerlemesi (Dalga 13): veli oran gorur.
+            'planProgress' => \App\Models\StudyPlanItem::weeklyProgress(
+                $student,
+                \App\Support\LocalDay::weekStart(\App\Support\LocalDay::today()),
+            ),
             'examResults' => \App\Models\ExamResult::where('student_id', $student->id)
                 ->with(['event', 'subjects.subject'])
                 ->get()

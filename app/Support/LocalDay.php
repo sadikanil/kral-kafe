@@ -74,6 +74,21 @@ class LocalDay
     }
 
     /**
+     * Verilen gunun icinde bulundugu haftanin YEREL pazartesisi (Y-m-d).
+     *
+     * weekBounds() UTC Carbon donuyor ve ondan dogrudan toDateString() almak
+     * bir gun geri kayardi: yerel pazartesi 00:00, UTC'de PAZAR 21:00.
+     * Hesabi burada yapmak, her cagiran yerde ayni tuzaga dusmeyi onluyor
+     * (bkz. README SS10.1 - ayni tuzak uc kez isirdi).
+     */
+    public static function weekStart(string $date): string
+    {
+        return Carbon::parse($date, self::timezone())
+            ->startOfWeek(Carbon::MONDAY)
+            ->toDateString();
+    }
+
+    /**
      * Bir yerel ayin sinirlari.
      *
      * @return array{0:Carbon,1:Carbon}

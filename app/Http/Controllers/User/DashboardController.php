@@ -63,6 +63,11 @@ class DashboardController extends Controller
             'monthMinutes' => $istatistik->monthMinutes($user),
             'streak' => $istatistik->streak($user),
             'weeklyGoal' => StudyGoal::activeFor($user, LocalDay::today()),
+            // Haftalik plan (Dalga 13): hedefin yaninda "ne" sorusunun cevabi.
+            'planItems' => \App\Models\StudyPlanItem::forWeek($user, LocalDay::weekStart(LocalDay::today()))
+                ->with('subject')
+                ->orderBy('id')
+                ->get(),
             // Onay bekleyen / reddedilen oturumlar (Dalga 9): yukaridaki
             // sureler yalnizca ONAYLI oturumlari sayiyor. Bu liste olmadan
             // ogrenci calistigi halde sifir goruyor ve sebebini bilmiyor.

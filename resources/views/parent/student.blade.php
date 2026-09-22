@@ -9,6 +9,13 @@
 
 @section('content')
 
+    @if($planProgress[1] > 0)
+        <div class="session-card mb-3">
+            <strong>Bu haftanın planı</strong>
+            <div class="text-muted">{{ $planProgress[0] }} / {{ $planProgress[1] }} madde tamamlandı</div>
+        </div>
+    @endif
+
     @include('_deneme-sonuclari')
 
     @php

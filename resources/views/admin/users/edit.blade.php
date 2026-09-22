@@ -163,4 +163,54 @@
             </form>
         </div>
     </div>
+
+    @if($user->isStudent())
+        {{--
+            Haftalik calisma plani (Dalga 13). Ana formun DISINDA: ic ice
+            form gecersiz HTML.
+        --}}
+        <div class="card mt-3" style="max-width: 640px;">
+            <div class="card-header"><h4>Bu haftanın planı</h4></div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Haftalık hedef "ne kadar" sorusunu, plan "ne" sorusunu cevaplar.
+                    Geçmiş haftalar değişmez; her hafta kendi maddelerini taşır.
+                </p>
+
+                <form method="POST" action="{{ route('admin.study-plan.store', $user) }}"
+                      class="d-flex align-items-center gap-2 mb-3">
+                    @csrf
+                    <input type="text" name="title" class="form-control" placeholder="Yapılacak" maxlength="150" required>
+                    <select name="subject_id" class="form-control">
+                        <option value="">Ders (isteğe bağlı)</option>
+                        @foreach($planSubjects as $ders)
+                            <option value="{{ $ders->id }}">{{ $ders->name }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="btn btn-primary">Ekle</button>
+                </form>
+
+                @forelse($planItems as $madde)
+                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                        <div>
+                            <strong>{{ $madde->title }}</strong>
+                            <div class="text-muted">
+                                {{ $madde->subject?->name ?? 'Genel' }}
+                                @if($madde->status === 'done') · tamamlandı @endif
+                            </div>
+                        </div>
+
+                        <form method="POST" action="{{ route('admin.study-plan.destroy', $madde) }}">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger">Sil</button>
+                        </form>
+                    </div>
+                @empty
+                    <p class="text-muted">Bu hafta için madde yok.</p>
+                @endforelse
+            </div>
+        </div>
+    @endif
+
 @endsection

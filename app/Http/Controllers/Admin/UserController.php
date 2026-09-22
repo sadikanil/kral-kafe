@@ -95,6 +95,13 @@ class UserController extends Controller
         return view('admin.users.edit', [
             'user' => $user,
             'weeklyGoal' => StudyGoal::activeFor($user, LocalDay::today()),
+            // Haftalik calisma plani (Dalga 13). Hedefin ("ne kadar")
+            // hemen yaninda duruyor cunku plan "ne" sorusunu cevapliyor.
+            'planItems' => \App\Models\StudyPlanItem::forWeek($user, LocalDay::weekStart(LocalDay::today()))
+                ->with('subject')
+                ->orderBy('id')
+                ->get(),
+            'planSubjects' => \App\Models\Subject::active()->orderBy('sort_order')->orderBy('name')->get(),
             // Veli-ogrenci bagi (Dalga 6). Liste yalnizca KAYITLI role gore
             // gelir: veliye ogrenci listesi, ogrenciye veli listesi. Rol bu
             // formda degistiriliyorsa bag bir sonraki duzenlemede kurulur.

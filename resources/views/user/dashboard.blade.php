@@ -192,6 +192,37 @@
         </div>
     @endif
 
+    {{--
+        Bu haftanin plani (Dalga 13). Hedef cubugunun ALTINDA: once "ne
+        kadar", sonra "ne". Madde yoksa bolum hic cizilmez - bos bir liste
+        "plansizsin" demez, "plan var ama bos" der.
+    --}}
+    @if($planItems->isNotEmpty())
+        @php $tamamlanan = $planItems->where('status', 'done')->count(); @endphp
+
+        <h2 class="mt-4">Bu haftanın planı ({{ $tamamlanan }} / {{ $planItems->count() }})</h2>
+
+        @foreach($planItems as $madde)
+            <div class="session-card mb-2">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div>
+                        <strong>{{ $madde->title }}</strong>
+                        <div class="text-muted">{{ $madde->subject?->name ?? 'Genel' }}</div>
+                    </div>
+
+                    @if($madde->status === 'done')
+                        <span class="badge badge-success">Tamamlandı</span>
+                    @else
+                        <form method="POST" action="{{ route('user.study-plan.complete', $madde) }}">
+                            @csrf
+                            <button type="submit" class="btn btn-primary">Tamamladım</button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+    @endif
+
     @include('_bildirimler')
 
     {{--

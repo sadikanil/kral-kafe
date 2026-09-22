@@ -66,6 +66,10 @@ Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')-
     Route::get('/denemeler', [ExamCalendarController::class, 'student'])->name('exams');
 
     // Deneme sonuc raporlari (PDF + yapay zeka analizi), salt okunur
+    // Haftalik calisma plani (Dalga 13): ogrenci yalnizca tamamlar
+    Route::post('/plan/{item}/tamamla', [\App\Http\Controllers\User\StudyPlanController::class, 'complete'])
+        ->name('study-plan.complete');
+
     // Deneme sonuclari (Dalga 12): siralamalar ve yonetici notu
     Route::get('/deneme-sonuclari', [\App\Http\Controllers\User\ExamResultController::class, 'index'])
         ->name('exam-results');
@@ -133,6 +137,12 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     Route::get('/lokasyonlar/{location}/qr', [LocationController::class, 'showQr'])->name('locations.qr');
     Route::post('/lokasyonlar/{location}/durum', [LocationController::class, 'toggleStatus'])->name('locations.toggle-status');
     Route::get('/lokasyonlar-qr-yazdir', [LocationController::class, 'printQrCodes'])->name('locations.print-qr');
+
+    // Haftalik calisma plani (Dalga 13): plani yonetici belirler
+    Route::post('/kullanicilar/{student}/plan', [\App\Http\Controllers\Admin\StudyPlanController::class, 'store'])
+        ->name('study-plan.store');
+    Route::delete('/plan/{item}', [\App\Http\Controllers\Admin\StudyPlanController::class, 'destroy'])
+        ->name('study-plan.destroy');
 
     // Dersler (Dalga 12): deneme sonucu girisinin ders listesi
     Route::get('/dersler', [SubjectController::class, 'index'])->name('subjects.index');

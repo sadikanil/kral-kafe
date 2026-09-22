@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 22 Eylül 2026 · Laravel 12 · 284 test / 844 doğrulama yeşil._
+_Son güncelleme: 22 Eylül 2026 · Laravel 12 · 294 test / 862 doğrulama yeşil._
 
 ---
 
@@ -140,6 +140,8 @@ yazar), veli salt okunur.
 | Ders tanımları (TYT/AYT hazır gelir, panelden düzenlenir) | Yönetici | Yönetim → Dersler |
 | Deneme sonucu girişi: ders bazlı D/Y, sıralamalar, değerlendirme notu | Yönetici | Kullanıcı → Deneme Raporları |
 | Deneme sonuçları: netler, sıralamalar, yöneticinin notu | Öğrenci, veli | `/kullanici/deneme-sonuclari`, veli öğrenci sayfası |
+| Haftalık plan: madde ekleme ve silme | Yönetici | Kullanıcı düzenleme sayfası |
+| Haftalık plan: maddeleri tamamlama, tamamlama oranı | Öğrenci, veli | Panel |
 | Unutulan oturumların otomatik kapanması (tembel, cron opsiyonel) | Sistem | — |
 | Gün/hafta/ay süre, üst üste gelme serisi | Öğrenci | Panel |
 | Haftalık hedef ve ilerleme; hedef geçmişi korunur | Yönetici koyar, öğrenci görür | Kullanıcı formu, panel |
@@ -169,6 +171,7 @@ Supabase Postgres (session pooler) · elle yazılmış CSS (Tailwind yok).
 | 10b | Oturum konumu + kafe koordinatı ayarı; uzaklık onay kuyruğunda işaret | ✅ |
 | 11 | Bildirim altyapısı: devamsızlık + deneme hatırlatması, Vercel Cron, panel içi teslim | ✅ |
 | 12 | Deneme sonucu: ders bazlı D/Y/net, kurum–ilçe–il–TR sıralaması, yönetici notu, veliye açık | ✅ |
+| 13 | Haftalık çalışma planı: yönetici belirler, öğrenci tamamlar, oran velide | ✅ |
 
 ---
 
@@ -183,7 +186,6 @@ oturduktan sonra.
 | Sıra | Dalga | İçerik | Büyüklük | Bağımlılık | Durum |
 |---|---|---|---|---|---|
 | 1 | **12b** | **Net gelişim grafiği** — ders bazlı net serisi, deneme türüne göre ayrı (§7-C) | S | 12 ✅ | ⬜ |
-| 2 | **13** | **Haftalık çalışma planı** — yönetici belirler, öğrenci tamamlar, tamamlama oranı (§7-D) | M | — | ⬜ |
 | 3 | **8** | **Tüketim sadeleştirme** — QR tüketim akışının kaldırılması, tüketimin `package_items` kapsamına bağlanması (`covered_by_package`) | M | 7 ✅ | ⬜ |
 | 4 | **14** | **Koç rolü aktif** — koç–öğrenci atama, koç paneli, notlar, görüşme kaydı (§7-B, §7-I) | L | 6 | ⬜ |
 | 5 | **15** | **Haftalık veli raporu** — tembel üretim, yönetici/koç yorumu (§7-A) + sınava geri sayım (§7-G) | M | 9, 12 | ⬜ |
@@ -429,7 +431,7 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
   karşılaştırmayı yasaklar; kurum/il/TR sıralaması ise sınavın kendi verisidir,
   sistemin ürettiği bir kıyas değil.
 
-### D · Haftalık çalışma planı — Dalga 13
+### D · Haftalık çalışma planı — Dalga 13 · ✅ bitti (22 Eylül 2026)
 
 - **Ne:** Yönetici (ya da koç) öğrencinin haftalık yapması gerekenleri belirler:
   başlık, ders, hedef gün. Öğrenci panelinde bu haftanın listesini görür,
@@ -508,7 +510,7 @@ gerekmez. Dalga 6b altyapısıyla bir günlük iş.
 `study_tables` · `study_sessions` · `study_goals` · `student_parent` ·
 `exam_events` · `exam_reports` · `packages` · `package_items` ·
 `subscriptions` · `payments` · `settings` · `notifications` · `subjects` ·
-`exam_results` · `exam_result_subjects`
+`exam_results` · `exam_result_subjects` · `study_plan_items`
 
 ### 8.2 Eklenecek sütunlar
 
@@ -529,9 +531,6 @@ gerekmez. Dalga 6b altyapısıyla bir günlük iş.
 ```
 
 
-study_plan_items      id, student_id, subject_id?, title, week_start,
-                      due_date?, status (open|done|cancelled),
-                      completed_at, created_by
 
 coach_assignments     id, coach_id, student_id, assigned_at, is_active
 
@@ -1199,6 +1198,30 @@ sonuç girişi, öğrenci ve veli görünümü. Kararlar:
 - Sıralama, §6.1-4'teki "öğrenciler birbiriyle karşılaştırılmaz" kuralına
   takılmıyor: bu **sınavın kendi verisi**, sistemin ürettiği bir kıyas değil.
 
+#### Dalga 13 — Haftalık çalışma planı · ✅ bitti (22 Eylül 2026)
+
+`study_plan_items`; yönetici kullanıcı sayfasından madde ekliyor, öğrenci
+panelinden tamamlıyor, oran veli panelinde. Kararlar:
+
+- **Hedef "ne kadar", plan "ne".** İkisi ayrı tablo ve ayrı soru: 20 saat
+  çalışıp hiç matematik yapmamak hedef çubuğuna yansımıyor.
+- **Geçmiş hafta yeniden yazılmaz.** Madde `week_start`'a bağlı; planı
+  değiştirmek geçmiş haftanın "tuttu mu" cevabını değiştirmemeli —
+  `study_goals`'un geçerlilik aralığı kararının aynısı (Dalga 5).
+- **İkinci kez "tamamladım" tamamlanma anını ileri kaydırmaz.** Koşul
+  WHERE'de (`status = open`): "ne zaman bitirdi" sorusu sayfayı iki kez
+  yenilemekle değişmemeli. `closeOnce` ile aynı gerekçe.
+- **Öğrenci yalnızca tamamlar.** Madde ekleyemez, silemez, düzenleyemez
+  (karar 10). Sahiplik kontrolü açık bir `abort_unless`: o tek satır
+  "başkasının planını işaretleme" sınırının tamamı.
+- **`LocalDay::weekStart()` eklendi.** `weekBounds()` UTC Carbon döndürüyor
+  ve ondan doğrudan `toDateString()` almak bir gün geri kayardı — yerel
+  pazartesi 00:00, UTC'de **pazar 21:00**. Hesabı tek yere koymak, her
+  çağıran yerde aynı tuzağa düşmeyi önlüyor; §10.1'deki tuzağın dördüncü
+  biçimi olabilirdi.
+- Plan formu yönetici kullanıcı sayfasında, ana formun **dışında**: iç içe
+  form geçersiz HTML.
+
 ---
 
 ---
@@ -1406,7 +1429,7 @@ Ardından `http://127.0.0.1:8000`. Hepsini birden (sunucu + kuyruk + log + vite)
 php artisan test
 ```
 
-284 test, 844 doğrulama. Testler `:memory:` SQLite kullanır, yerel veritabanına
+294 test, 862 doğrulama. Testler `:memory:` SQLite kullanır, yerel veritabanına
 dokunmaz — bu yüzden `migrate:fresh` çalıştırmak için hiçbir sebep yok (§10.3).
 
 **Stil uyarısı:** proje Tailwind ya da Bootstrap kullanmıyor; stiller elle
