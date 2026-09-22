@@ -6,6 +6,7 @@
 @section('topbar-actions')
     <a href="{{ route('coach.plan.show', $student) }}" class="btn btn-sm btn-secondary">Çalışma planı</a>
     <a href="{{ route('coach.report', $student) }}" class="btn btn-sm btn-secondary">Rapor</a>
+    <a href="{{ route('coach.topics.index', $student) }}" class="btn btn-sm btn-secondary">Konular</a>
     <a href="{{ route('coach.plan.index') }}" class="btn btn-sm btn-secondary">← Öğrenciler</a>
 @endsection
 

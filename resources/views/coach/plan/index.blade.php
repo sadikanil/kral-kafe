@@ -84,6 +84,9 @@
                                             <a href="{{ route('coach.report', $ogrenci) }}" class="btn btn-sm btn-secondary">
                                                 Rapor
                                             </a>
+                                            <a href="{{ route('coach.topics.index', $ogrenci) }}" class="btn btn-sm btn-secondary">
+                                                Konular
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>

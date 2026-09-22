@@ -46,6 +46,8 @@
         </div>
     @endforeach
 
+    @include('_zayif-konular')
+
     @include('_koc-notlari')
 
     @include('_deneme-sonuclari')

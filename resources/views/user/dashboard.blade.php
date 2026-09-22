@@ -266,6 +266,8 @@
         </div>
     @endif
 
+    @include('_zayif-konular')
+
     @include('_koc-notlari')
 
     @include('_bildirimler')

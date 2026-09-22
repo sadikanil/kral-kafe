@@ -193,7 +193,7 @@ oturduktan sonra.
 | 5b | **15b** | **Sınava geri sayım** — `ExamType::Official`, panelde geri sayım (§7-G) | S | 6b ✅ | ✅ |
 | 6 | **16** | **Devamlılık düşüş sinyalleri** — önce koça (§7-E) | S | 14 ✅ | ✅ |
 | 7 | **17a** | **Ders etiketi** — `study_sessions.subject_id`, haftalık ders kırılımı (§7-F) | S | 12 ✅ | ✅ |
-| 7b | **17b** | **Zayıf konu listesi** — `weak_topics`, plan maddesine bağlama (§7-H) | M | 17a ✅ | ⬜ |
+| 7b | **17b** | **Zayıf konu listesi** — `weak_topics`, plan maddesine bağlama (§7-H) | M | 17a ✅ | ✅ |
 
 S ≈ bir oturum · M ≈ iki-üç oturum · L ≈ dört ve üzeri.
 
@@ -503,11 +503,16 @@ etiketsiz oturum "Genel" kovasına düşer. Değeri: "12 saat çalıştı" yerin
 "8 saat matematik, 0 saat Türkçe". `study_sessions.subject_id` nullable;
 `subjects` §7-C ile ortak. Kırılım öğrenci panosunda, haftalık.
 
-### H · Zayıf konu listesi — Dalga 17
+### H · Zayıf konu listesi — Dalga 17b · ✅ bitti (22 Eylül 2026)
 
-Deneme sonucundan (düşük net) ya da yönetici/koç girişiyle konu listesi; her
-konuya plan maddesi bağlanır, konu "kapandı" işaretlenir. 6d'nin PDF analizinden
-de beslenebilir.
+Yönetici/koç girişiyle konu listesi (`weak_topics`); her konu tek dokunuşla bu
+haftanın **plan maddesine** dönüşür, konu "kapandı" işaretlenir. Öğrenci ve veli
+**açık** konuları görür.
+
+**Otomatik türetme (düşük net, 6d'nin PDF analizi) bilerek ertelendi.** "Düşük
+net" eşiğini sistemin kendi başına belirlemesi §6.1-6'ya (sistem sayı gösterir,
+sıfat üretmez) yaklaşır ve ayrı bir karar gerektirir. `source` sütunu o kaynak
+geldiğinde yeni bir migration gerekmesin diye şimdiden duruyor.
 
 ### G · Sınava geri sayım — Dalga 15b · ✅ bitti (22 Eylül 2026)
 
@@ -566,7 +571,8 @@ ikisi de duruyor.
 -- weekly_reports: Dalga 15a'da EKLENDI (§9). unique(student_id, week_start);
 --                  coach_comment payload'in DISINDA (regenerate onu korur)
 
-weak_topics           id, student_id, subject_id, topic, source, status
+-- weak_topics: Dalga 17b'de EKLENDI (§9). Taslaga ek olarak closed_at ve
+--              created_by; status 'open'|'closed'.
 
 -- packages, package_items, subscriptions, payments: Dalga 7'de eklendi (§9.4)
 ```
@@ -1050,6 +1056,29 @@ dalında yazıldı ve şeması canlıya uygulandı (batch 9), ama `main`'e alın
 taşımıyordu. 22 Eylül'de merge edildi. Migration gerekmedi, defter zaten
 doluydu. Bu, §10.4'teki defter/dosya karşılaştırmasının **ters yönde** ısırması:
 canlı depodan ileri gidebiliyor.
+
+#### Dalga 17b — Zayıf konu listesi · ✅ bitti (22 Eylül 2026)
+
+`weak_topics` (student_id, subject_id?, topic, source, status, closed_at).
+**Yol haritası bitti.** Kararlar:
+
+- **Konu kapanır, silinmez** (silme ayrı bir uçta duruyor). "Bunu hallettin"
+  bilgisi öğrencinin görebileceği tek ilerleme işareti; kayıt silinirse geçmişte
+  neyin düzeldiği de kaybolur.
+- **İkinci kez kapatmak kapanma anını ileri kaydırmaz** — koşul WHERE'de,
+  `StudyPlanItem::markDone` ile aynı gerekçe.
+- **Kapanan konu yeniden açılabilir:** düşüşün tekrarlaması olağan.
+- **Kapanmış konu veli ve öğrenci listesinden çıkar.** "Geliştirilmesi gereken"
+  listesi geçmişin değil **bugünün** listesi; kapanmışları bırakmak liste
+  uzadıkça öğrenciyi boğar. Koç geçmişi kendi ekranında görüyor.
+- **Ders isteğe bağlı:** her zayıf konu bir derse oturmuyor ("soru çözme hızı",
+  "deneme stresi").
+- **Konu → plan maddesi, tek dokunuş.** Zayıf konu listesi kendi başına bir görev
+  listesi değil; plana dönüşmezse öğrenci onu hiçbir yerde görmez ve liste koçun
+  not defterinden ibaret kalır. **Konu ile madde arasında bağ tutulmuyor:** aynı
+  konu birden fazla hafta planlanabilir (üzerinde birkaç hafta çalışılır), tek
+  bir madde kimliğine bağlamak o durumu temsil edemezdi.
+- **Otomatik türetme ertelendi** — §7-H'deki gerekçe.
 
 #### Dalga 17a — Oturuma ders etiketi · ✅ bitti (22 Eylül 2026)
 

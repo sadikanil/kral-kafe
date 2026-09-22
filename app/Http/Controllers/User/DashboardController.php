@@ -64,6 +64,12 @@ class DashboardController extends Controller
             'streak' => $istatistik->streak($user),
             'weeklyGoal' => StudyGoal::activeFor($user, LocalDay::today()),
             // Ders etiketi ve kirilimi (Dalga 17a).
+            // Acik zayif konular (Dalga 17b). Kapanmislar listeden cikar.
+            'weakTopics' => \App\Models\WeakTopic::forStudent($user)
+                ->open()
+                ->with('subject')
+                ->orderByDesc('created_at')
+                ->get(),
             'sessionSubjects' => \App\Models\Subject::active()->orderBy('sort_order')->orderBy('name')->get(),
             'subjectBreakdown' => $istatistik->minutesBySubject(
                 $user,

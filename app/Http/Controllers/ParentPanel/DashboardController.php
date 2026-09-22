@@ -95,6 +95,11 @@ class DashboardController extends Controller
                 ->values(),
             // Paylasilan koc notlari (Dalga 14b). Ozel notlar shared()
             // scope'unda suzuluyor - sablon gizlilik karari vermiyor.
+            'weakTopics' => \App\Models\WeakTopic::forStudent($student)
+                ->open()
+                ->with('subject')
+                ->orderByDesc('created_at')
+                ->get(),
             'coachNotes' => \App\Models\CoachNote::forStudent($student)
                 ->shared()
                 ->with('author')

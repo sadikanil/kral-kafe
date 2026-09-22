@@ -121,6 +121,14 @@ Route::middleware(['auth', 'role:coach,admin'])->prefix('koc')->name('coach.')->
     Route::get('/rapor/{student}', [\App\Http\Controllers\Coach\WeeklyReportController::class, 'show'])->name('report');
     Route::post('/rapor/{student}/yorum', [\App\Http\Controllers\Coach\WeeklyReportController::class, 'comment'])->name('report.comment');
     Route::post('/rapor/{student}/yeniden', [\App\Http\Controllers\Coach\WeeklyReportController::class, 'regenerate'])->name('report.regenerate');
+
+    // Zayif konu listesi (Dalga 17b). Plan ile AYNI sinir (User::canCoach).
+    Route::get('/konular/{student}', [\App\Http\Controllers\Coach\WeakTopicController::class, 'index'])->name('topics.index');
+    Route::post('/konular/{student}', [\App\Http\Controllers\Coach\WeakTopicController::class, 'store'])->name('topics.store');
+    Route::post('/konular/kayit/{topic}/kapat', [\App\Http\Controllers\Coach\WeakTopicController::class, 'close'])->name('topics.close');
+    Route::post('/konular/kayit/{topic}/ac', [\App\Http\Controllers\Coach\WeakTopicController::class, 'reopen'])->name('topics.reopen');
+    Route::post('/konular/kayit/{topic}/plana', [\App\Http\Controllers\Coach\WeakTopicController::class, 'plan'])->name('topics.plan');
+    Route::delete('/konular/kayit/{topic}', [\App\Http\Controllers\Coach\WeakTopicController::class, 'destroy'])->name('topics.destroy');
 });
 
 // Admin Routes
