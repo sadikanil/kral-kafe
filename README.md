@@ -185,7 +185,7 @@ oturduktan sonra.
 
 | Sıra | Dalga | İçerik | Büyüklük | Bağımlılık | Durum |
 |---|---|---|---|---|---|
-| 1 | **12b** | **Net gelişim grafiği** — ders bazlı net serisi, deneme türüne göre ayrı (§7-C) | S | 12 ✅ | ⬜ |
+| 1 | **12b** | **Net gelişim grafiği** — ders bazlı net serisi, deneme türüne göre ayrı (§7-C) | S | 12 ✅ | ✅ |
 | 3 | **8** | **Tüketim sadeleştirme** — QR tüketim akışının kaldırılması, stok düşümünün self adisyona taşınması, `package_items` kapsamının uygulanması (`covered_quantity`) | M | 7 ✅ | ✅ |
 | 4 | **14a** | **Koç rolü + çalışma planı sayfası** — koç–öğrenci atama, `/koc/plan`, haftalık **ve aylık** dönem, veli görünürlüğü (§7-B, §7-D) | M | 6 ✅ | ✅ |
 | 4b | **14b** | **Koç notları ve görüşme kaydı** — `coach_notes`, `visibility` (parent/private), görüşme özeti (§7-B, §7-I) | M | 14a ✅ | ✅ |
@@ -407,7 +407,7 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
 - **Devamsızlık bildiriminin eşiği** düşünülmeli: öğrencinin her gelmediği gün
   veliye mesaj gitmesi, kısa sürede görmezden gelinen bir gürültüye dönüşür.
 
-### C · Deneme sonucu, sıralamalar ve yönetici notu — Dalga 12 · ✅ bitti (22 Eylül 2026, grafik hariç)
+### C · Deneme sonucu, sıralamalar ve yönetici notu — Dalga 12 + 12b · ✅ bitti (22 Eylül 2026)
 
 - **Ne:** Takvimdeki bir denemeye (Dalga 6b) öğrenci başına sonuç girişi:
   - Ders bazlı **doğru / yanlış / boş**, net otomatik hesaplanır.
@@ -426,8 +426,9 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
 - **Sıralama sütunları nullable:** kurum sıralaması denemenin ertesi günü,
   Türkiye geneli bir hafta sonra açıklanabiliyor. Sonuç girişi eksik veriyle
   başlayıp tamamlanabilmeli.
-- **Net grafiği:** ders bazlı seri, deneme türüne göre ayrı. Çalışma süresiyle
-  yan yana gösterim sonraki iş; **nedensellik iddiası yok**.
+- **Net grafiği ✅ (Dalga 12b):** ders bazlı seri, deneme türüne göre ayrı;
+  sunucuda üretilen satır içi SVG. Çalışma süresiyle yan yana gösterim sonraki
+  iş; **nedensellik iddiası yok**.
 - **`mock_exams` tablosu açılmaz** — `exam_events` onun yerine geçti (karar 13).
 - **Sıralama gizlilik kuralına takılmaz:** §6.1-4 öğrencileri birbiriyle
   karşılaştırmayı yasaklar; kurum/il/TR sıralaması ise sınavın kendi verisidir,
@@ -1048,6 +1049,31 @@ dalında yazıldı ve şeması canlıya uygulandı (batch 9), ama `main`'e alın
 taşımıyordu. 22 Eylül'de merge edildi. Migration gerekmedi, defter zaten
 doluydu. Bu, §10.4'teki defter/dosya karşılaştırmasının **ters yönde** ısırması:
 canlı depodan ileri gidebiliyor.
+
+#### Dalga 12b — Net gelişim grafiği · ✅ bitti (22 Eylül 2026)
+
+`NetProgress` + `ChartPath`; öğrenci, veli ve koç aynı `_net-grafigi` parçasını
+görüyor. Migration yok. Kararlar:
+
+- **Sunucuda üretilen satır içi SVG, JS kütüphanesi değil.** Proje derleme adımı
+  taşımıyor (Vite yok, stiller elle yazılı `public/css/app.css`'te); bir grafik
+  kütüphanesini CDN'den çekmek bu projeye yeni bir **bağımlılık sınıfı**
+  sokardı. Sunucuda üretmek ayrıca grafiği **test edilebilir** kılıyor —
+  `ChartPath::points()` koordinatları doğrudan doğrulanıyor.
+- **Deneme türüne göre ayrı grafik.** TYT ile AYT'nin ders listesi ve net
+  aralığı farklı; aynı eksene koymak iki seriyi de okunamaz yapardı.
+- **Tek denemeden grafik çizilmez.** Bir nokta bir "gelişim" değil; tek noktalı
+  bir çizgi olmayan bir eğilim varmış izlenimi verir.
+- **Eksik ders boşluk bırakır, sıfır değil.** O denemede girilmemiş bir dersi
+  sıfır yazmak "sıfır çekti" demek olurdu — girilmemiş veriyle kötü sonucu
+  ayırt edememek grafiği yalancı yapar.
+- **Eksen veriye göre ölçekleniyor**, sıfırdan değil: 60–90 arası değişen bir
+  TYT serisini sıfırdan başlatmak bütün değişimi düzleştirirdi. Alt ve üst sınır
+  eksende yazılı, böylece ölçek gizli kalmıyor.
+- **Ek sorgu yok:** grafik ekranın zaten yüklediği `$examResults` koleksiyonundan
+  kuruluyor.
+- **§6.1-4 ile çelişmiyor:** bu öğrencinin kendi serisi, başka öğrencilerle
+  kıyas değil.
 
 #### Dalga 16 — Devamlılık düşüş sinyalleri · ✅ bitti (22 Eylül 2026)
 

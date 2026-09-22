@@ -5,6 +5,8 @@
     Siralama, gizlilik kurali 4'e (ogrenciler birbiriyle karsilastirilmaz)
     takilmiyor: bu, SINAVIN kendi verisi - sistemin urettigi bir kiyas degil.
 --}}
+@include('_net-grafigi')
+
 @if($examResults->isNotEmpty())
     <h2>Deneme sonuçları</h2>
 
