@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\User\ConsumptionController;
 use App\Http\Controllers\User\TabController;
 use App\Http\Controllers\User\ExamReportController as UserExamReportController;
 use App\Http\Controllers\Admin\ExamReportController as AdminExamReportController;
@@ -42,10 +41,11 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
-// QR Code Consumption Route (Public for scanning, but requires auth)
-Route::get('/tuketim/{qrCode}', [ConsumptionController::class, 'showLocation'])
-    ->middleware(['auth', 'subscription'])
-    ->name('consume.location');
+// QR TUKETIM AKISI DALGA 8'DE KALDIRILDI.
+//
+// Ogrenci urun eklemek icin QR okutmuyor; self adisyondan (/kullanici/adisyon)
+// ekliyor ve stok dusumu orada yapiliyor. Lokasyon QR'lari DURUYOR - onlar
+// yoneticinin stok sayimi icin.
 
 // Masa QR okutma ve calisma oturumu.
 // {table:qr_code} bagi kodu dogrudan sutunla eslestirir; bilinmeyen kod 404.
@@ -83,10 +83,6 @@ Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')-
     Route::post('/adisyon', [TabController::class, 'store'])->name('tab.store');
     Route::post('/adisyon/{consumption}/geri-al', [TabController::class, 'undo'])->name('tab.undo');
 
-    // Consumption API
-    Route::post('/tuketim', [ConsumptionController::class, 'store'])->name('consume.store');
-    Route::post('/tuketim/{consumption}/geri-al', [ConsumptionController::class, 'undo'])->name('consume.undo');
-    Route::get('/tuketim/ozet', [ConsumptionController::class, 'getCurrentMonthSummary'])->name('consume.summary');
 });
 
 // Veli paneli - salt okunur, yalnizca GET (Dalga 6).

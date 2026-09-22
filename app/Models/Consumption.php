@@ -15,6 +15,7 @@ class Consumption extends Model
         'product_id',
         'location_id',
         'quantity',
+        'covered_quantity',
         'unit_price',
         'total_price',
         'consumed_at',
@@ -23,6 +24,7 @@ class Consumption extends Model
     ];
 
     protected $casts = [
+        'covered_quantity' => 'integer',
         'unit_price' => 'decimal:2',
         'total_price' => 'decimal:2',
         'consumed_at' => 'datetime',
@@ -37,12 +39,16 @@ class Consumption extends Model
     {
         parent::boot();
 
-        // Auto-calculate total price
-        static::creating(function ($consumption) {
+        static::creating(function (Consumption $consumption) {
             if (empty($consumption->consumed_at)) {
                 $consumption->consumed_at = now();
             }
-            $consumption->total_price = $consumption->unit_price * $consumption->quantity;
+
+            // Fiyat KAPSAMDAN SONRA hesaplanir. Bu satir Dalga 8'e kadar
+            // kosulsuz unit_price * quantity yaziyordu; paket kapsami
+            // girince dogrudan yanlis fatura uretirdi - SS4.2'de bu dalganin
+            // onkosulu olarak isaretliydi.
+            $consumption->total_price = $consumption->chargeableQuantity() * (float) $consumption->unit_price;
         });
     }
 
@@ -68,6 +74,27 @@ class Consumption extends Model
     public function location()
     {
         return $this->belongsTo(Location::class);
+    }
+
+    /**
+     * Ucreti odenecek adet: kapsanmayan kisim.
+     */
+    public function chargeableQuantity(): int
+    {
+        return max(0, (int) $this->quantity - (int) $this->covered_quantity);
+    }
+
+    /**
+     * Tamami paket kapsaminda mi?
+     *
+     * Sutunda TUTULMUYOR, turetiliyor: covered_quantity ile yan yana duran
+     * bir bool ikinci bir dogruluk kaynagi olurdu ve ikisi gunun birinde
+     * ayrisirdi - ayni gerekce exam_result_subjects.net ve
+     * study_tables.status icin de verilmisti.
+     */
+    public function isCoveredByPackage(): bool
+    {
+        return $this->quantity > 0 && $this->covered_quantity >= $this->quantity;
     }
 
     /**

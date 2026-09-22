@@ -96,7 +96,7 @@ için burada:
 | 1 | Deneme sonuçları veliye **varsayılan kapalı**, öğrenci başına `can_view_exams` bayrağı | **Profile işlenen her şey veliye açık** | `can_view_exams` sütunu gereksizleşti, planlanmayacak. Koç notunun özel kalabilmesi ayrı soru → §4.4 |
 | 2 | Oturum bitince süre doğrudan görünür | **Yönetici onayından sonra görünür** | Yeni durum sütunu, onay kuyruğu, "onay bekliyor" ekranı. Onaylanmamış oturum istatistiklere girmez |
 | 3 | Cron **zorunlu değil**; tembel kapatma yeterli (Dalga 4) | **Cron zorunlu** | Deneme hatırlatması ve gün sonu devamsızlık bildirimi kullanıcı paneli açmasa da gitmeli. Vercel Cron + kimlik doğrulamalı uç nokta gerekiyor |
-| 4 | Tüketim QR okutularak kaydedilir (`/tuketim/{qr}`) | **Tüketim yalnızca panelden** | QR tüketim akışı kaldırılacak; lokasyon QR'ları stok tarafında kalır. Masa QR'ı etkilenmez |
+| 4 | Tüketim QR okutularak kaydedilir (`/tuketim/{qr}`) | **Tüketim yalnızca panelden** | ✅ Dalga 8 (22 Eyl): QR tüketim akışı kaldırıldı, stok düşümü self adisyona taşındı. Lokasyon QR'ları stok tarafında kaldı; masa QR'ı etkilenmedi |
 | 5 | Geolocation "yedek" (⚠️), IP kapısı rafta | **Konum oturum başlangıcında kaydedilir** | Sert kapı değil: iç mekânda sapma var, izin reddedilebilir. Kayıt + anomali işareti olarak kullanılır |
 
 Değişmeyen kararlar: sıralama/rekabet yok, sistem yorum üretmez (yorumu insan
@@ -110,7 +110,7 @@ yazar), veli salt okunur.
 
 | Özellik | Kim kullanır | Nerede |
 |---|---|---|
-| QR ile tüketim kaydı, 60 sn geri alma | Öğrenci | `/tuketim/{qr}` — *kaldırılacak, bkz. §2-4* |
+| Self adisyon: panelden ürün ekleme, raf stoğundan düşme, paket kapsamı, 60 sn geri alma | Öğrenci | `/kullanici/adisyon` |
 | Self adisyon: panelden ürün ekleme | Öğrenci | Panel |
 | Tüketim geçmişi ve aylık özet | Öğrenci | `/kullanici/gecmis` |
 | Ürün ve lokasyon yönetimi, lokasyon QR yazdırma | Yönetici | Yönetim → Ürünler / Lokasyonlar |
@@ -186,7 +186,7 @@ oturduktan sonra.
 | Sıra | Dalga | İçerik | Büyüklük | Bağımlılık | Durum |
 |---|---|---|---|---|---|
 | 1 | **12b** | **Net gelişim grafiği** — ders bazlı net serisi, deneme türüne göre ayrı (§7-C) | S | 12 ✅ | ⬜ |
-| 3 | **8** | **Tüketim sadeleştirme** — QR tüketim akışının kaldırılması, tüketimin `package_items` kapsamına bağlanması (`covered_by_package`) | M | 7 ✅ | ⬜ |
+| 3 | **8** | **Tüketim sadeleştirme** — QR tüketim akışının kaldırılması, stok düşümünün self adisyona taşınması, `package_items` kapsamının uygulanması (`covered_quantity`) | M | 7 ✅ | ✅ |
 | 4 | **14a** | **Koç rolü + çalışma planı sayfası** — koç–öğrenci atama, `/koc/plan`, haftalık **ve aylık** dönem, veli görünürlüğü (§7-B, §7-D) | M | 6 ✅ | ✅ |
 | 4b | **14b** | **Koç notları ve görüşme kaydı** — `coach_notes`, `visibility` (parent/private), görüşme özeti (§7-B, §7-I) | M | 14a ✅ | ⬜ |
 | 5 | **15** | **Haftalık veli raporu** — tembel üretim, yönetici/koç yorumu (§7-A) + sınava geri sayım (§7-G) | M | 9, 12 | ⬜ |
@@ -209,7 +209,6 @@ bitmişti; yan dalda kalmıştı, 22 Eylül'de main'e alındı.
 | **Supabase'i Frankfurt'a taşı** | M | **Karar verildi (22 Eyl), henüz yapılmadı.** Giriş sayfası 0,9 sn; Frankfurt ~0,2 sn getirir. Çalıştırılabilir plan §12.7'de — kesinti gerektirir, kafe kapalıyken yapılmalı |
 | Üretimde `LOG_CHANNEL` kontrolü | XS | Panelde `stack` duruyorsa salt okunur diske log yazılıp **ikinci bir 500** üretiliyor; üretim ortam dökümü hiç doğrulanmadı — §12 "Doğrulanmamış" |
 | `brashlab` remote'unu kaldır | XS | Yerel depoyu 21 MiB'de tutuyor, kazara merge yolu açık — §13 |
-| `Consumption::boot` fiyat ezmesi | S | `total_price` koşulsuz yeniden hesaplanıyor; paket kapsamı girince yanlış fatura üretir. Dalga 8'in önkoşulu |
 | Anomaliye "gördüm" işareti | S | Yedi günlük pencere sessizce kapanıyor; `discrepancy_logs` çözümleme akışı örnek alınabilir |
 | `study_tables` ertelenen sütunları | S | `status`, `assigned_student_id`, `location_id` — anlamları paket ve raf/masa kararıyla geliyor |
 | Görevliye masa yönetimi erişimi | S | Yetki matrisi açık diyor, `AdminMiddleware` kapalı tutuyor |
@@ -529,7 +528,7 @@ gerekmez. Dalga 6b altyapısıyla bir günlük iş.
 | ~~`study_sessions`~~ | ~~`approval_status`, `reviewed_by`, `reviewed_at`, `rejection_reason`~~ | 9 | ✅ Yapıldı. `approved_by/at` yerine `reviewed_by/at`: red de bir incelemedir, onu "approved_at"te tutmak yanıltıcı olurdu |
 | ~~`study_sessions`~~ | ~~`latitude`, `longitude`, `accuracy`~~ | 10b | ✅ Yapıldı. `decimal(10,7)`, nullable ve varsayılansız: "konum yok" ile "kafede değil" ayrı şeyler |
 | `study_sessions` | `subject_id` (null) | 17 | Ders etiketi |
-| `consumptions` | `covered_by_package` (bool) | 8 | Paket kapsamı faturaya yansısın |
+| ~~`consumptions`~~ | ~~`covered_by_package` (bool)~~ | 8 | ✅ Yapıldı — ama **bool değil `covered_quantity` (int)**: limit aşımında kısmi kapsam gerekiyor, bkz. §9 Dalga 8 |
 | ~~`monthly_bills`~~ | ~~`package_amount`~~ | 7 | ✅ Yapıldı — `total_amount` tüketim toplamı olarak kaldı, genel toplam `grandTotal()` |
 | `exam_events` | `exam_type`'a `official` | 15 | Sınava geri sayım |
 | `study_tables` | `status`, `assigned_student_id`, `location_id` | 7 | Dalga 2'de bilerek ertelendi |
@@ -1036,10 +1035,52 @@ taşımıyordu. 22 Eylül'de merge edildi. Migration gerekmedi, defter zaten
 doluydu. Bu, §10.4'teki defter/dosya karşılaştırmasının **ters yönde** ısırması:
 canlı depodan ileri gidebiliyor.
 
-#### Dalga 8 — Tüketimin masa ve pakete bağlanması (MVP #12) · en son
+#### Dalga 8 — Tüketim sadeleştirme · ✅ bitti (22 Eylül 2026)
 
-`consumptions.table_id` + `covered_by_package`. `Consumption::boot` içindeki
-`total_price` hesabı koşulsuz eziyor — kapsam mantığı oraya girmeli.
+QR tüketim akışı kaldırıldı (`/tuketim/{qr}`, `ConsumptionController`,
+`user/consume.blade.php`); stok düşümü ve paket kapsamı self adisyona geçti.
+Kararlar:
+
+- **QR'ı kaldırmak stok düşümünü zorunlu kıldı.** Bu dalga "sadeleştirme" diye
+  planlanmıştı ama tek başına uygulanamazdı: stok mutabakatı
+  `expected_quantity`'nin sayımlar **arasında** tüketimle düşmesine dayanıyor
+  (`StockController` kapanış sayımında beklenen ile sayılanı karşılaştırıp farkı
+  `DiscrepancyLog`'a yazıyor) ve stoğu düşüren **tek yer QR akışıydı**. Self
+  adisyon Dalga 6c'de bilerek stok-nötrdü. QR'ı öylece kaldırmak, yöneticinin
+  stok takibini her gün meşru satışı **kayıp** olarak işaretler hale getirirdi.
+- **Kayıt artık gerçek rafa yazılıyor.** Sanal `Location::selfService()` yalnızca
+  ürün hiçbir aktif rafa bağlı değilken yedek: sütun `NOT NULL` ve her ekran
+  `location->name` okuyor. Bir fark araştırılırken hangi tüketimin hangi rafı
+  düşürdüğü kayıtta görünmeli.
+- **Ürün iki raftaysa öğrenci seçer.** Rastgele birini düşürmek **iki** sahte
+  fark üretirdi: biri eksik, öbürü fazla görünür ve yönetici olmayan bir kaybı
+  araştırırdı. Belirsizliği tahminle kapatmak stok takibini güvenilmez kılar.
+  Tek raftaki ürün soru sormadan oradan düşer — seçim ekranda yalnızca
+  gerektiğinde çıkar.
+- **`covered_by_package` (bool) değil `covered_quantity` (int).** Yol haritası
+  bool planlamıştı; "limit aşımında engelleme yok, ücretlendir" kararı (§7)
+  kısmi kapsamı kaçınılmaz kılıyor: günlük hakkı 1 kalmış öğrenci 3 kahve
+  eklerse 1'i bedava, 2'si ücretli olmalı. Bool ile bunun tek yolu kaydı iki
+  satıra bölmekti — o da 60 saniyelik geri almayı tek işlem olmaktan çıkarırdı.
+  `isCoveredByPackage()` **türetiliyor**, sütunda tutulmuyor; yan yana duran bir
+  bool ikinci doğruluk kaynağı olurdu (aynı gerekçe `exam_result_subjects.net`
+  ve `study_tables.status` için de verilmişti).
+- **Limit sayımı `covered_quantity` üzerinden.** `quantity` üzerinden sayılsaydı
+  limit aşımında **ücreti ödenen** adet de hakkı tüketir, öğrenci iki kez
+  cezalandırılmış olurdu. Geri alınan kayıt hakkı geri verir.
+- **Dönem penceresi `LocalDay` üzerinden.** `whereDate`/`whereMonth` UTC gününe
+  göre çalışıyor; yerel 00:00–03:00 arasındaki tüketim bir önceki güne düşer ve
+  öğrenci gece yarısından sonra günlük hakkını **iki kez** kullanırdı — §10.1'deki
+  tuzağın tüketim biçimi.
+- **`Consumption::boot` düzeltildi.** `total_price` koşulsuz
+  `unit_price * quantity` yazıyordu; artık `chargeableQuantity()` üzerinden.
+  §4.2'de bu dalganın önkoşulu olarak işaretliydi. `total_price`'ı yazan tek yer
+  burası (kalan her yer okuyor), o yüzden formül değişikliği tek noktada kaldı.
+- **Kayıt ve stok düşümü tek transaction.** Yarım kalan bir düşüm, kapanış
+  sayımında sahte fark üretir.
+- **Lokasyon QR'ları DURUYOR.** Kaldırılan yalnızca öğrencinin ürün tüketmek
+  için QR okutması; QR'lar stok sayımı tarafında kullanılıyor. Masa QR'ı
+  (oturum başlatma) hiç etkilenmedi.
 
 #### Dalga 9 — Oturum onay akışı · ✅ bitti (22 Eylül 2026)
 

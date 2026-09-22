@@ -27,14 +27,24 @@
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table">
-                        <thead><tr><th>Saat</th><th>Ürün</th><th>Adet</th><th>Tutar</th><th></th></tr></thead>
+                        <thead><tr><th>Saat</th><th>Ürün</th><th>Nereden</th><th>Adet</th><th>Tutar</th><th></th></tr></thead>
                         <tbody>
                             @foreach($todayEntries as $kayit)
                                 <tr>
                                     <td>{{ $kayit->consumed_at->timezone(config('kafe.timezone'))->format('H:i') }}</td>
                                     <td>{{ $kayit->product->name }}</td>
+                                    <td class="text-muted">{{ $kayit->location->name }}</td>
                                     <td>{{ $kayit->quantity }}</td>
-                                    <td>{{ $kayit->formatted_total }}</td>
+                                    <td>
+                                        @if($kayit->isCoveredByPackage())
+                                            <span class="badge badge-success">Paketinde</span>
+                                        @else
+                                            {{ $kayit->formatted_total }}
+                                            @if($kayit->covered_quantity > 0)
+                                                <span class="badge badge-info">{{ $kayit->covered_quantity }} paketten</span>
+                                            @endif
+                                        @endif
+                                    </td>
                                     <td class="text-right">
                                         @if($kayit->canUndo())
                                             <form action="{{ route('user.tab.undo', $kayit) }}" method="POST" class="d-inline-block">
@@ -77,6 +87,22 @@
                             </div>
                             <div class="product-card-name">{{ $product->name }}</div>
                             <div class="product-card-price">{{ $product->formatted_price }}</div>
+
+                            {{--
+                                Raf secimi YALNIZCA urun birden fazla yerdeyse
+                                cikar (Dalga 8). Tek raftaki urun soru sormadan
+                                oradan duser; rastgele birini dusurmek iki sahte
+                                fark uretirdi - biri eksik, oburu fazla.
+                            --}}
+                            @if($shelves[$product->id]->count() > 1)
+                                <select name="location_id" class="form-control mt-2" required>
+                                    <option value="">Nereden aldın?</option>
+                                    @foreach($shelves[$product->id] as $raf)
+                                        <option value="{{ $raf->location_id }}">{{ $raf->location->name }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
+
                             <div class="d-flex gap-1 justify-content-center align-items-center mt-2">
                                 <select name="quantity" class="form-control" style="width: 64px; padding: 4px;">
                                     @for($i = 1; $i <= 5; $i++)
@@ -93,6 +119,7 @@
     </div>
 
     <div class="alert alert-info mt-3">
-        💡 Buradan eklediklerin doğrudan aylık hesabına yazılır. Yanlış eklediysen 60 saniye içinde geri alabilirsin.
+        💡 Buradan eklediklerin doğrudan aylık hesabına yazılır ve rafın stoğundan düşülür.
+        Paketine dahil olanlar ücretsiz işlenir. Yanlış eklediysen 60 saniye içinde geri alabilirsin.
     </div>
 @endsection
