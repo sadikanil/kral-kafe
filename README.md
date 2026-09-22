@@ -1266,6 +1266,13 @@ Kararlar:
 - **`LocalDay::monthStart()` eklendi.** `weekStart` ile aynı gerekçe: ay
   sınırından UTC ile okumak "Eylül planı"nı **Ağustos'a** düşürürdü — §10.1'deki
   tuzağın beşinci biçimi.
+- **Yan etki, bilerek açık bırakıldı:** `accessibleStudentIds()` tek kaynak
+  olduğu için koçu oraya eklemek `UserPolicy` ve `ExamReportPolicy`'yi de
+  genişletti — koç artık atandığı öğrencinin **deneme raporunu** da açabiliyor.
+  Bu §7-B'nin zaten söylediği şey ("kim görür: öğrenci, veli, koç, yönetici"),
+  ama kazara açılmış bir yetki test edilmeden bırakılmaz: `CoachPlanTest`
+  hem açık ucu hem de atanmamış öğrencide 403'ü pinliyor. Tek kaynağın
+  bedeli bu — genişletirken **nereye değdiğini** aramak gerekiyor.
 
 ---
 

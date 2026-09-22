@@ -423,6 +423,42 @@ class CoachPlanTest extends TestCase
             ->assertSee('Bu ay 8 deneme');
     }
 
+    /**
+     * YAN ETKI, BILEREK ACIK BIRAKILDI.
+     *
+     * accessibleStudentIds()'i koc icin genisletmek UserPolicy ve
+     * ExamReportPolicy'yi de genisletti - ikisi de oraya delege ediyor.
+     * Yani koc, atandigi ogrencinin deneme raporunu da gorebiliyor.
+     *
+     * Bu urun niyetine uygun (SS7-B: "Kim gorur: ogrenci, veli, KOC,
+     * yonetici") ama kazara acilmis bir yetki test edilmeden birakilmaz.
+     * Asil onemlisi ikinci test: sinirin atamaya bagli oldugunu pinliyor.
+     */
+    public function test_a_coach_can_open_their_own_students_exam_report(): void
+    {
+        $koc = $this->koc();
+        $ogrenci = $this->ogrenci();
+        $koc->coachStudents()->attach($ogrenci->id);
+
+        $rapor = \App\Models\ExamReport::factory()->analyzed()->create([
+            'student_id' => $ogrenci->id,
+        ]);
+
+        $this->actingAs($koc)->get(route('user.exam-reports.show', $rapor))->assertOk();
+    }
+
+    public function test_a_coach_cannot_open_an_unassigned_students_exam_report(): void
+    {
+        $koc = $this->koc();
+        $baskasinin = $this->ogrenci('Başkasının');
+
+        $rapor = \App\Models\ExamReport::factory()->analyzed()->create([
+            'student_id' => $baskasinin->id,
+        ]);
+
+        $this->actingAs($koc)->get(route('user.exam-reports.show', $rapor))->assertForbidden();
+    }
+
     public function test_a_student_sees_the_monthly_plan_on_the_dashboard(): void
     {
         $ogrenci = $this->ogrenci();
