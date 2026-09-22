@@ -1247,6 +1247,8 @@ Vercel projesinde Settings → Environment Variables altına gir:
 | `SESSION_LIFETIME` | `900` (kafe gününden uzun olmalı) |
 | `KAFE_TIMEZONE` | `Europe/Istanbul` |
 | `KAFE_ACILIS` / `KAFE_KAPANIS` | `09:00` / `21:00` |
+| `KAFE_DENEME_HATIRLATMA_GUN` | Kaç gün kala deneme hatırlatıcısı uyarı rengine döner. Varsayılan `7`; tanımlamak zorunlu değil |
+| `KAFE_ODEME_VADESI_GUN` | Abonelik başlangıcından kaç gün sonra ödeme "gecikmiş" sayılır. Varsayılan `7`; tanımlamak zorunlu değil |
 | `KAFE_IPLER` | **Boş bırak.** IP kapısı rafta: kafenin IP'si dinamik ölçüldü (bkz. §9.3) |
 | `LOG_CHANNEL` | `stderr` — **panelde `stack` tanımlıysa sil.** `api/index.php` bu değeri yalnızca *tanımsızsa* `stderr` yapar; panelde `stack` duruyorsa çerçeve `storage/logs`'a yazmaya çalışır, orası salt okunur ve uygulama loglarken **ikinci bir 500** üretir |
 | `DB_CONNECTION` | `pgsql` |
