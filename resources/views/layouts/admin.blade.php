@@ -56,6 +56,12 @@
                     <span>Canlı Ekran</span>
                 </a>
 
+                <a href="{{ route('admin.subjects.index') }}"
+                    class="sidebar-nav-link {{ request()->routeIs('admin.subjects.*') ? 'active' : '' }}">
+                    <span class="sidebar-nav-link-icon">📚</span>
+                    <span>Dersler</span>
+                </a>
+
                 <a href="{{ route('admin.settings.edit') }}"
                     class="sidebar-nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
                     <span class="sidebar-nav-link-icon">⚙️</span>

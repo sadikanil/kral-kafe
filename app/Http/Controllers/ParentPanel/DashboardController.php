@@ -70,6 +70,13 @@ class DashboardController extends Controller
             'summary' => $this->ozet($student),
             'days' => $this->sonGunler($student, 14),
             'sessions' => $this->sonOturumlar($student, 30),
+            // Deneme sonuclari (Dalga 12). Karar 2: profile islenen her sey
+            // veliye acik - netler, siralamalar ve yoneticinin notu dahil.
+            'examResults' => \App\Models\ExamResult::where('student_id', $student->id)
+                ->with(['event', 'subjects.subject'])
+                ->get()
+                ->sortByDesc(fn ($sonuc) => $sonuc->event->exam_date)
+                ->values(),
         ]);
     }
 

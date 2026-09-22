@@ -8,6 +8,32 @@
 @endsection
 
 @section('content')
+
+    {{--
+        Deneme sonucu girisi (Dalga 12). PDF raporunun YANINDA duruyor:
+        yonetici PDF'i yukleyip ozeti okuyor ve ayni ekranda sonucu girip
+        notunu yaziyor. Ayri bir sayfa, iki isi birbirinden koparirdi.
+    --}}
+    @if($events->isNotEmpty())
+        <div class="card mb-3" style="max-width: 640px;">
+            <div class="card-header"><h4>Deneme sonucu gir</h4></div>
+            <div class="card-body">
+                @foreach($events as $deneme)
+                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                        <div>
+                            <strong>{{ $deneme->title }}</strong>
+                            <div class="text-muted">
+                                {{ $deneme->exam_date->timezone(config('kafe.timezone'))->format('d.m.Y') }}
+                            </div>
+                        </div>
+                        <a href="{{ route('admin.exam-results.edit', [$deneme, $student]) }}"
+                           class="btn btn-secondary">Sonuç gir</a>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     <div class="card mb-3" style="max-width: 640px;">
         <div class="card-header"><h4>PDF yükle</h4></div>
         <div class="card-body">

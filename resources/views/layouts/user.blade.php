@@ -58,6 +58,12 @@
                     <span>Deneme Raporlarım</span>
                 </a>
 
+                <a href="{{ route('user.exam-results') }}"
+                    class="sidebar-nav-link {{ request()->routeIs('user.exam-results') ? 'active' : '' }}">
+                    <span class="sidebar-nav-link-icon">📊</span>
+                    <span>Deneme Sonuçlarım</span>
+                </a>
+
                 <a href="{{ route('user.exams') }}"
                     class="sidebar-nav-link {{ request()->routeIs('user.exams') ? 'active' : '' }}">
                     <span class="sidebar-nav-link-icon">📝</span>

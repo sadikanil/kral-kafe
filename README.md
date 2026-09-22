@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 22 Eylül 2026 · Laravel 12 · 273 test / 823 doğrulama yeşil._
+_Son güncelleme: 22 Eylül 2026 · Laravel 12 · 284 test / 844 doğrulama yeşil._
 
 ---
 
@@ -137,6 +137,9 @@ yazar), veli salt okunur.
 | Kafe konumu ayarı ("konumu buradan al") | Yönetici | Yönetim → Ayarlar |
 | Onay kuyruğunda konum işareti: kafede / uzak / konum yok | Yönetici | Yönetim → Canlı Ekran |
 | Bildirimler: devamsızlık, yarın deneme var | Öğrenci, veli | Panel |
+| Ders tanımları (TYT/AYT hazır gelir, panelden düzenlenir) | Yönetici | Yönetim → Dersler |
+| Deneme sonucu girişi: ders bazlı D/Y, sıralamalar, değerlendirme notu | Yönetici | Kullanıcı → Deneme Raporları |
+| Deneme sonuçları: netler, sıralamalar, yöneticinin notu | Öğrenci, veli | `/kullanici/deneme-sonuclari`, veli öğrenci sayfası |
 | Unutulan oturumların otomatik kapanması (tembel, cron opsiyonel) | Sistem | — |
 | Gün/hafta/ay süre, üst üste gelme serisi | Öğrenci | Panel |
 | Haftalık hedef ve ilerleme; hedef geçmişi korunur | Yönetici koyar, öğrenci görür | Kullanıcı formu, panel |
@@ -165,6 +168,7 @@ Supabase Postgres (session pooler) · elle yazılmış CSS (Tailwind yok).
 | 10a | Mobil kabuk: alt menü + uygulama içi QR okuyucu, elle kod yedeğiyle | ✅ |
 | 10b | Oturum konumu + kafe koordinatı ayarı; uzaklık onay kuyruğunda işaret | ✅ |
 | 11 | Bildirim altyapısı: devamsızlık + deneme hatırlatması, Vercel Cron, panel içi teslim | ✅ |
+| 12 | Deneme sonucu: ders bazlı D/Y/net, kurum–ilçe–il–TR sıralaması, yönetici notu, veliye açık | ✅ |
 
 ---
 
@@ -178,7 +182,7 @@ oturduktan sonra.
 
 | Sıra | Dalga | İçerik | Büyüklük | Bağımlılık | Durum |
 |---|---|---|---|---|---|
-| 1 | **12** | **Deneme sonucu ve sıralamalar** — ders bazlı D/Y/net, kurum/ilçe/il/TR sıralaması, PDF özetinin altına yönetici notu, veliye açık profil (§7-C) | L | 6b, 6d | ⬜ |
+| 1 | **12b** | **Net gelişim grafiği** — ders bazlı net serisi, deneme türüne göre ayrı (§7-C) | S | 12 ✅ | ⬜ |
 | 2 | **13** | **Haftalık çalışma planı** — yönetici belirler, öğrenci tamamlar, tamamlama oranı (§7-D) | M | — | ⬜ |
 | 3 | **8** | **Tüketim sadeleştirme** — QR tüketim akışının kaldırılması, tüketimin `package_items` kapsamına bağlanması (`covered_by_package`) | M | 7 ✅ | ⬜ |
 | 4 | **14** | **Koç rolü aktif** — koç–öğrenci atama, koç paneli, notlar, görüşme kaydı (§7-B, §7-I) | L | 6 | ⬜ |
@@ -399,7 +403,7 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
 - **Devamsızlık bildiriminin eşiği** düşünülmeli: öğrencinin her gelmediği gün
   veliye mesaj gitmesi, kısa sürede görmezden gelinen bir gürültüye dönüşür.
 
-### C · Deneme sonucu, sıralamalar ve yönetici notu — Dalga 12
+### C · Deneme sonucu, sıralamalar ve yönetici notu — Dalga 12 · ✅ bitti (22 Eylül 2026, grafik hariç)
 
 - **Ne:** Takvimdeki bir denemeye (Dalga 6b) öğrenci başına sonuç girişi:
   - Ders bazlı **doğru / yanlış / boş**, net otomatik hesaplanır.
@@ -503,7 +507,8 @@ gerekmez. Dalga 6b altyapısıyla bir günlük iş.
 `stock_records` · `stock_photos` · `monthly_bills` · `discrepancy_logs` ·
 `study_tables` · `study_sessions` · `study_goals` · `student_parent` ·
 `exam_events` · `exam_reports` · `packages` · `package_items` ·
-`subscriptions` · `payments` · `settings` · `notifications`
+`subscriptions` · `payments` · `settings` · `notifications` · `subjects` ·
+`exam_results` · `exam_result_subjects`
 
 ### 8.2 Eklenecek sütunlar
 
@@ -522,19 +527,7 @@ gerekmez. Dalga 6b altyapısıyla bir günlük iş.
 ### 8.3 Eklenecek tablolar
 
 ```
-subjects              id, exam_type (tyt|ayt|lgs), name, sort_order
 
-exam_results          id, exam_event_id, student_id,
-                      rank_institution, total_institution,
-                      rank_district,    total_district,
-                      rank_city,        total_city,
-                      rank_country,     total_country,
-                      note (yönetici yorumu), entered_by, created_at
-                      -- siralama sutunlarinin hepsi nullable: kurum siralamasi
-                      -- ertesi gun, TR geneli bir hafta sonra aciklanabiliyor
-
-exam_result_subjects  id, exam_result_id, subject_id,
-                      correct, wrong, blank, net
 
 study_plan_items      id, student_id, subject_id?, title, week_start,
                       due_date?, status (open|done|cancelled),
@@ -1170,6 +1163,42 @@ Vercel Cron ucu, panel içi bildirim listesi. Kararlar:
 - `user_id` kime gittiği, `student_id` kimin hakkında olduğu: veli
   bildiriminde ikisi farklı, öğrenciye giden deneme hatırlatmasında aynı.
 
+#### Dalga 12 — Deneme sonucu ve sıralamalar · ✅ bitti (22 Eylül 2026)
+
+`subjects` (+ seeder), `exam_results`, `exam_result_subjects`, yönetici
+sonuç girişi, öğrenci ve veli görünümü. Kararlar:
+
+- **Net hesaplanır, saklanmaz.** `net = doğru − yanlış/4`, bir accessor.
+  Sütunda tutmak ikinci bir doğruluk kaynağı yaratırdı: doğru/yanlış
+  düzeltilip net güncellenmezse ikisi sessizce ayrışır ve hangisinin doğru
+  olduğu sorusu cevapsız kalır. Dalga 2'de `study_tables.status` için
+  verilen kararın aynısı.
+- **Net negatif olabilir ve kırpılmaz.** 1 doğru 8 yanlış gerçekten −1
+  nettir; sıfıra yuvarlamak öğrencinin durumunu olduğundan iyi gösterirdi.
+- **Sıralamanın yanında katılımcı sayısı var.** "1.240 kişide 87." anlamlı,
+  çıplak "87." değil — sıranın anlamı denemeden denemeye değişir. Yüzdelik
+  dilimi sistem hesaplamıyor (karar 7).
+- **Sıralama sütunlarının hepsi nullable.** Kurum sıralaması ertesi gün,
+  Türkiye geneli bir hafta sonra açıklanabiliyor; giriş eksik veriyle
+  başlayıp tamamlanabilmeli. Aynı sonuca ikinci kez girmek yeni kayıt
+  açmaz, mevcudu günceller.
+- **Dersler veriden geliyor**, koda gömülü değil: TYT/AYT/LGS listeleri
+  farklı ve kurumdan kuruma değişiyor. Seeder standart listeyi yüklüyor,
+  yönetici panelden ekleyip **kapatabiliyor** — ders silinmez, çünkü
+  silinseydi ona bağlı geçmiş sonuçlar da giderdi (masalar ve paketlerle
+  aynı karar).
+- **Sonucu yönetici giriyor.** Sonuçlar kuruma toplu geliyor; öğrenciden
+  girmesini beklemek hem gecikme hem hata kaynağı olurdu. *(Bu, 20 Eylül'de
+  önerilen "öğrenci girer, koç doğrular" tasarımından ayrılıyor — 22 Eylül
+  akışı yöneticiyi tek giriş noktası yaptı.)*
+- **Sonuç girişi PDF raporunun yanında** (aynı ekran): yönetici PDF'i
+  yükleyip özeti okuyor ve orada sonucu girip notunu yazıyor. Ayrı sayfa
+  iki işi koparırdı.
+- **Profile işlenen her şey veliye açık** (karar 2): netler, sıralamalar ve
+  yöneticinin notu. Eski `can_view_exams` bayrağı bu yüzden hiç planlanmadı.
+- Sıralama, §6.1-4'teki "öğrenciler birbiriyle karşılaştırılmaz" kuralına
+  takılmıyor: bu **sınavın kendi verisi**, sistemin ürettiği bir kıyas değil.
+
 ---
 
 ---
@@ -1377,7 +1406,7 @@ Ardından `http://127.0.0.1:8000`. Hepsini birden (sunucu + kuyruk + log + vite)
 php artisan test
 ```
 
-273 test, 823 doğrulama. Testler `:memory:` SQLite kullanır, yerel veritabanına
+284 test, 844 doğrulama. Testler `:memory:` SQLite kullanır, yerel veritabanına
 dokunmaz — bu yüzden `migrate:fresh` çalıştırmak için hiçbir sebep yok (§10.3).
 
 **Stil uyarısı:** proje Tailwind ya da Bootstrap kullanmıyor; stiller elle

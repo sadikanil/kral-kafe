@@ -13,6 +13,8 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\StockController;
+use App\Http\Controllers\Admin\ExamResultController;
+use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\LiveController;
 use App\Http\Controllers\CronController;
 use App\Http\Controllers\Admin\SessionApprovalController;
@@ -64,6 +66,10 @@ Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')-
     Route::get('/denemeler', [ExamCalendarController::class, 'student'])->name('exams');
 
     // Deneme sonuc raporlari (PDF + yapay zeka analizi), salt okunur
+    // Deneme sonuclari (Dalga 12): siralamalar ve yonetici notu
+    Route::get('/deneme-sonuclari', [\App\Http\Controllers\User\ExamResultController::class, 'index'])
+        ->name('exam-results');
+
     Route::get('/deneme-raporlari', [UserExamReportController::class, 'index'])->name('exam-reports.index');
     Route::get('/deneme-raporlari/{report}', [UserExamReportController::class, 'show'])->name('exam-reports.show');
     Route::get('/deneme-raporlari/{report}/pdf', [UserExamReportController::class, 'pdf'])->name('exam-reports.pdf');
@@ -127,6 +133,17 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     Route::get('/lokasyonlar/{location}/qr', [LocationController::class, 'showQr'])->name('locations.qr');
     Route::post('/lokasyonlar/{location}/durum', [LocationController::class, 'toggleStatus'])->name('locations.toggle-status');
     Route::get('/lokasyonlar-qr-yazdir', [LocationController::class, 'printQrCodes'])->name('locations.print-qr');
+
+    // Dersler (Dalga 12): deneme sonucu girisinin ders listesi
+    Route::get('/dersler', [SubjectController::class, 'index'])->name('subjects.index');
+    Route::post('/dersler', [SubjectController::class, 'store'])->name('subjects.store');
+    Route::post('/dersler/{subject}/durum', [SubjectController::class, 'toggleStatus'])->name('subjects.toggle-status');
+
+    // Deneme sonucu girisi (Dalga 12)
+    Route::get('/denemeler/{examEvent}/ogrenci/{student}/sonuc', [ExamResultController::class, 'edit'])
+        ->name('exam-results.edit');
+    Route::post('/denemeler/{examEvent}/ogrenci/{student}/sonuc', [ExamResultController::class, 'store'])
+        ->name('exam-results.store');
 
     // Ayarlar (Dalga 10b): panelden degistirilen kafe geneli ayarlar
     Route::get('/ayarlar', [SettingsController::class, 'edit'])->name('settings.edit');

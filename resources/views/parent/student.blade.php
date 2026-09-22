@@ -8,6 +8,9 @@
 @endsection
 
 @section('content')
+
+    @include('_deneme-sonuclari')
+
     @php
         use App\Support\Duration;
         $tz = config('kafe.timezone');
