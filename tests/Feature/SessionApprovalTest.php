@@ -137,4 +137,138 @@ class SessionApprovalTest extends TestCase
 
         $this->assertSame(0, app(StudyStats::class)->todayMinutes($ogrenci));
     }
+
+    // --- Yonetici onay kuyrugu (canli ekran) --------------------------------
+
+    private function yonetici(): User
+    {
+        return User::factory()->create(['role' => Role::Admin->value]);
+    }
+
+    public function test_the_live_screen_lists_sessions_awaiting_approval(): void
+    {
+        $ogrenci = User::factory()->create([
+            'name' => 'Onay Bekleyen Öğrenci',
+            'role' => Role::Student->value,
+            'subscription_status' => 'active',
+        ]);
+        $this->bitmisOturum($ogrenci, 120);
+
+        $this->actingAs($this->yonetici())->get(route('admin.live'))
+            ->assertOk()
+            ->assertSee('Onay Bekleyen Öğrenci');
+    }
+
+    public function test_an_approved_session_leaves_the_queue(): void
+    {
+        $ogrenci = User::factory()->create([
+            'name' => 'Onaylanmış Öğrenci',
+            'role' => Role::Student->value,
+            'subscription_status' => 'active',
+        ]);
+        $this->bitmisOturum($ogrenci, 120)->approve($this->yonetici());
+
+        $this->actingAs($this->yonetici())->get(route('admin.live'))
+            ->assertOk()
+            ->assertDontSee('Onaylanmış Öğrenci');
+    }
+
+    public function test_an_admin_approves_from_the_queue(): void
+    {
+        $oturum = $this->bitmisOturum($this->ogrenci());
+
+        $this->actingAs($this->yonetici())
+            ->post(route('admin.sessions.approve', $oturum))
+            ->assertRedirect();
+
+        $this->assertSame(ApprovalStatus::Approved, $oturum->fresh()->approval_status);
+    }
+
+    public function test_a_rejection_from_the_queue_needs_a_reason(): void
+    {
+        $oturum = $this->bitmisOturum($this->ogrenci());
+
+        $this->actingAs($this->yonetici())
+            ->post(route('admin.sessions.reject', $oturum), ['reason' => ''])
+            ->assertSessionHasErrors('reason');
+
+        $this->assertSame(ApprovalStatus::Pending, $oturum->fresh()->approval_status);
+    }
+
+    public function test_a_rejection_from_the_queue_stores_the_reason(): void
+    {
+        $oturum = $this->bitmisOturum($this->ogrenci());
+
+        $this->actingAs($this->yonetici())
+            ->post(route('admin.sessions.reject', $oturum), ['reason' => 'Masada yoktun.'])
+            ->assertRedirect();
+
+        $this->assertSame('Masada yoktun.', $oturum->fresh()->rejection_reason);
+    }
+
+    public function test_a_student_cannot_approve_a_session(): void
+    {
+        $oturum = $this->bitmisOturum($this->ogrenci());
+
+        $this->actingAs($this->ogrenci())
+            ->post(route('admin.sessions.approve', $oturum))
+            ->assertForbidden();
+
+        $this->assertSame(ApprovalStatus::Pending, $oturum->fresh()->approval_status);
+    }
+
+    /**
+     * Gunde yirmi oturumu tek tek onaylamak, ozelligin kullanilmamasi demek.
+     */
+    public function test_the_whole_queue_can_be_approved_at_once(): void
+    {
+        $bir = $this->bitmisOturum($this->ogrenci());
+        $iki = $this->bitmisOturum($this->ogrenci());
+
+        $this->actingAs($this->yonetici())
+            ->post(route('admin.sessions.approve-many'), ['ids' => [$bir->id, $iki->id]])
+            ->assertRedirect();
+
+        $this->assertSame(ApprovalStatus::Approved, $bir->fresh()->approval_status);
+        $this->assertSame(ApprovalStatus::Approved, $iki->fresh()->approval_status);
+    }
+
+    // --- Ogrencinin gordugu ------------------------------------------------
+
+    /**
+     * Ogrenci kendi ham suresini gorur.
+     *
+     * Gormezse "iki saat calistim ama panelde sifir yaziyor" durumu olusur ve
+     * ogrenci sistemin kendisine guvenmeyi birakir. Sure gorunur, ama "onay
+     * bekliyor" etiketiyle: henuz sayilmadigi da ayni ekranda yaziyor.
+     */
+    public function test_a_student_sees_their_own_session_awaiting_approval(): void
+    {
+        $ogrenci = $this->ogrenci();
+        $this->bitmisOturum($ogrenci, 120);
+
+        $this->actingAs($ogrenci)->get(route('user.dashboard'))
+            ->assertOk()
+            ->assertSee('Onay bekliyor');
+    }
+
+    public function test_a_student_sees_why_a_session_was_rejected(): void
+    {
+        $ogrenci = $this->ogrenci();
+        $this->bitmisOturum($ogrenci, 120)->reject($this->yonetici(), 'Masada değildin.');
+
+        $this->actingAs($ogrenci)->get(route('user.dashboard'))
+            ->assertOk()
+            ->assertSee('Masada değildin.');
+    }
+
+    public function test_an_approved_session_is_not_listed_as_waiting(): void
+    {
+        $ogrenci = $this->ogrenci();
+        $this->bitmisOturum($ogrenci, 120)->approve($this->yonetici());
+
+        $this->actingAs($ogrenci)->get(route('user.dashboard'))
+            ->assertOk()
+            ->assertDontSee('Onay bekliyor');
+    }
 }

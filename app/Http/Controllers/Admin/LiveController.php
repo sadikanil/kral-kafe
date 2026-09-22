@@ -42,8 +42,17 @@ class LiveController extends Controller
             ->orderByDesc('ended_at')
             ->get();
 
+        // Onay kuyrugu (Dalga 9): bitmis ama karara baglanmamis oturumlar.
+        // Otomatik kapananlar da buraya duser - asil dogrulanmasi gereken
+        // onlar, cunku ogrenci cikisi bildirmemis demektir.
+        $onayBekleyenler = StudySession::awaitingApproval()
+            ->with(['student', 'table'])
+            ->orderBy('ended_at')
+            ->get();
+
         return view('admin.live', [
             'sessions' => $acikOturumlar,
+            'pending' => $onayBekleyenler,
             'anomalies' => $anomaliler,
             'tableCount' => $acikMasaSayisi,
             'freeTables' => max(0, $acikMasaSayisi - $acikOturumlar->count()),

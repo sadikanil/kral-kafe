@@ -187,6 +187,40 @@
         </div>
     @endif
 
+    {{--
+        Onay bekleyen / reddedilen oturumlar (Dalga 9).
+
+        Yukaridaki sure, seri ve hedef cubugu YALNIZCA onayli oturumlari
+        sayiyor. Bu liste olmasa ogrenci iki saat calisip panelde sifir
+        gorur ve sebebini hicbir yerde bulamazdi.
+    --}}
+    @if($notCredited->isNotEmpty())
+        <h2 class="mt-4">Henüz sayılmayan oturumlar</h2>
+
+        @foreach($notCredited as $oturum)
+            @php $dakika = $oturum->duration_minutes ?? 0; @endphp
+
+            <div class="session-card mb-2">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div>
+                        <strong>{{ $oturum->table->name }}</strong>
+                        <div class="text-muted">
+                            {{ $oturum->started_at->timezone(config('kafe.timezone'))->format('d.m H:i') }}–{{ $oturum->ended_at->timezone(config('kafe.timezone'))->format('H:i') }}
+                            · {{ sprintf('%ds %ddk', intdiv($dakika, 60), $dakika % 60) }}
+                        </div>
+                        @if($oturum->rejection_reason)
+                            <div class="text-muted">{{ $oturum->rejection_reason }}</div>
+                        @endif
+                    </div>
+
+                    <span class="badge {{ $oturum->approval_status === \App\Enums\ApprovalStatus::Rejected ? 'badge-danger' : 'badge-warning' }}">
+                        {{ $oturum->approval_status->label() }}
+                    </span>
+                </div>
+            </div>
+        @endforeach
+    @endif
+
     <!-- Bilgilendirme -->
     <div class="alert alert-info mt-4 animate-slide-up" style="animation-delay: 200ms">
         💡 <strong>Nasıl tüketim eklerim?</strong><br>

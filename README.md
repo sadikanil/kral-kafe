@@ -130,6 +130,8 @@ yazar), veli salt okunur.
 | Masa tanımı, kalıcı masa QR'ı, toplu yazdırma | Yönetici | Yönetim → Masalar |
 | Masa QR'ı okut → çalışma başlat; panelden ya da QR ile bitir | Öğrenci | `/masa/{kod}`, panel |
 | Canlı ekran: kim hangi masada ne kadardır, boş masa, anomaliler | Yönetici | Yönetim → Canlı Ekran |
+| Onay kuyruğu: biten oturumu onayla/reddet, toplu onay | Yönetici | Yönetim → Canlı Ekran |
+| Henüz sayılmayan oturumlar (onay bekleyen / reddedilen, sebebiyle) | Öğrenci | Panel |
 | Unutulan oturumların otomatik kapanması (tembel, cron opsiyonel) | Sistem | — |
 | Gün/hafta/ay süre, üst üste gelme serisi | Öğrenci | Panel |
 | Haftalık hedef ve ilerleme; hedef geçmişi korunur | Yönetici koyar, öğrenci görür | Kullanıcı formu, panel |
@@ -167,10 +169,9 @@ oturduktan sonra.
 
 | Sıra | Dalga | İçerik | Büyüklük | Bağımlılık | Durum |
 |---|---|---|---|---|---|
-| 1 | **9** | **Oturum onay akışı** — bitişte yöneticiye onay kuyruğu, onaylanan süre öğrenci/veliye görünür (§7-L) | M | 3, 6 | 🔄 sırada |
-| 2 | **10** | **Mobil kabuk** — alt menü, uygulama içi QR okuyucu, oturum başlangıcında konum kaydı (§7-M, §7-N) | M | 3 | ⬜ |
-| 3 | **11** | **Bildirim altyapısı** — e-posta + Vercel Cron; deneme öncesi hatırlatma, gün sonu devamsızlık bildirimi (§7-K) | L | 6b | ⬜ |
-| 4 | **12** | **Deneme sonucu ve sıralamalar** — ders bazlı D/Y/net, kurum/ilçe/il/TR sıralaması, PDF özetinin altına yönetici notu, veliye açık profil (§7-C) | L | 6b, 6d | ⬜ |
+| 1 | **10** | **Mobil kabuk** — alt menü, uygulama içi QR okuyucu, oturum başlangıcında konum kaydı (§7-M, §7-N) | M | 3 | 🔄 sırada |
+| 2 | **11** | **Bildirim altyapısı** — e-posta + Vercel Cron; deneme öncesi hatırlatma, gün sonu devamsızlık bildirimi (§7-K) | L | 6b | ⬜ |
+| 3 | **12** | **Deneme sonucu ve sıralamalar** — ders bazlı D/Y/net, kurum/ilçe/il/TR sıralaması, PDF özetinin altına yönetici notu, veliye açık profil (§7-C) | L | 6b, 6d | ⬜ |
 | 5 | **13** | **Haftalık çalışma planı** — yönetici belirler, öğrenci tamamlar, tamamlama oranı (§7-D) | M | — | ⬜ |
 | 6 | **8** | **Tüketim sadeleştirme** — QR tüketim akışının kaldırılması, tüketimin `package_items` kapsamına bağlanması (`covered_by_package`) | M | 7 ✅ | ⬜ |
 | 7 | **14** | **Koç rolü aktif** — koç–öğrenci atama, koç paneli, notlar, görüşme kaydı (§7-B, §7-I) | L | 6 | ⬜ |
@@ -180,8 +181,8 @@ oturduktan sonra.
 
 S ≈ bir oturum · M ≈ iki-üç oturum · L ≈ dört ve üzeri.
 
-**Neden bu sıra:** Dalga 9 olmadan §1.1'deki akış eksik kalıyor — bugün süre
-onaysız görünüyor. Dalga 10 akışın günlük kullanımını taşıyor (öğrenci telefonla
+**Neden bu sıra:** Dalga 9 (onay akışı) 22 Eylül'de bitti. Dalga 10 akışın
+günlük kullanımını taşıyor (öğrenci telefonla
 okutacak). Dalga 11 olmadan §1.2'nin 2. ve 3. adımları hiç çalışmaz. Dalga 12
 denemenin sonuç tarafını kapatır. Paket ve ödeme (Dalga 7) 21 Eylül'de
 bitmişti; yan dalda kalmıştı, 22 Eylül'de main'e alındı.
@@ -299,7 +300,7 @@ yönetici toplamlarına sızardı).
 
 Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlandığı**.
 
-### L · Oturum onay akışı — Dalga 9
+### L · Oturum onay akışı — Dalga 9 · ✅ bitti (22 Eylül 2026)
 
 - **Problem:** Bugün oturum bitince süre doğrudan görünüyor. Yönetici "bu
   öğrenci gerçekten bu kadar çalıştı mı" sorusunu ancak canlı ekranda, o an
@@ -340,7 +341,7 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
   Tek yol olarak kameraya bağlanmak, izni kapalı bir telefonu sistem dışına atar.
 - **Stil kısıtı:** proje Tailwind kullanmıyor; alt menü `public/css/app.css`'e
   elle yazılacak ve muhafız test sınıfların tanımlı olmasını zorunlu kılıyor
-  (§10.5).
+  (§10.6).
 
 ### N · Konum kaydı — Dalga 10
 
@@ -491,7 +492,7 @@ gerekmez. Dalga 6b altyapısıyla bir günlük iş.
 
 | Tablo | Sütun | Dalga | Sebep |
 |---|---|---|---|
-| `study_sessions` | `approval_status` (pending\|approved\|rejected), `approved_by`, `approved_at` | 9 | Onay akışı (§7-L). `end_reason`'dan ayrı sütun: onay, oturumun nasıl bittiğinden bağımsız bir eksen |
+| ~~`study_sessions`~~ | ~~`approval_status`, `reviewed_by`, `reviewed_at`, `rejection_reason`~~ | 9 | ✅ Yapıldı. `approved_by/at` yerine `reviewed_by/at`: red de bir incelemedir, onu "approved_at"te tutmak yanıltıcı olurdu |
 | `study_sessions` | `latitude`, `longitude`, `accuracy` | 10 | Konum kaydı (§7-N) |
 | `study_sessions` | `subject_id` (null) | 17 | Ders etiketi |
 | `consumptions` | `covered_by_package` (bool) | 8 | Paket kapsamı faturaya yansısın |
@@ -540,7 +541,7 @@ weak_topics           id, student_id, subject_id, topic, source, status
 -- packages, package_items, subscriptions, payments: Dalga 7'de eklendi (§9.4)
 ```
 
-Şema kuralları §10.9'da: `enum()` yasak, her tablo `PostgresSecurity::lockDown()`
+Şema kuralları §10.10'da: `enum()` yasak, her tablo `PostgresSecurity::lockDown()`
 ve bir factory ile birlikte gelir.
 
 ---
@@ -1025,6 +1026,45 @@ canlı depodan ileri gidebiliyor.
 `consumptions.table_id` + `covered_by_package`. `Consumption::boot` içindeki
 `total_price` hesabı koşulsuz eziyor — kapsam mantığı oraya girmeli.
 
+#### Dalga 9 — Oturum onay akışı · ✅ bitti (22 Eylül 2026)
+
+`study_sessions.approval_status` + `reviewed_by` + `reviewed_at` +
+`rejection_reason`; yönetici onay kuyruğu canlı ekranın içinde. Kararlar:
+
+- **`approval_status` ayrı sütun**, `end_reason`'a eklenen bir değer değil.
+  `end_reason` oturumun *nasıl* bittiğini söyler; onay ondan bağımsız bir
+  eksen. Birleştirmek "otomatik kapandı **ve** onaylandı" durumunu temsil
+  edilemez yapardı — Dalga 3'ün `switched`/`auto_closed` kararının aynısı.
+- **`approved_by/at` değil `reviewed_by/at`.** Red de bir incelemedir;
+  reddin anını "approved_at"te tutmak yanıltıcı olurdu.
+- **Karar WHERE'de, PHP'de değil** (`closeOnce` ile aynı gerekçe). Açık
+  oturum onaylanamaz: onay, bitmiş bir sürenin doğrulanmasıdır.
+- **Red sebebi zorunlu, kayıt silinmez.** Sessiz red, öğrencinin süresinin
+  neden kaybolduğunu anlamasını imkânsız kılardı.
+- **Açık oturum artık toplamlara girmiyor.** Eskiden o ana kadarki süresi
+  sayılıyordu; onayla birlikte bu savunulamaz hale geldi — çalışmayı
+  bitirmek bugünün toplamını **düşürürdü**. Açık oturum panelde ayrı bir
+  canlı kart. (`StudyStatsTest`'teki eski test bu gerekçeyle yeniden yazıldı.)
+- **Veli açık oturumu onaysız da görür**: "şu an içeride" bir varlık
+  bilgisi, kredilendirilmiş süre iddiası değil. Kapanan oturum onaya kadar
+  velinin listesine girmez — süre `StudyStats`'ten süzülüyordu ama liste
+  modele doğrudan gidiyordu, tanım `scopeCountable`'da tek yere toplandı.
+- **Mevcut satırlar onaylı yazıldı.** Varsayılan `pending` yeni oturumlar
+  için doğru ama geçmişe uygulanırsa görünen süreler kaybolur, seri ve
+  hedef çubuğu sebepsiz sıfırlanırdı. Onay ileriye dönük bir kural.
+- **Toplu onay şart.** Günde yirmi oturumu tek tek onaylamak, özelliğin
+  kullanılmaması demek; kuyruk birikir ve öğrencinin süresi donar.
+  `approveMany()` filtreyi SQL'de uygular — istemciden gelen id listesine
+  güvenmek, reddedilmiş bir oturumu sessizce geri almak olurdu.
+- **Öğrenci kendi ham süresini görür** ("Henüz sayılmayan oturumlar"),
+  reddedilen sebebiyle birlikte. Görmezse "iki saat çalıştım ama panelde
+  sıfır yazıyor" olur ve öğrenci sisteme güvenmeyi bırakır.
+- Onay yalnızca yöneticide: kafede fiilen bulunmayı gerektiren bir
+  doğrulama (§6.2).
+
+**Yol üstünde bulunan hata:** migration, SQLite'ta tabloyu yeniden yazarken
+Dalga 3'ün kısmi tekil indeksini bozdu — §10.5.
+
 ---
 
 ---
@@ -1119,7 +1159,32 @@ sürücü için elle SQL yazmayı zorunlu kılardı.
 php artisan migrate:status
 ```
 
-### 10.5 Bu proje Tailwind da Bootstrap da kullanmıyor
+### 10.5 SQLite tabloyu yeniden yazarken ham SQL indeksi kaybolur
+
+`Schema::table()` ile `foreignId()->constrained()` eklemek SQLite'ta ALTER
+TABLE ile yapılamaz; Laravel **tabloyu baştan yazar** ve yalnızca *kendi
+bildiği* indeksleri geri kurar.
+
+22 Eylül 2026'da Dalga 9'un migration'ı bu yüzden Dalga 3'ün kısmi tekil
+indeksini bozdu:
+
+```
+CREATE UNIQUE INDEX ... ON study_sessions (student_id) WHERE ended_at IS NULL
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^
+                                                      yeniden yazmada kayboldu
+```
+
+Sonuç sessiz ve ağır: "öğrenci başına tek **açık** oturum" kuralı "öğrenci
+başına tek oturum" oldu — öğrenci ikinci kez hiç çalışmaya başlayamazdı. Dört
+test yakaladı.
+
+**Kural:** SQLite'ta tabloyu yeniden yazan her migration, ham SQL ile
+kurulmuş her şeyi (kısmi indeks, CHECK, trigger) açıkça geri koymak zorunda.
+Postgres'te ALTER TABLE indekse dokunmaz; orada aynı adım zararsız bir
+yeniden oluşturmadır. Aynı aile: §10.2'de `->change()`'in komşu sütunun CHECK
+kısıtını düşürmesi.
+
+### 10.6 Bu proje Tailwind da Bootstrap da kullanmıyor
 
 Stiller **elle yazılmış** `public/css/app.css`'te (1464 satır). Hiçbir blade
 `@vite` kullanmıyor; `resources/css/app.css` boş bir kabuk.
@@ -1130,7 +1195,7 @@ her sınıf `app.css`'te ya da bir `<style>` bloğunda tanımlı olmak zorunda
 (`js-` önekli kancalar muaf). `@apply` ya da `tailwind` geçen bir satır da
 ayrı bir testle engelleniyor.
 
-### 10.6 Test yeşil görülmeden commit yok
+### 10.7 Test yeşil görülmeden commit yok
 
 İki kez test kırmızıyken push edildi; sebebi her seferinde aynıydı: komutlar
 zincirlendiği için sonuç görülmeden commit'e geçildi.
@@ -1138,13 +1203,13 @@ zincirlendiği için sonuç görülmeden commit'e geçildi.
 **Kural:** `php artisan test` ve `git commit` **ayrı adımlar**. Çıktı okunur,
 sonra commit edilir.
 
-### 10.7 Görüş alanı dışındaki şey ölçülmeden değiştirilmez
+### 10.8 Görüş alanı dışındaki şey ölçülmeden değiştirilmez
 
 Vercel yapılandırması iki kez tahminle değiştirildi, ikisi de yanlış çıktı
 (`composer` PATH'te sanıldı; filesystem rota sırası yanlış kuruldu). Üçüncüde
 ölçüldü ve otuz saniyede çözüldü. Teşhis yolları §12.2.2'de.
 
-### 10.8 Geçici dosyalar `.scratch/` altına
+### 10.9 Geçici dosyalar `.scratch/` altına
 
 Arka plan analiz ajanları bir kez `tests/` altına sonda dosyaları bıraktı ve
 bunlar farkında olmadan commit'lendi. Tek seferlik test/hata ayıklama betikleri
@@ -1155,7 +1220,7 @@ commit'e girdi; depo 21 MB'tan 332 KB'a inerken geçmişin yeniden yazılması
 gerekti ve arkasında hâlâ temizlenmemiş bir tuzak bıraktı — bkz.
 §13.
 
-### 10.9 Her yeni dalgada kontrol listesi
+### 10.10 Her yeni dalgada kontrol listesi
 
 - [ ] Migration + `PostgresSecurity::lockDown()` — **yeni tablolar RLS'i miras
       almaz.** Postgres'te "varsayılan RLS" diye bir şey yok; yetkiler kapalı
@@ -1212,7 +1277,7 @@ dokunmaz — bu yüzden `migrate:fresh` çalıştırmak için hiçbir sebep yok 
 
 **Stil uyarısı:** proje Tailwind ya da Bootstrap kullanmıyor; stiller elle
 yazılmış `public/css/app.css`'te. Tanımsız bir sınıf adı hata vermez, sessizce
-hiçbir şey yapmaz — muhafız test bunu yakalar (§10.5).
+hiçbir şey yapmaz — muhafız test bunu yakalar (§10.6).
 
 ---
 

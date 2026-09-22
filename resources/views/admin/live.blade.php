@@ -89,4 +89,57 @@
             <p class="text-muted">Bir öğrenci masadaki QR'ı okutunca burada görünür.</p>
         </div>
     @endforelse
+
+{{--
+    Onay kuyrugu (Dalga 9).
+
+    Burada, canli ekranin icinde: yonetici zaten gun boyu bu sayfayi acik
+    tutuyor. Ustte kim iceride, altta neyi onaylamasi gerektigi.
+
+    Karar icin gereken en az bilgi gosteriliyor - ogrenci, masa, saat araligi,
+    sure. Yonetici karari zaten kafede gordukleriyle veriyor; ekranin isi
+    hatirlatmak, ikna etmek degil.
+--}}
+@if($pending->isNotEmpty())
+    <h2 class="mt-4">Onay bekleyen oturumlar ({{ $pending->count() }})</h2>
+    <p class="text-muted">Onaylanana kadar bu süreler öğrencinin toplamına ve velinin paneline girmez.</p>
+
+    <form method="POST" action="{{ route('admin.sessions.approve-many') }}" class="mb-2">
+        @csrf
+        @foreach($pending as $bekleyen)
+            <input type="hidden" name="ids[]" value="{{ $bekleyen->id }}">
+        @endforeach
+        <button type="submit" class="btn btn-primary">Hepsini onayla ({{ $pending->count() }})</button>
+    </form>
+
+    @foreach($pending as $bekleyen)
+        @php $dakika = $bekleyen->duration_minutes ?? $bekleyen->minutesSoFar(); @endphp
+
+        <div class="session-card mb-2">
+            <div class="d-flex align-items-center justify-content-between gap-2">
+                <div>
+                    <strong>{{ $bekleyen->student->name }}</strong>
+                    <div class="text-muted">
+                        {{ $bekleyen->table->name }} ·
+                        {{ $bekleyen->started_at->timezone(config('kafe.timezone'))->format('H:i') }}–{{ $bekleyen->ended_at->timezone(config('kafe.timezone'))->format('H:i') }}
+                        · {{ sprintf('%ds %ddk', intdiv($dakika, 60), $dakika % 60) }}
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <form method="POST" action="{{ route('admin.sessions.approve', $bekleyen) }}">
+                        @csrf
+                        <button type="submit" class="btn btn-primary">Onayla</button>
+                    </form>
+
+                    <form method="POST" action="{{ route('admin.sessions.reject', $bekleyen) }}" class="d-flex align-items-center gap-2">
+                        @csrf
+                        <input type="text" name="reason" class="form-control" placeholder="Red sebebi" maxlength="255" required>
+                        <button type="submit" class="btn btn-danger">Reddet</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
+@endif
 @endsection

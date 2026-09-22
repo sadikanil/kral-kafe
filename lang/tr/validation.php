@@ -191,6 +191,7 @@ return [
 
     'attributes' => [
         'name' => 'ad',
+        'reason' => 'red sebebi',
         'role' => 'rol',
         'weekly_goal_hours' => 'haftalık hedef',
         'product_id' => 'ürün',

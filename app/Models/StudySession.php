@@ -85,6 +85,22 @@ class StudySession extends Model
     }
 
     /**
+     * Bitmis ama toplamlara girmemis oturumlar: bekleyen + reddedilen.
+     *
+     * Ogrencinin kendi panelinde gordugu liste. Gormezse "iki saat calistim
+     * ama panelde sifir yaziyor" durumu olusur ve ogrenci sisteme guvenmeyi
+     * birakir; reddedilen oturum da sebebiyle birlikte burada gorunur.
+     */
+    public function scopeNotCredited(Builder $query): Builder
+    {
+        return $query->whereNotNull('ended_at')
+            ->whereIn('approval_status', [
+                ApprovalStatus::Pending->value,
+                ApprovalStatus::Rejected->value,
+            ]);
+    }
+
+    /**
      * Istatistige giren oturumlar.
      *
      * Cok kisa oturum "yanlis okutma" sayilir: kayit SILINMEZ (veriyi yok etmek
@@ -158,6 +174,33 @@ class StudySession extends Model
         }
 
         return $this->review(ApprovalStatus::Rejected, $reviewer, $sebep);
+    }
+
+    /**
+     * Birden cok oturumu tek yazmayla onaylar.
+     *
+     * Filtre SQL'de: yalnizca gercekten bekleyen ve bitmis oturumlar degisir.
+     * Istemciden gelen id listesine guvenmek, kapali bir oturumu yeniden
+     * "onayli" yazmak ya da baskasinin reddettigini sessizce geri almak
+     * demekti.
+     *
+     * @param  array<int,int>  $ids
+     * @return int Onaylanan oturum sayisi
+     */
+    public static function approveMany(array $ids, User $reviewer): int
+    {
+        if ($ids === []) {
+            return 0;
+        }
+
+        return static::whereIn('id', $ids)
+            ->awaitingApproval()
+            ->update([
+                'approval_status' => ApprovalStatus::Approved->value,
+                'reviewed_by' => $reviewer->id,
+                'reviewed_at' => now(),
+                'updated_at' => now(),
+            ]);
     }
 
     private function review(ApprovalStatus $durum, User $reviewer, ?string $sebep): bool

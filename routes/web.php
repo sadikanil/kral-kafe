@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\LiveController;
+use App\Http\Controllers\Admin\SessionApprovalController;
 use App\Http\Controllers\Admin\StudyTableController;
 use App\Http\Controllers\Study\SessionController;
 use App\Http\Controllers\Study\TableSessionController;
@@ -123,6 +124,14 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
 
     // Canli ekran: su an iceride kim, hangi masada, ne kadardir
     Route::get('/canli', [LiveController::class, 'index'])->name('live');
+
+    // Oturum onay kuyrugu (Dalga 9) - kuyruk canli ekranin icinde yasiyor
+    Route::post('/oturumlar/toplu-onay', [SessionApprovalController::class, 'approveMany'])
+        ->name('sessions.approve-many');
+    Route::post('/oturumlar/{session}/onayla', [SessionApprovalController::class, 'approve'])
+        ->name('sessions.approve');
+    Route::post('/oturumlar/{session}/reddet', [SessionApprovalController::class, 'reject'])
+        ->name('sessions.reject');
 
     // Masalar (locations'tan ayri: raf/dolap degil, ogrencinin oturdugu yer)
     Route::get('/masalar-qr-yazdir', [StudyTableController::class, 'printQr'])->name('tables.print-qr');

@@ -7,6 +7,7 @@ use App\Models\Consumption;
 use App\Models\ExamEvent;
 use App\Services\BillingService;
 use App\Models\StudyGoal;
+use App\Models\StudySession;
 use App\Services\StudySessionService;
 use App\Services\StudyStats;
 use App\Support\LocalDay;
@@ -62,6 +63,15 @@ class DashboardController extends Controller
             'monthMinutes' => $istatistik->monthMinutes($user),
             'streak' => $istatistik->streak($user),
             'weeklyGoal' => StudyGoal::activeFor($user, LocalDay::today()),
+            // Onay bekleyen / reddedilen oturumlar (Dalga 9): yukaridaki
+            // sureler yalnizca ONAYLI oturumlari sayiyor. Bu liste olmadan
+            // ogrenci calistigi halde sifir goruyor ve sebebini bilmiyor.
+            'notCredited' => StudySession::where('student_id', $user->id)
+                ->notCredited()
+                ->with('table')
+                ->orderByDesc('ended_at')
+                ->limit(5)
+                ->get(),
             // Deneme takvimi hatirlaticisi: siradaki deneme(ler).
             'upcomingExams' => ExamEvent::upcoming()->limit(3)->get(),
             'subscription' => $user->currentSubscription(),
