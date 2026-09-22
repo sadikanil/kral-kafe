@@ -206,6 +206,7 @@ bitmişti; yan dalda kalmıştı, 22 Eylül'de main'e alındı.
 
 | İş | Büyüklük | Not |
 |---|---|---|
+| **Supabase'i Frankfurt'a taşı** | M | **Karar verildi (22 Eyl), henüz yapılmadı.** Giriş sayfası 0,9 sn; Frankfurt ~0,2 sn getirir. Çalıştırılabilir plan §12.7'de — kesinti gerektirir, kafe kapalıyken yapılmalı |
 | Üretimde `LOG_CHANNEL` kontrolü | XS | Panelde `stack` duruyorsa salt okunur diske log yazılıp **ikinci bir 500** üretiliyor; üretim ortam dökümü hiç doğrulanmadı — §12 "Doğrulanmamış" |
 | `brashlab` remote'unu kaldır | XS | Yerel depoyu 21 MiB'de tutuyor, kazara merge yolu açık — §13 |
 | `Consumption::boot` fiyat ezmesi | S | `total_price` koşulsuz yeniden hesaplanıyor; paket kapsamı girince yanlış fatura üretir. Dalga 8'in önkoşulu |
@@ -1846,6 +1847,86 @@ satır satır doğrulanmadı. 20 Eylül 2026'daki önizleme raporunda `LOG_CHANN
 ve `UPLOAD_DISK=public` görüldü, ama o rapor **önizleme** ortamındandı ve Vercel'de
 değişkenler ortam başına tanımlanır. İlk fırsatta üretimde kontrol edilmeli;
 `LOG_CHANNEL=stack` üretimde duruyorsa yukarıdaki tuzak aktif demektir.
+
+### 12.7 Frankfurt'a taşıma — çalıştırılabilir plan (karar verildi, henüz yapılmadı)
+
+Veritabanı Singapur'da (`ap-southeast-1`). §10.12'deki düzeltme fonksiyonu
+oraya taşıdı ve giriş sayfasını 4,5 sn'den 0,9 sn'ye indirdi; kalan 0,9 sn'nin
+kaynağı **isteğin Türkiye'den Singapur'a gitmesi**. Frankfurt (`eu-central-1`,
+İstanbul'a ~1600 km) beklenen sonuç: **~0,2 sn**.
+
+**Supabase bir projenin bölgesini yerinde değiştiremez.** Yeni proje açılır,
+veri taşınır, eskisi kapatılır.
+
+#### Bunu kolaylaştıran şey: veri çok az
+
+22 Eylül 2026 itibarıyla taşınacak gerçek veri ~25 satır:
+
+| Tablo | Satır | Not |
+|---|---|---|
+| `users` | 2 | Admin + bir öğrenci |
+| `subjects` | 11 | `SubjectSeeder` yeniden üretir |
+| `locations` | 5 | Elle girilmiş |
+| `packages` | 2 | Elle girilmiş |
+| `study_tables` | 1 | QR kodu **korunmalı** — etiket basılı |
+| `products`, `product_locations` | 1 + 1 | |
+| `study_sessions` | 1 | |
+| `settings` | 1 | Kafe koordinatı (Dalga 10b) |
+| `sessions`, `cache` | 37 | **Taşınmaz** — herkes yeniden giriş yapar |
+
+**Supabase Storage boş** (`storage.objects` = 0 satır), yani dosya göçü yok.
+Bucket'ın kendisi yine de yeniden kurulmalı, yoksa ilk yükleme patlar.
+
+Bu hacimde `pg_dump`/restore gereksiz — üstelik bu makinede `pg_dump` **kurulu
+değil**. Şemayı migration'lardan kurmak hem daha az adım hem daha güvenli:
+`PostgresSecurity::lockDown()` RLS'i kendiliğinden getirir, dump'ta bunun
+taşınıp taşınmadığını ayrıca doğrulamak gerekirdi.
+
+#### Adımlar
+
+1. **Proje aç:** Supabase → yeni proje, bölge **Central EU (Frankfurt)**
+   `eu-central-1`. Ücretsiz planda organizasyon başına aktif proje sınırı
+   var; `Arabam` zaten `INACTIVE`, gerekirse önce o silinir.
+2. **`.env.supabase.fra` hazırla** — mevcut `.env.supabase`'in kopyası, yalnız
+   `DB_HOST` / `DB_USERNAME` / `DB_PASSWORD` yeni projeden. **Session pooler**
+   (`aws-0-eu-central-1.pooler.supabase.com`, port **5432**); transaction
+   pooler (6543) boolean bağlamalarını bozuyor (§12.1).
+3. **Şemayı kur:**
+   `php artisan migrate --force --env=supabase.fra`
+   Sonra `migrate:status` ile 35 satırın da `Ran` olduğunu gör.
+4. **Bucket:** yeni projede `Kafe` adında **public** bucket aç, S3 anahtarlarını
+   üret. `AWS_ENDPOINT` / `AWS_URL` / `AWS_ACCESS_KEY_ID` /
+   `AWS_SECRET_ACCESS_KEY` yeni değerlerle güncellenir.
+5. **Veriyi taşı.** Elle yeniden girmek **yanlış olur**: `users.password`
+   bcrypt hash'i ve `study_tables.qr_code` korunmalı — QR etiketi basılı,
+   kodu değişirse masadaki etiket ölür. Satırları `INSERT` ile kopyala,
+   `sessions` ve `cache` hariç.
+6. **Sequence'leri ilerlet.** Açık `id` ile satır kopyalamanın klasik tuzağı:
+   `bigserial` sequence'i 1'de kalır ve ilk yeni kayıt mevcut bir id'ye
+   çarpar. Her tablo için:
+   ```sql
+   SELECT setval(pg_get_serial_sequence(t, 'id'), coalesce(max(id), 1))
+   FROM ...;
+   ```
+   Taşımadan sonra **her tabloda** çalıştırılmalı, yalnızca satır kopyalananda
+   değil.
+7. **Kafe koordinatını doğrula** (`settings`), yoksa Yönetim → Ayarlar →
+   "Konumu buradan al" ile kafedeyken yeniden kur. Yanlış koordinat, uzaktan
+   başlatılan oturumları sessizce "yakın" gösterir.
+8. **Geçiş (kesinti burada).** Vercel → Settings → Environment Variables:
+   `DB_*` ve `AWS_*` yeni değerlerle. Aynı commit'te `vercel.json`
+   `"regions": ["fra1"]` — **ikisi birlikte**, yoksa Frankfurt veritabanı +
+   Singapur fonksiyonu yine ayrı kıtalarda kalır ve iş daha da kötüleşir.
+   Sonra redeploy.
+9. **Doğrula:** `curl -sI .../giris` → `X-Vercel-Id` `fra1::fra1::...` olmalı;
+   süre ~0,2 sn. Giriş yap, canlı ekranı ve `/koc/plan`'ı aç.
+10. **Eski projeyi bir hafta durdurma (pause) ile beklet**, silme. Geri dönüş
+    gerekirse env değişkenlerini ve `regions`'ı geri almak yeterli.
+
+> **Kesinti:** 5. adımdaki kopyalama ile 8. adımdaki redeploy arasında eski
+> veritabanına yazılan her şey kaybolur. Veri bu kadar azken pencere birkaç
+> dakika; yine de kafenin kapalı olduğu bir saatte yapılmalı. Öğrenci çalışma
+> oturumu **açıkken** yapılmamalı — açık oturum taşınmazsa sayaç kaybolur.
 
 ### 12.6 Bilinen kısıtlar
 
