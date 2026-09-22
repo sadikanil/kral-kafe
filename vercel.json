@@ -1,6 +1,9 @@
 {
     "$schema": "https://openapi.vercel.sh/vercel.json",
     "framework": null,
+    "regions": [
+        "sin1"
+    ],
     "outputDirectory": "public",
     "functions": {
         "api/index.php": {
@@ -9,12 +12,26 @@
         }
     },
     "crons": [
-        { "path": "/api/cron/gunluk", "schedule": "0 20 * * *" }
+        {
+            "path": "/api/cron/gunluk",
+            "schedule": "0 20 * * *"
+        }
     ],
     "routes": [
-        { "src": "^/$", "dest": "/api/index.php" },
-        { "src": "^/(.+\\.php)$", "dest": "/api/index.php" },
-        { "handle": "filesystem" },
-        { "src": "/(.*)", "dest": "/api/index.php" }
+        {
+            "src": "^/$",
+            "dest": "/api/index.php"
+        },
+        {
+            "src": "^/(.+\\.php)$",
+            "dest": "/api/index.php"
+        },
+        {
+            "handle": "filesystem"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/api/index.php"
+        }
     ]
 }
