@@ -74,6 +74,11 @@ class DashboardController extends Controller
                 ->get(),
             // Deneme takvimi hatirlaticisi: siradaki deneme(ler).
             'upcomingExams' => ExamEvent::upcoming()->limit(3)->get(),
+            // Bildirimler (Dalga 11): teslim kanali su an yalnizca panel.
+            'notifications' => \App\Models\Notification::for($user)
+                ->latest()
+                ->limit(10)
+                ->get(),
             'subscription' => $user->currentSubscription(),
             'currentMonthTotal' => $currentMonthTotal,
             'currentMonthItems' => $currentMonthItems,

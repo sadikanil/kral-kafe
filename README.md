@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 22 Eylül 2026 · Laravel 12 · 262 test / 810 doğrulama yeşil._
+_Son güncelleme: 22 Eylül 2026 · Laravel 12 · 273 test / 823 doğrulama yeşil._
 
 ---
 
@@ -136,6 +136,7 @@ yazar), veli salt okunur.
 | Alt menü (telefonda gezinme) | Öğrenci, veli, yönetici | Her panel |
 | Kafe konumu ayarı ("konumu buradan al") | Yönetici | Yönetim → Ayarlar |
 | Onay kuyruğunda konum işareti: kafede / uzak / konum yok | Yönetici | Yönetim → Canlı Ekran |
+| Bildirimler: devamsızlık, yarın deneme var | Öğrenci, veli | Panel |
 | Unutulan oturumların otomatik kapanması (tembel, cron opsiyonel) | Sistem | — |
 | Gün/hafta/ay süre, üst üste gelme serisi | Öğrenci | Panel |
 | Haftalık hedef ve ilerleme; hedef geçmişi korunur | Yönetici koyar, öğrenci görür | Kullanıcı formu, panel |
@@ -163,6 +164,7 @@ Supabase Postgres (session pooler) · elle yazılmış CSS (Tailwind yok).
 | 9 | Oturum onay akışı: yönetici onaylamadan süre sayılmaz | ✅ |
 | 10a | Mobil kabuk: alt menü + uygulama içi QR okuyucu, elle kod yedeğiyle | ✅ |
 | 10b | Oturum konumu + kafe koordinatı ayarı; uzaklık onay kuyruğunda işaret | ✅ |
+| 11 | Bildirim altyapısı: devamsızlık + deneme hatırlatması, Vercel Cron, panel içi teslim | ✅ |
 
 ---
 
@@ -176,14 +178,13 @@ oturduktan sonra.
 
 | Sıra | Dalga | İçerik | Büyüklük | Bağımlılık | Durum |
 |---|---|---|---|---|---|
-| 1 | **11** | **Bildirim altyapısı** — e-posta + Vercel Cron; deneme öncesi hatırlatma, gün sonu devamsızlık bildirimi (§7-K) | L | 6b | ⬜ |
-| 2 | **12** | **Deneme sonucu ve sıralamalar** — ders bazlı D/Y/net, kurum/ilçe/il/TR sıralaması, PDF özetinin altına yönetici notu, veliye açık profil (§7-C) | L | 6b, 6d | ⬜ |
-| 5 | **13** | **Haftalık çalışma planı** — yönetici belirler, öğrenci tamamlar, tamamlama oranı (§7-D) | M | — | ⬜ |
-| 6 | **8** | **Tüketim sadeleştirme** — QR tüketim akışının kaldırılması, tüketimin `package_items` kapsamına bağlanması (`covered_by_package`) | M | 7 ✅ | ⬜ |
-| 7 | **14** | **Koç rolü aktif** — koç–öğrenci atama, koç paneli, notlar, görüşme kaydı (§7-B, §7-I) | L | 6 | ⬜ |
-| 8 | **15** | **Haftalık veli raporu** — tembel üretim, yönetici/koç yorumu (§7-A) + sınava geri sayım (§7-G) | M | 9, 12 | ⬜ |
-| 9 | **16** | **Devamlılık düşüş sinyalleri** — önce koça (§7-E) | S | 14 | ⬜ |
-| 10 | **17** | **Ders etiketi + zayıf konu listesi** (§7-F, §7-H) | M | 12 | ⬜ |
+| 1 | **12** | **Deneme sonucu ve sıralamalar** — ders bazlı D/Y/net, kurum/ilçe/il/TR sıralaması, PDF özetinin altına yönetici notu, veliye açık profil (§7-C) | L | 6b, 6d | ⬜ |
+| 2 | **13** | **Haftalık çalışma planı** — yönetici belirler, öğrenci tamamlar, tamamlama oranı (§7-D) | M | — | ⬜ |
+| 3 | **8** | **Tüketim sadeleştirme** — QR tüketim akışının kaldırılması, tüketimin `package_items` kapsamına bağlanması (`covered_by_package`) | M | 7 ✅ | ⬜ |
+| 4 | **14** | **Koç rolü aktif** — koç–öğrenci atama, koç paneli, notlar, görüşme kaydı (§7-B, §7-I) | L | 6 | ⬜ |
+| 5 | **15** | **Haftalık veli raporu** — tembel üretim, yönetici/koç yorumu (§7-A) + sınava geri sayım (§7-G) | M | 9, 12 | ⬜ |
+| 6 | **16** | **Devamlılık düşüş sinyalleri** — önce koça (§7-E) | S | 14 | ⬜ |
+| 7 | **17** | **Ders etiketi + zayıf konu listesi** (§7-F, §7-H) | M | 12 | ⬜ |
 
 S ≈ bir oturum · M ≈ iki-üç oturum · L ≈ dört ve üzeri.
 
@@ -225,7 +226,7 @@ ve §5'e geçti.)*
 | # | Soru | Öneri |
 |---|---|---|
 | 1 | Onaylanmamış oturum **ne kadar bekler**? Yönetici üç gün bakmazsa süre kaybolur mu, kendiliğinden onaylanır mı? | Kaybolmaz, kuyrukta bekler; bekleyen sayısı ve en eski bekleyenin yaşı panelde görünür. Otomatik onay yok — onayın anlamı kalmaz |
-| 2 | Devamsızlık bildiriminin **eşiği** ne olmalı? | Her gelmediği gün veliye mesaj gitmesi kısa sürede gürültüye dönüşür. Kafe gününde hiç oturum yoksa ve öğrenci o hafta en az bir kez geldiyse gönder — tatildeki öğrenciye her gün mesaj gitmesin |
+| ~~2~~ | ~~Devamsızlık bildiriminin **eşiği** ne olmalı?~~ *(22 Eylül'de kapandı: o hafta en az bir kez geldiyse gönderilir)* | Her gelmediği gün veliye mesaj gitmesi kısa sürede gürültüye dönüşür. Kafe gününde hiç oturum yoksa ve öğrenci o hafta en az bir kez geldiyse gönder — tatildeki öğrenciye her gün mesaj gitmesin |
 
 ## 5. Verilen kararlar
 
@@ -241,6 +242,8 @@ ve §5'e geçti.)*
 | 8 | Tüketim için QR okutma yok; **panelden manuel ekleme** tek yol. Stok takibi yönetici tarafında aktif kalır | 22 Eyl 2026 |
 | 9 | Oturum başlangıcında **konum kaydedilir**; sert kapı değil, doğrulama verisi. İzin reddedilirse oturum yine başlar, "konum yok" işaretiyle | 22 Eyl 2026 |
 | 9b | Uzaklık eşiği **250 m** (`kafe.konum_esigi_metre`); iç mekân GPS sapması 50–100 m olduğu için dar eşik gerçek öğrenciyi şüpheli gösterirdi | 22 Eyl 2026 |
+| 9d | Teslim kanalı **şimdilik yalnızca panel**; e-posta sağlayıcısı sonra. Kayıt ile teslim ayrı tutuldu, sağlayıcı gelince aynı kayıtların `sent_at`'i dolacak | 22 Eyl 2026 |
+| 9e | Devamsızlık bildirimi yalnızca **o hafta en az bir kez gelen** öğrenci için; tatildekinin velisine her gün mesaj gürültüye döner | 22 Eyl 2026 |
 | 9c | Kafe koordinatı **veritabanında** (`settings`), config'de değil: kafede ölçülerek alınıyor, taşınınca deploy gerekmesin | 22 Eyl 2026 |
 | 10 | Haftalık çalışma planını **yönetici belirler** | 22 Eyl 2026 |
 | 11 | Yönetici en yetkili kişidir ve **koç yetkilerini de taşır**; sistemde ayrıca koç rolü vardır | 22 Eyl 2026 |
@@ -374,7 +377,7 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
   Panelde harita gösterilmez; yalnızca "kafede / uzak / konum yok" işareti.
 - **Açık soru:** §4.4 #5.
 
-### K · Bildirim altyapısı — Dalga 11
+### K · Bildirim altyapısı — Dalga 11 · ✅ bitti (22 Eylül 2026, e-posta hariç)
 
 - **Ne gönderilecek:**
   1. **Denemeden bir gün önce** — öğrenciye ve veliye hatırlatma.
@@ -500,7 +503,7 @@ gerekmez. Dalga 6b altyapısıyla bir günlük iş.
 `stock_records` · `stock_photos` · `monthly_bills` · `discrepancy_logs` ·
 `study_tables` · `study_sessions` · `study_goals` · `student_parent` ·
 `exam_events` · `exam_reports` · `packages` · `package_items` ·
-`subscriptions` · `payments` · `settings`
+`subscriptions` · `payments` · `settings` · `notifications`
 
 ### 8.2 Eklenecek sütunlar
 
@@ -519,10 +522,6 @@ gerekmez. Dalga 6b altyapısıyla bir günlük iş.
 ### 8.3 Eklenecek tablolar
 
 ```
-notifications         id, type, user_id, related_type, related_id,
-                      channel (mail|panel), sent_at, error
-                      -- idempotans: (type, user_id, related_id) tekil
-
 subjects              id, exam_type (tyt|ayt|lgs), name, sort_order
 
 exam_results          id, exam_event_id, student_id,
@@ -1140,6 +1139,37 @@ Ayarlar sayfası, onay kuyruğunda konum işareti. Kararlar:
   yazmadı ve Dalga 3'ün kısmi tekil indeksi yerinde kaldı (§10.5'te Dalga
   9'da ısırmıştı); canlıda da doğrulandı.
 
+#### Dalga 11 — Bildirim altyapısı · ✅ bitti (22 Eylül 2026, e-posta hariç)
+
+`notifications` tablosu, `NotificationBuilder`, gizli anahtarla korunan
+Vercel Cron ucu, panel içi bildirim listesi. Kararlar:
+
+- **Kayıt ile teslim ayrı.** Bu dalga yalnızca *kayıt* üretiyor; bugünkü
+  teslim kanalı panel. E-posta sağlayıcısı gelince aynı kayıtların `sent_at`
+  sütunu dolacak. Birleştirseydik, kanal değişince geçmiş bildirimlerin ne
+  olduğu cevaplanamaz hale gelirdi.
+- **Cron zorunlu, tembel üretim yetmez.** Dalga 4'te oturum kapatma tembel
+  yapılabilmişti çünkü sonucu veriden *hesaplanabiliyordu*. Bildirim ise
+  gönderilmiş ya da gönderilmemiştir — sonradan türetilemez.
+- **Onay bekleyen oturum da geliş sayılır.** Devamsızlığı `StudyStats`
+  üzerinden ölçseydik (o yalnızca onaylıyı sayar), öğrenci gelir, yönetici
+  henüz onaylamamış olur ve velisine "gelmedi" bildirimi giderdi. Onay bir
+  **muhasebe** kararı; öğrencinin kafede olup olmadığı ondan bağımsız bir
+  olgu. Testi var.
+- **O hafta hiç gelmemişse susuluyor.** Tatildeki ya da kaydı donmuş
+  öğrencinin velisine her gün mesaj gitmesi gürültüye döner; gürültüye dönen
+  bildirim okunmaz hale gelir ve asıl önemli olanı da götürür.
+- **`unique_key` ile idempotans.** Cron iki kez çalışabilir (Hobby'de ±59 dk
+  sapma, yeniden deneme, elle tetikleme) ve aynı bildirim iki kez oluşmamalı.
+- **Anahtar tanımsızsa uç hiç çalışmaz.** "Anahtar yoksa herkese açık"
+  varsayılanı, değişkeni girmeyi unutan bir dağıtımda ucu internete açardı ve
+  bunu kimse fark etmezdi. `hash_equals` ile karşılaştırılıyor.
+- **Cron 20:00 UTC** (yerel 23:00): kapanıştan (21:00) ve Dalga 4'ün otomatik
+  kapatma cron'undan (19 UTC) sonra. Hobby sapmasıyla en geç yerel 23:59 —
+  her durumda aynı yerel günün içinde kalır.
+- `user_id` kime gittiği, `student_id` kimin hakkında olduğu: veli
+  bildiriminde ikisi farklı, öğrenciye giden deneme hatırlatmasında aynı.
+
 ---
 
 ---
@@ -1347,7 +1377,7 @@ Ardından `http://127.0.0.1:8000`. Hepsini birden (sunucu + kuyruk + log + vite)
 php artisan test
 ```
 
-262 test, 810 doğrulama. Testler `:memory:` SQLite kullanır, yerel veritabanına
+273 test, 823 doğrulama. Testler `:memory:` SQLite kullanır, yerel veritabanına
 dokunmaz — bu yüzden `migrate:fresh` çalıştırmak için hiçbir sebep yok (§10.3).
 
 **Stil uyarısı:** proje Tailwind ya da Bootstrap kullanmıyor; stiller elle
@@ -1389,6 +1419,8 @@ Vercel projesinde Settings → Environment Variables altına gir:
 | `KAFE_ACILIS` / `KAFE_KAPANIS` | `09:00` / `21:00` |
 | `KAFE_DENEME_HATIRLATMA_GUN` | Kaç gün kala deneme hatırlatıcısı uyarı rengine döner. Varsayılan `7`; tanımlamak zorunlu değil |
 | `KAFE_ODEME_VADESI_GUN` | Abonelik başlangıcından kaç gün sonra ödeme "gecikmiş" sayılır. Varsayılan `7`; tanımlamak zorunlu değil |
+| `KAFE_KONUM_ESIGI_METRE` | Kafeden kaç metre uzaklık onay kuyruğunda "uzak" işaretlenir. Varsayılan `250`; tanımlamak zorunlu değil |
+| `KAFE_CRON_ANAHTARI` | **Gerekli.** Vercel Cron'un günlük ucu çağırırken taşıdığı gizli anahtar. **Tanımlanmazsa uç hiç çalışmaz** (403) — bu bilinçli: "anahtar yoksa herkese açık" varsayılanı ucu internete açardı. Uzun ve rastgele bir değer üret |
 | `KAFE_IPLER` | **Boş bırak.** IP kapısı rafta: kafenin IP'si dinamik ölçüldü (bkz. §9.3) |
 | `LOG_CHANNEL` | `stderr` — **panelde `stack` tanımlıysa sil.** `api/index.php` bu değeri yalnızca *tanımsızsa* `stderr` yapar; panelde `stack` duruyorsa çerçeve `storage/logs`'a yazmaya çalışır, orası salt okunur ve uygulama loglarken **ikinci bir 500** üretir |
 | `DB_CONNECTION` | `pgsql` |

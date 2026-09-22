@@ -192,6 +192,8 @@
         </div>
     @endif
 
+    @include('_bildirimler')
+
     {{--
         Onay bekleyen / reddedilen oturumlar (Dalga 9).
 

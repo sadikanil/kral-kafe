@@ -49,6 +49,12 @@ class DashboardController extends Controller
         return view('parent.dashboard', [
             'students' => $ogrenciler,
             'upcomingExams' => ExamEvent::upcoming()->limit(3)->get(),
+            // Bildirimler (Dalga 11): teslim kanali su an yalnizca panel.
+            // E-posta gelince ayni kayitlarin uzerine binecek.
+            'notifications' => \App\Models\Notification::for(auth()->user())
+                ->latest()
+                ->limit(10)
+                ->get(),
         ]);
     }
 

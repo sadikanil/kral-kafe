@@ -86,6 +86,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Cron anahtari (Dalga 11)
+    |--------------------------------------------------------------------------
+    |
+    | Vercel Cron'un gunluk ucu cagirirken tasidigi gizli anahtar. TANIMSIZSA
+    | uc hic calismaz: "anahtar yoksa herkese acik" varsayilani, degiskeni
+    | girmeyi unutan bir dagitimda ucu internete acardi.
+    |
+    */
+
+    'cron_anahtari' => (string) env('KAFE_CRON_ANAHTARI', ''),
+
+    /*
+    |--------------------------------------------------------------------------
     | Kafe agi — RAFTA (19 Eylul 2026)
     |--------------------------------------------------------------------------
     |

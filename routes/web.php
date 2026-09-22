@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\LiveController;
+use App\Http\Controllers\CronController;
 use App\Http\Controllers\Admin\SessionApprovalController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\StudyTableController;
@@ -212,3 +213,14 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
 
 // Auth Routes
 require __DIR__ . '/auth.php';
+
+/*
+|--------------------------------------------------------------------------
+| Zamanlanmis isler (Dalga 11)
+|--------------------------------------------------------------------------
+|
+| Vercel Cron bu adresi cagiriyor. Giris gerektirmiyor - gizli anahtarla
+| korunuyor (bkz. CronController). Anahtar tanimsizsa uc hic calismaz.
+|
+*/
+Route::get('/api/cron/gunluk', [CronController::class, 'daily'])->name('cron.daily');

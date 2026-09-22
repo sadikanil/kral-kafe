@@ -8,6 +8,9 @@
             "maxDuration": 60
         }
     },
+    "crons": [
+        { "path": "/api/cron/gunluk", "schedule": "0 20 * * *" }
+    ],
     "routes": [
         { "src": "^/$", "dest": "/api/index.php" },
         { "src": "^/(.+\\.php)$", "dest": "/api/index.php" },
