@@ -57,6 +57,9 @@ Route::middleware(['auth', 'subscription'])->group(function () {
     Route::get('/masa/{table:qr_code}', [TableSessionController::class, 'show'])->name('table.scan');
     Route::post('/masa/{table:qr_code}/basla', [TableSessionController::class, 'start'])->name('table.session.start');
     Route::post('/oturum/bitir', [SessionController::class, 'end'])->name('session.end');
+    // Ders etiketi (Dalga 17a). Yalnizca ACIK oturum; istege bagli.
+    Route::post('/oturum/{session}/ders', [\App\Http\Controllers\Study\SessionSubjectController::class, 'update'])
+        ->name('session.subject');
 });
 
 // Authenticated User Routes

@@ -21,6 +21,7 @@ class StudySession extends Model
     protected $fillable = [
         'student_id',
         'study_table_id',
+        'subject_id',
         'started_at',
         'ended_at',
         'duration_minutes',
@@ -51,6 +52,17 @@ class StudySession extends Model
     protected $attributes = [
         'approval_status' => ApprovalStatus::Pending->value,
     ];
+
+    /**
+     * Oturumda calisilan ders - ISTEGE BAGLI (Dalga 17a).
+     *
+     * Bos birakilabilir; kirilimda "Genel" kovasina duser. Zorunlu kilmak
+     * masaya oturmanin onune bir soru koyardi.
+     */
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class);
+    }
 
     public function student(): BelongsTo
     {

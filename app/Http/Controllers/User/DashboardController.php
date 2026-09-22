@@ -63,6 +63,12 @@ class DashboardController extends Controller
             'monthMinutes' => $istatistik->monthMinutes($user),
             'streak' => $istatistik->streak($user),
             'weeklyGoal' => StudyGoal::activeFor($user, LocalDay::today()),
+            // Ders etiketi ve kirilimi (Dalga 17a).
+            'sessionSubjects' => \App\Models\Subject::active()->orderBy('sort_order')->orderBy('name')->get(),
+            'subjectBreakdown' => $istatistik->minutesBySubject(
+                $user,
+                ...LocalDay::weekBounds(LocalDay::today()),
+            ),
             // Calisma plani (Dalga 13; aylik donem Dalga 14). Hedefin
             // yaninda "ne" sorusunun cevabi. Iki donem ayri listeleniyor
             // cunku "bu hafta" ile "bu ay" farkli aciliyor: haftalik madde

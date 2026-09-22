@@ -192,7 +192,8 @@ oturduktan sonra.
 | 5 | **15a** | **Haftalık veli raporu** — tembel üretim, dondurulmuş payload, koç yorumu (§7-A) | M | 9 ✅, 12 ✅ | ✅ |
 | 5b | **15b** | **Sınava geri sayım** — `ExamType::Official`, panelde geri sayım (§7-G) | S | 6b ✅ | ✅ |
 | 6 | **16** | **Devamlılık düşüş sinyalleri** — önce koça (§7-E) | S | 14 ✅ | ✅ |
-| 7 | **17** | **Ders etiketi + zayıf konu listesi** (§7-F, §7-H) | M | 12 | ⬜ |
+| 7 | **17a** | **Ders etiketi** — `study_sessions.subject_id`, haftalık ders kırılımı (§7-F) | S | 12 ✅ | ✅ |
+| 7b | **17b** | **Zayıf konu listesi** — `weak_topics`, plan maddesine bağlama (§7-H) | M | 17a ✅ | ⬜ |
 
 S ≈ bir oturum · M ≈ iki-üç oturum · L ≈ dört ve üzeri.
 
@@ -495,12 +496,12 @@ Tablo yok; `StudyStats` üzerinden hesaplanır, eşikler `config/kafe.php`
 Dalga 11'in gün sonu devamsızlık bildiriminden farkı: o **tek güne** bakar ve
 veliye gider, bu **eğilime** bakar ve **koçta kalır**.
 
-### F · Ders bazlı çalışma kırılımı — Dalga 17
+### F · Ders bazlı çalışma kırılımı — Dalga 17a · ✅ bitti (22 Eylül 2026)
 
-Oturum başlarken ya da biterken tek dokunuşla ders etiketi. Zorunlu değil;
-etiketsiz oturum "genel". Değeri: "12 saat çalıştı" yerine "8 saat matematik,
-0 saat Türkçe" — planla (§7-D) ve zayıf konuyla bağlanır.
-`study_sessions.subject_id` nullable; `subjects` C ile ortak.
+Öğrenci açık oturum kartından tek dokunuşla ders seçiyor. **Zorunlu değil**;
+etiketsiz oturum "Genel" kovasına düşer. Değeri: "12 saat çalıştı" yerine
+"8 saat matematik, 0 saat Türkçe". `study_sessions.subject_id` nullable;
+`subjects` §7-C ile ortak. Kırılım öğrenci panosunda, haftalık.
 
 ### H · Zayıf konu listesi — Dalga 17
 
@@ -1049,6 +1050,28 @@ dalında yazıldı ve şeması canlıya uygulandı (batch 9), ama `main`'e alın
 taşımıyordu. 22 Eylül'de merge edildi. Migration gerekmedi, defter zaten
 doluydu. Bu, §10.4'teki defter/dosya karşılaştırmasının **ters yönde** ısırması:
 canlı depodan ileri gidebiliyor.
+
+#### Dalga 17a — Oturuma ders etiketi · ✅ bitti (22 Eylül 2026)
+
+`study_sessions.subject_id` (nullable) + `StudyStats::minutesBySubject()`.
+Kararlar:
+
+- **Zorunlu değil ve olmayacak.** Etiketsiz oturum "Genel" kovasına düşer;
+  zorunlu kılmak masaya oturmanın önüne bir soru koyardı ve öğrenci okutmayı
+  bırakırdı. Kırılımın toplamı `minutesBetween()` ile aynı kalıyor.
+- **Yalnızca AÇIK oturum etiketlenir.** Bitmiş oturumun süresi onaya gitmiş
+  olabilir; geçmişi sonradan yeniden etiketlemek kırılımı velinin gördüğü
+  rapordan **sonra** değiştirirdi. Etiket açıkken serbestçe değiştirilebilir
+  ve boş bırakılarak kaldırılabilir.
+- **`foreignId()->constrained()` KULLANILMADI** — §10.5'teki tuzak. SQLite'ta
+  `study_sessions`'a kısıt eklemek tabloyu baştan yazıp
+  `study_sessions_tek_acik_oturum` kısmi indeksini sessizce düşürür ve "bir
+  öğrencinin tek **açık** oturumu" kuralı "tek oturumu"na dönüşür. Bu bir kez
+  oldu; bu sefer `SessionSubjectTest` indeksin `ended_at IS NULL` yüklemiyle
+  ayakta kaldığını **doğrudan** denetliyor. Bütünlük yazma ucunda
+  `Rule::exists` ile.
+- **Kırılım yalnızca onaylı oturumu sayar** — diğer tüm istatistikler gibi.
+- **Çok çalışılan üstte:** "neye zaman ayırdım" sorusu ilk satırda görünmeli.
 
 #### Dalga 12b — Net gelişim grafiği · ✅ bitti (22 Eylül 2026)
 

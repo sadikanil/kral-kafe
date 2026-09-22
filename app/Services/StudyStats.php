@@ -72,6 +72,40 @@ class StudyStats
         return $toplam;
     }
 
+    /**
+     * Araliktaki dakikalarin DERS KIRILIMI (Dalga 17a).
+     *
+     * Etiketsiz oturum "Genel" kovasina duser - kaybolmaz. Toplam,
+     * minutesBetween() ile ayni kaliyor.
+     *
+     * Cok calisilan ust sirada: koc ve ogrenci "neye zaman ayirdim"
+     * sorusunu ilk satirda gormeli.
+     *
+     * @return array<string,int>
+     */
+    public function minutesBySubject(User $student, Carbon $from, Carbon $to): array
+    {
+        $kova = [];
+
+        foreach ($this->overlapping($student, $from, $to)->load('subject') as $oturum) {
+            $bitis = $oturum->ended_at ?? now();
+
+            $kesisimBas = $oturum->started_at->greaterThan($from) ? $oturum->started_at : $from;
+            $kesisimSon = $bitis->lessThan($to) ? $bitis : $to;
+
+            if (! $kesisimSon->greaterThan($kesisimBas)) {
+                continue;
+            }
+
+            $ad = $oturum->subject?->name ?? 'Genel';
+            $kova[$ad] = ($kova[$ad] ?? 0) + (int) $kesisimBas->diffInMinutes($kesisimSon);
+        }
+
+        arsort($kova);
+
+        return $kova;
+    }
+
     public function todayMinutes(User $student): int
     {
         return $this->minutesOnDay($student, LocalDay::today());

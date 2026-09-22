@@ -29,6 +29,22 @@
                 {{ $openSession->started_at->timezone(config('kafe.timezone'))->format('H:i') }}'den beri
             </p>
 
+            {{-- Ders etiketi (Dalga 17a). ISTEGE BAGLI: bos birakilan oturum
+                 kirilimda "Genel" kovasina duser. Zorunlu kilmak masaya
+                 oturmanin onune bir soru koyardi. --}}
+            <form action="{{ route('session.subject', $openSession) }}" method="POST"
+                  class="d-flex align-items-center gap-2 mb-3" style="flex-wrap: wrap;">
+                @csrf
+                <label class="text-muted" for="oturum-ders">Ne çalışıyorsun?</label>
+                <select name="subject_id" id="oturum-ders" class="form-control" style="max-width: 220px;">
+                    <option value="">Genel</option>
+                    @foreach($sessionSubjects as $ders)
+                        <option value="{{ $ders->id }}" @selected($openSession->subject_id === $ders->id)>{{ $ders->name }}</option>
+                    @endforeach
+                </select>
+                <button type="submit" class="btn btn-sm btn-secondary">Kaydet</button>
+            </form>
+
             <form action="{{ route('session.end') }}" method="POST">
                 @csrf
                 <button type="submit" class="btn btn-danger">Çalışmayı Bitir</button>
@@ -231,6 +247,24 @@
         @endforeach
     @endif
     @endforeach
+
+    {{--
+        Bu haftanin ders kirilimi (Dalga 17a). "12 saat calisti" yerine
+        "8 saat matematik, 0 saat Turkce". Kayit yoksa cizilmez.
+    --}}
+    @if($subjectBreakdown !== [])
+        <div class="card mb-3">
+            <div class="card-header"><h4>Ders kırılımı · bu hafta</h4></div>
+            <div class="card-body">
+                @foreach($subjectBreakdown as $ad => $dakika)
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>{{ $ad }}</span>
+                        <strong>{{ \App\Support\Duration::human($dakika) }}</strong>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     @include('_koc-notlari')
 
