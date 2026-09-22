@@ -70,6 +70,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Konum esigi (Dalga 10b)
+    |--------------------------------------------------------------------------
+    |
+    | Oturum baslangicindaki konum kafeden bu kadar metreden uzaksa, oturum
+    | onay kuyrugunda "uzak" isaretlenir - ENGELLENMEZ.
+    |
+    | 250 m bilerek genis: ic mekanda GPS sapmasi 50-100 metreyi buluyor ve
+    | dar bir esik masada oturan gercek ogrenciyi supheli gosterirdi. Gercek
+    | dagilimi gorduk ten sonra daraltilabilir.
+    |
+    */
+
+    'konum_esigi_metre' => (int) env('KAFE_KONUM_ESIGI_METRE', 250),
+
+    /*
+    |--------------------------------------------------------------------------
     | Kafe agi — RAFTA (19 Eylul 2026)
     |--------------------------------------------------------------------------
     |

@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\LiveController;
 use App\Http\Controllers\Admin\SessionApprovalController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\StudyTableController;
 use App\Http\Controllers\Study\SessionController;
 use App\Http\Controllers\Study\TableSessionController;
@@ -125,6 +126,10 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     Route::get('/lokasyonlar/{location}/qr', [LocationController::class, 'showQr'])->name('locations.qr');
     Route::post('/lokasyonlar/{location}/durum', [LocationController::class, 'toggleStatus'])->name('locations.toggle-status');
     Route::get('/lokasyonlar-qr-yazdir', [LocationController::class, 'printQrCodes'])->name('locations.print-qr');
+
+    // Ayarlar (Dalga 10b): panelden degistirilen kafe geneli ayarlar
+    Route::get('/ayarlar', [SettingsController::class, 'edit'])->name('settings.edit');
+    Route::post('/ayarlar/konum', [SettingsController::class, 'saveLocation'])->name('settings.location');
 
     // Canli ekran: su an iceride kim, hangi masada, ne kadardir
     Route::get('/canli', [LiveController::class, 'index'])->name('live');

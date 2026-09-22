@@ -40,6 +40,10 @@
                 <h3 class="mb-3">{{ $table->name }}</h3>
                 <form action="{{ route('table.session.start', $table->qr_code) }}" method="POST">
                     @csrf
+                    {{-- Konum (Dalga 10b): izin verilmezse bos gider, oturum yine baslar --}}
+                    <input type="hidden" name="latitude" class="js-konum-enlem">
+                    <input type="hidden" name="longitude" class="js-konum-boylam">
+                    <input type="hidden" name="accuracy" class="js-konum-dogruluk">
                     <button type="submit" class="btn btn-primary">Bu Masaya Geç</button>
                 </form>
             </div>
@@ -61,6 +65,10 @@
                     <p class="text-muted mb-3">Hoş geldin {{ auth()->user()->name }}!</p>
                     <form action="{{ route('table.session.start', $table->qr_code) }}" method="POST">
                         @csrf
+                        {{-- Konum (Dalga 10b): izin verilmezse bos gider, oturum yine baslar --}}
+                        <input type="hidden" name="latitude" class="js-konum-enlem">
+                        <input type="hidden" name="longitude" class="js-konum-boylam">
+                        <input type="hidden" name="accuracy" class="js-konum-dogruluk">
                         <button type="submit" class="btn btn-primary">Çalışmaya Başla</button>
                     </form>
                 @else
@@ -88,5 +96,35 @@
             ciz();
             setInterval(ciz, 30000);
         });
+    </script>
+@endpush
+
+@push('scripts')
+    <script>
+        // Konum ISTEGE BAGLI. Izin reddedilirse ya da zaman asimina ugrarsa
+        // alanlar bos kalir ve oturum yine baslar - sunucu tarafi da oyle
+        // dogruluyor. Ogrenciyi konum ekraninda bekletmemek icin sayfa
+        // acilir acilmaz isteniyor, butona basinca degil.
+        (function () {
+            if (!navigator.geolocation) {
+                return;
+            }
+
+            function doldur(secici, deger) {
+                document.querySelectorAll(secici).forEach(function (alan) {
+                    alan.value = deger;
+                });
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                function (konum) {
+                    doldur('.js-konum-enlem', konum.coords.latitude.toFixed(7));
+                    doldur('.js-konum-boylam', konum.coords.longitude.toFixed(7));
+                    doldur('.js-konum-dogruluk', Math.round(konum.coords.accuracy));
+                },
+                function () { /* izin yok: alanlar bos kalir, akis degismez */ },
+                { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
+            );
+        })();
     </script>
 @endpush

@@ -33,9 +33,12 @@ class StudySessionService
      * doner - ogrenci butona iki kez basinca ya da mobilde POST yeniden
      * gonderilince ikinci istek hata gostermemeli.
      */
-    public function start(User $student, StudyTable $table): StudySession
+    /**
+     * @param  array{latitude?: float|null, longitude?: float|null, accuracy?: float|null}  $location
+     */
+    public function start(User $student, StudyTable $table, array $location = []): StudySession
     {
-        return DB::transaction(function () use ($student, $table) {
+        return DB::transaction(function () use ($student, $table, $location) {
             $acik = $this->openFor($student);
 
             if ($acik) {
@@ -51,6 +54,9 @@ class StudySessionService
                     'student_id' => $student->id,
                     'study_table_id' => $table->id,
                     'started_at' => now(),
+                    'latitude' => $location['latitude'] ?? null,
+                    'longitude' => $location['longitude'] ?? null,
+                    'accuracy' => $location['accuracy'] ?? null,
                 ]);
             } catch (UniqueConstraintViolationException $e) {
                 // Es zamanli ikinci istek kisiti yedi. Kaybeden istek de

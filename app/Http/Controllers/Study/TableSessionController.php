@@ -72,7 +72,7 @@ class TableSessionController extends Controller
         ]);
     }
 
-    public function start(StudyTable $table): RedirectResponse
+    public function start(Request $request, StudyTable $table): RedirectResponse
     {
         if (! $table->is_active) {
             return back()->with('error', 'Bu masa şu anda kullanımda değil.');
@@ -84,7 +84,17 @@ class TableSessionController extends Controller
             return back()->with('error', 'Çalışma oturumu yalnızca öğrenciler içindir.');
         }
 
-        $oturum = $this->sessions->start($kullanici, $table);
+        // Konum ISTEGE BAGLI: izin reddedilirse oturum yine baslar, sutunlar
+        // bos kalir ve onay kuyrugunda "konum yok" gorunur. Zorunlu kilmak,
+        // izni kapali ya da GPS'i zayif bir telefondaki gercek ogrenciyi
+        // ekranda kilitlerdi - sahtekari ise durdurmazdi.
+        $konum = $request->validate([
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
+            'accuracy' => ['nullable', 'numeric', 'min:0'],
+        ]);
+
+        $oturum = $this->sessions->start($kullanici, $table, $konum);
 
         return redirect()
             ->route('table.scan', $table->qr_code)

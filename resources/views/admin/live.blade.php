@@ -124,6 +124,25 @@
                         {{ $bekleyen->started_at->timezone(config('kafe.timezone'))->format('H:i') }}–{{ $bekleyen->ended_at->timezone(config('kafe.timezone'))->format('H:i') }}
                         · {{ sprintf('%ds %ddk', intdiv($dakika, 60), $dakika % 60) }}
                     </div>
+
+                    {{--
+                        Konum bir ISARET, bir karar degil (Dalga 10b). Uc ayri
+                        durum var ve ucu de farkli anlama geliyor:
+                        konum yok (izin verilmemis), uzak (esigi asmis),
+                        kafede. "Konum yok"u "uzak" saymak, izni kapali her
+                        ogrenciyi supheli gosterirdi.
+                    --}}
+                    @php $mesafe = $bekleyen->distanceFromCafe(); @endphp
+
+                    @if($bekleyen->latitude === null)
+                        <span class="badge badge-warning">Konum yok</span>
+                    @elseif($mesafe === null)
+                        <span class="badge badge-info">Kafe konumu girilmedi</span>
+                    @elseif($bekleyen->isFarFromCafe())
+                        <span class="badge badge-danger">Kafeden uzak ({{ round($mesafe) }} m)</span>
+                    @else
+                        <span class="badge badge-success">Kafede ({{ round($mesafe) }} m)</span>
+                    @endif
                 </div>
 
                 <div class="d-flex align-items-center gap-2">

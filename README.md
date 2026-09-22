@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 22 Eylül 2026 · Laravel 12 · 213 test / 715 doğrulama yeşil._
+_Son güncelleme: 22 Eylül 2026 · Laravel 12 · 262 test / 810 doğrulama yeşil._
 
 ---
 
@@ -134,6 +134,8 @@ yazar), veli salt okunur.
 | Henüz sayılmayan oturumlar (onay bekleyen / reddedilen, sebebiyle) | Öğrenci | Panel |
 | Uygulama içi QR okuyucu + masadaki kodu elle yazma | Öğrenci | `/masa-okut` |
 | Alt menü (telefonda gezinme) | Öğrenci, veli, yönetici | Her panel |
+| Kafe konumu ayarı ("konumu buradan al") | Yönetici | Yönetim → Ayarlar |
+| Onay kuyruğunda konum işareti: kafede / uzak / konum yok | Yönetici | Yönetim → Canlı Ekran |
 | Unutulan oturumların otomatik kapanması (tembel, cron opsiyonel) | Sistem | — |
 | Gün/hafta/ay süre, üst üste gelme serisi | Öğrenci | Panel |
 | Haftalık hedef ve ilerleme; hedef geçmişi korunur | Yönetici koyar, öğrenci görür | Kullanıcı formu, panel |
@@ -160,6 +162,7 @@ Supabase Postgres (session pooler) · elle yazılmış CSS (Tailwind yok).
 | 7 | Paket kataloğu, abonelik, ödeme takibi, faturada paket tutarı | ✅ |
 | 9 | Oturum onay akışı: yönetici onaylamadan süre sayılmaz | ✅ |
 | 10a | Mobil kabuk: alt menü + uygulama içi QR okuyucu, elle kod yedeğiyle | ✅ |
+| 10b | Oturum konumu + kafe koordinatı ayarı; uzaklık onay kuyruğunda işaret | ✅ |
 
 ---
 
@@ -173,9 +176,8 @@ oturduktan sonra.
 
 | Sıra | Dalga | İçerik | Büyüklük | Bağımlılık | Durum |
 |---|---|---|---|---|---|
-| 1 | **10b** | **Konum kaydı** — oturum başlangıcında konum, kafe koordinatı yönetici panelinden, eşiği aşan oturum anomali işaretli (§7-N) | S | 10a ✅ | 🔄 sırada |
-| 2 | **11** | **Bildirim altyapısı** — e-posta + Vercel Cron; deneme öncesi hatırlatma, gün sonu devamsızlık bildirimi (§7-K) | L | 6b | ⬜ |
-| 3 | **12** | **Deneme sonucu ve sıralamalar** — ders bazlı D/Y/net, kurum/ilçe/il/TR sıralaması, PDF özetinin altına yönetici notu, veliye açık profil (§7-C) | L | 6b, 6d | ⬜ |
+| 1 | **11** | **Bildirim altyapısı** — e-posta + Vercel Cron; deneme öncesi hatırlatma, gün sonu devamsızlık bildirimi (§7-K) | L | 6b | ⬜ |
+| 2 | **12** | **Deneme sonucu ve sıralamalar** — ders bazlı D/Y/net, kurum/ilçe/il/TR sıralaması, PDF özetinin altına yönetici notu, veliye açık profil (§7-C) | L | 6b, 6d | ⬜ |
 | 5 | **13** | **Haftalık çalışma planı** — yönetici belirler, öğrenci tamamlar, tamamlama oranı (§7-D) | M | — | ⬜ |
 | 6 | **8** | **Tüketim sadeleştirme** — QR tüketim akışının kaldırılması, tüketimin `package_items` kapsamına bağlanması (`covered_by_package`) | M | 7 ✅ | ⬜ |
 | 7 | **14** | **Koç rolü aktif** — koç–öğrenci atama, koç paneli, notlar, görüşme kaydı (§7-B, §7-I) | L | 6 | ⬜ |
@@ -185,8 +187,9 @@ oturduktan sonra.
 
 S ≈ bir oturum · M ≈ iki-üç oturum · L ≈ dört ve üzeri.
 
-**Neden bu sıra:** Dalga 9 (onay akışı) ve 10a (mobil kabuk) 22 Eylül'de
-bitti. Dalga 10b akışın günlük kullanımını taşıyor (öğrenci telefonla
+**Neden bu sıra:** Dalga 9 (onay akışı), 10a (mobil kabuk) ve 10b (konum)
+22 Eylül'de bitti. Sıradaki Dalga 11 olmadan §1.2'nin 2. ve 3. adımları hiç
+çalışmıyor; Dalga 12 (öğrenci telefonla
 okutacak). Dalga 11 olmadan §1.2'nin 2. ve 3. adımları hiç çalışmaz. Dalga 12
 denemenin sonuç tarafını kapatır. Paket ve ödeme (Dalga 7) 21 Eylül'de
 bitmişti; yan dalda kalmıştı, 22 Eylül'de main'e alındı.
@@ -222,8 +225,7 @@ ve §5'e geçti.)*
 | # | Soru | Öneri |
 |---|---|---|
 | 1 | Onaylanmamış oturum **ne kadar bekler**? Yönetici üç gün bakmazsa süre kaybolur mu, kendiliğinden onaylanır mı? | Kaybolmaz, kuyrukta bekler; bekleyen sayısı ve en eski bekleyenin yaşı panelde görünür. Otomatik onay yok — onayın anlamı kalmaz |
-| 2 | Konum izni **reddedilirse** oturum başlar mı? | Başlar, "konum yok" işaretiyle. Engellemek gerçek öğrenciyi cezalandırır, sahtekârı durdurmaz (§7-N) |
-| 3 | Devamsızlık bildiriminin **eşiği** ne olmalı? | Her gelmediği gün veliye mesaj gitmesi kısa sürede gürültüye dönüşür. Kafe gününde hiç oturum yoksa ve öğrenci o hafta en az bir kez geldiyse gönder — tatildeki öğrenciye her gün mesaj gitmesin |
+| 2 | Devamsızlık bildiriminin **eşiği** ne olmalı? | Her gelmediği gün veliye mesaj gitmesi kısa sürede gürültüye dönüşür. Kafe gününde hiç oturum yoksa ve öğrenci o hafta en az bir kez geldiyse gönder — tatildeki öğrenciye her gün mesaj gitmesin |
 
 ## 5. Verilen kararlar
 
@@ -237,7 +239,9 @@ ve §5'e geçti.)*
 | 6 | Koç/yönetici notunda **"veliyle paylaş" varsayılan işaretli**; özel not seçeneği kalır | 22 Eyl 2026 |
 | 7 | Deneme sıralaması **sıra + katılımcı sayısı** olarak tutulur ("1.240 kişide 87."); yüzdelik dilimi sistem hesaplamaz | 22 Eyl 2026 |
 | 8 | Tüketim için QR okutma yok; **panelden manuel ekleme** tek yol. Stok takibi yönetici tarafında aktif kalır | 22 Eyl 2026 |
-| 9 | Oturum başlangıcında **konum kaydedilir**; sert kapı değil, doğrulama verisi | 22 Eyl 2026 |
+| 9 | Oturum başlangıcında **konum kaydedilir**; sert kapı değil, doğrulama verisi. İzin reddedilirse oturum yine başlar, "konum yok" işaretiyle | 22 Eyl 2026 |
+| 9b | Uzaklık eşiği **250 m** (`kafe.konum_esigi_metre`); iç mekân GPS sapması 50–100 m olduğu için dar eşik gerçek öğrenciyi şüpheli gösterirdi | 22 Eyl 2026 |
+| 9c | Kafe koordinatı **veritabanında** (`settings`), config'de değil: kafede ölçülerek alınıyor, taşınınca deploy gerekmesin | 22 Eyl 2026 |
 | 10 | Haftalık çalışma planını **yönetici belirler** | 22 Eyl 2026 |
 | 11 | Yönetici en yetkili kişidir ve **koç yetkilerini de taşır**; sistemde ayrıca koç rolü vardır | 22 Eyl 2026 |
 | 12 | **Uygulama içi QR okuyucu** ve alt menüyle mobil tam uyum | 22 Eyl 2026 |
@@ -350,7 +354,7 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
   elle yazılacak ve muhafız test sınıfların tanımlı olmasını zorunlu kılıyor
   (§10.6).
 
-### N · Konum kaydı — Dalga 10
+### N · Konum kaydı — Dalga 10b · ✅ bitti (22 Eylül 2026)
 
 - **Amaç:** Oturumun gerçekten kafede başladığını doğrulamak. Basılı QR bir kez
   fotoğraflanıp evden okutulabilir; IP kapısı dinamik IP yüzünden rafa kalktı.
@@ -496,14 +500,14 @@ gerekmez. Dalga 6b altyapısıyla bir günlük iş.
 `stock_records` · `stock_photos` · `monthly_bills` · `discrepancy_logs` ·
 `study_tables` · `study_sessions` · `study_goals` · `student_parent` ·
 `exam_events` · `exam_reports` · `packages` · `package_items` ·
-`subscriptions` · `payments`
+`subscriptions` · `payments` · `settings`
 
 ### 8.2 Eklenecek sütunlar
 
 | Tablo | Sütun | Dalga | Sebep |
 |---|---|---|---|
 | ~~`study_sessions`~~ | ~~`approval_status`, `reviewed_by`, `reviewed_at`, `rejection_reason`~~ | 9 | ✅ Yapıldı. `approved_by/at` yerine `reviewed_by/at`: red de bir incelemedir, onu "approved_at"te tutmak yanıltıcı olurdu |
-| `study_sessions` | `latitude`, `longitude`, `accuracy` | 10 | Konum kaydı (§7-N) |
+| ~~`study_sessions`~~ | ~~`latitude`, `longitude`, `accuracy`~~ | 10b | ✅ Yapıldı. `decimal(10,7)`, nullable ve varsayılansız: "konum yok" ile "kafede değil" ayrı şeyler |
 | `study_sessions` | `subject_id` (null) | 17 | Ders etiketi |
 | `consumptions` | `covered_by_package` (bool) | 8 | Paket kapsamı faturaya yansısın |
 | ~~`monthly_bills`~~ | ~~`package_amount`~~ | 7 | ✅ Yapıldı — `total_amount` tüketim toplamı olarak kaldı, genel toplam `grandTotal()` |
@@ -1101,6 +1105,41 @@ Alt menü (her rol için ayrı sekme seti) + uygulama içi QR okuyucu
 - Her rolün alt menüsü testle sabitlendi: sessizce kaybolursa telefonda
   panelden başka hiçbir yere gidilemez hale gelir.
 
+#### Dalga 10b — Oturum konumu · ✅ bitti (22 Eylül 2026)
+
+`study_sessions.latitude/longitude/accuracy`, `settings` tablosu, yönetici
+Ayarlar sayfası, onay kuyruğunda konum işareti. Kararlar:
+
+- **Sert kapı değil, işaret.** Eşiği aşan oturum engellenmiyor, kuyrukta
+  "Kafeden uzak (X m)" rozetiyle görünüyor. Asıl doğrulama yöneticinin
+  onayı (Dalga 9); konum ona yardımcı bir veri.
+- **Konum izni reddedilirse oturum yine başlar.** Engellemek, izni kapalı
+  ya da GPS'i zayıf bir telefondaki gerçek öğrenciyi ekranda kilitlerdi —
+  sahtekârı ise durdurmazdı, basılı QR bir kez fotoğraflanıp evden
+  okutulabilir.
+- **"Konum yok" ≠ "uzak".** Üç ayrı durum var ve üçü farklı anlama geliyor:
+  konum verilmemiş, kafe koordinatı girilmemiş, eşiği aşmış. İkisini
+  birleştirmek izni kapalı her öğrenciyi şüpheli gösterirdi;
+  `isFarFromCafe()` konum bilinmiyorken **false** döner.
+- **Eşik 250 m** (`kafe.konum_esigi_metre`). İç mekânda GPS sapması 50–100
+  metreyi buluyor; dar bir eşik masada oturan öğrenciyi işaretlerdi. Gerçek
+  dağılım görüldükten sonra daraltılabilir.
+- **Kafe koordinatı `settings` tablosunda**, `config/kafe.php`'de değil:
+  değer kafede **ölçülerek** alınıyor ("konumu buradan al"). Config'e yazmak
+  her taşınmada deploy gerektirir ve değerin doğruluğunu kimse göremez.
+  Anahtar/değer şeması seçildi çünkü kafe saatleri ve eşikler de zamanla
+  buraya gelecek.
+- **Haversine, düz Öklid değil** (`App\Support\GeoDistance`): bir derece
+  boylamın metre karşılığı enleme göre değişiyor, dereceleri doğrudan
+  çıkarmak Türkiye enleminde ~%25 sessiz hata verirdi.
+- `decimal(10,7)`, float değil: float karşılaştırmaları sürücüye göre
+  değişirdi. Nullable ve varsayılansız — sıfır koordinat yazmak izni kapalı
+  her öğrenciyi Gine Körfezi'nde gösterirdi.
+- **Yalnızca başlangıç kaydediliyor**, oturum boyunca takip yok (§6.1-7).
+- Migration'da **yabancı anahtar yok**, bu yüzden SQLite tabloyu yeniden
+  yazmadı ve Dalga 3'ün kısmi tekil indeksi yerinde kaldı (§10.5'te Dalga
+  9'da ısırmıştı); canlıda da doğrulandı.
+
 ---
 
 ---
@@ -1308,7 +1347,7 @@ Ardından `http://127.0.0.1:8000`. Hepsini birden (sunucu + kuyruk + log + vite)
 php artisan test
 ```
 
-213 test, 715 doğrulama. Testler `:memory:` SQLite kullanır, yerel veritabanına
+262 test, 810 doğrulama. Testler `:memory:` SQLite kullanır, yerel veritabanına
 dokunmaz — bu yüzden `migrate:fresh` çalıştırmak için hiçbir sebep yok (§10.3).
 
 **Stil uyarısı:** proje Tailwind ya da Bootstrap kullanmıyor; stiller elle

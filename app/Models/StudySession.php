@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ApprovalStatus;
+use App\Support\GeoDistance;
 use App\Enums\SessionEndReason;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -28,6 +29,9 @@ class StudySession extends Model
         'reviewed_by',
         'reviewed_at',
         'rejection_reason',
+        'latitude',
+        'longitude',
+        'accuracy',
     ];
 
     protected $casts = [
@@ -115,6 +119,40 @@ class StudySession extends Model
         return $query->whereNotNull('ended_at')
             ->approved()
             ->where('duration_minutes', '>=', config('kafe.sayilabilir_dakika'));
+    }
+
+    /**
+     * Oturumun kafeye uzakligi (metre); bilinmiyorsa null.
+     *
+     * "Bilinmiyor" ile "uzak" ayri seyler ve ikisi de olabilir: ogrenci konum
+     * izni vermemis olabilir, ya da yonetici kafe koordinatini hic girmemis
+     * olabilir. Ikisini de 0 ya da sonsuz saymak, izni kapali her ogrenciyi
+     * supheli isaretlerdi.
+     */
+    public function distanceFromCafe(): ?float
+    {
+        $kafe = Setting::cafeLocation();
+
+        if ($kafe === null || $this->latitude === null || $this->longitude === null) {
+            return null;
+        }
+
+        return GeoDistance::metersBetween(
+            (float) $this->latitude,
+            (float) $this->longitude,
+            $kafe['lat'],
+            $kafe['lng'],
+        );
+    }
+
+    /**
+     * Esigi asiyor mu? Konum bilinmiyorsa FALSE - supheli degil, olculemeyen.
+     */
+    public function isFarFromCafe(): bool
+    {
+        $mesafe = $this->distanceFromCafe();
+
+        return $mesafe !== null && $mesafe > (int) config('kafe.konum_esigi_metre');
     }
 
     /**
