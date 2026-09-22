@@ -188,7 +188,7 @@ oturduktan sonra.
 | 1 | **12b** | **Net gelişim grafiği** — ders bazlı net serisi, deneme türüne göre ayrı (§7-C) | S | 12 ✅ | ⬜ |
 | 3 | **8** | **Tüketim sadeleştirme** — QR tüketim akışının kaldırılması, stok düşümünün self adisyona taşınması, `package_items` kapsamının uygulanması (`covered_quantity`) | M | 7 ✅ | ✅ |
 | 4 | **14a** | **Koç rolü + çalışma planı sayfası** — koç–öğrenci atama, `/koc/plan`, haftalık **ve aylık** dönem, veli görünürlüğü (§7-B, §7-D) | M | 6 ✅ | ✅ |
-| 4b | **14b** | **Koç notları ve görüşme kaydı** — `coach_notes`, `visibility` (parent/private), görüşme özeti (§7-B, §7-I) | M | 14a ✅ | ⬜ |
+| 4b | **14b** | **Koç notları ve görüşme kaydı** — `coach_notes`, `visibility` (parent/private), görüşme özeti (§7-B, §7-I) | M | 14a ✅ | ✅ |
 | 5 | **15** | **Haftalık veli raporu** — tembel üretim, yönetici/koç yorumu (§7-A) + sınava geri sayım (§7-G) | M | 9, 12 | ⬜ |
 | 6 | **16** | **Devamlılık düşüş sinyalleri** — önce koça (§7-E) | S | 14 | ⬜ |
 | 7 | **17** | **Ders etiketi + zayıf konu listesi** (§7-F, §7-H) | M | 12 | ⬜ |
@@ -459,7 +459,7 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
   Bildirim tarafı cron'a bağlı (§7-K), ama raporun kendisi paneli açan ilk kişide
   üretilebilir.
 
-### B · Koç rolü, atama ve notlar — Dalga 14a ✅ / 14b ⬜
+### B · Koç rolü, atama ve notlar — Dalga 14a ✅ / 14b ✅ (22 Eylül 2026)
 
 - **Ne:** Koç paneli: öğrenci listesi (haftalık süre, hedef %, seri, son deneme),
   düşüş gösteren öğrenci vurgusu, öğrenci detayı, not bırakma.
@@ -469,13 +469,13 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
   görür) ve `private` (yalnız koç/yönetici). Varsayılanın açık olması §6.1-2'nin
   gereği; özel seçeneğinin kalması koçun ham gözlemini yazabilmesi için
   (karar 6).
-- **Teknik:** `coach_assignments` ✅ (Dalga 14a), `coach_notes` ⬜ (Dalga 14b).
+- **Teknik:** `coach_assignments` ✅ (Dalga 14a), `coach_notes` ✅ (Dalga 14b).
 - **Koç paneli şimdilik yalnızca plan.** Öğrenci listesi + plan ekranı var;
   haftalık süre, seri ve son deneme sütunları Dalga 16'nın düşüş sinyalleriyle
   birlikte gelecek — ikisi aynı sorguyu paylaşıyor, ayrı ayrı yazmak iki kez
   yazmak olurdu.
 
-### I · Koç–veli görüşme kaydı — Dalga 14
+### I · Koç–veli görüşme kaydı — Dalga 14b · ✅ bitti (22 Eylül 2026)
 
 Koç görüşme sonrası kısa özet bırakır ("Ekim planı konuşuldu, hedef 20 saat").
 Sohbet/mesajlaşma **değil** — tek yönlü kayıt; WhatsApp'ın yerini almaya
@@ -541,11 +541,15 @@ gerekmez. Dalga 6b altyapısıyla bir günlük iş.
 
 
 
-coach_assignments     id, coach_id, student_id, assigned_at, is_active
-
-coach_notes           id, coach_id, student_id, kind (note|meeting), body,
-                      visibility (parent|private), created_at
-                      -- varsayilan parent: veli gorur (karar 6)
+-- coach_assignments ve coach_notes: Dalga 14'te EKLENDI (§9). Kurulan
+-- bicim taslaktan iki yerde ayrildi:
+--   coach_assignments  id, coach_id, student_id, created_by, timestamps
+--                      -- assigned_at/is_active yerine satirin kendisi:
+--                      -- atama kalkinca satir silinir, bayrak tasinmaz
+--   coach_notes        id, student_id, created_by, kind, visibility, body,
+--                      occurred_on, timestamps
+--                      -- created_by (coach_id degil): yonetici de yazar
+--                      -- occurred_on yalnizca gorusme kaydinda dolu
 
 weekly_reports        id, student_id, week_start, payload (json),
                       coach_comment, generated_at
@@ -1034,6 +1038,36 @@ dalında yazıldı ve şeması canlıya uygulandı (batch 9), ama `main`'e alın
 taşımıyordu. 22 Eylül'de merge edildi. Migration gerekmedi, defter zaten
 doluydu. Bu, §10.4'teki defter/dosya karşılaştırmasının **ters yönde** ısırması:
 canlı depodan ileri gidebiliyor.
+
+#### Dalga 14b — Koç notları ve görüşme kaydı · ✅ bitti (22 Eylül 2026)
+
+`coach_notes` (kind: note|meeting, visibility: parent|private). Kararlar:
+
+- **Varsayılan görünürlük `parent`** (karar 6). Varsayılanın kapalı olması
+  §6.1-2'nin ("veli profile işlenen her şeyi görür") tersine çalışırdı: koç her
+  seferinde işaretlemeyi unutur, veli hiçbir şey görmezdi.
+- **Özel not seçeneği şart.** Gözlem notuyla veliye giden değerlendirme aynı şey
+  değil; özel seçeneği olmayan bir sistemde koç ham gözlemini **hiç yazmaz** ve
+  özellik kullanılmaz hale gelir. Bu dalganın en önemli sınırı: özel not sızarsa
+  koç bir daha yazmaz, o yüzden hem veli hem öğrenci tarafında ayrı test var.
+- **Öğrenci ile veli AYNI kümeyi görür** (§6.1-3: "veliye ne gittiğini öğrenci
+  kendi panelinde görür, gizli izleme yok"). Tek `shared()` scope, tek blade
+  parçası (`_koc-notlari`): iki yerde yazılsaydı biri gün gelip diğerinden
+  fazlasını gösterirdi. Süzgeç **scope'ta, şablonda değil** — şablonun gizlilik
+  kararı vermesi, bir gün başka bir şablonun onu unutması demekti.
+- **Görüşme kaydı ayrı tablo değil**, `kind = meeting` (§7-I). Sohbet değil tek
+  yönlü kayıt; WhatsApp'ın yerini almaya çalışmaz.
+- **Görüşme kaydı tarih ister, düz not istemez.** Görüşme çoğu zaman sonradan
+  yazılıyor; `created_at`'i görüşme anı saymak "ne zaman konuşuldu" sorusunu
+  günler kaydırırdı. Düz notta böyle bir ayrım yok — yazıldığı an olayın
+  kendisi, ve `occurred_on` doldurmak ikinci bir doğruluk kaynağı olurdu.
+  Zorunluluğu `CoachNoteKind::needsDate()` belirliyor; kuralı bilen taraf orası.
+- **`canPlanFor` → `canCoach` olarak yeniden adlandırıldı.** Plan yazmak, not
+  bırakmak ve görüşme kaydı girmek **aynı sınır**; üçüne ayrı isim vermek, gün
+  gelip birinin diğerinden gevşek kalması demekti.
+- **`created_by`, `coach_id` değil** (§8.3 taslağı öyle diyordu): yönetici de
+  yazar (karar 11), `coach_id` adı yanıltıcı olurdu. Projedeki diğer üç tabloyla
+  da aynı ad.
 
 #### Dalga 8 — Tüketim sadeleştirme · ✅ bitti (22 Eylül 2026)
 

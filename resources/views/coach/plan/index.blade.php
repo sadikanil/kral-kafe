@@ -63,9 +63,14 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <a href="{{ route('coach.plan.show', $ogrenci) }}" class="btn btn-sm btn-primary">
-                                            Planı aç
-                                        </a>
+                                        <div class="d-flex gap-1">
+                                            <a href="{{ route('coach.plan.show', $ogrenci) }}" class="btn btn-sm btn-primary">
+                                                Plan
+                                            </a>
+                                            <a href="{{ route('coach.notes.index', $ogrenci) }}" class="btn btn-sm btn-secondary">
+                                                Notlar
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

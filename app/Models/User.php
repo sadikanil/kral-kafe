@@ -190,14 +190,18 @@ class User extends Authenticatable
     }
 
     /**
-     * Bu kullanici o ogrenciye plan YAZABILIR mi?
+     * Bu kullanici o ogrencinin KOCU gibi davranabilir mi?
      *
-     * Gormek ile yazmak ayni sey DEGIL: veli cocugunun planini gorur ama
-     * maddeyi koc/yonetici koyar. Bu yuzden once rol kapisi, sonra ayni
-     * gorunurluk siniri - sinir yine accessibleStudentIds()'den geliyor ki
-     * atama kalktiginda yazma yetkisi de ayni anda kapansin.
+     * Plan yazmak, not birakmak ve gorusme kaydi girmek AYNI sinir; ucune
+     * ayri isim vermek, gun gelip birinin digerinden gevsek kalmasi demekti.
+     *
+     * Gormek ile yazmak ayni sey DEGIL: veli cocugunun planini ve paylasilan
+     * notlari gorur ama ikisini de koc/yonetici yazar. Bu yuzden once rol
+     * kapisi, sonra ayni gorunurluk siniri - sinir yine
+     * accessibleStudentIds()'den geliyor ki atama kalktiginda yazma yetkisi
+     * de ayni anda kapansin.
      */
-    public function canPlanFor(User $student): bool
+    public function canCoach(User $student): bool
     {
         if (! $this->hasRole(Role::Admin, Role::Coach)) {
             return false;

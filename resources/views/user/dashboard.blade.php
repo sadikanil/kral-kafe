@@ -230,6 +230,8 @@
     @endif
     @endforeach
 
+    @include('_koc-notlari')
+
     @include('_bildirimler')
 
     {{--

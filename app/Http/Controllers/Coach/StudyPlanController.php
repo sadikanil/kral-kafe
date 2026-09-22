@@ -145,6 +145,6 @@ class StudyPlanController extends Controller
     private function kapiyiAc(?User $student): void
     {
         abort_if($student === null || ! $student->isStudent(), 404);
-        abort_unless(auth()->user()->canPlanFor($student), 403);
+        abort_unless(auth()->user()->canCoach($student), 403);
     }
 }

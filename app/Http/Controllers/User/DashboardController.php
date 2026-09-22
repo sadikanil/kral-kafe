@@ -72,6 +72,14 @@ class DashboardController extends Controller
                 \App\Enums\PlanPeriod::Week,
                 \App\Enums\PlanPeriod::Week->startFor(LocalDay::today()),
             )->with('subject')->orderBy('id')->get(),
+            // Paylasilan koc notlari (Dalga 14b). Ogrenci veliyle AYNI
+            // kumeyi gorur (SS6.1-3): gizli izleme yok.
+            'coachNotes' => \App\Models\CoachNote::forStudent($user)
+                ->shared()
+                ->with('author')
+                ->orderByDesc('created_at')
+                ->limit(5)
+                ->get(),
             'monthlyPlanItems' => \App\Models\StudyPlanItem::forPeriod(
                 $user,
                 \App\Enums\PlanPeriod::Month,

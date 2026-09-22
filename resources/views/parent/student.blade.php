@@ -45,6 +45,8 @@
         </div>
     @endforeach
 
+    @include('_koc-notlari')
+
     @include('_deneme-sonuclari')
 
     @php

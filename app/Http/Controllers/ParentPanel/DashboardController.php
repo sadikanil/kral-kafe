@@ -90,6 +90,13 @@ class DashboardController extends Controller
                 ])
                 ->filter(fn (array $blok) => $blok['items']->isNotEmpty())
                 ->values(),
+            // Paylasilan koc notlari (Dalga 14b). Ozel notlar shared()
+            // scope'unda suzuluyor - sablon gizlilik karari vermiyor.
+            'coachNotes' => \App\Models\CoachNote::forStudent($student)
+                ->shared()
+                ->with('author')
+                ->orderByDesc('created_at')
+                ->get(),
             'examResults' => \App\Models\ExamResult::where('student_id', $student->id)
                 ->with(['event', 'subjects.subject'])
                 ->get()

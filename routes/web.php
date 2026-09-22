@@ -102,6 +102,12 @@ Route::middleware(['auth', 'role:coach,admin'])->prefix('koc')->name('coach.')->
     Route::get('/plan/{student}', [\App\Http\Controllers\Coach\StudyPlanController::class, 'show'])->name('plan.show');
     Route::post('/plan/{student}', [\App\Http\Controllers\Coach\StudyPlanController::class, 'store'])->name('plan.store');
     Route::delete('/plan/maddeler/{item}', [\App\Http\Controllers\Coach\StudyPlanController::class, 'destroy'])->name('plan.destroy');
+
+    // Koc notlari ve veli gorusme kaydi (Dalga 14b). Plan ile AYNI sinir
+    // (User::canCoach); ayri sayfada cunku her sayfa tek is yapsin.
+    Route::get('/notlar/{student}', [\App\Http\Controllers\Coach\NoteController::class, 'index'])->name('notes.index');
+    Route::post('/notlar/{student}', [\App\Http\Controllers\Coach\NoteController::class, 'store'])->name('notes.store');
+    Route::delete('/notlar/kayit/{note}', [\App\Http\Controllers\Coach\NoteController::class, 'destroy'])->name('notes.destroy');
 });
 
 // Admin Routes
