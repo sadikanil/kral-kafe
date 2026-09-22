@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\StudyTable;
 use App\Services\StudySessionService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -18,6 +20,43 @@ class TableSessionController extends Controller
 {
     public function __construct(private readonly StudySessionService $sessions)
     {
+    }
+
+    /**
+     * Kamerasiz yedek yol: masadaki kodu elle yazma ekrani.
+     *
+     * Okuyucu getUserMedia + BarcodeDetector ile calisiyor ve ikisi de her
+     * telefonda yok: kamera izni reddedilebilir, tarayici BarcodeDetector
+     * tasimayabilir, ve kamera YALNIZCA https'te (ve localhost'ta) acilir.
+     * Tek yol olarak kameraya baglanmak, bu durumlarin herhangi birindeki
+     * ogrenciyi sistem disina atardi.
+     */
+    public function scanner(): View
+    {
+        return view('study.scanner');
+    }
+
+    /**
+     * Elle yazilan masa kodunu cozer.
+     *
+     * Kodlar buyuk harf uretiliyor (Str::upper) ama telefon klavyesi kucuk
+     * harf yaziyor ve yapistirirken bosluk bulasiyor. Bunlari kullaniciya
+     * duzelttirmek yedek yolu kullanilamaz kilardi; normallestirme burada.
+     */
+    public function find(Request $request): RedirectResponse
+    {
+        $request->validate(['code' => ['required', 'string', 'max:50']]);
+
+        $kod = Str::upper(trim($request->string('code')->toString()));
+        $masa = StudyTable::where('qr_code', $kod)->first();
+
+        if ($masa === null) {
+            return back()
+                ->withInput()
+                ->withErrors(['code' => 'Bu kodla bir masa bulunamadı. Masadaki etikette yazan kodu kontrol et.']);
+        }
+
+        return redirect()->route('table.scan', $masa->qr_code);
     }
 
     public function show(StudyTable $table): View

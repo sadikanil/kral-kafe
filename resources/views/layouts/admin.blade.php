@@ -136,7 +136,7 @@
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="main-content has-bottom-nav">
             <header class="topbar">
                 <div class="d-flex align-items-center gap-2">
                     <button class="btn btn-icon btn-secondary d-lg-none" onclick="toggleSidebar()">
@@ -188,6 +188,13 @@
             document.getElementById('sidebarOverlay').classList.toggle('open');
         }
     </script>
+
+    @include('layouts._bottom-nav', ['tabs' => [
+        ['route' => 'admin.dashboard', 'label' => 'Panel', 'icon' => '🏠'],
+        ['route' => 'admin.live', 'label' => 'Canlı', 'icon' => '🟢'],
+        ['route' => 'admin.users.index', 'label' => 'Kullanıcılar', 'icon' => '👥', 'match' => 'admin.users.*'],
+        ['route' => 'admin.tables.index', 'label' => 'Masalar', 'icon' => '🪑', 'match' => 'admin.tables.*'],
+    ]])
 
     @stack('scripts')
 </body>

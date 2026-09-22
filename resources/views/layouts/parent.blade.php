@@ -85,7 +85,7 @@
         <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="main-content has-bottom-nav">
             <header class="topbar">
                 <div class="d-flex align-items-center gap-2">
                     <button class="btn btn-icon btn-secondary d-lg-none" onclick="toggleSidebar()">
@@ -124,6 +124,11 @@
             document.getElementById('sidebarOverlay').classList.toggle('open');
         }
     </script>
+
+    @include('layouts._bottom-nav', ['tabs' => [
+        ['route' => 'parent.dashboard', 'label' => 'Panel', 'icon' => '🏠', 'match' => 'parent.dashboard'],
+        ['route' => 'parent.exams', 'label' => 'Denemeler', 'icon' => '📝'],
+    ]])
 
     @stack('scripts')
 </body>

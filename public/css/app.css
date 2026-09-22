@@ -1462,3 +1462,58 @@ select.form-control {
     color: var(--gray-700);
     margin-bottom: 0.25rem;
 }
+
+/* ============================================================
+   Alt menu (Dalga 10a)
+
+   Telefonda kenar cubugu kullanilmiyor; gunluk uc dokunus
+   (panel, QR okut, gecmis) parmagin ulastigi yerde olmali.
+   1024px ustunde hic cizilmez - orada kenar cubugu zaten var.
+   ============================================================ */
+.bottom-nav {
+    display: none;
+}
+
+.bottom-nav-icon {
+    font-size: 1.15rem;
+    line-height: 1;
+}
+
+@media (max-width: 1024px) {
+    .bottom-nav {
+        display: flex;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 50;
+        background: #fff;
+        border-top: 1px solid var(--gray-200);
+        box-shadow: var(--shadow-md);
+        /* Centikli telefonlarda alt seridin arkasina dusmesin */
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .bottom-nav-item {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.15rem;
+        padding: 0.55rem 0.25rem;
+        text-decoration: none;
+        color: var(--gray-500);
+        font-size: 0.72rem;
+        text-align: center;
+    }
+
+    .bottom-nav-item.is-active {
+        color: var(--primary-dark);
+        font-weight: 600;
+    }
+
+    /* Alt menunun altinda kalan icerik gorunmez kalmasin */
+    .has-bottom-nav {
+        padding-bottom: 4.75rem;
+    }
+}

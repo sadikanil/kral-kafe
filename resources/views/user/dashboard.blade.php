@@ -6,6 +6,11 @@
 @section('content')
     @include('exams._hatirlatici', ['calendarRoute' => 'user.exams'])
 
+    @unless($openSession)
+        {{-- Gunun ilk dokunusu: kamerayi uygulamanin icinde acar. --}}
+        <a href="{{ route('table.scanner') }}" class="btn btn-primary mb-3">QR Okut</a>
+    @endunless
+
     @if($openSession)
         <div class="session-card mb-3">
             <div class="d-flex align-items-center gap-2 mb-2">

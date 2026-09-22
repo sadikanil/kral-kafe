@@ -132,6 +132,8 @@ yazar), veli salt okunur.
 | Canlı ekran: kim hangi masada ne kadardır, boş masa, anomaliler | Yönetici | Yönetim → Canlı Ekran |
 | Onay kuyruğu: biten oturumu onayla/reddet, toplu onay | Yönetici | Yönetim → Canlı Ekran |
 | Henüz sayılmayan oturumlar (onay bekleyen / reddedilen, sebebiyle) | Öğrenci | Panel |
+| Uygulama içi QR okuyucu + masadaki kodu elle yazma | Öğrenci | `/masa-okut` |
+| Alt menü (telefonda gezinme) | Öğrenci, veli, yönetici | Her panel |
 | Unutulan oturumların otomatik kapanması (tembel, cron opsiyonel) | Sistem | — |
 | Gün/hafta/ay süre, üst üste gelme serisi | Öğrenci | Panel |
 | Haftalık hedef ve ilerleme; hedef geçmişi korunur | Yönetici koyar, öğrenci görür | Kullanıcı formu, panel |
@@ -156,6 +158,8 @@ Supabase Postgres (session pooler) · elle yazılmış CSS (Tailwind yok).
 | 6c | Self adisyon: panelden ürün ekleme, 60 sn geri alma | ✅ |
 | 6d | Deneme sonuç PDF'i + yapay zekâ analizi | ✅ |
 | 7 | Paket kataloğu, abonelik, ödeme takibi, faturada paket tutarı | ✅ |
+| 9 | Oturum onay akışı: yönetici onaylamadan süre sayılmaz | ✅ |
+| 10a | Mobil kabuk: alt menü + uygulama içi QR okuyucu, elle kod yedeğiyle | ✅ |
 
 ---
 
@@ -169,7 +173,7 @@ oturduktan sonra.
 
 | Sıra | Dalga | İçerik | Büyüklük | Bağımlılık | Durum |
 |---|---|---|---|---|---|
-| 1 | **10** | **Mobil kabuk** — alt menü, uygulama içi QR okuyucu, oturum başlangıcında konum kaydı (§7-M, §7-N) | M | 3 | 🔄 sırada |
+| 1 | **10b** | **Konum kaydı** — oturum başlangıcında konum, kafe koordinatı yönetici panelinden, eşiği aşan oturum anomali işaretli (§7-N) | S | 10a ✅ | 🔄 sırada |
 | 2 | **11** | **Bildirim altyapısı** — e-posta + Vercel Cron; deneme öncesi hatırlatma, gün sonu devamsızlık bildirimi (§7-K) | L | 6b | ⬜ |
 | 3 | **12** | **Deneme sonucu ve sıralamalar** — ders bazlı D/Y/net, kurum/ilçe/il/TR sıralaması, PDF özetinin altına yönetici notu, veliye açık profil (§7-C) | L | 6b, 6d | ⬜ |
 | 5 | **13** | **Haftalık çalışma planı** — yönetici belirler, öğrenci tamamlar, tamamlama oranı (§7-D) | M | — | ⬜ |
@@ -181,8 +185,8 @@ oturduktan sonra.
 
 S ≈ bir oturum · M ≈ iki-üç oturum · L ≈ dört ve üzeri.
 
-**Neden bu sıra:** Dalga 9 (onay akışı) 22 Eylül'de bitti. Dalga 10 akışın
-günlük kullanımını taşıyor (öğrenci telefonla
+**Neden bu sıra:** Dalga 9 (onay akışı) ve 10a (mobil kabuk) 22 Eylül'de
+bitti. Dalga 10b akışın günlük kullanımını taşıyor (öğrenci telefonla
 okutacak). Dalga 11 olmadan §1.2'nin 2. ve 3. adımları hiç çalışmaz. Dalga 12
 denemenin sonuç tarafını kapatır. Paket ve ödeme (Dalga 7) 21 Eylül'de
 bitmişti; yan dalda kalmıştı, 22 Eylül'de main'e alındı.
@@ -325,7 +329,7 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
   bu yüzden Dalga 9 Dalga 11'i beklemez (karar 5).
 - **Açık soru:** §4.4 #1 — onaylanmamış oturum ne kadar bekler?
 
-### M · Mobil kabuk: alt menü + uygulama içi QR okuyucu — Dalga 10
+### M · Mobil kabuk: alt menü + uygulama içi QR okuyucu — Dalga 10a · ✅ bitti (22 Eylül 2026)
 
 - **Problem:** Öğrenci QR'ı okutmak için telefonun kamera uygulamasına çıkıyor,
   tarayıcıya geri dönüyor; her gün iki kez yaşanan sürtünme. Menü de masaüstü
@@ -337,8 +341,11 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
   çalışır. Üretim Vercel'de HTTPS; yerelde `php artisan serve` ile test
   edilemez, `localhost` kullanılmalı ya da tünel açılmalı.
 - **Yedek yol her zaman kalır:** kamera izni reddedilirse ya da tarayıcı
-  desteklemiyorsa, masadaki QR'ın altındaki **kısa kodu elle yazma** alanı.
+  desteklemiyorsa, masadaki QR'ın altındaki kodu **elle yazma** alanı.
   Tek yol olarak kameraya bağlanmak, izni kapalı bir telefonu sistem dışına atar.
+  *Uygularken çıktı:* yazdırma şablonu kodu zaten QR'ın altına metin olarak
+  basıyordu, yani **mevcut etiketler bu yola hazır** — yeni sütun da gerekmedi,
+  etiketleri yeniden basmak da.
 - **Stil kısıtı:** proje Tailwind kullanmıyor; alt menü `public/css/app.css`'e
   elle yazılacak ve muhafız test sınıfların tanımlı olmasını zorunlu kılıyor
   (§10.6).
@@ -350,6 +357,9 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
 - **Nasıl:** Oturum başlarken tarayıcıdan konum istenir; `latitude`, `longitude`,
   `accuracy` oturum satırına yazılır. Kafe koordinatına uzaklık hesaplanır,
   eşiği aşan oturum **anomali olarak işaretlenir** — engellenmez.
+- **Kafe koordinatı yönetici panelinden**, koda gömülü değil: yönetici kafedeyken
+  "konumu buradan al" der, tarayıcının verdiği koordinat kaydedilir. Taşınırsa
+  tek tıkla güncellenir, deploy gerekmez ve değerin doğruluğu panelde görünür.
 - **Neden sert kapı değil:**
   - İç mekânda GPS sapması 50–100 metreyi bulur; gerçek öğrenci dışarıda görünür.
   - Konum izni reddedilebilir; reddeden öğrenciyi sistem dışına atmak,
@@ -1064,6 +1074,32 @@ canlı depodan ileri gidebiliyor.
 
 **Yol üstünde bulunan hata:** migration, SQLite'ta tabloyu yeniden yazarken
 Dalga 3'ün kısmi tekil indeksini bozdu — §10.5.
+
+#### Dalga 10a — Mobil kabuk · ✅ bitti (22 Eylül 2026)
+
+Alt menü (her rol için ayrı sekme seti) + uygulama içi QR okuyucu
+(`/masa-okut`). Kararlar:
+
+- **Okuyucu "en iyi ihtimal" olarak yazıldı**, tek yol olarak değil.
+  `BarcodeDetector` her tarayıcıda yok, kamera izni reddedilebilir ve kamera
+  **yalnızca HTTPS'te** (ve `localhost`'ta) açılır — yerelde `127.0.0.1`
+  üzerinden hiç test edilemez. Üçünden biri olursa ekranda hata değil,
+  elle giriş formu duruyor.
+- **Yeni "kısa kod" sütunu açılmadı.** Yazdırma şablonu `qr_code`'u zaten
+  QR'ın altına metin olarak basıyordu; yani mevcut etiketler elle girişe
+  hazır. Sütun eklemek hem gereksiz hem de `qr_code`'un "bir daha değişmez"
+  kuralıyla (Dalga 2) çelişen ikinci bir kimlik yaratırdı.
+- **Normalleştirme sunucuda:** kodlar `Str::upper` ile üretiliyor ama telefon
+  klavyesi küçük harf yazıyor ve yapıştırırken boşluk bulaşıyor. Bunları
+  kullanıcıya düzelttirmek yedek yolu kullanılamaz kılardı.
+- **QR'ın taşıdığı şey tam adres** (`StudyTable::getQrUrlAttribute`), o yüzden
+  okuyucu koddan kod ayıklamıyor, doğrudan okuduğu adrese gidiyor. Kod ayıklama
+  yazsaydık, adres biçimi değişince sessizce bozulurdu.
+- **Alt menü 1024px üstünde hiç çizilmiyor** — orada kenar çubuğu zaten var.
+  `has-bottom-nav` içerik sarmalayıcısına alt boşluk veriyor ki sabit menü
+  içeriği örtmesin; `env(safe-area-inset-bottom)` çentikli telefonlar için.
+- Her rolün alt menüsü testle sabitlendi: sessizce kaybolursa telefonda
+  panelden başka hiçbir yere gidilemez hale gelir.
 
 ---
 

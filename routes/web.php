@@ -46,6 +46,10 @@ Route::get('/tuketim/{qrCode}', [ConsumptionController::class, 'showLocation'])
 // Masa QR okutma ve calisma oturumu.
 // {table:qr_code} bagi kodu dogrudan sutunla eslestirir; bilinmeyen kod 404.
 Route::middleware(['auth', 'subscription'])->group(function () {
+    // Uygulama ici QR okuyucu ve kamerasiz yedek yol (Dalga 10a)
+    Route::get('/masa-okut', [TableSessionController::class, 'scanner'])->name('table.scanner');
+    Route::post('/masa-bul', [TableSessionController::class, 'find'])->name('table.find');
+
     Route::get('/masa/{table:qr_code}', [TableSessionController::class, 'show'])->name('table.scan');
     Route::post('/masa/{table:qr_code}/basla', [TableSessionController::class, 'start'])->name('table.session.start');
     Route::post('/oturum/bitir', [SessionController::class, 'end'])->name('session.end');
