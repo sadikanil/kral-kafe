@@ -52,9 +52,9 @@ class StylesheetTest extends TestCase
 
     public function test_the_project_does_not_pull_in_tailwind(): void
     {
-        // Kaynak belge (GUNCELLEMELER.md §1) "Tailwind 4 + Vite" diyor ama
-        // gercekte tek bir tailwind satiri yok. Bu test yanlis varsayimla
-        // @apply yazilmasini engeller.
+        // Proje bir donem "Tailwind 4 + Vite" diye belgelenmisti ama gercekte
+        // tek bir tailwind satiri yok (bkz. README.md SS10.5). Bu test
+        // yanlis varsayimla @apply yazilmasini engeller.
         $this->assertStringNotContainsString('@apply', $this->stylesheet());
         $this->assertStringNotContainsString('tailwind', strtolower($this->stylesheet()));
     }

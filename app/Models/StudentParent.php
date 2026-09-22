@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * student_parent bag satiri.
  *
  * Ayri bir model olarak var olmasinin tek sebebi factory: her yeni tablo ile
- * birlikte factory yaziliyor (UYGULAMA-PLANI §4). Uygulama kodu bagi
+ * birlikte factory yaziliyor (README.md SS10.9). Uygulama kodu bagi
  * User::students() / User::parents() uzerinden kurar, bu sinifi dogrudan
  * kullanmaz.
  */

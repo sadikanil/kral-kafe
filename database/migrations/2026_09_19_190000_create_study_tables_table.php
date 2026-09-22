@@ -21,8 +21,8 @@ use Illuminate\Support\Facades\Schema;
  *     bir dogruluk kaynagi yaratir ve ikisi kacinilmaz olarak ayrisir.
  *   - assigned_student_id'nin anlami paket ozelligiyle (Dalga 7) geliyor;
  *     simdi eklenirse hicbir sey yazmaz ve okumaz.
- *   - location_id, GUNCELLEMELER.md §11 #10'daki "raf ile masa fiziksel olarak
- *     ortusuyor mu" sorusu cevaplanmadan tasarlanamaz.
+ *   - location_id, "raf ile masa fiziksel olarak ortusuyor mu" sorusu
+ *     cevaplanmadan tasarlanamaz (bkz. README.md SS8).
  */
 return new class extends Migration
 {

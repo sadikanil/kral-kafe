@@ -66,7 +66,7 @@ return [
     | kullanilamaz — modem her resetlendiginde butun kafe disarida kalirdi.
     |
     | Ayarlar kurumsal sabit IP alinirsa diye duruyor. Uzerine mantik yazmadan
-    | once docs/UYGULAMA-PLANI.md §2.1 okunmali.
+    | once README.md SS9.3 okunmali.
     |
     */
 
