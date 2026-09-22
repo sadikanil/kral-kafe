@@ -27,7 +27,10 @@
             <div class="card mb-3 animate-slide-up">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h4>{{ $summary['student']->name }}</h4>
-                    <a href="{{ route('parent.student', $summary['student']) }}" class="btn btn-sm btn-secondary">Ayrıntı</a>
+                    <div class="d-flex gap-1">
+                        <a href="{{ route('parent.report', $summary['student']) }}" class="btn btn-sm btn-primary">Rapor</a>
+                        <a href="{{ route('parent.student', $summary['student']) }}" class="btn btn-sm btn-secondary">Ayrıntı</a>
+                    </div>
                 </div>
                 <div class="card-body">
                     @include('parent._ozet', ['summary' => $summary])

@@ -70,6 +70,9 @@ Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')-
     Route::post('/plan/{item}/tamamla', [\App\Http\Controllers\User\StudyPlanController::class, 'complete'])
         ->name('study-plan.complete');
 
+    // Kendi haftalik raporu. SS6.1-3: veliye giden ogrenciye de gorunur.
+    Route::get('/rapor', [\App\Http\Controllers\User\WeeklyReportController::class, 'show'])->name('report');
+
     // Deneme sonuclari (Dalga 12): siralamalar ve yonetici notu
     Route::get('/deneme-sonuclari', [\App\Http\Controllers\User\ExamResultController::class, 'index'])
         ->name('exam-results');
@@ -91,6 +94,7 @@ Route::middleware(['auth', 'role:parent'])->prefix('veli')->name('parent.')->gro
     Route::get('/', [ParentDashboardController::class, 'index'])->name('dashboard');
     Route::get('/ogrenci/{student}', [ParentDashboardController::class, 'show'])->name('student');
     Route::get('/denemeler', [ExamCalendarController::class, 'parent'])->name('exams');
+    Route::get('/ogrenci/{student}/rapor', [ParentDashboardController::class, 'report'])->name('report');
 });
 
 // Koc paneli - calisma plani (Dalga 14).
@@ -108,6 +112,12 @@ Route::middleware(['auth', 'role:coach,admin'])->prefix('koc')->name('coach.')->
     Route::get('/notlar/{student}', [\App\Http\Controllers\Coach\NoteController::class, 'index'])->name('notes.index');
     Route::post('/notlar/{student}', [\App\Http\Controllers\Coach\NoteController::class, 'store'])->name('notes.store');
     Route::delete('/notlar/kayit/{note}', [\App\Http\Controllers\Coach\NoteController::class, 'destroy'])->name('notes.destroy');
+
+    // Haftalik veli raporu - koc tarafi (Dalga 15a). Rapor tembel uretiliyor:
+    // sayfayi acan ilk kiside hesaplanip saklaniyor, cron gerekmiyor.
+    Route::get('/rapor/{student}', [\App\Http\Controllers\Coach\WeeklyReportController::class, 'show'])->name('report');
+    Route::post('/rapor/{student}/yorum', [\App\Http\Controllers\Coach\WeeklyReportController::class, 'comment'])->name('report.comment');
+    Route::post('/rapor/{student}/yeniden', [\App\Http\Controllers\Coach\WeeklyReportController::class, 'regenerate'])->name('report.regenerate');
 });
 
 // Admin Routes

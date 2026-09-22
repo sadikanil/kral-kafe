@@ -106,6 +106,26 @@ class DashboardController extends Controller
     }
 
     /**
+     * Haftalik rapor (Dalga 15a).
+     *
+     * Ayni policy kapisi: veli yalnizca kendi cocugunun raporunu acar.
+     */
+    public function report(\Illuminate\Http\Request $request, User $student, \App\Services\WeeklyReportBuilder $uretici): View
+    {
+        Gate::authorize('viewStudy', $student);
+        abort_unless($student->isStudent(), 404);
+
+        $hafta = \App\Support\WeekParameter::resolve($request->query('hafta'));
+
+        return view('parent.report', [
+            'student' => $student,
+            'hafta' => $hafta,
+            'report' => $uretici->for($student, $hafta),
+            'finished' => $uretici->isFinished($hafta),
+        ]);
+    }
+
+    /**
      * Bir ogrencinin kart ozeti. Panel ve detay ayni ozeti gosterir.
      *
      * @return array<string,mixed>

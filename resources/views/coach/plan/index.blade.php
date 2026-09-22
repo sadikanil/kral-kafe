@@ -70,6 +70,9 @@
                                             <a href="{{ route('coach.notes.index', $ogrenci) }}" class="btn btn-sm btn-secondary">
                                                 Notlar
                                             </a>
+                                            <a href="{{ route('coach.report', $ogrenci) }}" class="btn btn-sm btn-secondary">
+                                                Rapor
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>

@@ -189,7 +189,8 @@ oturduktan sonra.
 | 3 | **8** | **Tüketim sadeleştirme** — QR tüketim akışının kaldırılması, stok düşümünün self adisyona taşınması, `package_items` kapsamının uygulanması (`covered_quantity`) | M | 7 ✅ | ✅ |
 | 4 | **14a** | **Koç rolü + çalışma planı sayfası** — koç–öğrenci atama, `/koc/plan`, haftalık **ve aylık** dönem, veli görünürlüğü (§7-B, §7-D) | M | 6 ✅ | ✅ |
 | 4b | **14b** | **Koç notları ve görüşme kaydı** — `coach_notes`, `visibility` (parent/private), görüşme özeti (§7-B, §7-I) | M | 14a ✅ | ✅ |
-| 5 | **15** | **Haftalık veli raporu** — tembel üretim, yönetici/koç yorumu (§7-A) + sınava geri sayım (§7-G) | M | 9, 12 | ⬜ |
+| 5 | **15a** | **Haftalık veli raporu** — tembel üretim, dondurulmuş payload, koç yorumu (§7-A) | M | 9 ✅, 12 ✅ | ✅ |
+| 5b | **15b** | **Sınava geri sayım** — `ExamType::Official`, panelde geri sayım (§7-G) | S | 6b ✅ | ⬜ |
 | 6 | **16** | **Devamlılık düşüş sinyalleri** — önce koça (§7-E) | S | 14 | ⬜ |
 | 7 | **17** | **Ders etiketi + zayıf konu listesi** (§7-F, §7-H) | M | 12 | ⬜ |
 
@@ -449,15 +450,17 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
 - **Geçmiş hafta yeniden yazılmaz:** plan değiştirilmez, yeni hafta için yenisi
   açılır — `study_goals`'ta verilen kararın aynısı (§9, Dalga 5).
 
-### A · Haftalık veli raporu — Dalga 15
+### A · Haftalık veli raporu — Dalga 15a · ✅ bitti (22 Eylül 2026)
 
 - **Ne:** Her pazar üretilen tek sayfa: geliş gün sayısı, **onaylanmış** toplam
   süre, geçen haftaya göre değişim, hedef tutma, plan tamamlama oranı, çözülen
   deneme ve net değişimi, yönetici/koç yorumu.
 - **Teknik:** `weekly_reports` (student_id, week_start, payload json,
-  coach_comment). **Tembel üretim:** rapor ilk açıldığında hesaplanır ve saklanır.
-  Bildirim tarafı cron'a bağlı (§7-K), ama raporun kendisi paneli açan ilk kişide
-  üretilebilir.
+  coach_comment, generated_at). **Tembel üretim:** rapor ilk açıldığında
+  hesaplanır ve saklanır — cron gerekmez. Bildirim tarafı cron'a bağlı (§7-K).
+- **Üç ekran, tek parça:** veli (`/veli/ogrenci/{id}/rapor`), öğrenci
+  (`/kullanici/rapor`) ve koç (`/koc/rapor/{id}`) aynı `_haftalik-rapor`
+  parçasını gösterir; koç ekranında ek olarak yorum formu ve "yeniden hesapla".
 
 ### B · Koç rolü, atama ve notlar — Dalga 14a ✅ / 14b ✅ (22 Eylül 2026)
 
@@ -502,7 +505,7 @@ Deneme sonucundan (düşük net) ya da yönetici/koç girişiyle konu listesi; h
 konuya plan maddesi bağlanır, konu "kapandı" işaretlenir. 6d'nin PDF analizinden
 de beslenebilir.
 
-### G · Sınava geri sayım — Dalga 15 ile
+### G · Sınava geri sayım — Dalga 15b ⬜
 
 Deneme takvimine "resmî sınav" türü (YKS, LGS tarihi); panelde büyük geri sayım,
 takvimde işaretli. `ExamType::Official` yeter; `exam_events` üstüne bayrak
@@ -551,8 +554,8 @@ gerekmez. Dalga 6b altyapısıyla bir günlük iş.
 --                      -- created_by (coach_id degil): yonetici de yazar
 --                      -- occurred_on yalnizca gorusme kaydinda dolu
 
-weekly_reports        id, student_id, week_start, payload (json),
-                      coach_comment, generated_at
+-- weekly_reports: Dalga 15a'da EKLENDI (§9). unique(student_id, week_start);
+--                  coach_comment payload'in DISINDA (regenerate onu korur)
 
 weak_topics           id, student_id, subject_id, topic, source, status
 
@@ -1038,6 +1041,43 @@ dalında yazıldı ve şeması canlıya uygulandı (batch 9), ama `main`'e alın
 taşımıyordu. 22 Eylül'de merge edildi. Migration gerekmedi, defter zaten
 doluydu. Bu, §10.4'teki defter/dosya karşılaştırmasının **ters yönde** ısırması:
 canlı depodan ileri gidebiliyor.
+
+#### Dalga 15a — Haftalık veli raporu · ✅ bitti (22 Eylül 2026)
+
+`weekly_reports` (payload json + `coach_comment` + `generated_at`); üç ekran
+(veli, öğrenci, koç) tek `_haftalik-rapor` parçasını gösteriyor. Kararlar:
+
+- **Rapor bir ANLIK GÖRÜNTÜ, canlı hesap değil.** Canlı hesaplamak daha az kod
+  olurdu ama gecikmiş bir onay ya da düzeltilen bir plan maddesi, veliye
+  gönderilmiş bir raporu sessizce değiştirirdi. "Geçen hafta 14 saat yazmıştı"
+  diyen veliyle sistem ayrışamaz.
+- **Süren hafta raporlanmaz.** Yarım haftayı dondurmak, salı günü açan veliye
+  haftanın **tamamı** gibi görünürdü ve o sayı bir daha düzelmezdi.
+  `isFinished()` tek kural: raporlanan hafta, içinde bulunulan haftadan önce
+  olmalı.
+- **Varsayılan hafta, tamamlanmış SON hafta.** Süren haftaya varsayılmak,
+  raporu açan velinin her seferinde "henüz hazır değil" görmesi demekti —
+  özellik kullanılmaz görünürdü. `WeekParameter` üç ekranda da aynı kuralı
+  uyguluyor; ayrı ayrı yazılsaydı biri gün gelip farklı bir haftayı açardı.
+- **`coach_comment` payload'ın DIŞINDA.** Yorum insan emeği ve yeniden
+  hesaplamada korunmalı; payload'ın içinde olsaydı her `regenerate()` onu
+  silerdi. Dondurulmuş rapordan tek kaçış yolu bu **açık** işlem — sessiz
+  yeniden hesap yok.
+- **Hedef, o hafta yürürlükte olanı** (`StudyGoal::activeFor($student, $hafta)`).
+  Bugünkü hedefi yazsaydık, hedefi sonradan yükseltmek geçmiş haftaların "tuttu
+  mu" cevabını değiştirirdi — `supersedeOn` kararının tamamı bunu önlemek
+  içindi (Dalga 5).
+- **Hedefi olmayan öğrenci "tutturamadı" sayılmaz.** Hedefsizlik bir
+  başarısızlık değil; ekranda çubuk hiç çizilmiyor.
+- **Süre yalnızca onaylanmış** (`StudyStats` zaten `scopeCountable` ile
+  süzüyor): veliye gösterilen süre doğrulanmış süredir (karar 3).
+- **İlk denemenin net değişimi yok.** Sıfırla karşılaştırmak "50 net artış" gibi
+  anlamsız bir müjde üretirdi.
+- **Yorum raporun tek insan ürünü parçası** — §6.1-6: sistem sayı ve alan
+  gösterir, sıfat üretmez.
+- **payload JSON tam sayıyı int döndürür.** `28.0` net, JSON gidiş-dönüşünde
+  `28` olarak geri geliyor. Değer doğru ve `number_format` ikisini de aynı
+  basıyor; testler bunu `(float)` ile sabitliyor.
 
 #### Dalga 14b — Koç notları ve görüşme kaydı · ✅ bitti (22 Eylül 2026)
 

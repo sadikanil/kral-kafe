@@ -40,6 +40,12 @@
                     <span>Ana Sayfa</span>
                 </a>
 
+                <a href="{{ route('user.report') }}"
+                    class="sidebar-nav-link {{ request()->routeIs('user.report') ? 'active' : '' }}">
+                    <span class="sidebar-nav-link-icon">📊</span>
+                    <span>Haftalık Raporum</span>
+                </a>
+
                 <a href="{{ route('user.tab') }}"
                     class="sidebar-nav-link {{ request()->routeIs('user.tab*') ? 'active' : '' }}">
                     <span class="sidebar-nav-link-icon">🧾</span>

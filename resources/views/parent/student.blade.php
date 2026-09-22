@@ -4,6 +4,7 @@
 @section('page-title', $summary['student']->name)
 
 @section('topbar-actions')
+    <a href="{{ route('parent.report', $summary['student']) }}" class="btn btn-sm btn-primary">Haftalık rapor</a>
     <a href="{{ route('parent.dashboard') }}" class="btn btn-sm btn-secondary">← Çocuklarım</a>
 @endsection
 
