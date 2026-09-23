@@ -10,6 +10,21 @@
 @endsection
 
 @section('content')
+    @if($lessons !== [])
+        <div class="card mb-3">
+            <div class="card-header"><h4>👨‍🏫 Özel dersler · önümüzdeki 2 hafta</h4></div>
+            <div class="card-body">
+                @foreach($lessons as $ders)
+                    <div class="mb-1">
+                        {{ \Illuminate\Support\Carbon::parse($ders['date'])->locale('tr')->translatedFormat('d M D') }}
+                        {{ $ders['starts_at'] }}–{{ $ders['ends_at'] }}
+                        @if($ders['status'] === 'cancelled')<span class="badge badge-danger">İptal</span>@endif
+                        @if($ders['status'] === 'moved')<span class="badge badge-warning">Taşındı</span>@endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     {{--
         Calisma plani (Dalga 13; aylik donem Dalga 14).

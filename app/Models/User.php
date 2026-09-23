@@ -256,6 +256,12 @@ class User extends Authenticatable
 
     private ?Entitlements $entitlementsCache = null;
 
+    /** Dalga 25: haftalik ozel ders saatleri (Tier 3). */
+    public function privateLessonSlots(): HasMany
+    {
+        return $this->hasMany(PrivateLessonSlot::class, 'student_id')->orderBy('weekday')->orderBy('starts_at');
+    }
+
     /**
      * Ogrencinin paket gecmisi (Dalga 7).
      */

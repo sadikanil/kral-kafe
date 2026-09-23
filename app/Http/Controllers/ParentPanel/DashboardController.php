@@ -73,6 +73,12 @@ class DashboardController extends Controller
             'summary' => $this->ozet($student),
             'days' => $this->sonGunler($student, 14),
             'sessions' => $this->sonOturumlar($student, 30),
+            // Ozel ders (Dalga 25): onumuzdeki iki hafta, yalnizca Tier 3.
+            'lessons' => $student->entitlements()->privateLessons
+                ? \App\Support\PrivateLessonCalendar::between(
+                    $student, \App\Support\LocalDay::today(),
+                    \Illuminate\Support\Carbon::parse(\App\Support\LocalDay::today())->addWeeks(2)->toDateString())
+                : [],
             // Deneme sonuclari (Dalga 12). Karar 2: profile islenen her sey
             // veliye acik - netler, siralamalar ve yoneticinin notu dahil.
             // Calisma plani (Dalga 13, Dalga 14'te aylik eklendi).

@@ -30,11 +30,22 @@ class ExamCalendarController extends Controller
     private function render(Request $request): View
     {
         [$yil, $ay] = ExamCalendar::parseMonth($request->query('ay'));
+        $haftalar = ExamCalendar::weeks($yil, $ay, ExamEvent::inMonth($yil, $ay)->get());
+
+        // Ozel ders (Dalga 25): ogrencinin kendi takviminde, izgaranin
+        // gorunen tum gunleri icin.
+        $kullanici = $request->user();
+        $dersler = $kullanici->isStudent() && $kullanici->entitlements()->privateLessons
+            ? collect(\App\Support\PrivateLessonCalendar::between(
+                $kullanici, $haftalar[0][0]['date'], end($haftalar)[6]['date']
+            ))->groupBy('date')->all()
+            : [];
 
         return view('exams.calendar', [
+            'lessons' => $dersler,
             'detay' => $request->user()->entitlements()->examClub,
             'upcoming' => ExamEvent::upcoming()->get(),
-            'weeks' => ExamCalendar::weeks($yil, $ay, ExamEvent::inMonth($yil, $ay)->get()),
+            'weeks' => $haftalar,
             'monthLabel' => ExamCalendar::monthLabel($yil, $ay),
             'neighbours' => ExamCalendar::neighbours($yil, $ay),
         ]);

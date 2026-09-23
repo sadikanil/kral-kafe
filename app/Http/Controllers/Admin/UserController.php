@@ -208,8 +208,16 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
+        // Ozel ders (Dalga 25): yalnizca paketi kapsayan ogrencide.
+        $ozelDers = $user->isStudent() && $user->entitlements()->privateLessons;
+        $bugun = LocalDay::today();
+
         return view('admin.users.edit', [
             'user' => $user,
+            'lessonSlots' => $ozelDers ? $user->privateLessonSlots : null,
+            'upcomingLessons' => $ozelDers
+                ? \App\Support\PrivateLessonCalendar::between($user, $bugun, Carbon::parse($bugun)->addWeeks(4)->toDateString())
+                : [],
             'weeklyGoal' => StudyGoal::activeFor($user, LocalDay::today()),
             // Koc atamasi (Dalga 14). Plan formu bu ekrandan /koc/plan
             // altina TASINDI; burada kalan yalnizca "kim izliyor" sorusu.

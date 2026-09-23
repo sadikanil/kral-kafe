@@ -27,6 +27,15 @@
                             <div class="{{ $gun['isToday'] ? 'text-primary' : 'text-muted' }}" style="font-size: 0.8125rem;">
                                 {{ $gun['isToday'] ? '● ' : '' }}{{ $gun['day'] }}
                             </div>
+                            @foreach(($lessons ?? [])[$gun['date']] ?? [] as $ders)
+                                <div class="mt-1">
+                                    <span class="badge badge-success" style="{{ $ders['status'] === 'cancelled' ? 'text-decoration: line-through; opacity: .6;' : '' }}">
+                                        Özel ders {{ $ders['starts_at'] }}
+                                    </span>
+                                    @if($ders['status'] === 'cancelled')<div style="font-size: .75rem;">iptal</div>@endif
+                                    @if($ders['status'] === 'moved')<div style="font-size: .75rem;">taşındı</div>@endif
+                                </div>
+                            @endforeach
                             @foreach($gun['events'] as $deneme)
                                 <div class="mt-1">
                                     @if(!empty($editable))

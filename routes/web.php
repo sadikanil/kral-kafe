@@ -196,6 +196,12 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     Route::delete('/kullanicilar/{student}/koc/{coach}', [\App\Http\Controllers\Admin\CoachAssignmentController::class, 'detach'])
         ->name('coaches.detach');
 
+    // Ozel ders (Dalga 25): Tier 3, yalnizca yonetici duzenler
+    Route::post('/kullanicilar/{student}/ozel-ders', [\App\Http\Controllers\Admin\PrivateLessonController::class, 'store'])->name('lessons.store');
+    Route::post('/ozel-ders/{slot}/iptal', [\App\Http\Controllers\Admin\PrivateLessonController::class, 'cancel'])->name('lessons.cancel');
+    Route::post('/ozel-ders/{slot}/tasi', [\App\Http\Controllers\Admin\PrivateLessonController::class, 'move'])->name('lessons.move');
+    Route::delete('/ozel-ders/{slot}', [\App\Http\Controllers\Admin\PrivateLessonController::class, 'destroy'])->name('lessons.destroy');
+
     // Dersler (Dalga 12): deneme sonucu girisinin ders listesi
     Route::get('/dersler', [SubjectController::class, 'index'])->name('subjects.index');
     Route::post('/dersler', [SubjectController::class, 'store'])->name('subjects.store');

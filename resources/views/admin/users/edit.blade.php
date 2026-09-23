@@ -189,6 +189,10 @@
         </div>
     @endif
 
+    @if($lessonSlots !== null)
+        @include('admin.users._ozel-ders')
+    @endif
+
     @if($user->isStudent())
         {{--
             Koc atamasi (Dalga 14). Ana formun DISINDA: ic ice form gecersiz
