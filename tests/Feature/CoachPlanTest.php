@@ -60,6 +60,8 @@ class CoachPlanTest extends TestCase
             'title' => $baslik,
             'period' => $donem->value,
             'week_start' => $donem->startFor($tarih ?? '2026-09-16'),
+            // Dalga 30c: takvim gune bakar; eski maddeler donemin ilk gununde.
+            'plan_date' => $donem->startFor($tarih ?? '2026-09-16'),
             'created_by' => $this->yonetici()->id,
         ]);
     }
@@ -170,7 +172,7 @@ class CoachPlanTest extends TestCase
             ->post(route('coach.plan.store', $ogrenci), [
                 'title' => 'Türev 40 soru',
                 'subject_id' => $ders->id,
-                'period' => 'week',
+                'plan_date' => '2026-09-16',
             ])
             ->assertRedirect();
 
@@ -191,26 +193,6 @@ class CoachPlanTest extends TestCase
      * uzerinden gecmek zorunda; ham Carbon ile yazilsa "Eylul plani"
      * Agustos'a giderdi.
      */
-    public function test_a_monthly_item_is_filed_under_the_first_of_the_month(): void
-    {
-        $koc = $this->koc();
-        $ogrenci = $this->ogrenci();
-        $koc->coachStudents()->attach($ogrenci->id);
-        $this->haftayaGit();
-
-        $this->actingAs($koc)
-            ->post(route('coach.plan.store', $ogrenci), [
-                'title' => 'Eylül boyunca 8 deneme',
-                'period' => 'month',
-            ])
-            ->assertRedirect();
-
-        $madde = StudyPlanItem::where('title', 'Eylül boyunca 8 deneme')->sole();
-
-        $this->assertSame(PlanPeriod::Month, $madde->period);
-        $this->assertSame('2026-09-01', $madde->week_start->toDateString());
-    }
-
     public function test_a_coach_cannot_add_an_item_for_an_unassigned_student(): void
     {
         $koc = $this->koc();
@@ -227,7 +209,8 @@ class CoachPlanTest extends TestCase
         $this->assertDatabaseCount('study_plan_items', 0);
     }
 
-    public function test_an_unknown_period_is_rejected_on_write(): void
+    /** Dalga 30c: plan gunlere bagli; gunsuz madde olmaz. */
+    public function test_a_plan_date_is_required(): void
     {
         $koc = $this->koc();
         $ogrenci = $this->ogrenci();
@@ -235,11 +218,8 @@ class CoachPlanTest extends TestCase
         $this->haftayaGit();
 
         $this->actingAs($koc)
-            ->post(route('coach.plan.store', $ogrenci), [
-                'title' => 'Yıllık hedef',
-                'period' => 'year',
-            ])
-            ->assertSessionHasErrors('period');
+            ->post(route('coach.plan.store', $ogrenci), ['title' => 'Yıllık hedef'])
+            ->assertSessionHasErrors('plan_date');
     }
 
     // --- Donem ayrimi -------------------------------------------------------
@@ -374,7 +354,7 @@ class CoachPlanTest extends TestCase
         $this->madde($ogrenci, 'Bu haftanın maddesi');
 
         $this->actingAs($koc)
-            ->get(route('coach.plan.show', [$ogrenci, 'baslangic' => 'kedi']))
+            ->get(route('coach.plan.show', [$ogrenci, 'hafta' => 'kedi']))
             ->assertOk()
             ->assertSee('Bu haftanın maddesi');
     }
@@ -407,7 +387,8 @@ class CoachPlanTest extends TestCase
     // --- Kim gorur ----------------------------------------------------------
 
     /** Karar 2: profile islenen her sey veliye acik. */
-    public function test_a_parent_sees_both_the_weekly_and_the_monthly_plan(): void
+    /** Dalga 30c: veli haftanin takvimini gorur (aylik donem kalkti). */
+    public function test_a_parent_sees_the_weeks_plan(): void
     {
         $ogrenci = $this->ogrenci('Çocuk');
         $veli = User::factory()->parent()->create();
@@ -415,12 +396,10 @@ class CoachPlanTest extends TestCase
 
         $this->haftayaGit();
         $this->madde($ogrenci, 'Bu hafta türev');
-        $this->madde($ogrenci, 'Bu ay 8 deneme', PlanPeriod::Month);
 
         $this->actingAs($veli)->get(route('parent.student', $ogrenci))
             ->assertOk()
-            ->assertSee('Bu hafta türev')
-            ->assertSee('Bu ay 8 deneme');
+            ->assertSee('Bu hafta türev');
     }
 
     /**

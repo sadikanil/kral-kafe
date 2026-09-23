@@ -20,17 +20,25 @@ class WeekParameter
      * Suren haftaya varsayilmak, raporu acan velinin her seferinde "henuz
      * hazir degil" gormesi demekti - ozellik kullanilmaz gorunurdu.
      */
-    public static function resolve(mixed $value): string
+    public static function resolve(mixed $value, ?string $default = null): string
     {
+        $default ??= self::lastFinished();
+
         if (! is_string($value) || trim($value) === '') {
-            return self::lastFinished();
+            return $default;
         }
 
         try {
             return LocalDay::weekStart(Carbon::parse($value, LocalDay::timezone())->toDateString());
         } catch (\Throwable) {
-            return self::lastFinished();
+            return $default;
         }
+    }
+
+    /** Takvim (Dalga 30c): verilmezse SUREN hafta. */
+    public static function resolveCurrent(mixed $value): string
+    {
+        return self::resolve($value, LocalDay::weekStart(LocalDay::today()));
     }
 
     public static function lastFinished(): string

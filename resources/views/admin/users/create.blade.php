@@ -49,8 +49,10 @@
                 </div>
 
                 <div id="ogrenciBolumu">
-                    {{-- 2 · Paket --}}
                     <hr>
+                    @include('admin.users._sinif-alan', ['user' => null])
+
+                    {{-- 2 · Paket --}}
                     <div class="form-group">
                         <label for="package_id" class="form-label">Paket *</label>
                         <select id="package_id" name="package_id" class="form-control @error('package_id') is-invalid @enderror">

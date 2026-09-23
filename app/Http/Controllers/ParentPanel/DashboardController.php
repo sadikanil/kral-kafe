@@ -74,26 +74,10 @@ class DashboardController extends Controller
                     $student, \App\Support\LocalDay::today(),
                     \Illuminate\Support\Carbon::parse(\App\Support\LocalDay::today())->addWeeks(2)->toDateString())
                 : [],
-            // Deneme sonuclari (Dalga 12). Karar 2: profile islenen her sey
-            // veliye acik - netler, siralamalar ve yoneticinin notu dahil.
-            // Calisma plani (Dalga 13, Dalga 14'te aylik eklendi).
-            //
-            // Veli artik yalnizca ORANI degil MADDELERI de goruyor: karar 2
-            // (profile islenen her sey veliye acik) oran icin de maddeler
-            // icin de gecerli, ve "3/5" tek basina velinin cocuguyla
-            // konusmasina yetmiyor - neyin yapildigi da gorunmeli.
-            'planPeriods' => collect(\App\Enums\PlanPeriod::cases())
-                ->map(fn (\App\Enums\PlanPeriod $donem) => [
-                    'period' => $donem,
-                    'start' => $donem->startFor(\App\Support\LocalDay::today()),
-                    'items' => \App\Models\StudyPlanItem::forPeriod(
-                        $student,
-                        $donem,
-                        $donem->startFor(\App\Support\LocalDay::today()),
-                    )->with('subject')->orderBy('id')->get(),
-                ])
-                ->filter(fn (array $blok) => $blok['items']->isNotEmpty())
-                ->values(),
+            // Calisma plani (Dalga 30c): haftalik takvim, salt okunur.
+            // ($days "son 14 gun" icin kullanimda.)
+            'hafta' => $hafta = \App\Support\WeekParameter::resolveCurrent(request()->query('hafta')),
+            'planDays' => \App\Support\WeekPlan::for($student, $hafta),
             // Paylasilan koc notlari (Dalga 14b). Ozel notlar shared()
             // scope'unda suzuluyor - sablon gizlilik karari vermiyor.
             'weakTopics' => \App\Models\WeakTopic::forStudent($student)

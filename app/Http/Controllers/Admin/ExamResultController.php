@@ -28,7 +28,8 @@ class ExamResultController extends Controller
             'event' => $examEvent,
             'student' => $student,
             'result' => $this->mevcutSonuc($examEvent, $student),
-            'subjects' => Subject::active()->orderBy('sort_order')->orderBy('name')->get(),
+            // Dalga 30b: denemenin turu + ogrencinin alani.
+            'subjects' => Subject::forExam($examEvent->exam_type, $student)->get(),
         ]);
     }
 

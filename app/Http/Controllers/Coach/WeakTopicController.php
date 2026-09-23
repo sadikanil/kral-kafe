@@ -39,7 +39,7 @@ class WeakTopicController extends Controller
                 ->orderBy('status')
                 ->orderByDesc('created_at')
                 ->get(),
-            'subjects' => Subject::active()->orderBy('sort_order')->orderBy('name')->get(),
+            'subjects' => Subject::forStudent($student)->get(),
         ]);
     }
 
@@ -112,6 +112,8 @@ class WeakTopicController extends Controller
             'student_id' => $topic->student_id,
             'subject_id' => $topic->subject_id,
             'title' => $topic->topic,
+            // Dalga 30c: takvimde bugune duser; koc tasiyabilir.
+            'plan_date' => LocalDay::today(),
             'period' => PlanPeriod::Week->value,
             'week_start' => PlanPeriod::Week->startFor(LocalDay::today()),
             'created_by' => auth()->id(),

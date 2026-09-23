@@ -154,19 +154,14 @@ class OfficialExamTest extends TestCase
     }
 
     /**
-     * DERS turu olarak "Resmî Sınav" secilemez.
-     *
-     * subjects.exam_type bir dersin hangi sinavda cikacagini soyluyor
-     * (TYT/AYT/LGS). "Resmî Sınav" orada anlamsiz bir secenek - yeni bir
-     * enum degeri eklemenin sessiz yan etkisi.
+     * Dersler sayfasi kalkti (Dalga 30d): liste mufredattan geliyor
+     * (migration 2026_09_23_170000), elle ders eklenmiyor. Eski test "ders
+     * turu olarak Resmî Sınav secilemez"di; secim yeri artik yok.
      */
-    public function test_the_subject_form_does_not_offer_the_official_type(): void
+    public function test_the_subjects_page_is_gone(): void
     {
-        $this->actingAs(User::factory()->create(['role' => Role::Admin->value]))
-            ->get(route('admin.subjects.index'))
-            ->assertOk()
-            ->assertSee('TYT')
-            ->assertDontSee('Resmî Sınav');
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('admin.subjects.index'));
+        $this->assertFalse(\Illuminate\Support\Facades\Route::has('admin.subjects.store'));
     }
 
     /** Resmi sinav takvimde DURUR - yalnizca hatirlaticidan cikti. */

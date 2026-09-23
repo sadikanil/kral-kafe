@@ -49,6 +49,10 @@
                     @enderror
                 </div>
 
+                @if($user->isStudent())
+                    @include('admin.users._sinif-alan')
+                @endif
+
                 <div class="form-group">
                     <label for="weekly_goal_hours" class="form-label">Haftalık Çalışma Hedefi (saat)</label>
                     <input type="number" id="weekly_goal_hours" name="weekly_goal_hours" min="1" max="120"

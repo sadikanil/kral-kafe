@@ -52,6 +52,8 @@ class StudyPlanTest extends TestCase
             'student_id' => $ogrenci->id,
             'title' => $baslik,
             'week_start' => $hafta ?? LocalDay::weekStart(LocalDay::today()),
+            // Dalga 30c: takvim gune bakar; eski maddeler haftanin pazartesinde.
+            'plan_date' => $hafta ?? LocalDay::weekStart(LocalDay::today()),
             'created_by' => $this->yonetici()->id,
         ]);
     }
@@ -83,7 +85,7 @@ class StudyPlanTest extends TestCase
             ->post(route('coach.plan.store', $ogrenci), [
                 'title' => 'Türev 40 soru',
                 'subject_id' => $ders->id,
-                'period' => 'week',
+                'plan_date' => '2026-09-16',
             ])
             ->assertRedirect();
 

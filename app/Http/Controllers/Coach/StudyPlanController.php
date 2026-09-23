@@ -51,27 +51,39 @@ class StudyPlanController extends Controller
         ]);
     }
 
+    /**
+     * Haftalik takvim (Dalga 30c). ?hafta= haftanin herhangi bir gunu.
+     */
     public function show(Request $request, User $student): View
     {
         $this->kapiyiAc($student);
 
-        $donem = PlanPeriod::fromRequest($request->query('donem'));
-        $baslangic = $donem->startForRequest($request->query('baslangic'));
+        $hafta = \App\Support\WeekParameter::resolveCurrent($request->query('hafta'));
+        $dersler = Subject::forStudent($student)->get();
 
         return view('coach.plan.show', [
             'student' => $student,
-            'donem' => $donem,
-            'baslangic' => $baslangic,
-            'maddeler' => StudyPlanItem::forPeriod($student, $donem, $baslangic)
-                ->with('subject')
-                ->orderBy('id')
-                ->get(),
-            'dersler' => Subject::active()->orderBy('sort_order')->orderBy('name')->get(),
+            'hafta' => $hafta,
+            'days' => \App\Support\WeekPlan::for($student, $hafta),
+            // Dalga 30b: yalnizca ogrencinin sorumlu oldugu dersler.
+            'dersler' => $dersler,
+            // Konu secimi derse gore suzulur (sayfadaki JS bu listeden).
+            'konular' => \App\Models\SubjectTopic::whereIn('subject_id', $dersler->pluck('id'))
+                ->orderBy('sort_order')->get(['id', 'subject_id', 'name'])
+                ->groupBy('subject_id')
+                ->map(fn ($k) => $k->map(fn ($t) => ['id' => $t->id, 'name' => $t->name])->values()),
+            'commitments' => \App\Models\StudentCommitment::where('student_id', $student->id)
+                ->orderBy('weekday')->orderBy('starts_at')->get(),
             // Calisma kayitlari (Dalga 28): ogrencinin ne bitirdigi.
             'studyLogs' => \App\Models\StudyLog::recentFor($student),
         ]);
     }
 
+    /**
+     * Gune ders + konu (Dalga 30c). Baslik: yazilan not, yoksa konu, yoksa
+     * ders. week_start ve period yazilmaya devam eder - haftalik ilerleme,
+     * koc listesi ve haftalik rapor onlardan okuyor.
+     */
     public function store(Request $request, User $student): RedirectResponse
     {
         // YETKI ONCE, dogrulama sonra. Tersi olsaydi atanmamis bir ogrenci
@@ -79,27 +91,52 @@ class StudyPlanController extends Controller
         // yerine "baslik gerekli" derdi - sinirin varligini sizdirirdi.
         $this->kapiyiAc($student);
 
-        $dogrulanmis = $request->validate([
-            'title' => ['required', 'string', 'max:150'],
-            'subject_id' => ['nullable', 'integer', 'exists:subjects,id'],
-            'period' => ['required', Rule::enum(PlanPeriod::class)],
-            'baslangic' => ['nullable', 'date'],
+        $v = $request->validate([
+            'plan_date' => ['required', 'date_format:Y-m-d'],
+            'subject_id' => ['nullable', 'required_without:title', 'integer', 'exists:subjects,id'],
+            'subject_topic_id' => ['nullable', 'integer',
+                Rule::exists('subject_topics', 'id')->where('subject_id', (int) $request->input('subject_id'))],
+            'title' => ['nullable', 'string', 'max:150'],
+            'starts_at' => ['nullable', 'date_format:H:i'],
+            'duration_minutes' => ['nullable', 'integer', 'min:5', 'max:720'],
+        ], [
+            'subject_id.required_without' => 'Bir ders seçin ya da not yazın.',
+            'subject_topic_id.exists' => 'Konu seçilen derse ait değil.',
         ]);
 
-        $donem = PlanPeriod::from($dogrulanmis['period']);
+        $konu = isset($v['subject_topic_id']) ? \App\Models\SubjectTopic::find($v['subject_topic_id']) : null;
+        $ders = isset($v['subject_id']) ? Subject::find($v['subject_id']) : null;
 
         StudyPlanItem::create([
             'student_id' => $student->id,
-            'subject_id' => $dogrulanmis['subject_id'] ?? null,
-            'title' => $dogrulanmis['title'],
-            'period' => $donem->value,
-            // Donem baslangicini PlanPeriod kuruyor; ham tarih yazilsaydi
-            // aylik madde ayin ortasina dusup hicbir listede gorunmezdi.
-            'week_start' => $donem->startFor($dogrulanmis['baslangic'] ?? LocalDay::today()),
+            'subject_id' => $ders?->id,
+            'subject_topic_id' => $konu?->id,
+            'title' => filled($v['title'] ?? null) ? $v['title'] : ($konu?->name ?? $ders->name),
+            'plan_date' => $v['plan_date'],
+            'period' => PlanPeriod::Week->value,
+            'week_start' => PlanPeriod::Week->startFor($v['plan_date']),
+            'starts_at' => $v['starts_at'] ?? null,
+            'duration_minutes' => $v['duration_minutes'] ?? null,
             'created_by' => auth()->id(),
         ]);
 
-        return back()->with('success', 'Plan maddesi eklendi.');
+        return back()->with('success', 'Plana eklendi.');
+    }
+
+    /** Maddeyi baska bir gune tasir; hafta da onunla degisir. */
+    public function move(Request $request, StudyPlanItem $item): RedirectResponse
+    {
+        $this->kapiyiAc($item->student);
+
+        $v = $request->validate(['plan_date' => ['required', 'date_format:Y-m-d']]);
+
+        $item->update([
+            'plan_date' => $v['plan_date'],
+            'period' => PlanPeriod::Week->value,
+            'week_start' => PlanPeriod::Week->startFor($v['plan_date']),
+        ]);
+
+        return back()->with('success', 'Taşındı.');
     }
 
     public function destroy(StudyPlanItem $item): RedirectResponse
@@ -108,7 +145,7 @@ class StudyPlanController extends Controller
 
         $item->delete();
 
-        return back()->with('success', 'Plan maddesi silindi.');
+        return back()->with('success', 'Plandan silindi.');
     }
 
     /**
@@ -145,6 +182,7 @@ class StudyPlanController extends Controller
 
     /**
      * Ogrenci gecerli mi ve bakan kisi ona plan yazabilir mi?
+     * (Sabit program da ayni kapidan: CommitmentController::kapiyiAc.)
      *
      * Tek yerde: dort ucun dordu de ayni kapidan geciyor. Ayri ayri
      * yazilsaydi biri gunun birinde digerinden gevsek kalirdi.

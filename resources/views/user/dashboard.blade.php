@@ -209,7 +209,8 @@
     @if($liste->isNotEmpty())
         @php $tamamlanan = $liste->where('status', 'done')->count(); @endphp
 
-        <h2 class="mt-4">{{ $baslik }} ({{ $tamamlanan }} / {{ $liste->count() }})</h2>
+        <h2 class="mt-4">{{ $baslik }} ({{ $tamamlanan }} / {{ $liste->count() }})
+            <a href="{{ route('user.plan') }}" class="btn btn-sm btn-secondary">🗓️ Takvimde gör</a></h2>
 
         @foreach($liste as $madde)
             <div class="session-card mb-2">

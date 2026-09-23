@@ -24,11 +24,17 @@ class StudyPlanItem extends Model
         'status',
         'completed_at',
         'created_by',
+        'plan_date',
+        'subject_topic_id',
+        'starts_at',
+        'duration_minutes',
+        'exam_event_id',
     ];
 
     protected $casts = [
         'period' => PlanPeriod::class,
         'week_start' => 'date',
+        'plan_date' => 'date',
         'completed_at' => 'datetime',
     ];
 
@@ -41,6 +47,18 @@ class StudyPlanItem extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(User::class, 'student_id');
+    }
+
+    /** Dalga 30c: mufredat konusu. */
+    public function topic(): BelongsTo
+    {
+        return $this->belongsTo(SubjectTopic::class, 'subject_topic_id');
+    }
+
+    /** Dalga 30c: ogrencinin gune koydugu serbest deneme. */
+    public function examEvent(): BelongsTo
+    {
+        return $this->belongsTo(ExamEvent::class);
     }
 
     public function subject(): BelongsTo

@@ -83,7 +83,6 @@ final class Navigation
                 ['route' => 'admin.users.index', 'label' => 'Kullanıcılar', 'icon' => '👥', 'match' => 'admin.users.*|admin.subscriptions.index|admin.exam-reports.*|admin.exam-results.*'],
                 self::planlar(),
                 ['route' => 'admin.exams.index', 'label' => 'Deneme Takvimi', 'icon' => '📝', 'match' => 'admin.exams.*'],
-                ['route' => 'admin.subjects.index', 'label' => 'Dersler', 'icon' => '📚', 'match' => 'admin.subjects.*'],
             ]],
             ['title' => 'Kafe', 'items' => [
                 ['route' => 'admin.tables.index', 'label' => 'Masalar', 'icon' => '🪑', 'match' => 'admin.tables.*'],
@@ -106,6 +105,7 @@ final class Navigation
                 ['route' => 'user.dashboard', 'label' => 'Panel', 'icon' => '🏠'],
                 $hak->table ? ['route' => 'table.scanner', 'label' => 'QR Okut', 'icon' => '📷', 'match' => 'table.*'] : null,
                 ['route' => 'user.tab', 'label' => 'Adisyon', 'icon' => '🧾', 'match' => 'user.tab*'],
+                ['route' => 'user.plan', 'label' => 'Planım', 'icon' => '🗓️'],
                 ['route' => 'user.report', 'label' => 'Haftalık Raporum', 'icon' => '📊'],
             ]))],
             ['title' => 'Denemeler', 'items' => array_values(array_filter([

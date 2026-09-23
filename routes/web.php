@@ -12,7 +12,6 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\ExamResultController;
-use App\Http\Controllers\Admin\SubjectController;
 use App\Http\Controllers\Admin\LiveController;
 use App\Http\Controllers\CronController;
 use App\Http\Controllers\Admin\SessionApprovalController;
@@ -79,6 +78,10 @@ Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')-
     // Haftalik calisma plani (Dalga 13): ogrenci yalnizca tamamlar
     Route::post('/plan/{item}/tamamla', [\App\Http\Controllers\User\StudyPlanController::class, 'complete'])
         ->name('study-plan.complete');
+    // Takvimli plan (Dalga 30c): kendi haftasi; serbest denemeyi gune koyar.
+    Route::get('/plan', [\App\Http\Controllers\User\StudyPlanController::class, 'show'])->name('plan');
+    Route::post('/plan/deneme', [\App\Http\Controllers\User\StudyPlanController::class, 'scheduleExam'])->name('plan.exam');
+    Route::delete('/plan/deneme/{item}', [\App\Http\Controllers\User\StudyPlanController::class, 'removeExam'])->name('plan.exam.destroy');
 
     // Kendi haftalik raporu. SS6.1-3: veliye giden ogrenciye de gorunur.
     Route::get('/rapor', [\App\Http\Controllers\User\WeeklyReportController::class, 'show'])->name('report');
@@ -120,6 +123,10 @@ Route::middleware(['auth', 'role:coach,admin'])->prefix('koc')->name('coach.')->
     Route::get('/plan/{student}', [\App\Http\Controllers\Coach\StudyPlanController::class, 'show'])->name('plan.show');
     Route::post('/plan/{student}', [\App\Http\Controllers\Coach\StudyPlanController::class, 'store'])->name('plan.store');
     Route::delete('/plan/maddeler/{item}', [\App\Http\Controllers\Coach\StudyPlanController::class, 'destroy'])->name('plan.destroy');
+    // Takvimli plan (Dalga 30c): maddeyi baska gune tasi; haftalik sabit program.
+    Route::patch('/plan/maddeler/{item}', [\App\Http\Controllers\Coach\StudyPlanController::class, 'move'])->name('plan.move');
+    Route::post('/program/{student}', [\App\Http\Controllers\Coach\CommitmentController::class, 'store'])->name('commitments.store');
+    Route::delete('/program/kayit/{commitment}', [\App\Http\Controllers\Coach\CommitmentController::class, 'destroy'])->name('commitments.destroy');
 
     // Koc notlari ve veli gorusme kaydi (Dalga 14b). Plan ile AYNI sinir
     // (User::canCoach); ayri sayfada cunku her sayfa tek is yapsin.
@@ -190,10 +197,7 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     Route::post('/ozel-ders/{slot}/tasi', [\App\Http\Controllers\Admin\PrivateLessonController::class, 'move'])->name('lessons.move');
     Route::delete('/ozel-ders/{slot}', [\App\Http\Controllers\Admin\PrivateLessonController::class, 'destroy'])->name('lessons.destroy');
 
-    // Dersler (Dalga 12): deneme sonucu girisinin ders listesi
-    Route::get('/dersler', [SubjectController::class, 'index'])->name('subjects.index');
-    Route::post('/dersler', [SubjectController::class, 'store'])->name('subjects.store');
-    Route::post('/dersler/{subject}/durum', [SubjectController::class, 'toggleStatus'])->name('subjects.toggle-status');
+    // Dersler sayfasi kalkti (Dalga 30d): liste mufredattan (sinif + alan).
 
     // Deneme sonucu girisi (Dalga 12)
     Route::get('/denemeler/{examEvent}/ogrenci/{student}/sonuc', [ExamResultController::class, 'edit'])

@@ -93,6 +93,7 @@ class UserController extends Controller
             ...$this->identityRules(),
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', Rule::enum(Role::class)],
+            ...$this->gradeRules(),
         ], $this->identityMessages());
 
         $ogrenciMi = $validated['role'] === Role::Student->value;
@@ -109,6 +110,7 @@ class UserController extends Controller
                 'phone' => $validated['phone'] ?? null,
                 'subscription_status' => 'active',
                 'subscription_start' => now(),
+                ...$this->gradeAndField($validated),
             ]);
 
             if ($ogrenciVerisi !== null) {
@@ -118,6 +120,35 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')
             ->with('success', 'Kullanıcı başarıyla oluşturuldu.');
+    }
+
+    /** Dalga 30b: sinif ve alan (yalnizca ogrenci). */
+    private function gradeRules(): array
+    {
+        return [
+            'grade' => ['nullable', Rule::enum(\App\Enums\Grade::class)],
+            'field' => ['nullable', Rule::enum(\App\Enums\StudyField::class)],
+        ];
+    }
+
+    /**
+     * Ogrenci degilse ikisi de bos; 9-10. sinifta alan yok (formdan gelse
+     * de yazilmaz - MEB cizelgesinde alan 11'de baslar).
+     *
+     * @return array{grade:?string,field:?string}
+     */
+    private function gradeAndField(array $v): array
+    {
+        if ($v['role'] !== Role::Student->value) {
+            return ['grade' => null, 'field' => null];
+        }
+
+        $sinif = \App\Enums\Grade::tryFrom((string) ($v['grade'] ?? ''));
+
+        return [
+            'grade' => $sinif?->value,
+            'field' => $sinif?->hasField() === false ? null : ($v['field'] ?? null),
+        ];
     }
 
     /**
@@ -269,6 +300,7 @@ class UserController extends Controller
             'student_ids.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Student->value)],
             'parent_ids' => ['sometimes', 'nullable', 'array'],
             'parent_ids.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Parent->value)],
+            ...$this->gradeRules(),
         ], $this->identityMessages());
 
         // Dalga 20: ogrencinin son velisi kaldirilamaz. Anahtar formda yoksa
@@ -284,6 +316,7 @@ class UserController extends Controller
             'role' => $validated['role'],
             'subscription_status' => $validated['subscription_status'],
             'phone' => $validated['phone'] ?? null,
+            ...$this->gradeAndField($validated),
         ]);
 
         if (!empty($validated['password'])) {

@@ -29,6 +29,8 @@ class User extends Authenticatable
         'subscription_start',
         'subscription_end',
         'phone',
+        'grade',
+        'field',
     ];
 
     /**
@@ -89,6 +91,18 @@ class User extends Authenticatable
     public function contactLabel(): string
     {
         return $this->phone ? \App\Support\Telefon::format($this->phone) : (string) $this->email;
+    }
+
+    /** Dalga 30b: sinif (9-12, mezun). */
+    public function gradeEnum(): ?\App\Enums\Grade
+    {
+        return \App\Enums\Grade::tryFrom((string) $this->grade);
+    }
+
+    /** Dalga 30b: alan (sayisal, EA, sozel, dil). */
+    public function fieldEnum(): ?\App\Enums\StudyField
+    {
+        return \App\Enums\StudyField::tryFrom((string) $this->field);
     }
 
     public function homeRoute(): string

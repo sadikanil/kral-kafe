@@ -38,7 +38,7 @@ class SessionController extends Controller
             'session' => $oturum,
             'pause' => $oturum->openPause(),
             'reminders' => BreakReminders::schedule(),
-            'subjects' => \App\Models\Subject::active()->orderBy('sort_order')->orderBy('name')->get(),
+            'subjects' => \App\Models\Subject::forStudent(auth()->user())->get(),
             // Calisma kaydi (Dalga 28): bugunun kayitlari, yeniden eskiye.
             'logs' => \App\Models\StudyLog::where('student_id', $oturum->student_id)
                 ->betweenLocalDays(\App\Support\LocalDay::today(), \App\Support\LocalDay::today())
