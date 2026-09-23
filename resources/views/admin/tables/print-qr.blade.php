@@ -88,16 +88,41 @@
                 padding: 0 !important;
             }
 
+            /* A4'e 3x3 = 9 etiket; 32 yer 4 sayfa. 5 cm QR masadan rahat okunur. */
+            @page {
+                size: A4;
+                margin: 1cm;
+            }
+
             .qr-print-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(3, 1fr);
                 gap: 0;
             }
 
             .qr-print-item {
                 box-shadow: none !important;
                 border: 1px dashed #9ca3af !important;
+                border-radius: 0 !important;
                 break-inside: avoid;
                 page-break-inside: avoid;
+            }
+
+            .qr-print-item .card-body {
+                padding: 0.6cm 0.3cm !important;
+            }
+
+            .qr-print-item h4 {
+                font-size: 16pt;
+                margin-bottom: 0.3cm !important;
+            }
+
+            .qr-print-item img {
+                width: 5cm;
+                height: 5cm;
+            }
+
+            .qr-print-item p {
+                margin-top: 0.2cm !important;
             }
         }
     </style>

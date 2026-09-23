@@ -56,8 +56,6 @@
                         </tbody>
                     </table>
                 </div>
-
-                {{ $tables->links() }}
             @endif
         </div>
     </div>

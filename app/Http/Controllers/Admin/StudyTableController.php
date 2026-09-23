@@ -15,10 +15,15 @@ use Illuminate\Http\Request;
  */
 class StudyTableController extends Controller
 {
+    /**
+     * Tum yerler tek sayfada, sayi sirasinda ("Masa 2" "Masa 10"dan once).
+     * SQL'de iki surucude de calisan dogal siralama yok; kafede 32 yer var,
+     * siralama bellekte yapilir. Sayfalama sirayi sayfalar arasinda bolerdi.
+     */
     public function index()
     {
         return view('admin.tables.index', [
-            'tables' => StudyTable::orderBy('name')->paginate(30),
+            'tables' => StudyTable::sortedByNumber(StudyTable::query()),
         ]);
     }
 
@@ -96,7 +101,7 @@ class StudyTableController extends Controller
     public function printQr()
     {
         return view('admin.tables.print-qr', [
-            'tables' => StudyTable::active()->orderBy('name')->get(),
+            'tables' => StudyTable::sortedByNumber(StudyTable::active()),
         ]);
     }
 }

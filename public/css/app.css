@@ -1265,13 +1265,19 @@ select.form-control {
 
     .sidebar,
     .topbar,
+    .bottom-nav,
     .btn,
     .no-print {
         display: none !important;
     }
 
+    body {
+        background: #fff !important;
+    }
+
     .main-content {
         margin-left: 0 !important;
+        padding-bottom: 0 !important;
     }
 
     .page-content {

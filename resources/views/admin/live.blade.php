@@ -18,13 +18,13 @@
         <div class="card" style="flex: 1; min-width: 150px;">
             <div class="card-body text-center">
                 <div class="session-timer">{{ $freeTables }}</div>
-                <div class="text-muted">Boş masa</div>
+                <div class="text-muted">Boş yer</div>
             </div>
         </div>
         <div class="card" style="flex: 1; min-width: 150px;">
             <div class="card-body text-center">
                 <div class="session-timer">{{ $tableCount }}</div>
-                <div class="text-muted">Kullanımdaki masa</div>
+                <div class="text-muted">Toplam yer</div>
             </div>
         </div>
     </div>

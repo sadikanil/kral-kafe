@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 741 test / 1814 doğrulama yeşil._
+_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 744 test / 1817 doğrulama yeşil._
 
 ---
 
@@ -56,6 +56,10 @@ Kararlar: plan **günlük** (haftalık/aylık hedef kalkar) · okul/dershane/dı
 - [x] **30b · Sınıf ve alan** — kayıt ve düzenlemede sınıf (9–12, mezun) + alan (sayısal, EA, sözel, dil; 11'den itibaren). 33 ders (MEB 2025 çizelgesi + 2026 YKS kılavuzu) ve 475 YKS konusu (`database/data/yks_konular.json`, kaynaklar içinde). Plan, zayıf konu, sayaç ve deneme sonucu formu yalnızca öğrencinin sorumlu olduğu dersleri gösterir; sınıf/alan girilmemişse hiçbir ders gizlenmez.
 - [x] **30c · Takvim** — koç haftalık takvimde güne ders + konu (+ not, saat, süre) ekler/taşır/siler. Aynı takvimde özel ders, denemeler ve haftalık sabit program (okul, dershane, dış özel ders) görünür. Öğrenci "Planım"da maddeyi tamamlar, serbest denemeyi (Deneme Kulübü) pencere içinde istediği güne koyar. Veli aynı takvimi salt okunur görür.
 - [x] **30d · Dersler sayfası kalktı** — liste müfredattan geliyor.
+
+### Masa düzeni (23 Eyl) · ✅ bitti
+
+- [x] **32 yer, 32 QR** — 11 çift kişilik masa (`Masa 1 · A` / `Masa 1 · B` … `Masa 11 · B`) + 10 tek kişilik (`Masa 12` … `Masa 21`). QR **sandalye başına**: sistem bir QR'ı bir oturma yeri sayar (canlı ekrandaki "Boş yer", "Bu masada X oturuyor" uyarısı). Liste ve yazdırma sayı sırasında; çıktı A4'e 9 etiket, 4 sayfa. Eski deneme masaları (Masa 1–3) kodlarını ve geçmişlerini koruyarak A sandalyesi oldu.
 
 ---
 

@@ -119,6 +119,48 @@ class StudyTableTest extends TestCase
     }
 
     /**
+     * Masa duzeni: 11 cift kisilik masa (A/B) + 10 tek kisilik = 32 yer.
+     * Duz isim sirasinda "Masa 10" "Masa 2"nin onune duser; etiketi kesip
+     * masalara dagitan kisi ve listeye bakan yonetici sayi sirasi bekler.
+     */
+    public function test_the_table_list_is_in_number_order(): void
+    {
+        foreach (['Masa 12', 'Masa 10 · A', 'Masa 2 · A', 'Masa 1 · B', 'Masa 1 · A'] as $ad) {
+            StudyTable::create(['name' => $ad]);
+        }
+
+        $this->actingAs($this->yonetici())
+            ->get(route('admin.tables.index'))
+            ->assertSeeInOrder(['Masa 1 · A', 'Masa 1 · B', 'Masa 2 · A', 'Masa 10 · A', 'Masa 12']);
+    }
+
+    public function test_the_print_sheet_is_in_number_order(): void
+    {
+        foreach (['Masa 21', 'Masa 11 · B', 'Masa 3 · A'] as $ad) {
+            StudyTable::create(['name' => $ad]);
+        }
+
+        $this->actingAs($this->yonetici())
+            ->get(route('admin.tables.print-qr'))
+            ->assertSeeInOrder(['Masa 3 · A', 'Masa 11 · B', 'Masa 21']);
+    }
+
+    /**
+     * 32 yer tek sayfada: sayfalama sirayi sayfalar arasinda bolerdi.
+     * "Masa 9" duz isim sirasinda sonuncu, yani eskiden ikinci sayfadaydi.
+     */
+    public function test_all_32_seats_are_listed_on_one_page(): void
+    {
+        for ($n = 1; $n <= 32; $n++) {
+            StudyTable::create(['name' => "Masa {$n}"]);
+        }
+
+        $this->actingAs($this->yonetici())
+            ->get(route('admin.tables.index'))
+            ->assertSee('<strong>Masa 9</strong>', false);
+    }
+
+    /**
      * Dalga 3'e kadar /masa/{kod} adresi YOK. O ana kadar basilan her etiket
      * 404'e gider ve fiziksel etiketi yeniden basmak pahalidir.
      *

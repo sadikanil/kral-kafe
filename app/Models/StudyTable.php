@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 /**
@@ -56,6 +57,12 @@ class StudyTable extends Model
     public function sessions(): HasMany
     {
         return $this->hasMany(StudySession::class);
+    }
+
+    /** "Masa 2" "Masa 10"dan once; duz isim sirasi bunu tersine cevirir. */
+    public static function sortedByNumber(Builder $query): Collection
+    {
+        return $query->get()->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)->values();
     }
 
     public function scopeActive(Builder $query): Builder

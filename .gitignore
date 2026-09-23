@@ -30,3 +30,5 @@ Thumbs.db
 # Yerel gelistirme araclari - depoya girmemeli
 /cloudflared.tgz
 /composer.phar
+
+/.scratch
