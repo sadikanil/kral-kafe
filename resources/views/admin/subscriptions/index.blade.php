@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Paket ve Ödeme - ' . $student->name)
 @section('page-title', 'Paket ve Ödeme: ' . $student->name)

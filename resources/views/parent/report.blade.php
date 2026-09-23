@@ -1,4 +1,4 @@
-@extends('layouts.parent')
+@extends('layouts.app')
 
 @section('title', $student->name . ' - Haftalık Rapor')
 @section('page-title', $student->name . ' · Haftalık Rapor')

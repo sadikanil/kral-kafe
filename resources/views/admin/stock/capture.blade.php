@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Stok Sayımı - ' . $location->name)
 @section('page-title', 'Stok Sayımı: ' . $location->name)

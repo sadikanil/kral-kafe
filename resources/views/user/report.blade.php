@@ -1,4 +1,4 @@
-@extends('layouts.user')
+@extends('layouts.app')
 
 @section('title', 'Haftalık Raporum - Kral Kafe')
 @section('page-title', 'Haftalık Raporum')

@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Tutarsızlık Detayı - Kral Kafe')
 @section('page-title', 'Tutarsızlık #' . $discrepancy->id)

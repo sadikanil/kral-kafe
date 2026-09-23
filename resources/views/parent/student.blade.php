@@ -1,4 +1,4 @@
-@extends('layouts.parent')
+@extends('layouts.app')
 
 @section('title', $summary['student']->name . ' - Kral Kafe')
 @section('page-title', $summary['student']->name)

@@ -1505,6 +1505,11 @@ select.form-control {
         color: var(--gray-500);
         font-size: 0.72rem;
         text-align: center;
+        /* "Menu" bir <button> (Dalga 21); tarayici varsayilanlarini sifirla */
+        background: none;
+        border: 0;
+        font-family: inherit;
+        cursor: pointer;
     }
 
     .bottom-nav-item.is-active {
@@ -1515,5 +1520,12 @@ select.form-control {
     /* Alt menunun altinda kalan icerik gorunmez kalmasin */
     .has-bottom-nav {
         padding-bottom: 4.75rem;
+    }
+
+    /* Kenar menusu alt barin ALTINDA kaliyor (ayni z-index, alt bar DOM'da
+       sonra); alt kisimdaki kullanici/cikis alani alt barin arkasina
+       dusmesin. Alt bar acikken "Menu"ye tekrar basmak menuyu kapatir. */
+    .sidebar {
+        padding-bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
     }
 }

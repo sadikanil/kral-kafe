@@ -1,4 +1,4 @@
-@extends('layouts.coach')
+@extends('layouts.app')
 
 @section('title', 'Çalışma Planı - Kral Kafe')
 @section('page-title', 'Çalışma Planı')

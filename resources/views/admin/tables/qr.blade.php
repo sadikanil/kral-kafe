@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'QR Kod - ' . $table->name)
 @section('page-title', 'QR Kod: ' . $table->name)

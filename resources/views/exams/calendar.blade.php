@@ -1,4 +1,4 @@
-@extends($layout)
+@extends('layouts.app')
 
 @section('title', 'Deneme Takvimi - Kral Kafe')
 @section('page-title', 'Deneme Takvimi')

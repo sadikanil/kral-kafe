@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Ürün Düzenle - Kral Kafe')
 @section('page-title', 'Ürün Düzenle')

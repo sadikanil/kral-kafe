@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Deneme Raporları - ' . $student->name)
 @section('page-title', 'Deneme Raporları: ' . $student->name)

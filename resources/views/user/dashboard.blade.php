@@ -1,4 +1,4 @@
-@extends('layouts.user')
+@extends('layouts.app')
 
 @section('title', 'Panel - Kral Kafe')
 @section('page-title', 'Hoş Geldin, {{ auth()->user()->name }}!')

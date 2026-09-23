@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'QR Kodları Yazdır - Kral Kafe')
 @section('page-title', 'QR Kodları Yazdır')

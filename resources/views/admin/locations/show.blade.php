@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', $location->name . ' - Kral Kafe')
 @section('page-title', $location->name)

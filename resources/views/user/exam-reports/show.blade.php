@@ -1,4 +1,4 @@
-@extends('layouts.user')
+@extends('layouts.app')
 
 @section('title', $report->title . ' - Kral Kafe')
 @section('page-title', $report->title)

@@ -1,4 +1,4 @@
-@extends('layouts.coach')
+@extends('layouts.app')
 
 @section('title', $student->name . ' - Notlar')
 @section('page-title', $student->name)

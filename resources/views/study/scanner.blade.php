@@ -1,4 +1,4 @@
-@extends('layouts.user')
+@extends('layouts.app')
 
 @section('title', 'QR Okut - Kral Kafe')
 @section('page-title', 'QR Okut')

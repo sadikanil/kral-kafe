@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+@extends('layouts.app')
 
 @section('title', 'Paket Düzenle - Kral Kafe')
 @section('page-title', 'Paket: ' . $package->name)
