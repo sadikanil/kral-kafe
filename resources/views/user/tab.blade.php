@@ -88,20 +88,6 @@
                             <div class="product-card-name">{{ $product->name }}</div>
                             <div class="product-card-price">{{ $product->formatted_price }}</div>
 
-                            {{--
-                                Raf secimi YALNIZCA urun birden fazla yerdeyse
-                                cikar (Dalga 8). Tek raftaki urun soru sormadan
-                                oradan duser; rastgele birini dusurmek iki sahte
-                                fark uretirdi - biri eksik, oburu fazla.
-                            --}}
-                            @if($shelves[$product->id]->count() > 1)
-                                <select name="location_id" class="form-control mt-2" required>
-                                    <option value="">Nereden aldın?</option>
-                                    @foreach($shelves[$product->id] as $raf)
-                                        <option value="{{ $raf->location_id }}">{{ $raf->location->name }}</option>
-                                    @endforeach
-                                </select>
-                            @endif
 
                             <div class="d-flex gap-1 justify-content-center align-items-center mt-2">
                                 <select name="quantity" class="form-control" style="width: 64px; padding: 4px;">

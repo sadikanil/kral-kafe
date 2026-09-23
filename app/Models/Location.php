@@ -71,14 +71,6 @@ class Location extends Model
     }
 
     /**
-     * Get the QR code URL for this location.
-     */
-    public function getQrUrlAttribute(): string
-    {
-        return url("/tuketim/{$this->qr_code}");
-    }
-
-    /**
      * Get products at this location.
      */
     public function products()

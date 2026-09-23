@@ -181,9 +181,7 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
         'update' => 'locations.update',
         'destroy' => 'locations.destroy',
     ])->parameters(['lokasyonlar' => 'location']);
-    Route::get('/lokasyonlar/{location}/qr', [LocationController::class, 'showQr'])->name('locations.qr');
     Route::post('/lokasyonlar/{location}/durum', [LocationController::class, 'toggleStatus'])->name('locations.toggle-status');
-    Route::get('/lokasyonlar-qr-yazdir', [LocationController::class, 'printQrCodes'])->name('locations.print-qr');
 
     // Koc atamasi (Dalga 14). Atamayi YALNIZCA yonetici yapar; kocun kendine
     // ogrenci atayabilmesi atamanin anlamini ortadan kaldirirdi.

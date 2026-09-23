@@ -117,6 +117,28 @@
                     @enderror
                 </div>
 
+                {{-- Dalga 26: urun nerede ve kac adet. Ogrenci yer secmez;
+                     stok birden fazla yerdeyse en dolu olandan duser. --}}
+                <div class="form-group">
+                    <label class="form-label">Nerede duruyor, kaç adet?</label>
+                    <input type="hidden" name="places_present" value="1">
+                    @forelse($locations as $yer)
+                        @php $adet = old("places.{$yer->id}.quantity", $placements[$yer->id] ?? ''); @endphp
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <label class="d-flex align-items-center gap-1" style="min-width: 180px;">
+                                <input type="checkbox" name="places[{{ $yer->id }}][on]" value="1"
+                                    {{ old("places.{$yer->id}.on", $placements->has($yer->id)) ? 'checked' : '' }}>
+                                {{ $yer->name }}
+                            </label>
+                            <input type="number" name="places[{{ $yer->id }}][quantity]" min="0" class="form-control"
+                                style="width: 100px; padding: 4px;" value="{{ $adet }}" placeholder="adet">
+                        </div>
+                    @empty
+                        <p class="text-muted mb-0">Önce Lokasyonlar'dan bir yer ekleyin.</p>
+                    @endforelse
+                    @error('places.*.quantity')<span class="invalid-feedback d-block">{{ $message }}</span>@enderror
+                </div>
+
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">Güncelle</button>
                     <a href="{{ route('admin.products.index') }}" class="btn btn-secondary">İptal</a>

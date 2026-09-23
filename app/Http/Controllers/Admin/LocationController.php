@@ -150,33 +150,6 @@ class LocationController extends Controller
     }
 
     /**
-     * Show QR code for a location.
-     */
-    public function showQr(Location $location)
-    {
-        return view('admin.locations.qr', [
-            'location' => $location,
-        ]);
-    }
-
-    /**
-     * Print QR codes for multiple locations.
-     */
-    public function printQrCodes(Request $request)
-    {
-        $locationIds = $request->get('locations', []);
-
-        if (empty($locationIds)) {
-            $locations = Location::where('is_active', true)->get();
-        } else {
-            $locations = Location::whereIn('id', $locationIds)->get();
-        }
-
-        return view('admin.locations.print-qr', [
-            'locations' => $locations,
-        ]);
-    }
-    /**
      * Toggle location status.
      */
     public function toggleStatus(Location $location)

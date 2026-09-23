@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Location;
 use App\Models\MonthlyBill;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,18 +17,6 @@ class AdminPagesTest extends TestCase
             'role' => 'admin',
             'subscription_status' => 'active',
         ]);
-    }
-
-    public function test_qr_print_page_renders_every_active_location(): void
-    {
-        Location::create(['name' => 'Mutfak', 'type' => 'shelf', 'qr_code' => 'LOC-A', 'is_active' => true]);
-        Location::create(['name' => 'Buzdolabı', 'type' => 'fridge', 'qr_code' => 'LOC-B', 'is_active' => true]);
-
-        $response = $this->actingAs($this->admin())->get('/yonetim/lokasyonlar-qr-yazdir');
-
-        $response->assertOk()
-            ->assertSee('Mutfak')
-            ->assertSee('Buzdolabı');
     }
 
     public function test_monthly_report_page_renders_bills_for_the_selected_month(): void

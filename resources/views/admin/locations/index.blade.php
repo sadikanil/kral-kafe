@@ -4,9 +4,6 @@
 @section('page-title', 'Lokasyonlar')
 
 @section('topbar-actions')
-    <a href="{{ route('admin.locations.print-qr') }}" class="btn btn-secondary btn-sm">
-        🖨️ QR Yazdır
-    </a>
     <a href="{{ route('admin.locations.create') }}" class="btn btn-primary btn-sm">
         ➕ Yeni Lokasyon
     </a>
@@ -22,7 +19,6 @@
                             <th>Lokasyon</th>
                             <th>Tip</th>
                             <th>Ürün Sayısı</th>
-                            <th>QR Kod</th>
                             <th>Durum</th>
                             <th>İşlemler</th>
                         </tr>
@@ -52,9 +48,6 @@
                                     <span class="badge badge-info">{{ $location->products->count() }}</span>
                                 </td>
                                 <td>
-                                    <code style="font-size: 0.75rem;">{{ $location->qr_code }}</code>
-                                </td>
-                                <td>
                                     <form action="{{ route('admin.locations.toggle-status', $location) }}" method="POST">
                                         @csrf
                                         <button type="submit" class="badge badge-{{ $location->is_active ? 'success' : 'warning' }}" style="border: none; cursor: pointer; opacity: 0.9; transition: opacity 0.2s;" title="Değiştirmek için tıkla" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.9">
@@ -64,7 +57,6 @@
                                 </td>
                                 <td>
                                     <div class="d-flex gap-1">
-                                        <a href="{{ route('admin.locations.qr', $location) }}" class="btn btn-sm btn-secondary" title="QR Kod">📱</a>
                                         <a href="{{ route('admin.locations.show', $location) }}" class="btn btn-sm btn-secondary" title="Detay">👁️</a>
                                         <a href="{{ route('admin.locations.edit', $location) }}" class="btn btn-sm btn-secondary" title="Düzenle">✏️</a>
                                         
@@ -78,7 +70,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center p-4 text-muted">
+                                <td colspan="5" class="text-center p-4 text-muted">
                                     Henüz lokasyon eklenmemiş.
                                 </td>
                             </tr>

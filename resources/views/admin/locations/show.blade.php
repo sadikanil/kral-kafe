@@ -4,7 +4,6 @@
 @section('page-title', $location->name)
 
 @section('topbar-actions')
-    <a href="{{ route('admin.locations.qr', $location) }}" class="btn btn-secondary btn-sm">📱 QR Kod</a>
     <a href="{{ route('admin.locations.edit', $location) }}" class="btn btn-primary btn-sm">✏️ Düzenle</a>
 @endsection
 
@@ -31,10 +30,6 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="text-muted">QR Kod</td>
-                        <td><code>{{ $location->qr_code }}</code></td>
-                    </tr>
-                    <tr>
                         <td class="text-muted">Durum</td>
                         <td>
                             <span class="badge badge-{{ $location->is_active ? 'success' : 'warning' }}">
@@ -49,19 +44,6 @@
                         </tr>
                     @endif
                 </table>
-            </div>
-        </div>
-        
-        <!-- QR Kod -->
-        <div class="card">
-            <div class="card-header">
-                <h4>QR Kod</h4>
-            </div>
-            <div class="card-body text-center">
-                <img src="{{ \App\Support\QrImage::url($location->qr_url, 200) }}" alt="QR Code" style="border-radius: var(--radius);">
-                <p class="text-muted mt-2 mb-0">
-                    <small>{{ $location->qr_url }}</small>
-                </p>
             </div>
         </div>
     </div>

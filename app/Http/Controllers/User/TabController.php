@@ -13,7 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Self adisyon: ogrenci QR okutmadan, panelden, sistemde tanimli bir urunu
@@ -44,11 +43,6 @@ class TabController extends Controller
 
         return view('user.tab', [
             'products' => $urunler,
-            // Urun basina secilebilir raflar. Yalnizca birden fazlaysa ekranda
-            // secim cikar; tek rafta olan urun soru sormadan oradan duser.
-            'shelves' => $urunler->mapWithKeys(fn (Product $urun) => [
-                $urun->id => $this->shelvesFor($urun),
-            ]),
             'todayEntries' => Consumption::with(['product', 'location'])
                 ->where('user_id', $user->id)
                 ->where('is_undone', false)
@@ -65,7 +59,6 @@ class TabController extends Controller
         $veri = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'quantity' => ['required', 'integer', 'min:1', 'max:10'],
-            'location_id' => ['nullable', 'integer'],
         ]);
 
         $urun = Product::findOrFail($veri['product_id']);
@@ -74,7 +67,7 @@ class TabController extends Controller
             return back()->with('error', 'Bu ürün şu an satışta değil.');
         }
 
-        $stok = $this->resolveShelf($urun, $veri['location_id'] ?? null);
+        $stok = $this->resolveShelf($urun);
         $kapsanan = $kapsam->coveredQuantity(Auth::user(), $urun, $veri['quantity']);
 
         // Kayit ve stok dusumu birlikte ya da hic: yarim kalan bir dusum
@@ -145,36 +138,15 @@ class TabController extends Controller
     /**
      * Stogun dusulecegi raf. Hicbir rafta degilse null.
      *
-     * Urun iki raftaysa ogrenci SECMELI. Rastgele birini dusurmek iki sahte
-     * fark uretirdi: biri eksik, oburu fazla gorunur ve yonetici kapanis
-     * sayiminda olmayan bir kaybi arastirirdi. Belirsizligi tahminle
-     * kapatmak stok takibini guvenilmez kilar.
+     * Dalga 26 (karar, 23 Eyl): ogrenciye raf SORULMAZ. Birden fazla raftaysa
+     * EN COK stoku olan secilir - deterministik; yanildigi yerde yonetici
+     * kapanis sayiminda duzeltir. (Eski kural "ogrenci secsin"di.)
      */
-    private function resolveShelf(Product $product, ?int $chosen): ?ProductLocation
+    private function resolveShelf(Product $product): ?ProductLocation
     {
-        $raflar = $this->shelvesFor($product);
-
-        if ($raflar->isEmpty()) {
-            return null;
-        }
-
-        if ($raflar->count() === 1 && $chosen === null) {
-            return $raflar->first();
-        }
-
-        $bulunan = $chosen === null
-            ? null
-            : $raflar->firstWhere('location_id', $chosen);
-
-        if ($bulunan === null) {
-            throw ValidationException::withMessages([
-                'location_id' => $chosen === null
-                    ? 'Bu ürün birden fazla yerde duruyor; nereden aldığını seç.'
-                    : 'Seçilen yerde bu ürün yok.',
-            ]);
-        }
-
-        return $bulunan;
+        return $this->shelvesFor($product)
+            ->sortByDesc('expected_quantity')
+            ->first();
     }
 
     /**

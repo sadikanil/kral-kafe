@@ -173,29 +173,28 @@ class SelfTabStockTest extends TestCase
     // --- Birden fazla raf ----------------------------------------------------
 
     /**
-     * Urun iki raftaysa ogrenci SECMELI.
-     *
-     * Rastgele birini dusurmek iki sahte fark uretirdi: biri eksik, oburu
-     * fazla gorunur ve kapanis sayiminda yonetici olmayan bir kaybi
-     * arastirir. Belirsizligi tahminle kapatmak, stok takibini
-     * guvenilmez kilar.
+     * Dalga 26 (karar, 23 Eyl): ogrenciye raf SORULMAZ. Urun birden fazla
+     * raftaysa stok EN COK stoku olan raftan duser - deterministik, ve
+     * tahminin yanildigi yerde yonetici kapanis sayiminda duzeltir.
+     * (Onceki kural "ogrenci secsin"di; kullanici secim istemedi.)
      */
-    public function test_a_product_on_two_shelves_requires_a_choice(): void
+    public function test_a_product_on_two_shelves_needs_no_choice(): void
     {
         $ogrenci = $this->ogrenci();
         $urun = $this->urun();
-        $this->yerlestir($urun, $this->raf('Buzdolabı'), 10);
-        $this->yerlestir($urun, $this->raf('Aburcubur Rafı'), 5);
+        $buzdolabi = $this->yerlestir($urun, $this->raf('Buzdolabı'), 10);
+        $raf = $this->yerlestir($urun, $this->raf('Aburcubur Rafı'), 5);
 
-        $this->actingAs($ogrenci)->from('/kullanici/adisyon')
-            ->post('/kullanici/adisyon', ['product_id' => $urun->id, 'quantity' => 1])
-            ->assertRedirect('/kullanici/adisyon')
-            ->assertSessionHasErrors('location_id');
+        $this->actingAs($ogrenci)
+            ->post('/kullanici/adisyon', ['product_id' => $urun->id, 'quantity' => 2])
+            ->assertSessionHasNoErrors();
 
-        $this->assertSame(0, Consumption::count());
+        $this->assertSame(8, $buzdolabi->fresh()->expected_quantity);
+        $this->assertSame(5, $raf->fresh()->expected_quantity);
     }
 
-    public function test_the_chosen_shelf_is_the_one_decremented(): void
+    /** Formdan raf gelse bile ogrenci secemez; kural ayni. */
+    public function test_a_sent_shelf_is_ignored(): void
     {
         $ogrenci = $this->ogrenci();
         $urun = $this->urun();
@@ -203,33 +202,21 @@ class SelfTabStockTest extends TestCase
         $raf = $this->yerlestir($urun, $this->raf('Aburcubur Rafı'), 5);
 
         $this->actingAs($ogrenci)->post('/kullanici/adisyon', [
-            'product_id' => $urun->id,
-            'quantity' => 2,
-            'location_id' => $raf->location_id,
+            'product_id' => $urun->id, 'quantity' => 1, 'location_id' => $raf->location_id,
         ]);
 
-        $this->assertSame(10, $buzdolabi->fresh()->expected_quantity);
-        $this->assertSame(3, $raf->fresh()->expected_quantity);
+        $this->assertSame(9, $buzdolabi->fresh()->expected_quantity);
     }
 
-    /** Urunun BULUNMADIGI bir raf secilemez. */
-    public function test_a_shelf_without_the_product_is_refused(): void
+    public function test_the_tab_asks_no_shelf(): void
     {
-        $ogrenci = $this->ogrenci();
         $urun = $this->urun();
         $this->yerlestir($urun, $this->raf('Buzdolabı'), 10);
         $this->yerlestir($urun, $this->raf('Aburcubur Rafı'), 5);
-        $alakasiz = $this->raf('Mutfak');
 
-        $this->actingAs($ogrenci)->from('/kullanici/adisyon')
-            ->post('/kullanici/adisyon', [
-                'product_id' => $urun->id,
-                'quantity' => 1,
-                'location_id' => $alakasiz->id,
-            ])
-            ->assertSessionHasErrors('location_id');
-
-        $this->assertSame(0, Consumption::count());
+        $this->actingAs($this->ogrenci())->get('/kullanici/adisyon')
+            ->assertOk()
+            ->assertDontSee('Nereden aldın');
     }
 
     // --- Kapsam self adisyonda -----------------------------------------------
