@@ -11,10 +11,7 @@ use App\Models\StudySession;
 use App\Services\StudySessionService;
 use App\Services\StudyStats;
 use App\Support\LocalDay;
-use App\Support\SqlDialect;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -122,64 +119,5 @@ class DashboardController extends Controller
             'recentConsumptions' => $recentConsumptions,
             'monthlySummary' => $monthlySummary,
         ]);
-    }
-
-    /**
-     * Show consumption history.
-     */
-    public function history(Request $request)
-    {
-        $user = Auth::user();
-
-        // Parse month parameter (format: YYYY-MM)
-        $monthParam = $request->get('month');
-        if ($monthParam) {
-            $parts = explode('-', $monthParam);
-            $year = (int) $parts[0];
-            $month = (int) ($parts[1] ?? now()->month);
-        } else {
-            $year = now()->year;
-            $month = now()->month;
-        }
-
-        // Get consumptions for the selected period
-        $consumptionsQuery = Consumption::with(['product', 'location'])
-            ->where('user_id', $user->id)
-            ->where('is_undone', false);
-
-        if ($monthParam) {
-            $consumptionsQuery->whereYear('consumed_at', $year)
-                ->whereMonth('consumed_at', $month);
-        }
-
-        $consumptions = $consumptionsQuery->orderBy('consumed_at', 'desc')
-            ->paginate(20);
-
-        $summary = $this->billingService->getUserMonthlySummary($user, $year, $month);
-
-        // Get available months
-        $availableMonths = Consumption::where('user_id', $user->id)
-            ->selectRaw($this->yearMonthSelect())
-            ->groupBy('year', 'month')
-            ->orderByDesc('year')
-            ->orderByDesc('month')
-            ->get();
-
-        return view('user.history', [
-            'user' => $user,
-            'consumptions' => $consumptions,
-            'summary' => $summary,
-            'year' => $year,
-            'month' => $month,
-            'availableMonths' => $availableMonths,
-        ]);
-    }
-
-    /**
-     * Year/month extraction for the "available months" filter.
-     */
-    private function yearMonthSelect(): string
-    {
-        return SqlDialect::yearMonth(DB::connection()->getDriverName(), 'consumed_at');
     }
 }

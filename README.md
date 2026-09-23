@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 565 test / 1416 doğrulama yeşil._
+_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 571 test / 1422 doğrulama yeşil._
 
 ---
 
@@ -33,7 +33,7 @@ _Son güncelleme: 23 Eylül 2026 · Laravel 12 · 565 test / 1416 doğrulama ye�
 - [x] **19 · Paket seviyesi** — pakete seviye + deneme kulübü/özel ders/ek paket kutuları. Masa ve deneme detayı artık pakete bağlı.
 - [x] **20 · Kullanıcı ekleme akışı** — tek sayfa: rol → paket (+ek) → koç (koçluklu pakette) → veli (kayıtlıdan seç ya da yeni yaz). Son veli kaldırılamaz/silinemez.
 - [x] **21 · Tek menü** — herkes tek kabukta; başlıklı düz menü (rol + pakete göre). Telefonda 4 sık sayfa + "Menü".
-- [ ] **22 · Ödemeler (öğrenci + veli)** — anlaşılan paket bedeli + aylık harcama, ay ay.
+- [x] **22 · Ödemeler (öğrenci + veli)** — ay ay: paket bedeli, ödenen, kalan, vade + adisyon dökümü (pakete dahiller işaretli). Eski "Tüketim Geçmişi" buna katıldı.
 - [ ] **23 · Çalışma sayacı sayfası** — duraklat/devam, "15 dk mola", "öğle arası 1 saat"; öğle arasında kafeden çıkmak serbest.
 - [ ] **24 · Esneme hatırlatıcıları** — sayaç sayfasında popup (aralıklar kaynaklarla doğrulanacak).
 - [ ] **25 · Özel ders takvimi** — tier 3 öğrencinin takviminde; Cahit Hoca (admin) her zaman düzenler.

@@ -31,6 +31,7 @@
                     <h4>{{ $summary['student']->name }}</h4>
                     <div class="d-flex gap-1">
                         <a href="{{ route('parent.report', $summary['student']) }}" class="btn btn-sm btn-primary">Rapor</a>
+                        <a href="{{ route('parent.payments', $summary['student']) }}" class="btn btn-sm btn-secondary">Ödemeler</a>
                         <a href="{{ route('parent.student', $summary['student']) }}" class="btn btn-sm btn-secondary">Ayrıntı</a>
                     </div>
                 </div>

@@ -27,7 +27,7 @@ final class Navigation
             ],
             Role::Parent => [
                 ['title' => 'Veli', 'items' => [
-                    ['route' => 'parent.dashboard', 'label' => 'Çocuklarım', 'icon' => '🏠', 'match' => 'parent.dashboard|parent.student|parent.report'],
+                    ['route' => 'parent.dashboard', 'label' => 'Çocuklarım', 'icon' => '🏠', 'match' => 'parent.dashboard|parent.student|parent.report|parent.payments'],
                     ['route' => 'parent.exams', 'label' => 'Deneme Takvimi', 'icon' => '📝'],
                 ]],
             ],
@@ -115,7 +115,7 @@ final class Navigation
                 $hak->examClub ? ['route' => 'user.exam-reports.index', 'label' => 'Deneme Raporlarım', 'icon' => '📄', 'match' => 'user.exam-reports.*'] : null,
             ]))],
             ['title' => 'Hesap', 'items' => [
-                ['route' => 'user.history', 'label' => 'Tüketim Geçmişi', 'icon' => '📜'],
+                ['route' => 'user.payments', 'label' => 'Ödemeler', 'icon' => '💳'],
             ]],
         ];
     }

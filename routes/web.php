@@ -65,7 +65,10 @@ Route::middleware(['auth', 'subscription'])->group(function () {
 // Authenticated User Routes
 Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')->group(function () {
     Route::get('/panel', [UserDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/gecmis', [UserDashboardController::class, 'history'])->name('history');
+    // Odemeler (Dalga 22): paket bedeli + aylik adisyon dokumu. Eski
+    // "Tuketim Gecmisi" bunun icinde; adresi yer imlerinde kalmis olabilir.
+    Route::get('/odemeler', [\App\Http\Controllers\StatementController::class, 'student'])->name('payments');
+    Route::redirect('/gecmis', '/kullanici/odemeler')->name('history');
     Route::get('/denemeler', [ExamCalendarController::class, 'student'])->name('exams');
 
     // Deneme sonuc raporlari (PDF + yapay zeka analizi), salt okunur
@@ -101,6 +104,7 @@ Route::middleware(['auth', 'role:parent'])->prefix('veli')->name('parent.')->gro
     Route::get('/ogrenci/{student}', [ParentDashboardController::class, 'show'])->name('student');
     Route::get('/denemeler', [ExamCalendarController::class, 'parent'])->name('exams');
     Route::get('/ogrenci/{student}/rapor', [ParentDashboardController::class, 'report'])->name('report');
+    Route::get('/ogrenci/{student}/odemeler', [\App\Http\Controllers\StatementController::class, 'parent'])->name('payments');
 });
 
 // Koc paneli - calisma plani (Dalga 14).

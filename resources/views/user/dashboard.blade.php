@@ -89,7 +89,7 @@
     <div class="card animate-slide-up" style="animation-delay: 100ms">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h4>Son Tüketimlerim</h4>
-            <a href="{{ route('user.history') }}" class="btn btn-sm btn-secondary">Tümünü Gör</a>
+            <a href="{{ route('user.payments') }}" class="btn btn-sm btn-secondary">Tümünü Gör</a>
         </div>
         <div class="card-body p-0">
             @if($recentConsumptions->isEmpty())
