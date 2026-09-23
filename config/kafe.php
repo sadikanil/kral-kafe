@@ -118,7 +118,9 @@ return [
     |
     */
 
-    'cron_anahtari' => (string) env('KAFE_CRON_ANAHTARI', ''),
+    // Degisken adi CRON_SECRET olmak ZORUNDA: Vercel Cron yalnizca bu
+    // degiskeni okuyup "Authorization: Bearer" basligina koyar.
+    'cron_anahtari' => (string) env('CRON_SECRET', env('KAFE_CRON_ANAHTARI', '')),
 
     /*
     |--------------------------------------------------------------------------

@@ -24,7 +24,8 @@ class CronController extends Controller
     public function daily(Request $request, NotificationBuilder $bildirimler): JsonResponse
     {
         $beklenen = (string) config('kafe.cron_anahtari');
-        $gelen = (string) $request->header('X-Cron-Anahtari', '');
+        // Vercel Cron yalnizca "Authorization: Bearer <CRON_SECRET>" gonderir.
+        $gelen = (string) $request->bearerToken();
 
         // hash_equals: zamanlama saldirisina karsi. Bos anahtar hicbir zaman
         // gecerli degil - kisa devre once.

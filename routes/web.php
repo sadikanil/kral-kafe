@@ -288,5 +288,9 @@ require __DIR__ . '/auth.php';
 | Vercel Cron bu adresi cagiriyor. Giris gerektirmiyor - gizli anahtarla
 | korunuyor (bkz. CronController). Anahtar tanimsizsa uc hic calismaz.
 |
+| /api ALTINDA DEGIL: Vercel PHP'yi /api/index.php'den calistiriyor ve
+| Symfony /api onekini kok dizin sayip yoldan kesiyor; /api/... rotasi
+| canlida hic eslesmiyordu.
+|
 */
-Route::get('/api/cron/gunluk', [CronController::class, 'daily'])->name('cron.daily');
+Route::get('/zamanlanmis/gunluk', [CronController::class, 'daily'])->name('cron.daily');

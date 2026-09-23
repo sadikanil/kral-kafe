@@ -13,7 +13,7 @@
     },
     "crons": [
         {
-            "path": "/api/cron/gunluk",
+            "path": "/zamanlanmis/gunluk",
             "schedule": "0 20 * * *"
         }
     ],

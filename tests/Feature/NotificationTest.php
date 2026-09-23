@@ -205,9 +205,44 @@ class NotificationTest extends TestCase
     {
         config(['kafe.cron_anahtari' => 'gizli']);
 
-        $this->withHeader('X-Cron-Anahtari', 'gizli')
+        // Vercel Cron ozel baslik GONDEREMEZ; tek tasidigi sey
+        // "Authorization: Bearer <CRON_SECRET>".
+        $this->withToken('gizli')
             ->get(route('cron.daily'))
             ->assertOk();
+    }
+
+    public function test_the_cron_endpoint_refuses_a_wrong_secret(): void
+    {
+        config(['kafe.cron_anahtari' => 'gizli']);
+
+        $this->withToken('yanlis')
+            ->get(route('cron.daily'))
+            ->assertForbidden();
+    }
+
+    /**
+     * Vercel PHP'yi /api/index.php uzerinden calistiriyor; Symfony bu yuzden
+     * /api onekini kok dizin sayip yoldan KESIYOR. /api/... altindaki bir
+     * rota canlida hic eslesmez (Dalga 11'in cron'u bu yuzden hic
+     * calismadi). vercel.json'daki her cron yolu gercek bir rotaya denk
+     * gelmeli ve /api ile baslamamali.
+     */
+    public function test_every_vercel_cron_path_hits_a_real_route_outside_api(): void
+    {
+        $vercel = json_decode(file_get_contents(base_path('vercel.json')), true);
+
+        $this->assertNotEmpty($vercel['crons']);
+
+        foreach ($vercel['crons'] as $cron) {
+            $this->assertStringStartsNotWith('/api/', $cron['path']);
+
+            $rota = app('router')->getRoutes()->match(
+                \Illuminate\Http\Request::create($cron['path'], 'GET')
+            );
+
+            $this->assertSame('cron.daily', $rota->getName());
+        }
     }
 
     /**
@@ -219,7 +254,7 @@ class NotificationTest extends TestCase
     {
         config(['kafe.cron_anahtari' => '']);
 
-        $this->withHeader('X-Cron-Anahtari', '')
+        $this->withToken('')
             ->get(route('cron.daily'))
             ->assertForbidden();
     }

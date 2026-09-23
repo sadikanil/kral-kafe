@@ -27,7 +27,7 @@ _Son güncelleme: 23 Eylül 2026 · Laravel 12 · 470 test / 1210 doğrulama ye�
 
 **Dalgalar** (sırayla)
 
-- [x] **Denetim** — 470 test yeşil, migration'lar yerel+canlı tamam, view/route derleniyor. README'deki eski sayılar düzeltildi.
+- [x] **Denetim** — cron canlıda hiç çalışmıyordu (yol + başlık), düzeltildi. 472 test yeşil, migration'lar yerel+canlı tamam, view/route derleniyor. README'deki eski sayılar düzeltildi.
 - [ ] **18 · Telefonla giriş** — önce telefon; şifresi varsa şifre sor, yoksa şifre belirlet. E-posta isteğe bağlı.
 - [ ] **18b · Şifre sıfırla** — admin butonu: kullanıcı askıya alınır, sonraki girişte yeni şifre belirlemek zorunda.
 - [ ] **19 · Paket seviyesi** — pakete `tier`; deneme kulübü ek paket olarak eklenebilir; "sadece deneme" paketi tanımlanabilir.
@@ -429,7 +429,7 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
   Dalga 4'ün "tembel üretim" çözümü burada çalışmaz — oradaki iş oturumu
   *kapatmaktı* ve sonucu veriden hesaplanabiliyordu; bildirim gönderilmiş ya da
   gönderilmemiştir, sonradan türetilemez.
-- **Vercel'de:** Vercel Cron → kimlik doğrulamalı `/api/cron/...` ucu.
+- **Vercel'de:** Vercel Cron → kimlik doğrulamalı `/zamanlanmis/gunluk` ucu. **`/api/` altına rota yazılmaz:** Vercel PHP'yi `/api/index.php`'den çalıştırıyor, Laravel `/api` önekini kesiyor ve rota eşleşmiyor (23 Eyl'e kadar cron bu yüzden hiç çalışmadı).
   Hobby katmanında cron sapması ±59 dk; "bir gün önce" penceresi buna dayanıklı
   kurulmalı (saat değil **gün** karşılaştırması, `LocalDay` ile).
 - **Gönderilen her bildirim kaydedilir** (`notifications` tablosu: tür, alıcı,
@@ -1857,7 +1857,7 @@ Vercel projesinde Settings → Environment Variables altına gir:
 | `KAFE_DENEME_HATIRLATMA_GUN` | Kaç gün kala deneme hatırlatıcısı uyarı rengine döner. Varsayılan `7`; tanımlamak zorunlu değil |
 | `KAFE_ODEME_VADESI_GUN` | Abonelik başlangıcından kaç gün sonra ödeme "gecikmiş" sayılır. Varsayılan `7`; tanımlamak zorunlu değil |
 | `KAFE_KONUM_ESIGI_METRE` | Kafeden kaç metre uzaklık onay kuyruğunda "uzak" işaretlenir. Varsayılan `250`; tanımlamak zorunlu değil |
-| `KAFE_CRON_ANAHTARI` | **Gerekli.** Vercel Cron'un günlük ucu çağırırken taşıdığı gizli anahtar. **Tanımlanmazsa uç hiç çalışmaz** (403) — bu bilinçli: "anahtar yoksa herkese açık" varsayılanı ucu internete açardı. Uzun ve rastgele bir değer üret |
+| `CRON_SECRET` | **Gerekli, adı değiştirilemez.** Vercel Cron bu değişkeni `Authorization: Bearer` başlığına koyar; özel başlık gönderemez. (Eski ad `KAFE_CRON_ANAHTARI` yedek olarak okunur ama Vercel onu göndermez.) **Tanımlanmazsa uç hiç çalışmaz** (403) — bu bilinçli: "anahtar yoksa herkese açık" varsayılanı ucu internete açardı. Uzun ve rastgele bir değer üret |
 | `KAFE_IPLER` | **Boş bırak.** IP kapısı rafta: kafenin IP'si dinamik ölçüldü (bkz. §9.3) |
 | `LOG_CHANNEL` | `stderr` — **panelde `stack` tanımlıysa sil.** `api/index.php` bu değeri yalnızca *tanımsızsa* `stderr` yapar; panelde `stack` duruyorsa çerçeve `storage/logs`'a yazmaya çalışır, orası salt okunur ve uygulama loglarken **ikinci bir 500** üretir |
 | `DB_CONNECTION` | `pgsql` |
