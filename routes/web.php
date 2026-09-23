@@ -146,6 +146,8 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
         'destroy' => 'users.destroy',
     ])->parameters(['kullanicilar' => 'user']);
     Route::post('/kullanicilar/{user}/durum', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+    // Dalga 18b: sifre silinir, kullanici her yerden cikar, yeni sifre belirler
+    Route::post('/kullanicilar/{user}/sifre-sifirla', [UserController::class, 'resetPassword'])->name('users.reset-password');
 
     // Products
     Route::resource('urunler', ProductController::class)->names([

@@ -164,6 +164,31 @@
         </div>
     </div>
 
+    {{-- Sifre sifirlama (Dalga 18b). Ana formun DISINDA: ic ice form gecersiz. --}}
+    @if(! $user->is(auth()->user()))
+        <div class="card mt-3" style="max-width: 600px;">
+            <div class="card-body d-flex justify-content-between align-items-center gap-2">
+                <div>
+                    <strong>Şifre</strong>
+                    <div class="text-muted" style="font-size:.85rem">
+                        @if($user->password === null)
+                            Henüz şifre yok — ilk girişte kendisi belirleyecek.
+                        @else
+                            Sıfırlarsan her cihazdan çıkarılır, sonraki girişte yeni şifre belirler.
+                        @endif
+                    </div>
+                </div>
+                @if($user->password !== null)
+                    <form method="POST" action="{{ route('admin.users.reset-password', $user) }}"
+                        onsubmit="return confirm('{{ $user->name }} her cihazdan çıkarılacak ve yeni şifre belirlemesi gerekecek. Emin misin?')">
+                        @csrf
+                        <button type="submit" class="btn btn-secondary">Şifreyi sıfırla</button>
+                    </form>
+                @endif
+            </div>
+        </div>
+    @endif
+
     @if($user->isStudent())
         {{--
             Koc atamasi (Dalga 14). Ana formun DISINDA: ic ice form gecersiz

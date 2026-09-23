@@ -22,6 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // "Tembel kapatma birincil" karari: cron kacsa da veri dogru gorunur.
         $middleware->appendToGroup('web', \App\Http\Middleware\SettleStaleSessions::class);
 
+        // Sifresi sifirlanan kullanici (Dalga 18b) her cihazdan atilir.
+        $middleware->appendToGroup('web', \App\Http\Middleware\EndPasswordlessSession::class);
+
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'subscription' => \App\Http\Middleware\ActiveSubscription::class,

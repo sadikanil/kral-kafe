@@ -267,6 +267,27 @@ class UserController extends Controller
     }
 
     /**
+     * Dalga 18b: sifre silinir. Kullanici bir sonraki isteginde her
+     * cihazdan atilir (EndPasswordlessSession) ve giriste yeni sifre
+     * belirler. remember_token da degisir ki "beni hatirla" cerezi geri
+     * sokmasin.
+     */
+    public function resetPassword(User $user)
+    {
+        // Kendi sifresini silen yonetici, baska yonetici yoksa sistemi kilitler.
+        if ($user->is(auth()->user())) {
+            return back()->with('error', 'Kendi şifreni buradan sıfırlayamazsın.');
+        }
+
+        $user->forceFill([
+            'password' => null,
+            'remember_token' => \Illuminate\Support\Str::random(60),
+        ])->save();
+
+        return back()->with('success', "{$user->name} çıkış yaptırıldı; sonraki girişte yeni şifre belirleyecek.");
+    }
+
+    /**
      * Telefon tek bicimde saklanir (App\Support\Telefon). Gecersiz girdi
      * OLDUGU GIBI birakilir ki asagidaki kural onu reddedebilsin.
      */

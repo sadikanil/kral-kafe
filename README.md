@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 505 test / 1286 doğrulama yeşil._
+_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 512 test / 1298 doğrulama yeşil._
 
 ---
 
@@ -29,7 +29,7 @@ _Son güncelleme: 23 Eylül 2026 · Laravel 12 · 505 test / 1286 doğrulama ye�
 
 - [x] **Denetim** — cron canlıda hiç çalışmıyordu (yol + başlık), düzeltildi. 505 test yeşil, migration'lar yerel+canlı tamam, view/route derleniyor. README'deki eski sayılar düzeltildi.
 - [x] **18 · Telefonla giriş** — önce telefon; şifresi varsa şifre sor, yoksa şifre belirlet. E-posta ve şifre isteğe bağlı; admin e-postayla girmeye devam eder.
-- [ ] **18b · Şifre sıfırla** — admin butonu: kullanıcı askıya alınır, sonraki girişte yeni şifre belirlemek zorunda.
+- [x] **18b · Şifre sıfırla** — kullanıcı düzenleme sayfasında buton: her cihazdan çıkarılır, sonraki girişte yeni şifre belirler.
 - [ ] **19 · Paket seviyesi** — pakete `tier`; deneme kulübü ek paket olarak eklenebilir; "sadece deneme" paketi tanımlanabilir.
 - [ ] **20 · Kullanıcı ekleme akışı** — rol → paket → koç (tier 2+) → veli (öğrenciye **en az 1 veli zorunlu**).
 - [ ] **21 · Tek menü** — `/koc/...` ayrımı kalkar; herkes tek düz menüde yetkisi kadarını görür.
