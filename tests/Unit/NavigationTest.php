@@ -29,7 +29,7 @@ class NavigationTest extends TestCase
 
         $this->assertContains('admin.dashboard', $rotalar);
         $this->assertContains('coach.plan.index', $rotalar);
-        $this->assertContains('admin.stock.index', $rotalar);
+        $this->assertContains('admin.products.index', $rotalar);
     }
 
     public function test_the_admin_menu_is_grouped_under_headings(): void

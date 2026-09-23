@@ -28,14 +28,12 @@ class Location extends Model
     public const SELF_SERVICE_QR = 'SELF-ADISYON';
 
     /**
-     * Panelden eklenen tuketimlerin baglandigi sanal lokasyon.
+     * Konumu olmayan urunun tuketiminin baglandigi sanal lokasyon.
      *
      * consumptions.location_id NOT NULL ve butun raporlar/ekranlar
      * location->name okuyor; sutunu nullable yapmak yerine tek bir sistem
-     * lokasyonu kullaniliyor. is_active=false BILEREK: stok sayimi, QR
-     * yazdirma ve panel sayaclari yalnizca acik lokasyonlari aldigi icin bu
-     * satir oralara hic girmez. Self adisyon stok dusmez (ProductLocation
-     * yok), yalnizca hesaba yazar.
+     * lokasyonu kullaniliyor. Konum etiketi listesine (tags()) ve sayima
+     * girmez. Stok dusumu urunun kendisinden yapilir (Dalga 29).
      */
     public static function selfService(): self
     {
@@ -71,65 +69,26 @@ class Location extends Model
     }
 
     /**
-     * Get products at this location.
+     * Konum etiketleri (Dalga 29): sistem lokasyonu (self adisyon) haric,
+     * ada gore. Lokasyonlar sayfasi kalkti; liste urun formunda ve stok
+     * filtresinde.
+     */
+    public static function tags()
+    {
+        return static::where('qr_code', '!=', self::SELF_SERVICE_QR)->orderBy('name')->get();
+    }
+
+    /** Formda yazilan konum adi: varsa o etiket, yoksa yenisi. */
+    public static function tagNamed(string $ad): self
+    {
+        return static::firstOrCreate(['name' => trim($ad)], ['type' => 'shelf', 'is_active' => true]);
+    }
+
+    /**
+     * Bu konum etiketini tasiyan urunler (Dalga 29).
      */
     public function products()
     {
-        return $this->belongsToMany(Product::class, 'product_locations')
-            ->withPivot(['expected_quantity', 'min_quantity'])
-            ->withTimestamps();
-    }
-
-    /**
-     * Get product locations.
-     */
-    public function productLocations()
-    {
-        return $this->hasMany(ProductLocation::class);
-    }
-
-    /**
-     * Get stock records for this location.
-     */
-    public function stockRecords()
-    {
-        return $this->hasMany(StockRecord::class);
-    }
-
-    /**
-     * Get stock photos for this location.
-     */
-    public function stockPhotos()
-    {
-        return $this->hasMany(StockPhoto::class);
-    }
-
-    /**
-     * Get consumptions at this location.
-     */
-    public function consumptions()
-    {
-        return $this->hasMany(Consumption::class);
-    }
-
-    /**
-     * Scope for active locations.
-     */
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-    /**
-     * Get Turkish type name.
-     */
-    public function getTypeNameAttribute(): string
-    {
-        return match ($this->type) {
-            'shelf' => 'Raf',
-            'cabinet' => 'Dolap',
-            'fridge' => 'Buzdolabı',
-            default => $this->type,
-        };
+        return $this->hasMany(Product::class);
     }
 }

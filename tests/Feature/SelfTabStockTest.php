@@ -7,7 +7,6 @@ use App\Models\Location;
 use App\Models\Package;
 use App\Models\PackageItem;
 use App\Models\Product;
-use App\Models\ProductLocation;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,6 +14,7 @@ use Tests\TestCase;
 
 /**
  * Dalga 8 - QR tuketim akisi kalkiyor, stok dusumu self adisyona geciyor.
+ * Dalga 29 - stok urunun uzerinde (product_locations kalkti).
  *
  * NEDEN BIRLIKTE: stok mutabakati expected_quantity'nin sayimlar ARASINDA
  * tuketimle dusmesine dayaniyor (StockController kapanis sayiminda
@@ -34,63 +34,60 @@ class SelfTabStockTest extends TestCase
         return User::factory()->student()->create();
     }
 
-    private function urun(string $ad = 'Filtre Kahve', float $fiyat = 25): Product
+    private function urun(string $ad = 'Canga', float $fiyat = 27, ?int $stok = 10, ?Location $konum = null, ?int $kritik = null): Product
     {
         return Product::create([
             'name' => $ad,
             'unit_price' => $fiyat,
-            'unit_type' => 'adet',
+            'unit_type' => 'Paket',
             'is_active' => true,
+            'stock_quantity' => $stok,
+            'critical_quantity' => $kritik,
+            'location_id' => $konum?->id,
         ]);
     }
 
-    private function raf(string $ad = 'Buzdolabı'): Location
+    private function raf(string $ad = 'Aburcubur Rafı'): Location
     {
-        return Location::create(['name' => $ad, 'is_active' => true]);
+        return Location::create(['name' => $ad]);
     }
 
-    private function yerlestir(Product $urun, Location $raf, int $adet): ProductLocation
+    // --- Stok dusumu (Dalga 29: stok urunun uzerinde) --------------------------
+
+    public function test_adding_to_the_tab_decrements_the_stock(): void
     {
-        return ProductLocation::create([
-            'product_id' => $urun->id,
-            'location_id' => $raf->id,
-            'expected_quantity' => $adet,
-            'min_quantity' => 0,
-        ]);
-    }
+        $urun = $this->urun(stok: 10);
 
-    // --- Stok dusumu ---------------------------------------------------------
-
-    public function test_adding_to_the_tab_decrements_the_shelf(): void
-    {
-        $ogrenci = $this->ogrenci();
-        $urun = $this->urun();
-        $raf = $this->raf();
-        $stok = $this->yerlestir($urun, $raf, 10);
-
-        $this->actingAs($ogrenci)
+        $this->actingAs($this->ogrenci())
             ->post('/kullanici/adisyon', ['product_id' => $urun->id, 'quantity' => 3])
             ->assertRedirect(route('user.tab'));
 
-        $this->assertSame(7, $stok->fresh()->expected_quantity);
+        $this->assertSame(7, $urun->fresh()->stock_quantity);
     }
 
     /**
-     * Kayit urunun GERCEK lokasyonuna yazilir.
-     *
-     * Dalga 6c'de self adisyon her zaman sanal "Self Adisyon" lokasyonuna
-     * yaziyordu cunku stokla ilgisi yoktu. Artik var: stok dusumunun hangi
-     * rafa yazildigi kaydin kendisinde gorunmeli, yoksa bir fark
-     * arastirilirken hangi tuketimin hangi rafi dusurdugu bilinemezdi.
+     * Kayit urunun konumuna yazilir: bir fark arastirilirken hangi
+     * tuketimin hangi konumu dusurdugu gorunur olmali.
      */
-    public function test_the_consumption_records_the_real_shelf(): void
+    public function test_the_consumption_records_the_products_location(): void
     {
-        $ogrenci = $this->ogrenci();
-        $urun = $this->urun();
         $raf = $this->raf();
-        $this->yerlestir($urun, $raf, 10);
+        $urun = $this->urun(konum: $raf);
 
-        $this->actingAs($ogrenci)->post('/kullanici/adisyon', ['product_id' => $urun->id, 'quantity' => 1]);
+        $this->actingAs($this->ogrenci())->post('/kullanici/adisyon', ['product_id' => $urun->id, 'quantity' => 1]);
+
+        $this->assertSame($raf->id, Consumption::sole()->location_id);
+    }
+
+    /** Formdan konum gelse bile ogrenci secemez. */
+    public function test_a_sent_location_is_ignored(): void
+    {
+        $raf = $this->raf();
+        $urun = $this->urun(konum: $raf);
+
+        $this->actingAs($this->ogrenci())->post('/kullanici/adisyon', [
+            'product_id' => $urun->id, 'quantity' => 1, 'location_id' => $this->raf('Depo')->id,
+        ]);
 
         $this->assertSame($raf->id, Consumption::sole()->location_id);
     }
@@ -98,29 +95,25 @@ class SelfTabStockTest extends TestCase
     public function test_undoing_puts_the_stock_back(): void
     {
         $ogrenci = $this->ogrenci();
-        $urun = $this->urun();
-        $raf = $this->raf();
-        $stok = $this->yerlestir($urun, $raf, 10);
+        $urun = $this->urun(stok: 10);
 
         $this->actingAs($ogrenci)->post('/kullanici/adisyon', ['product_id' => $urun->id, 'quantity' => 4]);
-        $this->assertSame(6, $stok->fresh()->expected_quantity);
+        $this->assertSame(6, $urun->fresh()->stock_quantity);
 
         $this->actingAs($ogrenci)->post(route('user.tab.undo', Consumption::sole()));
 
-        $this->assertSame(10, $stok->fresh()->expected_quantity);
+        $this->assertSame(10, $urun->fresh()->stock_quantity);
     }
 
     /** Geri alma suresi dolmussa stok da geri gelmez - kayit gecerli kaliyor. */
     public function test_an_expired_undo_leaves_the_stock_alone(): void
     {
         $ogrenci = $this->ogrenci();
-        $urun = $this->urun();
-        $raf = $this->raf();
-        $stok = $this->yerlestir($urun, $raf, 10);
+        $urun = $this->urun(stok: 10);
 
         $kayit = Consumption::create([
             'user_id' => $ogrenci->id,
-            'location_id' => $raf->id,
+            'location_id' => Location::selfService()->id,
             'product_id' => $urun->id,
             'quantity' => 2,
             'unit_price' => 25,
@@ -129,90 +122,50 @@ class SelfTabStockTest extends TestCase
 
         $this->actingAs($ogrenci)->post(route('user.tab.undo', $kayit))->assertSessionHas('error');
 
-        $this->assertSame(10, $stok->fresh()->expected_quantity);
+        $this->assertSame(10, $urun->fresh()->stock_quantity);
     }
 
-    // --- Rafi olmayan urun ---------------------------------------------------
-
     /**
-     * Hicbir rafa bagli olmayan urun yine de adisyona yazilir.
-     *
-     * Sanal lokasyon (Dalga 6c) bu durum icin KALIYOR: consumptions.location_id
-     * NOT NULL ve her ekran location->name okuyor. Stok dusumu yok - dusurulecek
-     * bir kayit da yok.
+     * Konumu olmayan urun yine de adisyona yazilir: consumptions.location_id
+     * NOT NULL, sanal lokasyon (Dalga 6c) yedek kaliyor. Stok yine duser.
      */
-    public function test_a_product_on_no_shelf_still_reaches_the_tab(): void
+    public function test_a_product_without_a_location_still_reaches_the_tab(): void
     {
-        $ogrenci = $this->ogrenci();
-        $urun = $this->urun();
+        $urun = $this->urun(stok: 5);
 
-        $this->actingAs($ogrenci)
+        $this->actingAs($this->ogrenci())
             ->post('/kullanici/adisyon', ['product_id' => $urun->id, 'quantity' => 1])
             ->assertRedirect(route('user.tab'));
 
-        $kayit = Consumption::sole();
-
-        $this->assertSame(Location::selfService()->id, $kayit->location_id);
-        $this->assertSame(0, ProductLocation::count());
-    }
-
-    /** Kapali raf sayilmaz: stok ekranlarindan cikmis bir raf dusurulmemeli. */
-    public function test_an_inactive_shelf_is_ignored(): void
-    {
-        $ogrenci = $this->ogrenci();
-        $urun = $this->urun();
-        $kapali = Location::create(['name' => 'Eski Raf', 'is_active' => false]);
-        $stok = $this->yerlestir($urun, $kapali, 10);
-
-        $this->actingAs($ogrenci)->post('/kullanici/adisyon', ['product_id' => $urun->id, 'quantity' => 1]);
-
         $this->assertSame(Location::selfService()->id, Consumption::sole()->location_id);
-        $this->assertSame(10, $stok->fresh()->expected_quantity);
+        $this->assertSame(4, $urun->fresh()->stock_quantity);
     }
 
-    // --- Birden fazla raf ----------------------------------------------------
-
-    /**
-     * Dalga 26 (karar, 23 Eyl): ogrenciye raf SORULMAZ. Urun birden fazla
-     * raftaysa stok EN COK stoku olan raftan duser - deterministik, ve
-     * tahminin yanildigi yerde yonetici kapanis sayiminda duzeltir.
-     * (Onceki kural "ogrenci secsin"di; kullanici secim istemedi.)
-     */
-    public function test_a_product_on_two_shelves_needs_no_choice(): void
+    /** Takip kapali (sicak icecek): satilir, stok bos kalir. */
+    public function test_an_untracked_product_is_sold_without_stock(): void
     {
-        $ogrenci = $this->ogrenci();
-        $urun = $this->urun();
-        $buzdolabi = $this->yerlestir($urun, $this->raf('Buzdolabı'), 10);
-        $raf = $this->yerlestir($urun, $this->raf('Aburcubur Rafı'), 5);
+        $urun = $this->urun('Türk Kahvesi', 60, stok: null);
 
-        $this->actingAs($ogrenci)
-            ->post('/kullanici/adisyon', ['product_id' => $urun->id, 'quantity' => 2])
-            ->assertSessionHasNoErrors();
+        $this->actingAs($this->ogrenci())->post('/kullanici/adisyon', ['product_id' => $urun->id, 'quantity' => 2]);
 
-        $this->assertSame(8, $buzdolabi->fresh()->expected_quantity);
-        $this->assertSame(5, $raf->fresh()->expected_quantity);
+        $this->assertSame(1, Consumption::count());
+        $this->assertNull($urun->fresh()->stock_quantity);
     }
 
-    /** Formdan raf gelse bile ogrenci secemez; kural ayni. */
-    public function test_a_sent_shelf_is_ignored(): void
+    /** Satis kritik sayiya indirirse yonetici bildirim alir. */
+    public function test_a_sale_to_the_critical_level_notifies_the_admin(): void
     {
-        $ogrenci = $this->ogrenci();
-        $urun = $this->urun();
-        $buzdolabi = $this->yerlestir($urun, $this->raf('Buzdolabı'), 10);
-        $raf = $this->yerlestir($urun, $this->raf('Aburcubur Rafı'), 5);
+        $yonetici = User::factory()->admin()->create();
+        $urun = $this->urun(stok: 6, kritik: 5);
 
-        $this->actingAs($ogrenci)->post('/kullanici/adisyon', [
-            'product_id' => $urun->id, 'quantity' => 1, 'location_id' => $raf->location_id,
-        ]);
+        $this->actingAs($this->ogrenci())->post('/kullanici/adisyon', ['product_id' => $urun->id, 'quantity' => 1]);
 
-        $this->assertSame(9, $buzdolabi->fresh()->expected_quantity);
+        $this->assertSame(1, \App\Models\Notification::where('user_id', $yonetici->id)->where('type', 'low_stock')->count());
     }
 
     public function test_the_tab_asks_no_shelf(): void
     {
-        $urun = $this->urun();
-        $this->yerlestir($urun, $this->raf('Buzdolabı'), 10);
-        $this->yerlestir($urun, $this->raf('Aburcubur Rafı'), 5);
+        $this->urun(konum: $this->raf());
 
         $this->actingAs($this->ogrenci())->get('/kullanici/adisyon')
             ->assertOk()

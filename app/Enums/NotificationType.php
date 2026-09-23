@@ -19,12 +19,16 @@ enum NotificationType: string
     /** Stok sayimi zamani geldi; yoneticiye (Dalga 27). */
     case StockCount = 'stock_count';
 
+    /** Bir urun kritik stok sayisina indi; yoneticiye (Dalga 29). */
+    case LowStock = 'low_stock';
+
     public function label(): string
     {
         return match ($this) {
             self::Absence => 'Devamsızlık',
             self::ExamTomorrow => 'Yarın deneme var',
             self::StockCount => 'Stok sayımı',
+            self::LowStock => 'Kritik stok',
         };
     }
 }

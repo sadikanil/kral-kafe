@@ -128,7 +128,7 @@
         </div>
         <div class="card-body">
             <div class="d-flex gap-2" style="flex-wrap: wrap;">
-                <a href="{{ route('admin.stock.index') }}" class="btn btn-primary">
+                <a href="{{ route('admin.stock.counts') }}" class="btn btn-primary">
                     📷 Stok Sayımı Yap
                 </a>
                 <a href="{{ route('admin.users.create') }}" class="btn btn-success">
@@ -137,8 +137,8 @@
                 <a href="{{ route('admin.products.create') }}" class="btn btn-warning">
                     📦 Yeni Ürün
                 </a>
-                <a href="{{ route('admin.locations.create') }}" class="btn btn-secondary">
-                    📍 Yeni Lokasyon
+                <a href="{{ route('admin.stock.index') }}" class="btn btn-secondary">
+                    📦 Stok
                 </a>
                 <a href="{{ route('admin.reports.monthly') }}" class="btn btn-secondary">
                     📈 Aylık Rapor
@@ -150,7 +150,7 @@
     @if($unresolvedDiscrepancies > 0)
         <div class="alert alert-warning mt-4 animate-slide-up">
             ⚠️ <strong>{{ $unresolvedDiscrepancies }}</strong> adet çözülmemiş stok tutarsızlığı var.
-            <a href="{{ route('admin.stock.index') }}" class="btn btn-sm btn-warning ml-2">İncele</a>
+            <a href="{{ route('admin.stock.counts') }}" class="btn btn-sm btn-warning ml-2">İncele</a>
         </div>
     @endif
 @endsection

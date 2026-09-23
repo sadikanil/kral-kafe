@@ -87,9 +87,8 @@ final class Navigation
             ]],
             ['title' => 'Kafe', 'items' => [
                 ['route' => 'admin.tables.index', 'label' => 'Masalar', 'icon' => '🪑', 'match' => 'admin.tables.*'],
-                ['route' => 'admin.products.index', 'label' => 'Ürünler', 'icon' => '☕', 'match' => 'admin.products.*'],
-                ['route' => 'admin.locations.index', 'label' => 'Lokasyonlar', 'icon' => '📍', 'match' => 'admin.locations.*'],
-                ['route' => 'admin.stock.index', 'label' => 'Stok Sayım', 'icon' => '📦', 'match' => 'admin.stock.*'],
+                // Dalga 29: urun, stok ve sayim tek girişte; sayfalar sekmeli.
+                ['route' => 'admin.products.index', 'label' => 'Ürünler ve Stok', 'icon' => '☕', 'match' => 'admin.products.*|admin.stock.*'],
                 ['route' => 'admin.packages.index', 'label' => 'Paketler', 'icon' => '🎫', 'match' => 'admin.packages.*'],
                 ['route' => 'admin.subscriptions.overview', 'label' => 'Ödemeler', 'icon' => '💳'],
                 ['route' => 'admin.reports.index', 'label' => 'Raporlar', 'icon' => '📈', 'match' => 'admin.reports.*'],

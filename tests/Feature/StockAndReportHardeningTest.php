@@ -37,7 +37,8 @@ class StockAndReportHardeningTest extends TestCase
         return Product::create(['name' => 'Kola', 'unit_price' => 20, 'unit_type' => 'paket']);
     }
 
-    public function test_stock_index_shows_the_discrepancy_difference(): void
+    /** Dalga 29: tutarsizliklar Urunler > Sayim sekmesinde. */
+    public function test_the_count_page_shows_the_discrepancy_difference(): void
     {
         DiscrepancyLog::create([
             'location_id' => $this->location()->id,
@@ -51,7 +52,7 @@ class StockAndReportHardeningTest extends TestCase
 
         // difference = 6 - 10 = -4 ; sayfa bu degeri gostermeli
         $this->actingAs($this->admin())
-            ->get('/yonetim/stok')
+            ->get(route('admin.stock.counts'))
             ->assertOk()
             ->assertSee('<td>-4</td>', false);
     }
@@ -85,7 +86,7 @@ class StockAndReportHardeningTest extends TestCase
 
         $admin = $this->admin();
         $location = $this->location();
-        $location->products()->attach($this->product()->id, ['expected_quantity' => 5, 'min_quantity' => 1]);
+        $this->product()->update(['location_id' => $location->id, 'stock_quantity' => 5, 'critical_quantity' => 1]);
 
         $this->actingAs($admin)->post("/yonetim/stok/{$location->id}/yukle", [
             'record_type' => 'opening',

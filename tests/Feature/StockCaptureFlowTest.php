@@ -33,7 +33,7 @@ class StockCaptureFlowTest extends TestCase
             'name' => 'Buzdolabı', 'type' => 'fridge', 'qr_code' => 'LOC-F', 'is_active' => true,
         ]);
         $product = Product::create(['name' => 'Ayran', 'unit_price' => 15, 'unit_type' => 'paket']);
-        $location->products()->attach($product->id, ['expected_quantity' => 12, 'min_quantity' => 3]);
+        $product->update(['location_id' => $location->id, 'stock_quantity' => 12, 'critical_quantity' => 3]);
 
         return $location;
     }

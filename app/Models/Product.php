@@ -19,29 +19,116 @@ class Product extends Model
         'image_url',
         'barcode',
         'is_active',
+        'description',
+        'location_id',
+        'stock_quantity',
+        'critical_quantity',
     ];
 
     protected $casts = [
         'unit_price' => 'decimal:2',
         'is_active' => 'boolean',
+        'stock_quantity' => 'integer',
+        'critical_quantity' => 'integer',
     ];
 
     /**
-     * Get locations where this product is stored.
+     * Kritik stok bildirimi (Dalga 29): sinir GECILDIGI anda, bir kez.
+     *
+     * Her satista degil: "kritik mi" once hayir sonra evet olunca. Stok
+     * yeniden ustune cikip tekrar inerse yeniden uyarir. Kritik sayinin
+     * stogun ustune cekilmesi de bir gecistir.
      */
-    public function locations()
+    protected static function booted(): void
     {
-        return $this->belongsToMany(Location::class, 'product_locations')
-            ->withPivot(['expected_quantity', 'min_quantity'])
-            ->withTimestamps();
+        static::created(function (Product $urun) {
+            if ($urun->isCritical()) {
+                app(\App\Services\NotificationBuilder::class)->lowStock($urun);
+            }
+        });
+
+        static::updated(function (Product $urun) {
+            if (! $urun->wasChanged(['stock_quantity', 'critical_quantity'])) {
+                return;
+            }
+
+            $onceden = self::criticalFor($urun->getOriginal('stock_quantity'), $urun->getOriginal('critical_quantity'));
+
+            if (! $onceden && $urun->isCritical()) {
+                app(\App\Services\NotificationBuilder::class)->lowStock($urun);
+            }
+        });
+    }
+
+    /** Bos stok = takip kapali (sicak icecek, cay). */
+    public function tracksStock(): bool
+    {
+        return $this->stock_quantity !== null;
+    }
+
+    /** Kritik sayiya (dahil) indi mi? Kritik sayi yoksa yalnizca tukenince. */
+    public function isCritical(): bool
+    {
+        return self::criticalFor($this->stock_quantity, $this->critical_quantity);
+    }
+
+    private static function criticalFor(?int $stok, ?int $kritik): bool
+    {
+        return $stok !== null && $kritik !== null && $stok <= $kritik;
+    }
+
+    /** untracked | out | critical | ok - stok sayfasinin rozeti ve filtresi. */
+    public function stockStatus(): string
+    {
+        return match (true) {
+            ! $this->tracksStock() => 'untracked',
+            $this->stock_quantity <= 0 => 'out',
+            $this->isCritical() => 'critical',
+            default => 'ok',
+        };
     }
 
     /**
-     * Get product locations.
+     * Filtre: 'critical' tukenenleri de kapsar (ikisi de "siparis ver").
      */
-    public function productLocations()
+    public function scopeWithStockStatus($query, string $durum)
     {
-        return $this->hasMany(ProductLocation::class);
+        return match ($durum) {
+            'untracked' => $query->whereNull('stock_quantity'),
+            'out' => $query->where('stock_quantity', '<=', 0),
+            'critical' => $query->whereNotNull('stock_quantity')->where(fn ($q) => $q
+                ->where('stock_quantity', '<=', 0)
+                ->orWhereColumn('stock_quantity', '<=', 'critical_quantity')),
+            'ok' => $query->where('stock_quantity', '>', 0)->where(fn ($q) => $q
+                ->whereNull('critical_quantity')
+                ->orWhereColumn('stock_quantity', '>', 'critical_quantity')),
+            default => $query,
+        };
+    }
+
+    /**
+     * Satis (-) ya da iade (+). Takip kapaliysa hicbir sey yapmaz.
+     *
+     * Eloquent increment/decrement: tek UPDATE (atomik) ve 'updated' olayi
+     * tetiklenir, yani kritik stok bildirimi burada da calisir.
+     */
+    public function adjustStock(int $fark): void
+    {
+        if (! $this->tracksStock() || $fark === 0) {
+            return;
+        }
+
+        $fark > 0
+            ? $this->increment('stock_quantity', $fark)
+            : $this->decrement('stock_quantity', -$fark);
+    }
+
+    /**
+     * Konum etiketi (Dalga 29): urunun durdugu tek yer. Bos olabilir.
+     */
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
     }
 
     /**

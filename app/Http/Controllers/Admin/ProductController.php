@@ -16,7 +16,7 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Product::query();
+        $query = Product::with('location');
 
         // Filter by category
         if ($request->has('category') && $request->category !== 'all') {
@@ -53,18 +53,9 @@ class ProductController extends Controller
     /**
      * Show the form for creating a new product.
      */
-    /**
-     * Show the form for creating a new product.
-     */
     public function create()
     {
-        $categories = Product::distinct()->pluck('category')->filter();
-        $units = Product::distinct()->pluck('unit_type')->filter();
-
-        return view('admin.products.create', [
-            'categories' => $categories,
-            'units' => $units
-        ]);
+        return view('admin.products.create', $this->formData(new Product()));
     }
 
     /**
@@ -72,23 +63,7 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-            'emoji' => ['nullable', 'string', 'max:20'],
-            'category' => ['nullable', 'string', 'max:50'],
-            'unit_price' => ['required', 'numeric', 'min:0'],
-            'unit_type' => ['required', 'string', 'max:50'],
-        ]);
-
-        Product::create([
-            'name' => $validated['name'],
-            'emoji' => $validated['emoji'] ?? null,
-            'category' => $validated['category'] ?? null,
-            'unit_price' => $validated['unit_price'],
-            'unit_type' => $validated['unit_type'],
-            // removed barcode and image_url
-            'is_active' => true,
-        ]);
+        Product::create($this->validatedProduct($request, null));
 
         return redirect()->route('admin.products.index')
             ->with('success', 'Ürün başarıyla oluşturuldu.');
@@ -99,17 +74,7 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        $categories = Product::distinct()->pluck('category')->filter();
-        $units = Product::distinct()->pluck('unit_type')->filter();
-
-        return view('admin.products.edit', [
-            'product' => $product,
-            // Dalga 26: urun nerede, kac adet - yalnizca yoneticinin girdisi.
-            'locations' => \App\Models\Location::where('is_active', true)->orderBy('name')->get(),
-            'placements' => $product->productLocations()->pluck('expected_quantity', 'location_id'),
-            'categories' => $categories,
-            'units' => $units,
-        ]);
+        return view('admin.products.edit', $this->formData($product));
     }
 
     /**
@@ -117,35 +82,68 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        $validated = $request->validate([
+        $product->update($this->validatedProduct($request, $product));
+
+        return redirect()->route('admin.products.index')
+            ->with('success', 'Ürün başarıyla güncellendi.');
+    }
+
+    /** @return array<string,mixed> */
+    private function formData(Product $product): array
+    {
+        return [
+            'product' => $product,
+            'categories' => Product::distinct()->pluck('category')->filter(),
+            'units' => Product::distinct()->pluck('unit_type')->filter(),
+            // Dalga 29: konum bir etiket; Lokasyonlar sayfasi kalkti.
+            'locations' => \App\Models\Location::tags(),
+        ];
+    }
+
+    /**
+     * Ekleme ve duzenleme ayni kurallar (Dalga 29). Iki ayri kopya
+     * ayristigi icin aciklama hic kaydedilmiyordu.
+     *
+     * @return array<string,mixed>
+     */
+    private function validatedProduct(Request $request, ?Product $product): array
+    {
+        $v = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'emoji' => ['nullable', 'string', 'max:20'],
             'category' => ['nullable', 'string', 'max:50'],
             'unit_price' => ['required', 'numeric', 'min:0'],
             'unit_type' => ['required', 'string', 'max:50'],
-            'is_active' => ['boolean'],
-            'places' => ['nullable', 'array'],
-            'places.*.on' => ['nullable', 'boolean'],
-            'places.*.quantity' => ['nullable', 'integer', 'min:0', 'max:100000'],
-        ], ['places.*.quantity.min' => 'Stok eksi olamaz.']);
-
-        $product->update([
-            'name' => $validated['name'],
-            'emoji' => $validated['emoji'] ?? null,
-            'category' => $validated['category'] ?? null,
-            'unit_price' => $validated['unit_price'],
-            'unit_type' => $validated['unit_type'],
-            'is_active' => $request->boolean('is_active'),
+            'description' => ['nullable', 'string', 'max:1000'],
+            'is_active' => ['nullable', 'boolean'],
+            'location_id' => ['nullable', 'integer', 'exists:locations,id'],
+            'new_location' => ['nullable', 'string', 'max:100'],
+            'stock_quantity' => ['nullable', 'integer', 'min:0', 'max:100000'],
+            'critical_quantity' => ['nullable', 'integer', 'min:0', 'max:100000',
+                'prohibited_if:stock_quantity,null'],
+        ], [
+            'stock_quantity.min' => 'Stok eksi olamaz.',
+            'critical_quantity.prohibited_if' => 'Kritik sayı için önce stok girin.',
         ]);
 
-        // Bolum formda yoksa yerlesime DOKUNULMAZ; varsa isaretli olanlar
-        // kalir/guncellenir, isareti kaldirilanlar silinir.
-        if ($request->has('places_present')) {
-            $this->syncPlacements($product, $validated['places'] ?? []);
-        }
+        $konum = filled($v['new_location'] ?? null)
+            ? \App\Models\Location::tagNamed($v['new_location'])->id
+            : ($v['location_id'] ?? null);
 
-        return redirect()->route('admin.products.index')
-            ->with('success', 'Ürün başarıyla güncellendi.');
+        return [
+            'name' => $v['name'],
+            'emoji' => $v['emoji'] ?? null,
+            'category' => $v['category'] ?? null,
+            'unit_price' => $v['unit_price'],
+            'unit_type' => $v['unit_type'],
+            'description' => $v['description'] ?? null,
+            // Alan hic gelmezse durum DEGISMEZ: eski duzenleme formunda kutu
+            // yoktu ve her kayit urunu sessizce pasife aliyordu.
+            'is_active' => $request->has('is_active') ? $request->boolean('is_active') : ($product?->is_active ?? true),
+            'location_id' => $konum,
+            'stock_quantity' => $v['stock_quantity'] ?? null,
+            'critical_quantity' => $v['critical_quantity'] ?? null,
+        ];
     }
 
     /**
@@ -174,26 +172,5 @@ class ProductController extends Controller
         $statusText = $product->is_active ? 'aktifleştirildi' : 'pasifleştirildi';
 
         return back()->with('success', "Ürün {$statusText}.");
-    }
-
-    /** @param array<int,array{on?:mixed,quantity?:mixed}> $yerler */
-    private function syncPlacements(Product $product, array $yerler): void
-    {
-        $gecerli = \App\Models\Location::whereIn('id', array_keys($yerler))->pluck('id')->all();
-        $isaretli = [];
-
-        foreach ($yerler as $lokasyonId => $yer) {
-            if (empty($yer['on']) || ! in_array((int) $lokasyonId, $gecerli, true)) {
-                continue;
-            }
-
-            $isaretli[] = (int) $lokasyonId;
-            \App\Models\ProductLocation::updateOrCreate(
-                ['product_id' => $product->id, 'location_id' => (int) $lokasyonId],
-                ['expected_quantity' => (int) ($yer['quantity'] ?? 0), 'min_quantity' => 0],
-            );
-        }
-
-        $product->productLocations()->whereNotIn('location_id', $isaretli)->delete();
     }
 }

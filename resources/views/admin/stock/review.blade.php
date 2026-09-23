@@ -39,7 +39,7 @@
     <a href="{{ route('admin.stock.capture', $location) }}" class="btn btn-secondary btn-sm">
         📷 Yeniden Fotoğraf Yükle
     </a>
-    <a href="{{ route('admin.stock.index') }}" class="btn btn-secondary btn-sm">
+    <a href="{{ route('admin.stock.counts') }}" class="btn btn-secondary btn-sm">
         📋 Stok Sayım
     </a>
 @endsection
@@ -121,9 +121,9 @@
                 <h4>Sayım Sonuçları</h4>
             </div>
             <div class="card-body text-center p-4">
-                <p class="text-muted mb-3">Bu lokasyona bağlı ürün bulunmuyor.</p>
-                <a href="{{ route('admin.locations.edit', $location) }}" class="btn btn-primary">
-                    ➕ Lokasyona Ürün Ekle
+                <p class="text-muted mb-3">Bu konum etiketini taşıyan ürün yok.</p>
+                <a href="{{ route('admin.products.index') }}" class="btn btn-primary">
+                    ☕ Ürünlere git
                 </a>
             </div>
         </div>
@@ -166,7 +166,7 @@
                                         $aiConfidence = isset($detection['confidence'])
                                             ? max(0, min(1, round((float) $detection['confidence'], 2)))
                                             : null;
-                                        $expectedQuantity = $product->pivot->expected_quantity;
+                                        $expectedQuantity = $product->stock_quantity;
                                         $defaultQuantity = $aiQuantity ?? $expectedQuantity ?? 0;
                                         $initialDifference = $defaultQuantity - ($expectedQuantity ?? 0);
                                     @endphp

@@ -24,30 +24,89 @@ class StockController extends Controller
     }
 
     /**
-     * Show stock management dashboard.
+     * Stok sayfasi (Dalga 29): urunler, konum etiketi ve stok; filtrelenir
+     * ve toplu girilir.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $locations = Location::where('is_active', true)
-            ->with('products')
-            ->get();
+        $filtre = $request->validate([
+            'konum' => ['nullable', 'integer'],
+            'durum' => ['nullable', 'in:critical,out,ok,untracked'],
+        ]);
 
-        // Unresolved discrepancies
-        $unresolvedDiscrepancies = DiscrepancyLog::with('location', 'product')
-            ->where('resolved', false)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // Recent stock records
-        $recentRecords = StockRecord::with('location', 'product', 'recorder')
-            ->orderBy('recorded_at', 'desc')
-            ->limit(20)
+        $urunler = Product::with('location')
+            ->when($filtre['konum'] ?? null, fn ($q, $konum) => $q->where('location_id', $konum))
+            ->when($filtre['durum'] ?? null, fn ($q, $durum) => $q->withStockStatus($durum))
+            ->orderBy('category')->orderBy('name')
             ->get();
 
         return view('admin.stock.index', [
-            'locations' => $locations,
-            'unresolvedDiscrepancies' => $unresolvedDiscrepancies,
-            'recentRecords' => $recentRecords,
+            'products' => $urunler,
+            'locations' => Location::tags(),
+            'filter' => $filtre,
+            'criticalCount' => Product::withStockStatus('critical')->count(),
+        ]);
+    }
+
+    /**
+     * Toplu stok girisi. Yalnizca gonderilen urunler degisir; bos stok =
+     * takip kapali. Kritik stok bildirimi Product'in kendi olayindan.
+     */
+    public function update(Request $request)
+    {
+        $veri = $request->validate([
+            'stok' => ['required', 'array'],
+            'stok.*.quantity' => ['nullable', 'integer', 'min:0', 'max:100000'],
+            'stok.*.critical' => ['nullable', 'integer', 'min:0', 'max:100000'],
+        ], ['stok.*.quantity.min' => 'Stok eksi olamaz.', 'stok.*.critical.min' => 'Kritik sayı eksi olamaz.']);
+
+        $hatalar = [];
+        foreach ($veri['stok'] as $id => $satir) {
+            if (($satir['critical'] ?? null) !== null && ($satir['quantity'] ?? null) === null) {
+                $hatalar["stok.{$id}.critical"] = 'Kritik sayı için önce stok girin.';
+            }
+        }
+        if ($hatalar !== []) {
+            throw \Illuminate\Validation\ValidationException::withMessages($hatalar);
+        }
+
+        $degisen = 0;
+        foreach (Product::whereIn('id', array_keys($veri['stok']))->get() as $urun) {
+            $satir = $veri['stok'][$urun->id];
+            $urun->fill([
+                'stock_quantity' => $satir['quantity'] ?? null,
+                'critical_quantity' => $satir['critical'] ?? null,
+            ]);
+
+            if ($urun->isDirty()) {
+                $urun->save();
+                $degisen++;
+            }
+        }
+
+        return back()->with('success', "{$degisen} ürünün stoğu güncellendi.");
+    }
+
+    /**
+     * Sayim sayfasi: konum etiketi secilip fotografla (yapay zeka) sayilir;
+     * cozulmemis tutarsizliklar ve son kayitlar burada.
+     */
+    public function counts()
+    {
+        return view('admin.stock.counts', [
+            'locations' => Location::where('qr_code', '!=', Location::SELF_SERVICE_QR)
+                ->whereHas('products')
+                ->withCount('products')
+                ->orderBy('name')
+                ->get(),
+            'unresolvedDiscrepancies' => DiscrepancyLog::with('location', 'product')
+                ->where('resolved', false)
+                ->orderBy('created_at', 'desc')
+                ->get(),
+            'recentRecords' => StockRecord::with('location', 'product', 'recorder')
+                ->orderBy('recorded_at', 'desc')
+                ->limit(20)
+                ->get(),
         ]);
     }
 
@@ -114,12 +173,13 @@ class StockController extends Controller
                 ->with('error', 'Fotoğraflar bulunamadı.');
         }
 
-        // Get expected products
+        // Bu konum etiketini tasiyan urunler; beklenen = sistemdeki stok
+        // (takip kapaliysa null - ilk sayim takibi baslatir).
         $expectedProducts = $location->products->map(function ($product) {
             return [
                 'id' => $product->id,
                 'name' => $product->name,
-                'expected_quantity' => $product->pivot->expected_quantity,
+                'expected_quantity' => $product->stock_quantity,
             ];
         })->toArray();
 
@@ -199,35 +259,32 @@ class StockController extends Controller
 
             $records[] = $record;
 
-            // Check for discrepancies
-            $productLocation = $location->productLocations()
-                ->where('product_id', $productData['product_id'])
-                ->first();
+            // Yalnizca bu konumun urunu guncellenir: formdan baska bir
+            // urun kimligi gelse de baska konumun stoku bozulmaz.
+            $urun = $location->products()->whereKey($productData['product_id'])->first();
 
-            if ($productLocation) {
-                $expectedQty = $productLocation->expected_quantity;
-                $actualQty = $productData['verified_quantity'];
+            if ($urun) {
+                $sayilan = (int) $productData['verified_quantity'];
 
-                if (abs($expectedQty - $actualQty) > 0) {
+                // Takip kapaliyken fark yoktur: ilk sayim takibi baslatir.
+                if ($urun->tracksStock() && $urun->stock_quantity !== $sayilan) {
                     DiscrepancyLog::create([
                         'location_id' => $location->id,
-                        'product_id' => $productData['product_id'],
-                        'expected_quantity' => $expectedQty,
-                        'actual_quantity' => $actualQty,
+                        'product_id' => $urun->id,
+                        'expected_quantity' => $urun->stock_quantity,
+                        'actual_quantity' => $sayilan,
                         'record_type' => $validated['record_type'],
                     ]);
                 }
 
-                // Update expected quantity for next time
-                $productLocation->update([
-                    'expected_quantity' => $actualQty,
-                ]);
+                // Sayilan, sistemdeki stok olur (kritik uyarisi olaydan).
+                $urun->update(['stock_quantity' => $sayilan]);
             }
         }
 
         $typeText = $validated['record_type'] === 'opening' ? 'Açılış' : 'Kapanış';
 
-        return redirect()->route('admin.stock.index')
+        return redirect()->route('admin.stock.counts')
             ->with('success', "{$typeText} stok sayımı başarıyla kaydedildi.");
     }
 
@@ -254,7 +311,7 @@ class StockController extends Controller
 
         $discrepancy->resolve(Auth::user(), $validated['resolution_notes']);
 
-        return redirect()->route('admin.stock.index')
+        return redirect()->route('admin.stock.counts')
             ->with('success', 'Tutarsızlık çözümlendi.');
     }
 }

@@ -49,7 +49,7 @@ class MissingAdminPagesTest extends TestCase
 
         $location = $this->location();
         $product = $this->product();
-        $location->products()->attach($product->id, ['expected_quantity' => 10, 'min_quantity' => 2]);
+        $product->update(['location_id' => $location->id, 'stock_quantity' => 10, 'critical_quantity' => 2]);
 
         $this->actingAs($this->admin())->post("/yonetim/stok/{$location->id}/yukle", [
             'record_type' => 'opening',
@@ -73,7 +73,7 @@ class MissingAdminPagesTest extends TestCase
 
         $location = $this->location();
         $product = $this->product();
-        $location->products()->attach($product->id, ['expected_quantity' => 10, 'min_quantity' => 2]);
+        $product->update(['location_id' => $location->id, 'stock_quantity' => 10, 'critical_quantity' => 2]);
 
         $this->actingAs($this->admin())->post("/yonetim/stok/{$location->id}/yukle", [
             'record_type' => 'opening',

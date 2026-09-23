@@ -174,6 +174,36 @@ class NotificationBuilder
     }
 
     /**
+     * Kritik stok uyarisi (Dalga 29): her yoneticiye. Ne zaman cagrilacagina
+     * Product karar verir (sinir gecildiginde); burada tekrar kontrolu yok.
+     * Anahtar ani tasir - ayni urun ikinci kez kritige inerse ikinci uyari.
+     */
+    public function lowStock(\App\Models\Product $urun): int
+    {
+        $kalan = $urun->stock_quantity <= 0
+            ? 'Stok tükendi'
+            : "{$urun->stock_quantity} {$urun->unit_type} kaldı";
+        $govde = "{$kalan} (kritik: {$urun->critical_quantity})."
+            . ($urun->location ? " Konum: {$urun->location->name}." : '');
+        $an = now()->format('YmdHisv') . \Illuminate\Support\Str::random(4);
+
+        $yeni = 0;
+        foreach (User::where('role', Role::Admin->value)->get() as $yonetici) {
+            $yeni += (int) $this->kaydet(
+                NotificationType::LowStock,
+                $yonetici,
+                null,
+                $urun->id,
+                "low_stock:{$yonetici->id}:{$urun->id}:{$an}",
+                "Kritik stok: {$urun->name} ⚠️",
+                $govde,
+            );
+        }
+
+        return $yeni;
+    }
+
+    /**
      * Bildirimi yazar; ayni anahtar zaten varsa hicbir sey yapmaz.
      *
      * @return bool Yeni kayit olustu mu

@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 656 test / 1604 doğrulama yeşil._
+_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 686 test / 1670 doğrulama yeşil._
 
 ---
 
@@ -43,6 +43,7 @@ _Son güncelleme: 23 Eylül 2026 · Laravel 12 · 656 test / 1604 doğrulama ye�
 - [x] **Saat dilimi** — fatura, Ödemeler, raporlar, paneller ay/gün sınırını ve saati kafe saatiyle (İstanbul) kullanıyor. 31'inde üretilen faturanın yanlış aya düşmesi de düzeldi.
 - [x] **`brashlab` remote'u kaldırıldı** — `.git` 30 MB → 1,1 MB (§13.2).
 - [x] **28 · Çalışma kaydı** — sayaçta "Ne bitirdin?": ders + sayı + birim (soru/sayfa/konu/deneme) + not. Bugünün listesi ve toplamı; veli ve koç son 14 günü görür, haftalık rapora toplam girer. Eski "Ne çalışıyorsun?" seçimi kalktı; oturumun dersi son kayıttan gelir.
+- [x] **29 · Ürünler ve Stok** — tek menü, üç sekme: Ürünler · Stok · Sayım. Stok ve kritik sayı ürünün üzerinde (boş stok = takip yok: sıcak içecek, çay). Konum ürünün etiketi; Lokasyonlar sayfası kalktı. Stok sayfası konuma/duruma göre süzülür, toplu girilir. Kritik sayıya inince yöneticiye bildirim (bir kez; stok yükselip tekrar inerse yine). Fotoğraflı sayım konum etiketine göre çalışır, onaylanan sayı stok olur. Düzeltilen iki hata: açıklama kaydedilmiyordu; düzenleme ürünü pasife alıyordu. Menüdeki 40 ürün girildi.
 - [ ] **Frankfurt'a taşıma** — ⏸ askıda (23 Eyl: şu an yeterince hızlı). Plan §12.7.
 - [x] **27 · Bildirim zili** — herkesin üst barında 🔔 + okunmamış sayısı + son bildirimler; "Tümü" okundu sayar. Stok sayımı 7 günü geçince admin'e (sayım yoksa 7 günde bir tekrar).
 

@@ -10,7 +10,6 @@ use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ProductController;
-use App\Http\Controllers\Admin\LocationController;
 use App\Http\Controllers\Admin\StockController;
 use App\Http\Controllers\Admin\ExamResultController;
 use App\Http\Controllers\Admin\SubjectController;
@@ -172,17 +171,7 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     ])->parameters(['urunler' => 'product']);
     Route::post('/urunler/{product}/durum', [ProductController::class, 'toggleStatus'])->name('products.toggle-status');
 
-    // Locations
-    Route::resource('lokasyonlar', LocationController::class)->names([
-        'index' => 'locations.index',
-        'create' => 'locations.create',
-        'store' => 'locations.store',
-        'show' => 'locations.show',
-        'edit' => 'locations.edit',
-        'update' => 'locations.update',
-        'destroy' => 'locations.destroy',
-    ])->parameters(['lokasyonlar' => 'location']);
-    Route::post('/lokasyonlar/{location}/durum', [LocationController::class, 'toggleStatus'])->name('locations.toggle-status');
+    // Lokasyonlar sayfasi kalkti (Dalga 29): konum urunun etiketi.
 
     // Koc atamasi (Dalga 14). Atamayi YALNIZCA yonetici yapar; kocun kendine
     // ogrenci atayabilmesi atamanin anlamini ortadan kaldirirdi.
@@ -274,7 +263,10 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     ])->parameters(['denemeler' => 'exam']);
 
     // Stock Management
+    // Dalga 29: stok urunler altinda - stok tablosu, toplu giris, sayim.
     Route::get('/stok', [StockController::class, 'index'])->name('stock.index');
+    Route::post('/stok', [StockController::class, 'update'])->name('stock.update');
+    Route::get('/stok/sayim', [StockController::class, 'counts'])->name('stock.counts');
     Route::get('/stok/{location}/kayit', [StockController::class, 'capture'])->name('stock.capture');
     Route::post('/stok/{location}/yukle', [StockController::class, 'uploadPhotos'])->name('stock.upload');
     // batch_id Postgres'te uuid tipi; gecersiz bir deger sorguya ulasirsa

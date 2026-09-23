@@ -55,16 +55,16 @@
                     <button type="submit" class="btn btn-primary">
                         📤 Yükle ve Analiz Et
                     </button>
-                    <a href="{{ route('admin.stock.index') }}" class="btn btn-secondary">İptal</a>
+                    <a href="{{ route('admin.stock.counts') }}" class="btn btn-secondary">İptal</a>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Bu Lokasyondaki Ürünler -->
+    <!-- Bu konumdaki urunler -->
     <div class="card mt-4" style="max-width: 800px;">
         <div class="card-header">
-            <h4>Bu Lokasyondaki Ürünler ({{ $location->products->count() }})</h4>
+            <h4>Bu Konumdaki Ürünler ({{ $location->products->count() }})</h4>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -72,27 +72,18 @@
                     <thead>
                         <tr>
                             <th>Ürün</th>
-                            <th>Fiyat</th>
-                            <th>Son Stok</th>
+                            <th>Sistemdeki stok</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($location->products as $product)
-                            @php
-                                $lastStock = \App\Models\StockRecord::where('location_id', $location->id)
-                                    ->where('product_id', $product->id)
-                                    ->latest('recorded_at')
-                                    ->first();
-                            @endphp
                             <tr>
                                 <td>{{ $product->name }}</td>
-                                <td>{{ $product->formatted_price }}</td>
                                 <td>
-                                    @if($lastStock)
-                                        {{ $lastStock->quantity }}
-                                        <small class="text-muted">({{ $lastStock->recorded_at->diffForHumans() }})</small>
+                                    @if($product->tracksStock())
+                                        {{ $product->stock_quantity }}
                                     @else
-                                        <span class="text-muted">-</span>
+                                        <span class="text-muted">takip yok · ilk sayım başlatır</span>
                                     @endif
                                 </td>
                             </tr>

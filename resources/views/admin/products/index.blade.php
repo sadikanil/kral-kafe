@@ -10,6 +10,8 @@
 @endsection
 
 @section('content')
+    @include('admin.products._tabs')
+
     <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -19,7 +21,8 @@
                             <th>Ürün</th>
                             <th>Kategori</th>
                             <th>Fiyat</th>
-                            <th>Birim</th>
+                            <th>Konum</th>
+                            <th>Stok</th>
                             <th>Durum</th>
                             <th>İşlemler</th>
                         </tr>
@@ -38,7 +41,16 @@
                                 </td>
                                 <td>{{ $product->category ?? '-' }}</td>
                                 <td>{{ $product->formatted_price }}</td>
-                                <td>{{ $product->unit_type_name }}</td>
+                                <td>{{ $product->location->name ?? '—' }}</td>
+                                <td>
+                                    @if($product->tracksStock())
+                                        <span class="{{ $product->isCritical() || $product->stock_quantity <= 0 ? 'text-danger' : '' }}">
+                                            {{ $product->stock_quantity }} {{ $product->unit_type_name }}
+                                        </span>
+                                    @else
+                                        <span class="text-muted">takip yok</span>
+                                    @endif
+                                </td>
                                 <td>
                                     <span class="badge badge-{{ $product->is_active ? 'success' : 'warning' }}">
                                         {{ $product->is_active ? 'Aktif' : 'Pasif' }}
@@ -71,7 +83,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center p-4 text-muted">
+                                <td colspan="7" class="text-center p-4 text-muted">
                                     Henüz ürün eklenmemiş.
                                 </td>
                             </tr>

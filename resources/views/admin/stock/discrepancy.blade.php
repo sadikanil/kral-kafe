@@ -4,9 +4,9 @@
 @section('page-title', 'Tutarsızlık #' . $discrepancy->id)
 
 @section('topbar-actions')
-    <a href="{{ route('admin.stock.index') }}" class="btn btn-secondary btn-sm">← Stok Sayımına Dön</a>
+    <a href="{{ route('admin.stock.counts') }}" class="btn btn-secondary btn-sm">← Sayıma Dön</a>
     @if($discrepancy->location)
-        <a href="{{ route('admin.locations.show', $discrepancy->location) }}" class="btn btn-primary btn-sm">📍 Lokasyon</a>
+        <a href="{{ route('admin.stock.index', ['konum' => $discrepancy->location]) }}" class="btn btn-primary btn-sm">📍 {{ $discrepancy->location->name }}</a>
     @endif
 @endsection
 
@@ -68,7 +68,7 @@
                             @endswitch
                         </span>
                         @if($discrepancy->location)
-                            <a href="{{ route('admin.locations.show', $discrepancy->location) }}">{{ $discrepancy->location->name }}</a>
+                            <a href="{{ route('admin.stock.index', ['konum' => $discrepancy->location]) }}">{{ $discrepancy->location->name }}</a>
                             <span class="text-muted">{{ $discrepancy->location->type_name }}</span>
                         @else
                             -
@@ -172,7 +172,7 @@
 
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary">Çözümlendi Olarak İşaretle</button>
-                        <a href="{{ route('admin.stock.index') }}" class="btn btn-secondary">İptal</a>
+                        <a href="{{ route('admin.stock.counts') }}" class="btn btn-secondary">İptal</a>
                     </div>
                 </form>
             </div>
