@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 755 test / 1830 doğrulama yeşil._
+_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 757 test / 1856 doğrulama yeşil._
 
 ---
 
@@ -66,6 +66,7 @@ Kararlar: plan **günlük** (haftalık/aylık hedef kalkar) · okul/dershane/dı
 Ekranlar telefon genişliğinde (390 px) görüntülenip denetlendi.
 
 - [x] **1 · Öğrenci ekranları** — Panel "çalışma önce": üstte oturum ya da büyük "Çalışmaya başla", sonra **Bugün** (Planım'daki takvimin bugünü: okul, özel ders, deneme, plan maddesi ✓), sonra süreler. Para kartları panelden kalktı (Adisyon'da ve Ödemeler'de). Alt menü: Panel · QR Okut · Planım · Adisyon · Menü. Süre "1 sa 35 dk" (eskiden "1s 35dk", saniye gibi okunuyordu). Düzeltilen hatalar: üst barda zil ikinci satıra düşüyordu; geniş tablolar tüm sayfayı ekrandan taşırıyordu (her rolde); QR okuyucuda boş mavi şerit; paneldeki eski "raflardaki QR ile tüketim" ipucu; masasız pakete QR düğmesi; sayaçta dağınık mola düğmeleri ve kesilen ders adı; Planım'da kırılan hafta okları ve görünmeyen "plan" rengi.
+- [x] **2 · Koç ekranları** — öğrencinin dört sayfası (Plan · Notlar · Rapor · Konular) sekmeyle bağlı; üst barda yalnızca "← Öğrenciler". "Plana ekle" katlı (telefonda takvim ilk ekranda); gündeki "+" açar ve tarihi yazar, hata varsa açık gelir. Form telefonda tek sütun, geniş ekranda tek satır. Madde menüsü (⋯) sağ üstte. Öğrenci listesi satır kartı: ad, sınıf/alan, düşüş sinyali, haftanın ilerlemesi; eskimiş "dönem" açıklaması gitti.
 
 ---
 

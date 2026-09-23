@@ -28,7 +28,7 @@
 @endforeach
 
 @foreach($gun['items'] as $madde)
-    <div class="cal-entry cal-item {{ $madde->status === 'done' ? 'done' : '' }} {{ $madde->exam_event_id ? 'cal-exam' : '' }}">
+    <div class="cal-entry cal-item {{ $madde->status === 'done' ? 'done' : '' }} {{ $madde->exam_event_id ? 'cal-exam' : '' }} {{ $mode === 'coach' ? 'has-actions' : '' }}">
         @if($madde->starts_at)
             <span class="cal-time">{{ $madde->starts_at }}{{ $madde->duration_minutes ? ' · ' . $madde->duration_minutes . ' dk' : '' }}</span>
         @elseif($madde->duration_minutes)

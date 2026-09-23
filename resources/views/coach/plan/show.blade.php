@@ -4,9 +4,6 @@
 @section('page-title', $student->name)
 
 @section('topbar-actions')
-    <a href="{{ route('coach.notes.index', $student) }}" class="btn btn-sm btn-secondary">Notlar</a>
-    <a href="{{ route('coach.report', $student) }}" class="btn btn-sm btn-secondary">Rapor</a>
-    <a href="{{ route('coach.topics.index', $student) }}" class="btn btn-sm btn-secondary">Zayıf konular</a>
     <a href="{{ route('coach.plan.index') }}" class="btn btn-sm btn-secondary">← Öğrenciler</a>
 @endsection
 
@@ -16,6 +13,8 @@
     program (okul, dershane, distaki ozel ders).
 --}}
 @section('content')
+    @include('coach._sekmeler')
+
     @if($student->gradeEnum())
         <p class="text-muted mb-2">
             {{ $student->gradeEnum()->label() }}@if($student->fieldEnum()) · {{ $student->fieldEnum()->label() }}@endif
@@ -23,17 +22,19 @@
         </p>
     @endif
 
-    <div class="card mb-3" id="planaEkle">
-        <div class="card-header"><h4>➕ Plana ekle</h4></div>
+    {{-- Katli durur ki telefonda takvim ilk ekranda gorunsun. Gundeki "+"
+         acar ve tarihi yazar; dogrulama hatasi varsa acik gelir. --}}
+    <details class="card mb-3 plan-add" id="planaEkle" {{ $errors->any() ? 'open' : '' }}>
+        <summary class="card-header"><h4>➕ Plana ekle</h4></summary>
         <div class="card-body">
             <form method="POST" action="{{ route('coach.plan.store', $student) }}" class="plan-form">
                 @csrf
-                <div class="form-group">
+                <div class="form-group plan-wide">
                     <label for="plan_date" class="form-label">Gün</label>
                     <input type="date" id="plan_date" name="plan_date" class="form-control @error('plan_date') is-invalid @enderror"
                            value="{{ old('plan_date', \App\Support\LocalDay::today() >= $hafta && \App\Support\LocalDay::today() <= $days[6]['date'] ? \App\Support\LocalDay::today() : $hafta) }}" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group plan-wide">
                     <label for="subject_id" class="form-label">Ders</label>
                     <select id="subject_id" name="subject_id" class="form-control @error('subject_id') is-invalid @enderror">
                         <option value="">Seçin…</option>
@@ -47,7 +48,7 @@
                     </select>
                     @error('subject_id')<span class="invalid-feedback">{{ $message }}</span>@enderror
                 </div>
-                <div class="form-group">
+                <div class="form-group plan-wide">
                     <label for="subject_topic_id" class="form-label">Konu</label>
                     <select id="subject_topic_id" name="subject_topic_id" class="form-control @error('subject_topic_id') is-invalid @enderror"
                             data-secili="{{ old('subject_topic_id') }}">
@@ -55,7 +56,7 @@
                     </select>
                     @error('subject_topic_id')<span class="invalid-feedback">{{ $message }}</span>@enderror
                 </div>
-                <div class="form-group">
+                <div class="form-group plan-wide">
                     <label for="title" class="form-label">Not</label>
                     <input type="text" id="title" name="title" maxlength="150" class="form-control"
                            value="{{ old('title') }}" placeholder="Örn. 40 soru, tekrar">
@@ -69,12 +70,12 @@
                     <input type="number" id="duration_minutes" name="duration_minutes" min="5" max="720" step="5"
                            class="form-control" value="{{ old('duration_minutes') }}" placeholder="60">
                 </div>
-                <div class="form-group plan-form-submit">
+                <div class="form-group plan-wide plan-form-submit">
                     <button type="submit" class="btn btn-primary btn-block">Ekle</button>
                 </div>
             </form>
         </div>
-    </div>
+    </details>
 
     @include('_plan-takvimi', [
         'mode' => 'coach',
@@ -166,6 +167,7 @@
     // Gundeki "+" formun gununu ayarlar ve forma goturur.
     document.querySelectorAll('.js-gune-ekle').forEach(b => b.addEventListener('click', () => {
         document.getElementById('plan_date').value = b.dataset.gun;
+        document.getElementById('planaEkle').open = true;
         document.getElementById('planaEkle').scrollIntoView({ behavior: 'smooth' });
         ders.focus();
     }));

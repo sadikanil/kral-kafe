@@ -4,13 +4,12 @@
 @section('page-title', $student->name)
 
 @section('topbar-actions')
-    <a href="{{ route('coach.plan.show', $student) }}" class="btn btn-sm btn-secondary">Plan</a>
-    <a href="{{ route('coach.notes.index', $student) }}" class="btn btn-sm btn-secondary">Notlar</a>
-    <a href="{{ route('coach.report', $student) }}" class="btn btn-sm btn-secondary">Rapor</a>
     <a href="{{ route('coach.plan.index') }}" class="btn btn-sm btn-secondary">← Öğrenciler</a>
 @endsection
 
 @section('content')
+    @include('coach._sekmeler')
+
 
     <div class="card mb-3">
         <div class="card-header"><h4>Geliştirilmesi gereken konu ekle</h4></div>

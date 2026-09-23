@@ -1670,6 +1670,9 @@ select.form-control {
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
 }
+@media (max-width: 480px) {
+    .page-tab { padding: 0.6rem 0.75rem; }
+}
 .page-tab.active {
     color: var(--primary);
     border-bottom-color: var(--primary);
@@ -1781,13 +1784,65 @@ select.form-control {
 .week-nav-title strong { display: block; }
 .week-nav-title .badge { margin-top: 0.25rem; }
 
+/* Ekleme formu (UX turu, 23 Eyl): telefonda ders, konu, not tam satir
+   (dar sutunda "Once ders se..." diye kesiliyordu); genis ekranda tek satir. */
 .plan-form {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0 0.75rem;
     align-items: end;
 }
+.plan-form .plan-wide { grid-column: 1 / -1; }
+@media (min-width: 1100px) {
+    .plan-form { grid-template-columns: 10rem repeat(2, minmax(0, 1.3fr)) minmax(0, 1fr) 7.5rem 6rem auto; }
+    .plan-form .plan-wide { grid-column: auto; }
+}
 .plan-form-submit { align-self: end; }
+.plan-add > summary {
+    cursor: pointer;
+    list-style: none;
+}
+.plan-add > summary::-webkit-details-marker { display: none; }
+.plan-add:not([open]) > summary { border-bottom: 0; }
+
+/* Madde menusu (⋯) sag ustte: daha buyuk dokunma alani, tamamlanan
+   maddede ustu cizilmez (mutlak konumlu oge cizgiyi almaz). */
+.cal-entry { position: relative; }
+.cal-entry.has-actions { padding-right: 1.5rem; }
+.cal-actions > summary {
+    position: absolute;
+    top: 0.15rem;
+    right: 0.1rem;
+    padding: 0.1rem 0.3rem;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    line-height: 1.2;
+}
+.cal-actions > summary:hover { background: var(--gray-100); }
+.cal-actions > summary::-webkit-details-marker { display: none; }
+
+/* Koc ogrenci listesi: satirin tamami plana goturur. */
+.student-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.25rem;
+    border-top: 1px solid var(--gray-200);
+    color: inherit;
+    text-decoration: none;
+}
+.student-row:first-child { border-top: 0; }
+.student-row:hover { background: var(--gray-50); color: inherit; }
+.student-row-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem 0.5rem;
+}
+.student-row-main > strong { flex-basis: 100%; }
+.student-row-arrow { font-size: 1.4rem; color: var(--gray-400); line-height: 1; }
 
 /* Gizli olan gizlidir: display veren kurallar (.alert gibi) [hidden]'i
    ezmesin. QR okuyucuda mesaj yokken bos bir mavi serit gorunuyordu. */

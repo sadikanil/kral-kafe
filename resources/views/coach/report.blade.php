@@ -1,16 +1,15 @@
 @extends('layouts.app')
 
 @section('title', $student->name . ' - Haftalık Rapor')
-@section('page-title', $student->name . ' · Haftalık Rapor')
+@section('page-title', $student->name)
 
 @section('topbar-actions')
-    <a href="{{ route('coach.plan.show', $student) }}" class="btn btn-sm btn-secondary">Plan</a>
-    <a href="{{ route('coach.notes.index', $student) }}" class="btn btn-sm btn-secondary">Notlar</a>
-    <a href="{{ route('coach.topics.index', $student) }}" class="btn btn-sm btn-secondary">Konular</a>
     <a href="{{ route('coach.plan.index') }}" class="btn btn-sm btn-secondary">← Öğrenciler</a>
 @endsection
 
 @section('content')
+    @include('coach._sekmeler')
+
     @include('_haftalik-rapor')
 
     @if($report)
