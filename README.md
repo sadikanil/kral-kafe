@@ -8,47 +8,43 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 22 Eylül 2026 · Laravel 12 · 294 test / 862 doğrulama yeşil._
+_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 470 test / 1210 doğrulama yeşil._
 
 ---
 
-## 0. Şimdiki plan (23 Eylül 2026) · ⏸️ onay bekliyor
+## 0. Şimdiki plan (23 Eylül 2026) · ▶️ onaylandı
 
 > Tek bakışta takip için. Biten satır `[x]` olur. Bu bölüm §1'le çelişirse **bu geçerli**.
 
-**Paketler**
+**Paketler** — veli ayrı etiket taşımaz, çocuğunun paketini görür.
 
 | Paket | Masa | Deneme takvimi | Koçluk | Deneme kulübü | Özel ders (Cahit Hoca) |
 |---|:--:|:--:|:--:|:--:|:--:|
 | Tier 1 · Standart | ✅ | yalnızca liste | — | — | — |
-| Tier 2 · Orta | ✅ | ✅ | ✅ | ❓ | — |
+| Tier 2 · Orta | ✅ | ✅ | ✅ | ek olarak alınabilir | — |
 | Tier 3 · Kral | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Sadece deneme | — | ✅ | — | ✅ | — |
 
 **Dalgalar** (sırayla)
 
+- [x] **Denetim** — 470 test yeşil, migration'lar yerel+canlı tamam, view/route derleniyor. README'deki eski sayılar düzeltildi.
 - [ ] **18 · Telefonla giriş** — önce telefon; şifresi varsa şifre sor, yoksa şifre belirlet. E-posta isteğe bağlı.
-- [ ] **19 · Paket seviyesi** — pakete `tier` (1/2/3); erişim kapıları buna bağlanır.
+- [ ] **18b · Şifre sıfırla** — admin butonu: kullanıcı askıya alınır, sonraki girişte yeni şifre belirlemek zorunda.
+- [ ] **19 · Paket seviyesi** — pakete `tier`; deneme kulübü ek paket olarak eklenebilir; "sadece deneme" paketi tanımlanabilir.
 - [ ] **20 · Kullanıcı ekleme akışı** — rol → paket → koç (tier 2+) → veli (öğrenciye **en az 1 veli zorunlu**).
 - [ ] **21 · Tek menü** — `/koc/...` ayrımı kalkar; herkes tek düz menüde yetkisi kadarını görür.
 - [ ] **22 · Ödemeler (öğrenci + veli)** — anlaşılan paket bedeli + aylık harcama, ay ay.
 - [ ] **23 · Çalışma sayacı sayfası** — duraklat/devam, "15 dk mola", "öğle arası 1 saat"; öğle arasında kafeden çıkmak serbest.
-- [ ] **24 · Esneme hatırlatıcıları** — sayaç sayfasında popup: 25 dk'da göz molası, 50 dk'da kalk-esne (aralıklar kaynaklarla doğrulanacak).
+- [ ] **24 · Esneme hatırlatıcıları** — sayaç sayfasında popup (aralıklar kaynaklarla doğrulanacak).
 - [ ] **25 · Özel ders takvimi** — tier 3 öğrencinin takviminde; Cahit Hoca (admin) her zaman düzenler.
 - [ ] **26 · Adisyon sadeleştirme** — öğrenci lokasyon seçmez; lokasyon QR'ları kalkar; ürünün yeri/stoğu yalnızca admin formunda.
-- [ ] **27 · Stok sayımı hatırlatması** — belirli aralıkla admin'e push bildirim.
-
-**Cevabını beklediğim 4 soru**
-
-1. Tier 2'de deneme kulübü var mı, yok mu?
-2. Veli de paket etiketi taşısın mı, yoksa çocuğunun paketini mi görsün? *(öneri: çocuğunun)*
-3. Telefonla ilk girişte doğrulama yok → numarayı bilen biri, öğrenciden önce şifre koyabilir. Kabul mü? *(öneri: kabul, ama admin "şifreyi sıfırla" butonu olsun)*
-4. Push bildirim iPhone'da ancak site ana ekrana eklenirse çalışır. Sorun olur mu? Stok sayımı kaç günde bir?
+- [ ] **27 · Bildirim zili** — herkesin üst barında zil + son bildirimler listesi; stok sayımı hatırlatması admin'e buradan düşer.
 
 ---
 
 ## İçindekiler
 
-0. [Şimdiki plan](#0-şimdiki-plan-23-eylül-2026--️-onay-bekliyor) — **buradan başla**
+0. [Şimdiki plan](#0-şimdiki-plan-23-eylül-2026--️-onaylandı) — **buradan başla**
 1. [Hedef akış](#1-hedef-akış) — sistemin bütünü, uçtan uca
 2. [Akış değişiklikleri](#2-akış-değişiklikleri-22-eylül-2026) — hangi eski karar değişti
 3. [Bugün canlıda ne var](#3-bugün-canlıda-ne-var)
@@ -207,6 +203,12 @@ Supabase Postgres (session pooler) · elle yazılmış CSS (Tailwind yok).
 | 11 | Bildirim altyapısı: devamsızlık + deneme hatırlatması, Vercel Cron, panel içi teslim | ✅ |
 | 12 | Deneme sonucu: ders bazlı D/Y/net, kurum–ilçe–il–TR sıralaması, yönetici notu, veliye açık | ✅ |
 | 13 | Haftalık çalışma planı: yönetici belirler, öğrenci tamamlar, oran velide | ✅ |
+| 8 | Tüketim sadeleştirme: QR tüketim kalktı, stok düşümü self adisyonda | ✅ |
+| 12b | Net gelişim grafiği | ✅ |
+| 14a–14b | Koç rolü, plan sayfası, koç notları, görüşme kaydı | ✅ |
+| 15a–15b | Haftalık veli raporu, sınava geri sayım | ✅ |
+| 16 | Devamlılık düşüş sinyalleri | ✅ |
+| 17a–17b | Oturuma ders etiketi, zayıf konu listesi | ✅ |
 
 ---
 
@@ -232,12 +234,7 @@ oturduktan sonra.
 
 S ≈ bir oturum · M ≈ iki-üç oturum · L ≈ dört ve üzeri.
 
-**Neden bu sıra:** Dalga 9 (onay akışı), 10a (mobil kabuk) ve 10b (konum)
-22 Eylül'de bitti. Sıradaki Dalga 11 olmadan §1.2'nin 2. ve 3. adımları hiç
-çalışmıyor; Dalga 12 (öğrenci telefonla
-okutacak). Dalga 11 olmadan §1.2'nin 2. ve 3. adımları hiç çalışmaz. Dalga 12
-denemenin sonuç tarafını kapatır. Paket ve ödeme (Dalga 7) 21 Eylül'de
-bitmişti; yan dalda kalmıştı, 22 Eylül'de main'e alındı.
+Bu tablodaki dalgaların hepsi 22 Eylül'de bitti. Sıradaki iş §0'da.
 
 ### 4.2 Bakım ve teknik borç
 
