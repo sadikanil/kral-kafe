@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Panel - Kral Kafe')
-@section('page-title', 'Hoş Geldin, {{ auth()->user()->name }}!')
+@section('page-title', 'Hoş Geldin, ' . auth()->user()->name . '!')
 
 @section('content')
     @include('exams._geri-sayim')

@@ -77,6 +77,16 @@ class MobileShellTest extends TestCase
             ->assertRedirect(route('login'));
     }
 
+    /** Baslik metnine {{ }} yazilirsa Blade derlemez, ham PHP ekrana cikar. */
+    public function test_the_student_greeting_shows_the_name_not_php(): void
+    {
+        $ogrenci = $this->ogrenci();
+
+        $this->actingAs($ogrenci)->get(route('user.dashboard'))
+            ->assertSee('Hoş Geldin, ' . $ogrenci->name . '!')
+            ->assertDontSee('<?php', false);
+    }
+
     public function test_the_student_panel_offers_the_scanner(): void
     {
         $this->actingAs($this->ogrenci())
