@@ -61,9 +61,10 @@ Route::middleware(['auth', 'subscription'])->group(function () {
     Route::get('/calisma', [SessionController::class, 'timer'])->name('session.timer');
     Route::post('/oturum/duraklat', [SessionController::class, 'pause'])->name('session.pause');
     Route::post('/oturum/devam', [SessionController::class, 'resume'])->name('session.resume');
-    // Ders etiketi (Dalga 17a). Yalnizca ACIK oturum; istege bagli.
-    Route::post('/oturum/{session}/ders', [\App\Http\Controllers\Study\SessionSubjectController::class, 'update'])
-        ->name('session.subject');
+    // Calisma kaydi (Dalga 28): "Tarih · 200 soru". Eski ders secimi kalkti;
+    // oturumun dersi son kayittan gelir.
+    Route::post('/oturum/kayit', [\App\Http\Controllers\Study\StudyLogController::class, 'store'])->name('session.logs.store');
+    Route::delete('/oturum/kayit/{log}', [\App\Http\Controllers\Study\StudyLogController::class, 'destroy'])->name('session.logs.destroy');
 });
 
 // Authenticated User Routes

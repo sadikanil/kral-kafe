@@ -67,6 +67,8 @@ class StudyPlanController extends Controller
                 ->orderBy('id')
                 ->get(),
             'dersler' => Subject::active()->orderBy('sort_order')->orderBy('name')->get(),
+            // Calisma kayitlari (Dalga 28): ogrencinin ne bitirdigi.
+            'studyLogs' => \App\Models\StudyLog::recentFor($student),
         ]);
     }
 

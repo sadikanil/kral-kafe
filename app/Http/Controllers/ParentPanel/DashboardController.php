@@ -67,6 +67,7 @@ class DashboardController extends Controller
             'summary' => $this->ozet($student),
             'days' => $this->sonGunler($student, 14),
             'sessions' => $this->sonOturumlar($student, 30),
+            'studyLogs' => \App\Models\StudyLog::recentFor($student),
             // Ozel ders (Dalga 25): onumuzdeki iki hafta, yalnizca Tier 3.
             'lessons' => $student->entitlements()->privateLessons
                 ? \App\Support\PrivateLessonCalendar::between(

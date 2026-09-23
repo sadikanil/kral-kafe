@@ -116,6 +116,10 @@ class WeeklyReportBuilder
             'plan_total' => $planToplam,
             'exams' => $denemeler,
             'net_change' => $this->netChange($student, $hafta, $denemeler),
+            // Calisma kaydi toplamlari (Dalga 28): ogrencinin beyani.
+            'logged' => \App\Models\StudyLog::totals(
+                \App\Models\StudyLog::where('student_id', $student->id)->betweenLocalDays($hafta, $haftaSonu)->get()
+            ),
         ];
     }
 

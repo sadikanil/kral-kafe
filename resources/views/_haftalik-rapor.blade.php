@@ -68,6 +68,17 @@
             </div>
         </div>
 
+        {{-- Eski raporlarda 'logged' yok (Dalga 28 oncesi). --}}
+        @if(! empty($p['logged']))
+            <div class="stat-card">
+                <div class="stat-icon success">✅</div>
+                <div class="stat-content">
+                    <div class="stat-value">{{ collect($p['logged'])->map(fn ($adet, $birim) => "$adet $birim")->implode(' · ') }}</div>
+                    <div class="stat-label">Çalışma kayıtları</div>
+                </div>
+            </div>
+        @endif
+
         @if($p['plan_total'] > 0)
             <div class="stat-card">
                 <div class="stat-icon warning">🗓️</div>

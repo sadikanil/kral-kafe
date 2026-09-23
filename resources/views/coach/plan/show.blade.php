@@ -105,4 +105,6 @@
             @endforelse
         </div>
     </div>
+
+    @include('_calisma-kayitlari')
 @endsection

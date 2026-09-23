@@ -16,7 +16,8 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * Dalga 17a - Oturuma ders etiketi.
+ * Dalga 17a - Oturuma ders etiketi. Dalga 28'den beri etiket ayri bir secim
+ * degil, son calisma kaydindan gelir.
  *
  * ZORUNLU DEGIL. Etiketsiz oturum "Genel" sayilir; zorunlu kilmak masaya
  * oturmanin onune bir soru koyardi ve ogrenci okutmayi birakirdi.
@@ -91,84 +92,7 @@ class SessionSubjectTest extends TestCase
         $this->assertStringContainsString('ended_at IS NULL', $tanim->sql);
     }
 
-    // --- Etiketleme ----------------------------------------------------------
-
-    public function test_a_student_labels_their_open_session(): void
-    {
-        $ogrenci = $this->ogrenci();
-        $ders = $this->ders('Matematik');
-        $oturum = $this->acikOturum($ogrenci);
-
-        $this->actingAs($ogrenci)
-            ->post(route('session.subject', $oturum), ['subject_id' => $ders->id])
-            ->assertRedirect();
-
-        $this->assertSame($ders->id, $oturum->fresh()->subject_id);
-    }
-
-    /** Etiket DEGISTIRILEBILIR: ogrenci dersi ortada degistirebilir. */
-    public function test_the_label_can_be_changed(): void
-    {
-        $ogrenci = $this->ogrenci();
-        $matematik = $this->ders('Matematik');
-        $turkce = $this->ders('Türkçe');
-        $oturum = $this->acikOturum($ogrenci);
-
-        $this->actingAs($ogrenci)->post(route('session.subject', $oturum), ['subject_id' => $matematik->id]);
-        $this->actingAs($ogrenci)->post(route('session.subject', $oturum), ['subject_id' => $turkce->id]);
-
-        $this->assertSame($turkce->id, $oturum->fresh()->subject_id);
-    }
-
-    public function test_the_label_can_be_cleared(): void
-    {
-        $ogrenci = $this->ogrenci();
-        $oturum = $this->acikOturum($ogrenci);
-        $this->actingAs($ogrenci)->post(route('session.subject', $oturum), ['subject_id' => $this->ders('Matematik')->id]);
-
-        $this->actingAs($ogrenci)->post(route('session.subject', $oturum), ['subject_id' => '']);
-
-        $this->assertNull($oturum->fresh()->subject_id);
-    }
-
-    public function test_a_student_cannot_label_someone_elses_session(): void
-    {
-        $sahibi = $this->ogrenci();
-        $baskasi = $this->ogrenci();
-        $oturum = $this->acikOturum($sahibi);
-
-        $this->actingAs($baskasi)
-            ->post(route('session.subject', $oturum), ['subject_id' => $this->ders('Matematik')->id])
-            ->assertForbidden();
-
-        $this->assertNull($oturum->fresh()->subject_id);
-    }
-
-    /**
-     * BITMIS oturum etiketlenemez.
-     *
-     * Sure onaya gitmis olabilir; gecmisi sonradan yeniden etiketlemek
-     * kirilimi velinin gordugu rapordan sonra degistirirdi.
-     */
-    public function test_a_finished_session_cannot_be_labelled(): void
-    {
-        $ogrenci = $this->ogrenci();
-        $oturum = $this->bitmisOturum($ogrenci, '2026-09-15', 120);
-
-        $this->actingAs($ogrenci)
-            ->post(route('session.subject', $oturum), ['subject_id' => $this->ders('Matematik')->id])
-            ->assertForbidden();
-    }
-
-    public function test_an_unknown_subject_is_refused(): void
-    {
-        $ogrenci = $this->ogrenci();
-        $oturum = $this->acikOturum($ogrenci);
-
-        $this->actingAs($ogrenci)->from(route('user.dashboard'))
-            ->post(route('session.subject', $oturum), ['subject_id' => 9999])
-            ->assertSessionHasErrors('subject_id');
-    }
+    // Etiketleme Dalga 28'de calisma kaydina tasindi: bkz. StudyLogTest.
 
     // --- Kirilim -------------------------------------------------------------
 
@@ -225,7 +149,7 @@ class SessionSubjectTest extends TestCase
 
     // --- Ekranda -------------------------------------------------------------
 
-    /** Dalga 23: ders secimi calisma sayacinda. */
+    /** Dalga 28: ders secimi calisma kaydi formunda. */
     public function test_the_timer_offers_the_subjects(): void
     {
         $ogrenci = $this->ogrenci();
@@ -234,7 +158,7 @@ class SessionSubjectTest extends TestCase
 
         $this->actingAs($ogrenci)->get(route('session.timer'))
             ->assertOk()
-            ->assertSee('Ne çalışıyorsun?')
+            ->assertSee('Ne bitirdin?')
             ->assertSee('Matematik');
     }
 

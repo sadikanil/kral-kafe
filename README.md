@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 647 test / 1575 doğrulama yeşil._
+_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 656 test / 1604 doğrulama yeşil._
 
 ---
 
@@ -16,7 +16,7 @@ _Son güncelleme: 23 Eylül 2026 · Laravel 12 · 647 test / 1575 doğrulama ye�
 
 > Tek bakışta takip için. Biten satır `[x]` olur. Bu bölüm §1'le çelişirse **bu geçerli**.
 >
-> ⚠️ **Senin yapacağın tek şey:** Vercel → Environment Variables → `CRON_SECRET` ekle (uzun rastgele değer). Yoksa günlük bildirimler gitmez.
+> `CRON_SECRET` Vercel'e eklendi (23 Eyl). Eski `KAFE_CRON_ANAHTARI` silindi.
 
 **Paketler** — veli ayrı etiket taşımaz, çocuğunun paketini görür. Deneme adı, sonuçları ve raporları = **deneme kulübü**. Personel (admin, koç) pakete bağlı değil.
 
@@ -42,7 +42,8 @@ _Son güncelleme: 23 Eylül 2026 · Laravel 12 · 647 test / 1575 doğrulama ye�
 - [x] **26 · Adisyon sadeleştirme** — öğrenci yer seçmez (stok en dolu yerden düşer); lokasyon QR'ları kalktı; ürün formunda "nerede, kaç adet".
 - [x] **Saat dilimi** — fatura, Ödemeler, raporlar, paneller ay/gün sınırını ve saati kafe saatiyle (İstanbul) kullanıyor. 31'inde üretilen faturanın yanlış aya düşmesi de düzeldi.
 - [x] **`brashlab` remote'u kaldırıldı** — `.git` 30 MB → 1,1 MB (§13.2).
-- [ ] **Frankfurt'a taşıma** — §12.7 (senin adımların + benim adımlarım).
+- [x] **28 · Çalışma kaydı** — sayaçta "Ne bitirdin?": ders + sayı + birim (soru/sayfa/konu/deneme) + not. Bugünün listesi ve toplamı; veli ve koç son 14 günü görür, haftalık rapora toplam girer. Eski "Ne çalışıyorsun?" seçimi kalktı; oturumun dersi son kayıttan gelir.
+- [ ] **Frankfurt'a taşıma** — ⏸ askıda (23 Eyl: şu an yeterince hızlı). Plan §12.7.
 - [x] **27 · Bildirim zili** — herkesin üst barında 🔔 + okunmamış sayısı + son bildirimler; "Tümü" okundu sayar. Stok sayımı 7 günü geçince admin'e (sayım yoksa 7 günde bir tekrar).
 
 ---

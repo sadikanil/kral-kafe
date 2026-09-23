@@ -64,21 +64,57 @@
         @endif
     </div>
 
+    {{-- Calisma kaydi (Dalga 28). Oturumun dersi son kayittan gelir. --}}
     <div class="card mb-3">
+        <div class="card-header"><h4>✅ Ne bitirdin?</h4></div>
         <div class="card-body">
-            {{-- Ders etiketi (Dalga 17a). Istege bagli. --}}
-            <form action="{{ route('session.subject', $session) }}" method="POST"
-                  class="d-flex align-items-center gap-2" style="flex-wrap: wrap;">
+            <form action="{{ route('session.logs.store') }}" method="POST" class="log-form">
                 @csrf
-                <label class="text-muted" for="oturum-ders">Ne çalışıyorsun?</label>
-                <select name="subject_id" id="oturum-ders" class="form-control" style="max-width: 220px;">
+                <select name="subject_id" class="form-control" aria-label="Ders">
                     <option value="">Genel</option>
                     @foreach($subjects as $ders)
-                        <option value="{{ $ders->id }}" @selected($session->subject_id === $ders->id)>{{ $ders->name }}</option>
+                        <option value="{{ $ders->id }}" @selected((int) old('subject_id', $session->subject_id) === $ders->id)>{{ $ders->name }}</option>
                     @endforeach
                 </select>
-                <button type="submit" class="btn btn-sm btn-secondary">Kaydet</button>
+                <input type="number" name="amount" class="form-control" min="1" max="10000" inputmode="numeric"
+                       placeholder="200" value="{{ old('amount') }}" aria-label="Sayı" required>
+                <select name="unit" class="form-control" aria-label="Birim">
+                    @foreach(\App\Enums\StudyUnit::cases() as $birim)
+                        <option value="{{ $birim->value }}" @selected(old('unit') === $birim->value)>{{ $birim->label() }}</option>
+                    @endforeach
+                </select>
+                <input type="text" name="note" class="form-control log-note" maxlength="120"
+                       placeholder="Not (isteğe bağlı)" value="{{ old('note') }}" aria-label="Not">
+                <button type="submit" class="btn btn-primary">+ Ekle</button>
             </form>
+            @if($errors->any())
+                <p class="text-danger mt-2 mb-0">{{ $errors->first() }}</p>
+            @endif
+
+            @if($logs->isNotEmpty())
+                <p class="mt-3 mb-2"><strong>Bugün:</strong>
+                    {{ collect(\App\Models\StudyLog::totals($logs))->map(fn ($adet, $birim) => "$adet $birim")->implode(' · ') }}
+                </p>
+                <ul class="log-list">
+                    @foreach($logs as $kayit)
+                        <li>
+                            <span class="text-muted">{{ $kayit->created_at->timezone(config('kafe.timezone'))->format('H:i') }}</span>
+                            <span class="log-label">{{ $kayit->label() }} ✓
+                                @if($kayit->note)<small class="text-muted">— {{ $kayit->note }}</small>@endif
+                            </span>
+                            @if($kayit->session?->ended_at === null)
+                                <form action="{{ route('session.logs.destroy', $kayit) }}" method="POST"
+                                      onsubmit="return confirm('Bu kaydı silmek istiyor musun?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-secondary" aria-label="Sil">✕</button>
+                                </form>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            @else
+                <p class="text-muted mt-3 mb-0">Bitirdiğin her şeyi buraya yaz: "200 soru tarih" gibi.</p>
+            @endif
         </div>
     </div>
 

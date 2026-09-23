@@ -62,6 +62,8 @@
         </div>
     @endforeach
 
+    @include('_calisma-kayitlari')
+
     @include('_zayif-konular')
 
     @include('_koc-notlari')
