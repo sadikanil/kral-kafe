@@ -23,8 +23,8 @@
             @foreach($weeks as $hafta)
                 <tr>
                     @foreach($hafta as $gun)
-                        <td style="vertical-align: top; height: 84px; {{ $gun['inMonth'] ? '' : 'opacity: 0.4;' }} {{ $gun['isToday'] ? 'background: var(--primary-light);' : '' }}">
-                            <div class="{{ $gun['isToday'] ? 'text-primary' : 'text-muted' }}" style="font-size: 0.8125rem;">
+                        <td style="vertical-align: top; height: 84px; {{ $gun['inMonth'] ? '' : 'opacity: 0.4;' }} {{ $gun['isToday'] ? 'background: #eef2ff; box-shadow: inset 0 0 0 2px var(--primary);' : '' }}">
+                            <div class="{{ $gun['isToday'] ? 'text-primary' : 'text-muted' }}" style="font-size: 0.8125rem; {{ $gun['isToday'] ? 'font-weight: 700;' : '' }}">
                                 {{ $gun['isToday'] ? '● ' : '' }}{{ $gun['day'] }}
                             </div>
                             @foreach(($lessons ?? [])[$gun['date']] ?? [] as $ders)

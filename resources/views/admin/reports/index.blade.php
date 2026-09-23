@@ -39,7 +39,7 @@
         </div>
     </div>
 
-    <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+    <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));">
         <!-- Fatura Oluştur -->
         <div class="card">
             <div class="card-header">
@@ -85,7 +85,7 @@
                 <h4>📥 Rapor İndir</h4>
             </div>
             <div class="card-body">
-                <div class="d-flex gap-2 mb-3">
+                <div class="d-flex gap-2 mb-3" style="flex-wrap: wrap;">
                     <a href="{{ route('admin.reports.export-summary', ['year' => date('Y'), 'month' => date('n')]) }}"
                         class="btn btn-secondary" style="flex: 1;">
                         📊 Özet Rapor (CSV)

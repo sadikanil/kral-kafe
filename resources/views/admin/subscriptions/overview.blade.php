@@ -22,18 +22,24 @@
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
-                            <tr><th>Öğrenci</th><th>Paket</th><th>Dönem</th><th>Tutar</th><th>Ödenen</th><th>Kalan</th><th>Vade</th><th>Durum</th><th></th></tr>
+                            <tr><th>Öğrenci</th><th class="hide-sm">Paket</th><th class="hide-sm">Dönem</th><th class="hide-sm">Tutar</th><th class="hide-sm">Ödenen</th><th>Kalan</th><th class="hide-sm">Vade</th><th>Durum</th><th></th></tr>
                         </thead>
                         <tbody>
                             @foreach($subscriptions as $abonelik)
                                 <tr>
-                                    <td><strong>{{ $abonelik->student?->name ?? '—' }}</strong></td>
-                                    <td>{{ $abonelik->package?->name ?? '—' }}</td>
-                                    <td>{{ $abonelik->starts_on->format('d.m.Y') }} – {{ $abonelik->ends_on->format('d.m.Y') }}</td>
-                                    <td>{{ $abonelik->formattedPrice() }}</td>
-                                    <td>{{ number_format($abonelik->paidTotal(), 2, ',', '.') }} ₺</td>
+                                    <td class="wrap-sm">
+                                        <strong>{{ $abonelik->student?->name ?? '—' }}</strong>
+                                        {{-- Telefonda gizlenen sutunlarin ozeti --}}
+                                        <div class="show-sm text-muted" style="font-size: 0.75rem;">
+                                            {{ $abonelik->package?->name ?? '—' }}@unless($abonelik->isCancelled()) · vade {{ $abonelik->dueOn()->format('d.m') }}@endunless
+                                        </div>
+                                    </td>
+                                    <td class="hide-sm">{{ $abonelik->package?->name ?? '—' }}</td>
+                                    <td class="hide-sm">{{ $abonelik->starts_on->format('d.m.Y') }} – {{ $abonelik->ends_on->format('d.m.Y') }}</td>
+                                    <td class="hide-sm">{{ $abonelik->formattedPrice() }}</td>
+                                    <td class="hide-sm">{{ number_format($abonelik->paidTotal(), 2, ',', '.') }} ₺</td>
                                     <td><strong>{{ $abonelik->formattedBalance() }}</strong></td>
-                                    <td>{{ $abonelik->isCancelled() ? '—' : $abonelik->dueOn()->format('d.m.Y') }}</td>
+                                    <td class="hide-sm">{{ $abonelik->isCancelled() ? '—' : $abonelik->dueOn()->format('d.m.Y') }}</td>
                                     <td><span class="badge badge-{{ $abonelik->payment_status->badgeClass() }}">{{ $abonelik->payment_status->label() }}</span></td>
                                     <td class="text-right">
                                         @if($abonelik->student)

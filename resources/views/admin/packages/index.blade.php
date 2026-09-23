@@ -21,19 +21,19 @@
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
-                            <tr><th>Paket</th><th>Aylık Fiyat</th><th>Kapsam</th><th>Abonelik</th><th>Durum</th><th class="text-right">İşlem</th></tr>
+                            <tr><th>Paket</th><th>Aylık Fiyat</th><th class="hide-sm">Kapsam</th><th class="hide-sm">Abonelik</th><th class="hide-sm">Durum</th><th class="text-right">İşlem</th></tr>
                         </thead>
                         <tbody>
                             @foreach($packages as $paket)
                                 <tr>
-                                    <td>
+                                    <td class="wrap-sm">
                                         <strong>{{ $paket->name }}</strong>
                                         @if($paket->tier)<span class="badge badge-info">Tier {{ $paket->tier }}</span>@endif
                                         @if($paket->is_addon)<span class="badge badge-warning">Ek paket</span>@endif
                                         @if($paket->description)<br><small class="text-muted">{{ $paket->description }}</small>@endif
                                     </td>
                                     <td>{{ $paket->formattedPrice() }}</td>
-                                    <td style="font-size: 0.8125rem;">
+                                    <td class="hide-sm" style="font-size: 0.8125rem;">
                                         @if($paket->has_reserved_table) 🪑 Rezerve masa<br> @endif
                                         @if($paket->includes_coaching) 🧭 Koçluk<br> @endif
                                         @if($paket->includes_exam_club) 📝 Deneme kulübü<br> @endif
@@ -43,16 +43,18 @@
                                             ☕ {{ $kalem->product->name }} — {{ $kalem->label() }}<br>
                                         @endforeach
                                     </td>
-                                    <td>{{ $paket->subscriptions_count }}</td>
-                                    <td>
+                                    <td class="hide-sm">{{ $paket->subscriptions_count }}</td>
+                                    <td class="hide-sm">
                                         <span class="badge badge-{{ $paket->is_active ? 'success' : 'danger' }}">{{ $paket->is_active ? 'Satışta' : 'Kapalı' }}</span>
                                     </td>
-                                    <td class="text-right">
-                                        <a href="{{ route('admin.packages.edit', $paket) }}" class="btn btn-secondary btn-sm">Düzenle</a>
-                                        <form action="{{ route('admin.packages.toggle-status', $paket) }}" method="POST" class="d-inline-block">
-                                            @csrf
-                                            <button type="submit" class="btn btn-secondary btn-sm">{{ $paket->is_active ? 'Kapat' : 'Aç' }}</button>
-                                        </form>
+                                    <td class="text-right actions-cell">
+                                        <div class="row-actions" style="justify-content: flex-end;">
+                                            <a href="{{ route('admin.packages.edit', $paket) }}" class="btn btn-secondary btn-sm">Düzenle</a>
+                                            <form action="{{ route('admin.packages.toggle-status', $paket) }}" method="POST">
+                                                @csrf
+                                                <button type="submit" class="btn btn-secondary btn-sm">{{ $paket->is_active ? 'Kapat' : 'Aç' }}</button>
+                                            </form>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach
