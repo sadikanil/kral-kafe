@@ -3,7 +3,7 @@
 @section('title', 'Şifremi Unuttum - Kral Kafe')
 
 @section('content')
-    <h2 class="auth-title">Şifremi Unuttum</h2>
+    <h1 class="auth-title">Şifremi Unuttum</h1>
     <p class="auth-subtitle">
         E-posta adresinizi girin, şifrenizi sıfırlamanız için size bir bağlantı gönderelim.
     </p>
@@ -21,6 +21,7 @@
                 type="email"
                 id="email"
                 name="email"
+                autocomplete="email"
                 class="form-control @error('email') is-invalid @enderror"
                 value="{{ old('email') }}"
                 placeholder="ornek@email.com"

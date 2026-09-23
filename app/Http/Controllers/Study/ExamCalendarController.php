@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Study;
 use App\Http\Controllers\Controller;
 use App\Models\ExamEvent;
 use App\Support\ExamCalendar;
+use App\Support\MonthParameter;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -29,7 +30,7 @@ class ExamCalendarController extends Controller
 
     private function render(Request $request): View
     {
-        [$yil, $ay] = ExamCalendar::parseMonth($request->query('ay'));
+        [$yil, $ay] = MonthParameter::resolve($request->query('ay'));
         $haftalar = ExamCalendar::weeks($yil, $ay, ExamEvent::inMonth($yil, $ay)->get());
 
         // Ozel ders (Dalga 25): ogrencinin kendi takviminde, izgaranin

@@ -13,8 +13,9 @@ use Illuminate\View\View;
 /**
  * Giris (Dalga 18): once telefon, sonra sifre ya da sifre belirleme.
  *
- * Adimlar arasinda sunucuda durum TUTULMUYOR; kimlik bir sonraki forma gizli
- * alan olarak tasiniyor. Guvenlik o alana degil, sunucudaki kontrole bagli:
+ * Adimlar arasinda sunucuda durum TUTULMUYOR; kimlik bir sonraki forma salt
+ * okunur (gorunur) alan olarak tasiniyor - sifre yoneticileri kullanici adini
+ * oradan okur. Guvenlik o alana degil, sunucudaki kontrole bagli:
  * sifre belirleme yalnizca sifresi HIC olmayan hesapta calisir.
  */
 class AuthenticatedSessionController extends Controller
@@ -23,10 +24,15 @@ class AuthenticatedSessionController extends Controller
     {
         // Hatali gonderimden donuste adim, formun gizli alanindan gelir.
         $adim = session('giris_adimi', old('adim', 'kimlik'));
+        $kimlik = session('giris_kimlik', old('kimlik'));
 
         return view('auth.login', [
             'adim' => in_array($adim, ['sifre', 'belirle'], true) ? $adim : 'kimlik',
-            'kimlik' => session('giris_kimlik', old('kimlik')),
+            'kimlik' => $kimlik,
+            // E-posta klavyesi: baglantidan (?ile=eposta), hata donusunde
+            // formun gizli alanindan ya da girilen degerin kendisinden.
+            'epostaIle' => $request->query('ile', old('ile')) === 'eposta'
+                || str_contains((string) $kimlik, '@'),
         ]);
     }
 

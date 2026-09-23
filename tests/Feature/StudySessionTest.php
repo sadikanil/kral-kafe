@@ -23,6 +23,15 @@ class StudySessionTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Kafe 09:00-21:00 arasi oturum acar (QA hata 7); saat sabit olmazsa
+        // takim gece calistiginda her baslatma reddedilir. Ay ortasi: "3 gun
+        // sonra" gibi kurulumlar ay degistirmesin.
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-09-16 14:00', config('kafe.timezone')));
+    }
+
     private function ogrenci(): User
     {
         return User::factory()->withPackage(\App\Models\Package::factory()->tier3())->create([
@@ -197,9 +206,10 @@ class StudySessionTest extends TestCase
         $ogrenci = $this->ogrenci();
         $masa = $this->masa();
 
-        Carbon::setTestNow(now()->subSeconds(30));
+        $simdi = now();
+        Carbon::setTestNow($simdi->copy()->subSeconds(30));
         $this->actingAs($ogrenci)->post(route('table.session.start', $masa->qr_code));
-        Carbon::setTestNow();
+        Carbon::setTestNow($simdi);
 
         $this->actingAs($ogrenci)->post(route('session.end'));
 

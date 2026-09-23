@@ -222,7 +222,7 @@ class CalendarPlanTest extends TestCase
         $ogrenci = $this->ogrenci();
 
         $this->actingAs($this->koc($ogrenci))->post(route('coach.commitments.store', $ogrenci), [
-            'kind' => 'okul', 'weekdays' => [1, 2, 3, 4, 5], 'starts_at' => '08:00', 'ends_at' => '15:00',
+            'kind' => 'okul', 'weekdays' => [1, 2, 3, 4, 5], 'commitment_starts_at' => '08:00', 'commitment_ends_at' => '15:00',
         ])->assertRedirect();
 
         $this->assertSame([1, 2, 3, 4, 5], StudentCommitment::orderBy('weekday')->pluck('weekday')->all());
@@ -235,9 +235,9 @@ class CalendarPlanTest extends TestCase
 
         $this->actingAs($this->koc($ogrenci))->from(route('coach.plan.show', $ogrenci))
             ->post(route('coach.commitments.store', $ogrenci), [
-                'kind' => 'okul', 'weekdays' => [1], 'starts_at' => '15:00', 'ends_at' => '08:00',
+                'kind' => 'okul', 'weekdays' => [1], 'commitment_starts_at' => '15:00', 'commitment_ends_at' => '08:00',
             ])
-            ->assertSessionHasErrors('ends_at');
+            ->assertSessionHasErrors('commitment_ends_at');
     }
 
     public function test_the_coach_removes_a_commitment(): void

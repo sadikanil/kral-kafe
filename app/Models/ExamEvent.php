@@ -92,14 +92,19 @@ class ExamEvent extends Model
             ->orderByDesc('exam_date');
     }
 
+    /**
+     * Yari acik aralik [ayin 1'i, sonraki ayin 1'i): SQLite'ta date cast
+     * "2026-08-31 00:00:00" yaziyor ve kapali whereBetween metin
+     * karsilastirmasinda ayin son gununu disarida birakiyordu. whereDate
+     * degil: SQLite'ta sutunu strftime'a sarip indeksi kullanilmaz kilar.
+     */
     public function scopeInMonth(Builder $query, int $year, int $month): Builder
     {
         $bas = Carbon::create($year, $month, 1);
 
-        return $query->whereBetween('exam_date', [
-            $bas->toDateString(),
-            $bas->copy()->endOfMonth()->toDateString(),
-        ])->where('is_flexible', false)->orderBy('exam_date')->orderBy('starts_at');
+        return $query->where('exam_date', '>=', $bas->toDateString())
+            ->where('exam_date', '<', $bas->copy()->addMonthNoOverflow()->toDateString())
+            ->where('is_flexible', false)->orderBy('exam_date')->orderBy('starts_at');
     }
 
     /** Y-m-d; takvim hucresi eslestirmesi icin. */

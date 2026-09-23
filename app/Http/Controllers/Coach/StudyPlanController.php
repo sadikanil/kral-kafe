@@ -80,6 +80,22 @@ class StudyPlanController extends Controller
     }
 
     /**
+     * Hata metnindeki alan adlari, formdaki ETIKETLERLE ayni. Dil
+     * dosyasinda karsiligi olmayan anahtar "duration minutes en az 5"
+     * diye Ingilizce sizar; starts_at'in genel karsiligi "başlangıç saati"
+     * ise bu formda "Saat" yazan alana uymaz. Tasima kutusu da plan_date
+     * gonderdigi icin iki uc ayni listeyi kullanir.
+     */
+    private const ALAN_ADLARI = [
+        'plan_date' => 'gün',
+        'subject_id' => 'ders',
+        'subject_topic_id' => 'konu',
+        'title' => 'not',
+        'starts_at' => 'saat',
+        'duration_minutes' => 'süre',
+    ];
+
+    /**
      * Gune ders + konu (Dalga 30c). Baslik: yazilan not, yoksa konu, yoksa
      * ders. week_start ve period yazilmaya devam eder - haftalik ilerleme,
      * koc listesi ve haftalik rapor onlardan okuyor.
@@ -102,7 +118,7 @@ class StudyPlanController extends Controller
         ], [
             'subject_id.required_without' => 'Bir ders seçin ya da not yazın.',
             'subject_topic_id.exists' => 'Konu seçilen derse ait değil.',
-        ]);
+        ], self::ALAN_ADLARI);
 
         $konu = isset($v['subject_topic_id']) ? \App\Models\SubjectTopic::find($v['subject_topic_id']) : null;
         $ders = isset($v['subject_id']) ? Subject::find($v['subject_id']) : null;
@@ -128,7 +144,7 @@ class StudyPlanController extends Controller
     {
         $this->kapiyiAc($item->student);
 
-        $v = $request->validate(['plan_date' => ['required', 'date_format:Y-m-d']]);
+        $v = $request->validate(['plan_date' => ['required', 'date_format:Y-m-d']], [], self::ALAN_ADLARI);
 
         $item->update([
             'plan_date' => $v['plan_date'],

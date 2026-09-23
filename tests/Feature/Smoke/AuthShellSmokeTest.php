@@ -287,8 +287,6 @@ class AuthShellSmokeTest extends TestCase
      */
     public function test_the_lockout_cannot_be_bypassed_by_writing_the_phone_differently(): void
     {
-        $this->markTestSkipped('BUG: login lockout bypassed by re-spacing the phone number');
-
         $this->ogrenci();
 
         for ($i = 1; $i <= 12; $i++) {
@@ -335,8 +333,6 @@ class AuthShellSmokeTest extends TestCase
      */
     public function test_a_user_saved_with_capitals_in_the_email_can_sign_in_with_it(): void
     {
-        $this->markTestSkipped('BUG: e-mail saved with capital letters can never sign in');
-
         $this->actingAs($this->kisi(Role::Admin))
             ->post(route('admin.users.store'), [
                 'name' => 'Gülşen Koç',
@@ -646,8 +642,6 @@ class AuthShellSmokeTest extends TestCase
     /** Uygulamanin tamami Turkce; sifirlama e-postasi Ingilizce gidiyor. */
     public function test_the_reset_email_is_written_in_turkish(): void
     {
-        $this->markTestSkipped('BUG: password reset e-mail is sent in English');
-
         $koc = $this->kisi(Role::Coach, ['email' => 'koc@kralkafe.com']);
         $posta = (new ResetPassword('belirteç'))->toMail($koc);
 
@@ -853,8 +847,6 @@ class AuthShellSmokeTest extends TestCase
      */
     public function test_a_parent_with_two_children_is_told_about_each_absent_child(): void
     {
-        $this->markTestSkipped('BUG: second sibling absence notice is silently dropped');
-
         config(['kafe.cron_anahtari' => 'gizli-anahtar']);
         $this->travelTo(Carbon::parse('2026-09-29 20:00', 'UTC'));
 
@@ -883,8 +875,6 @@ class AuthShellSmokeTest extends TestCase
      */
     public function test_the_reminder_for_an_official_exam_does_not_call_it_a_practice_exam(): void
     {
-        $this->markTestSkipped('BUG: official exam reminder says "Yarın deneme var"');
-
         config(['kafe.cron_anahtari' => 'gizli-anahtar']);
         $this->travelTo(Carbon::parse('2026-09-29 20:00', 'UTC'));
 
@@ -894,8 +884,7 @@ class AuthShellSmokeTest extends TestCase
         $this->withToken('gizli-anahtar')->get(route('cron.daily'))->assertOk();
 
         $hatirlatma = Bildirim::where('user_id', $ogrenci->id)->where('type', NotificationType::ExamTomorrow->value)->sole();
-        $this->assertStringContainsString('YKS 2027', $hatirlatma->title);
-        $this->assertStringNotContainsString('deneme', mb_strtolower($hatirlatma->title));
+        $this->assertSame('Yarın sınav günü: YKS 2027', $hatirlatma->title);
     }
 
     public function test_a_student_who_came_today_gets_no_absence_notice(): void

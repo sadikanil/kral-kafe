@@ -32,7 +32,9 @@
     --info-light: #dbeafe;
 
     /* Tipografi */
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    /* Sistem yazi tipi: sifir bayt, iOS'ta yerel SF. Google Fonts ilk
+       boyamayi ucuncu taraf DNS+TLS+CSS+font inisi kadar bekletiyordu. */
+    --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
     /* Gölgeler */
@@ -460,6 +462,30 @@ select.form-control {
     border-left: 4px solid var(--info);
 }
 
+/* Icerige gec: klavyede ilk Tab'da gorunur, masaustunde kenar menusunun
+   linklerini her sayfada tek tek gecmeyi onler. */
+.skip-link {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 100;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    background: #fff;
+    color: var(--primary-dark);
+    font-weight: 600;
+    transform: translateY(-200%);
+}
+
+.skip-link:focus {
+    transform: none;
+}
+
+/* Atlama hedefi; odak cercevesi tum sayfayi cevrelemesin. */
+.main-content:focus {
+    outline: none;
+}
+
 /* Navigation - Sidebar */
 .layout {
     display: flex;
@@ -719,14 +745,30 @@ select.form-control {
     color: var(--gray-500);
 }
 
+/* Karartma bir <button> (dokununca menu kapanir, ekran okuyucuda adi var);
+   masaustunde hic gorunmez. */
+.sidebar-overlay {
+    display: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+}
+
 /* Mobil Responsive */
 @media (max-width: 1024px) {
+    /* Kapali menu yalnizca disari itilirse ekran okuyucu ve klavye gorunmeyen
+       linklerin hepsinden gecer. visibility onu agactan da cikarir; kapanirken
+       kayma bitene kadar gecikmeli uygulanir. */
     .sidebar {
         transform: translateX(-100%);
+        visibility: hidden;
+        transition: transform var(--transition), visibility 0s linear var(--transition);
     }
 
     .sidebar.open {
         transform: translateX(0);
+        visibility: visible;
+        transition: transform var(--transition);
     }
 
     .main-content {
@@ -734,9 +776,11 @@ select.form-control {
     }
 
     .sidebar-overlay {
-        display: none;
         position: fixed;
         inset: 0;
+        /* <button> inset ile her tarayicida gerilmez; boyut acikca verilir. */
+        width: 100%;
+        height: 100%;
         background: rgba(0, 0, 0, 0.5);
         z-index: 45;
     }

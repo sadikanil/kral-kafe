@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Study;
 
 use App\Http\Controllers\Controller;
 use App\Models\StudyTable;
+use App\Services\SessionCloser;
 use App\Services\StudySessionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,8 +19,10 @@ use Illuminate\View\View;
  */
 class TableSessionController extends Controller
 {
-    public function __construct(private readonly StudySessionService $sessions)
-    {
+    public function __construct(
+        private readonly StudySessionService $sessions,
+        private readonly SessionCloser $closer,
+    ) {
     }
 
     /**
@@ -87,6 +90,17 @@ class TableSessionController extends Controller
         // Dalga 19: masa hakki paketten gelir ("sadece deneme" paketinde yok).
         if (! $kullanici->entitlements()->table) {
             return back()->with('error', 'Paketin masa kullanımını kapsamıyor. Yöneticiye danış.');
+        }
+
+        // Kafe kapaliyken oturum acilmaz (QA hata 7): 21:00'den sonra acilan
+        // oturum gece boyu acik kalip ertesi sabah 11-12 saatlik kayda
+        // donusuyordu. Kural SessionCloser'da, kapanis hesabinin yaninda.
+        if (! $this->closer->isOpenAt(now())) {
+            return back()->with('error', sprintf(
+                'Kafe şu anda kapalı (%s–%s). Çalışma açılış saatinde başlatılabilir.',
+                config('kafe.acilis'),
+                config('kafe.kapanis'),
+            ));
         }
 
         // Konum ISTEGE BAGLI: izin reddedilirse oturum yine baslar, sutunlar

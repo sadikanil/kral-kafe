@@ -19,22 +19,34 @@
                 listesinden çıkar ama burada kalır — "neyi hallettik" sorusunun cevabı.
             </p>
 
+            {{-- Gorunur etiketler: placeholder yazmaya baslayinca kaybolur ve
+                 ekran okuyucu icin guvenilir bir ad degil. Hatalar kendi
+                 alaninin altinda; dugme alanlarin tabanina hizali. --}}
             <form method="POST" action="{{ route('coach.topics.store', $student) }}"
-                  class="d-flex align-items-center gap-2" style="flex-wrap: wrap;">
+                  class="d-flex align-items-end gap-2" style="flex-wrap: wrap;">
                 @csrf
-                <input type="text" name="topic" class="form-control" maxlength="150" required
-                       placeholder="Türev - zincir kuralı" value="{{ old('topic') }}">
+                <div class="form-group" style="flex: 1; min-width: 200px;">
+                    <label for="topic" class="form-label">Konu</label>
+                    <input type="text" id="topic" name="topic" class="form-control @error('topic') is-invalid @enderror" maxlength="150" required
+                           placeholder="Örn. Türev - zincir kuralı" value="{{ old('topic') }}">
+                    @error('topic')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                </div>
 
-                <select name="subject_id" class="form-control">
-                    <option value="">Ders (isteğe bağlı)</option>
-                    @foreach($subjects as $ders)
-                        <option value="{{ $ders->id }}" @selected(old('subject_id') == $ders->id)>{{ $ders->name }}</option>
-                    @endforeach
-                </select>
+                <div class="form-group" style="min-width: 150px;">
+                    <label for="subject_id" class="form-label">Ders</label>
+                    <select id="subject_id" name="subject_id" class="form-control @error('subject_id') is-invalid @enderror">
+                        <option value="">İsteğe bağlı</option>
+                        @foreach($subjects as $ders)
+                            <option value="{{ $ders->id }}" @selected(old('subject_id') == $ders->id)>{{ $ders->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('subject_id')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                </div>
 
-                <button type="submit" class="btn btn-primary">Ekle</button>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Ekle</button>
+                </div>
             </form>
-            @error('topic')<span class="invalid-feedback">{{ $message }}</span>@enderror
         </div>
     </div>
 

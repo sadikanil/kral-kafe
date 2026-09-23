@@ -82,10 +82,33 @@ class SubscriptionController extends Controller
         $bas = Carbon::parse($veri['starts_on']);
         $bit = isset($veri['ends_on']) ? Carbon::parse($veri['ends_on']) : null;
 
-        DB::transaction(fn () => app(\App\Services\SubscriptionOpener::class)
-            ->open($user, $paket, $bas, $bit, isset($veri['price']) ? (string) $veri['price'] : null, $veri['note'] ?? null));
+        $acildi = DB::transaction(function () use ($user, $paket, $bas, $bit, $veri) {
+            // "Paketi ata"ya iki kez basilinca (yavas mobil baglanti) ayni
+            // donem iki kez aciliyor, ogrenci iki kez borclaniyordu. Ogrenci
+            // satiri kilitlenir: ayni anda gelen iki istek sirayla bakar
+            // (Postgres; SQLite yazmalari zaten sirali). Iptal edilmis donem
+            // sayilmaz - "iptal et, yeniden ata" calismali.
+            User::whereKey($user->id)->lockForUpdate()->first();
 
-        return redirect()->route('admin.subscriptions.index', $user)->with('success', 'Paket atandı.');
+            $zatenVar = Subscription::where('student_id', $user->id)
+                ->where('package_id', $paket->id)
+                ->whereDate('starts_on', $bas->toDateString())
+                ->where('payment_status', '!=', PaymentStatus::Cancelled->value)
+                ->exists();
+
+            if ($zatenVar) {
+                return false;
+            }
+
+            app(\App\Services\SubscriptionOpener::class)
+                ->open($user, $paket, $bas, $bit, isset($veri['price']) ? (string) $veri['price'] : null, $veri['note'] ?? null);
+
+            return true;
+        });
+
+        return redirect()->route('admin.subscriptions.index', $user)->with('success', $acildi
+            ? 'Paket atandı.'
+            : 'Bu paket bu tarihten itibaren zaten atanmış; ikinci kez açılmadı.');
     }
 
     /** Dalga 30a: paketi tarihten itibaren degistir (kullanici sayfasindan). */
@@ -129,7 +152,29 @@ class SubscriptionController extends Controller
             'note' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $subscription->payments()->create($veri + ['recorded_by' => auth()->id()]);
+        DB::transaction(function () use ($subscription, $veri) {
+            // "Odeme kaydet"e iki kez basilinca ayni odeme iki kez yaziliyor,
+            // kalan yanlis dusuyor, abonelik "Odendi"ye donebiliyordu. Tablo
+            // benzersizlik tasiyamaz (iki esit taksit mesrudur); bu yuzden
+            // AYNI yoneticinin bir dakika icinde gonderdigi AYNI odeme elenir
+            // (yavas baglantida ikinci dokunus saniyeler sonra gelir; ayni
+            // tutarli gercek ikinci taksit dakikalar sonra yazilir).
+            // Abonelik satiri kilitlenir: esanli iki istek sirayla bakar.
+            Subscription::whereKey($subscription->id)->lockForUpdate()->first();
+
+            $ayniOdeme = $subscription->payments()
+                ->where('amount', $veri['amount'])
+                ->whereDate('paid_at', $veri['paid_at'])
+                ->where('method', $veri['method'])
+                ->where('note', $veri['note'] ?? null)
+                ->where('recorded_by', auth()->id())
+                ->where('created_at', '>=', now()->subMinute())
+                ->exists();
+
+            if (! $ayniOdeme) {
+                $subscription->payments()->create($veri + ['recorded_by' => auth()->id()]);
+            }
+        });
         $subscription->syncPaymentStatus();
 
         return back()->with('success', 'Ödeme kaydedildi. Kalan: ' . $subscription->formattedBalance());

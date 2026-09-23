@@ -68,8 +68,8 @@
                             @endswitch
                         </span>
                         @if($discrepancy->location)
+                            {{-- Dalga 29: konum yalnizca bir etiket; tur adi (type_name) kalkti, bos yaziliyordu. --}}
                             <a href="{{ route('admin.stock.index', ['konum' => $discrepancy->location]) }}">{{ $discrepancy->location->name }}</a>
-                            <span class="text-muted">{{ $discrepancy->location->type_name }}</span>
                         @else
                             -
                         @endif

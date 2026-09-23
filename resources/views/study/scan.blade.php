@@ -36,7 +36,7 @@
         <div class="card">
             <div class="card-body text-center p-4">
                 <h3 class="mb-3">{{ $table->name }}</h3>
-                <form action="{{ route('table.session.start', $table->qr_code) }}" method="POST">
+                <form action="{{ route('table.session.start', $table->qr_code) }}" method="POST" class="js-konumlu-form">
                     @csrf
                     {{-- Konum (Dalga 10b): izin verilmezse bos gider, oturum yine baslar --}}
                     <input type="hidden" name="latitude" class="js-konum-enlem">
@@ -63,7 +63,7 @@
                     <p class="text-danger mb-0">Paketin masa kullanımını kapsamıyor. Yöneticiye danış.</p>
                 @elseif(auth()->user()->hasRole(\App\Enums\Role::Student))
                     <p class="text-muted mb-3">Hoş geldin {{ auth()->user()->name }}!</p>
-                    <form action="{{ route('table.session.start', $table->qr_code) }}" method="POST">
+                    <form action="{{ route('table.session.start', $table->qr_code) }}" method="POST" class="js-konumlu-form">
                         @csrf
                         {{-- Konum (Dalga 10b): izin verilmezse bos gider, oturum yine baslar --}}
                         <input type="hidden" name="latitude" class="js-konum-enlem">
@@ -81,14 +81,23 @@
 
 @push('scripts')
     <script>
+        // konum:bas
         // Konum ISTEGE BAGLI. Izin reddedilirse ya da zaman asimina ugrarsa
         // alanlar bos kalir ve oturum yine baslar - sunucu tarafi da oyle
         // dogruluyor. Ogrenciyi konum ekraninda bekletmemek icin sayfa
         // acilir acilmaz isteniyor, butona basinca degil.
+        //
+        // Hassas konum saniyeler surebiliyor (QA a11y A21): konum gelmeden
+        // basan ogrenci bos koordinat gonderiyor, yonetici izin verilmis olsa
+        // da "Konum yok" goruyordu. Istek suruyorsa gonderim en fazla 3 sn
+        // bekler; konum gelince hemen gider. Izin yoksa hic beklenmez.
         (function () {
             if (!navigator.geolocation) {
                 return;
             }
+
+            let bekleniyor = true;
+            const bekleyenler = [];
 
             function doldur(secici, deger) {
                 document.querySelectorAll(secici).forEach(function (alan) {
@@ -96,15 +105,54 @@
                 });
             }
 
+            function sonuclandi() {
+                bekleniyor = false;
+                bekleyenler.splice(0).forEach(function (gonder) { gonder(); });
+            }
+
             navigator.geolocation.getCurrentPosition(
                 function (konum) {
                     doldur('.js-konum-enlem', konum.coords.latitude.toFixed(7));
                     doldur('.js-konum-boylam', konum.coords.longitude.toFixed(7));
                     doldur('.js-konum-dogruluk', Math.round(konum.coords.accuracy));
+                    sonuclandi();
                 },
-                function () { /* izin yok: alanlar bos kalir, akis degismez */ },
+                // izin yok: alanlar bos kalir, akis degismez
+                sonuclandi,
                 { enableHighAccuracy: true, timeout: 8000, maximumAge: 60000 }
             );
+
+            document.querySelectorAll('.js-konumlu-form').forEach(function (form) {
+                form.addEventListener('submit', function (olay) {
+                    if (!bekleniyor) {
+                        return;
+                    }
+
+                    olay.preventDefault();
+                    if (form.dataset.bekliyor) {
+                        return;
+                    }
+                    form.dataset.bekliyor = '1';
+
+                    const dugme = form.querySelector('button[type=submit]');
+                    dugme.disabled = true;
+                    dugme.setAttribute('aria-busy', 'true');
+                    dugme.textContent = 'Konum alınıyor…';
+
+                    // form.submit() submit olayini yeniden tetiklemez; tek gonderim.
+                    let gitti = false;
+                    function gonder() {
+                        if (!gitti) {
+                            gitti = true;
+                            form.submit();
+                        }
+                    }
+
+                    bekleyenler.push(gonder);
+                    setTimeout(gonder, 3000);
+                });
+            });
         })();
+        // konum:son
     </script>
 @endpush

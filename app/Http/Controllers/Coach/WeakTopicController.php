@@ -34,9 +34,15 @@ class WeakTopicController extends Controller
             // Koc ACIK ve KAPANMIS konularin ikisini de gorur; gecmis
             // "neyi hallettik" sorusunun cevabi. Veli ve ogrenci yalnizca
             // aciklari gorur.
+            //
+            // ACIKLAR USTTE: islem dugmeleri (Plana ekle, Kapat) yalnizca
+            // onlarda. orderBy('status') alfabetik siralar ve 'closed' <
+            // 'open' oldugu icin gecmis ustte kalir, aylar icinde uzayan
+            // liste acik konulari gomerdi. CASE, ucuncu bir durum eklenirse
+            // de alfabeye yaslanmadan calisir (SQLite ve Postgres ikisi de).
             'topics' => WeakTopic::forStudent($student)
                 ->with(['subject', 'author'])
-                ->orderBy('status')
+                ->orderByRaw("CASE WHEN status = 'open' THEN 0 ELSE 1 END")
                 ->orderByDesc('created_at')
                 ->get(),
             'subjects' => Subject::forStudent($student)->get(),
@@ -52,6 +58,10 @@ class WeakTopicController extends Controller
             // Ders ISTEGE BAGLI: her zayif konu bir derse oturmuyor
             // ("soru cozme hizi", "deneme stresi").
             'subject_id' => ['nullable', 'integer', 'exists:subjects,id'],
+        ], [], [
+            // Dil dosyasinda karsiligi yok; yoksa "subject id" diye sizar.
+            'topic' => 'konu',
+            'subject_id' => 'ders',
         ]);
 
         $baslik = trim($dogrulanmis['topic']);

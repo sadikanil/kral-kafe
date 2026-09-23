@@ -29,9 +29,15 @@ class ExamReportController extends Controller
 
     public function pdf(ExamReport $report)
     {
+        // Once yetki: dosyasi olmayan baskasinin raporu 404 degil 403 almali,
+        // yoksa var olup olmadigi ele verilir.
         Gate::authorize('view', $report);
 
-        return Storage::disk(config('filesystems.uploads'))
-            ->response($report->file_path, $report->fileName(), ['Content-Type' => 'application/pdf']);
+        // response() Content-Length icin size() cagiriyor; eksik dosyada
+        // (depo tasima, dosyasiz yedekten donus) Flysystem hatasi 500 olurdu.
+        $disk = Storage::disk(config('filesystems.uploads'));
+        abort_unless($report->file_path && $disk->exists($report->file_path), 404, 'Dosya bulunamadı.');
+
+        return $disk->response($report->file_path, $report->fileName(), ['Content-Type' => 'application/pdf']);
     }
 }

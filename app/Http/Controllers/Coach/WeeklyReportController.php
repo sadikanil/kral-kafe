@@ -42,7 +42,7 @@ class WeeklyReportController extends Controller
 
         $dogrulanmis = $request->validate([
             'coach_comment' => ['nullable', 'string', 'max:2000'],
-        ]);
+        ], [], ['coach_comment' => 'yorum']);
 
         $hafta = WeekParameter::resolve($request->query('hafta'));
         $rapor = $this->uretici->for($student, $hafta);

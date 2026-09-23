@@ -54,6 +54,12 @@ class NoteController extends Controller
             ],
         ], [
             'occurred_on.required' => 'Görüşmenin hangi gün yapıldığını yaz.',
+        ], [
+            // Formdaki etiketler; dil dosyasinda bu anahtarlarin karsiligi yok.
+            'kind' => 'tür',
+            'visibility' => 'görünürlük',
+            'body' => 'not',
+            'occurred_on' => 'görüşme günü',
         ]);
 
         $govde = trim($dogrulanmis['body']);

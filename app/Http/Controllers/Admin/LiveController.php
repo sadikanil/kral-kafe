@@ -22,7 +22,11 @@ class LiveController extends Controller
             ->orderBy('started_at')
             ->get();
 
-        $doluluk = StudyTable::occupancy();
+        // Doluluk yuklu listeden: StudyTable::occupancy() acik oturumlari bir
+        // kez daha sayardi (P9). Masa basina tek oturum (kismi tekil indeks),
+        // yani acik oturum sayisi dolu masa sayisidir - occupancy ile ayni tanim.
+        $toplamYer = StudyTable::active()->count();
+        $doluluk = ['total' => $toplamYer, 'free' => max(0, $toplamYer - $acikOturumlar->count())];
 
         // "12 saati asan oturum yoneticiye anomali olarak duser" (FEATURE 1).
         // Sessizce kapatmak kurali uygulamak sayilmaz; birinin gormesi gerek.

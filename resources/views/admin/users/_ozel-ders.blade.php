@@ -20,13 +20,24 @@
 
         <form method="POST" action="{{ route('admin.lessons.store', $user) }}" class="d-flex gap-2 mt-2" style="flex-wrap: wrap; align-items: flex-end;">
             @csrf
-            <select name="weekday" class="form-control" style="flex: 1 1 130px;">
-                @foreach(\App\Models\PrivateLessonSlot::GUNLER as $no => $ad)
-                    <option value="{{ $no }}">{{ $ad }}</option>
-                @endforeach
-            </select>
-            <input type="time" name="starts_at" class="form-control" style="flex: 1 1 100px;" required>
-            <input type="time" name="ends_at" class="form-control" style="flex: 1 1 100px;" required>
+            {{-- Gorunur etiketler: iki bos saat kutusundan hangisinin baslangic
+                 oldugu yalnizca sirasindan anlasiliyordu. --}}
+            <div style="flex: 1 1 130px;">
+                <label for="ders-gun" class="form-label">Gün</label>
+                <select id="ders-gun" name="weekday" class="form-control">
+                    @foreach(\App\Models\PrivateLessonSlot::GUNLER as $no => $ad)
+                        <option value="{{ $no }}">{{ $ad }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div style="flex: 1 1 100px;">
+                <label for="ders-bas" class="form-label">Başlangıç</label>
+                <input type="time" id="ders-bas" name="starts_at" class="form-control" required>
+            </div>
+            <div style="flex: 1 1 100px;">
+                <label for="ders-bit" class="form-label">Bitiş</label>
+                <input type="time" id="ders-bit" name="ends_at" class="form-control" required>
+            </div>
             <button type="submit" class="btn btn-primary">Ekle</button>
         </form>
 
@@ -34,9 +45,10 @@
             <hr>
             <strong>Önümüzdeki 4 hafta</strong>
             @foreach($upcomingLessons as $ders)
+                @php $gunAdi = \Illuminate\Support\Carbon::parse($ders['date'])->locale('tr')->translatedFormat('d M D'); @endphp
                 <div class="d-flex justify-content-between align-items-center mt-2" style="flex-wrap: wrap; gap: .5rem;">
                     <span>
-                        {{ \Illuminate\Support\Carbon::parse($ders['date'])->locale('tr')->translatedFormat('d M D') }}
+                        {{ $gunAdi }}
                         {{ $ders['starts_at'] }}–{{ $ders['ends_at'] }}
                         @if($ders['status'] === 'cancelled')<span class="badge badge-danger">İptal</span>@endif
                         @if($ders['status'] === 'moved')<span class="badge badge-warning">Taşındı</span>@endif
@@ -49,9 +61,13 @@
                             </form>
                             <form method="POST" action="{{ route('admin.lessons.move', $ders['slot']) }}" class="d-flex gap-1">
                                 @csrf <input type="hidden" name="date" value="{{ $ders['original_date'] }}">
-                                <input type="date" name="new_date" class="form-control" style="padding: 4px; width: 140px;" value="{{ $ders['date'] }}" required>
-                                <input type="time" name="new_starts_at" class="form-control" style="padding: 4px; width: 90px;" value="{{ $ders['starts_at'] }}" required>
-                                <input type="time" name="new_ends_at" class="form-control" style="padding: 4px; width: 90px;" value="{{ $ders['ends_at'] }}" required>
+                                {{-- Satir ici form: gorunur etiket yer yok, ad satirin dersini soyler. --}}
+                                <input type="date" name="new_date" class="form-control" style="padding: 4px; width: 140px;" value="{{ $ders['date'] }}" required
+                                    aria-label="{{ $gunAdi }} dersinin yeni günü">
+                                <input type="time" name="new_starts_at" class="form-control" style="padding: 4px; width: 90px;" value="{{ $ders['starts_at'] }}" required
+                                    aria-label="{{ $gunAdi }} dersinin yeni başlangıcı">
+                                <input type="time" name="new_ends_at" class="form-control" style="padding: 4px; width: 90px;" value="{{ $ders['ends_at'] }}" required
+                                    aria-label="{{ $gunAdi }} dersinin yeni bitişi">
                                 <button type="submit" class="btn btn-sm btn-secondary">Taşı</button>
                             </form>
                         </span>

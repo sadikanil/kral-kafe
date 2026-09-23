@@ -29,10 +29,17 @@ final class WeekPlan
     {
         $bas = Carbon::parse(LocalDay::weekStart($anyDay), LocalDay::timezone());
         $son = $bas->copy()->addDays(6)->toDateString();
+        // Tarih sutunlari YARI ACIK pencereyle okunur: [pazartesi, sonraki
+        // pazartesi). 'date' cast'i SQLite'ta "2026-10-04 00:00:00" yaziyor
+        // ve kapali bir whereBetween(..., '2026-10-04') metin karsilastirmasinda
+        // Pazar'i disarida birakiyordu (README SS10.1 yan kural). $son yalnizca
+        // gun listesi ve ozel ders takvimi icin.
+        $sonrakiBas = $bas->copy()->addDays(7)->toDateString();
         $bugun = LocalDay::today();
 
         $maddeler = StudyPlanItem::where('student_id', $student->id)
-            ->whereBetween('plan_date', [$bas->toDateString(), $son])
+            ->where('plan_date', '>=', $bas->toDateString())
+            ->where('plan_date', '<', $sonrakiBas)
             ->with(['subject', 'topic', 'examEvent'])
             ->get()
             ->groupBy(fn (StudyPlanItem $m) => $m->plan_date->toDateString());
@@ -42,7 +49,8 @@ final class WeekPlan
             ->get()
             ->groupBy('weekday');
 
-        $denemeler = ExamEvent::whereBetween('exam_date', [$bas->toDateString(), $son])
+        $denemeler = ExamEvent::where('exam_date', '>=', $bas->toDateString())
+            ->where('exam_date', '<', $sonrakiBas)
             ->where('is_flexible', false)
             ->orderBy('starts_at')
             ->get()

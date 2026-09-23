@@ -66,16 +66,29 @@ class DiscrepancyLog extends Model
     }
 
     /**
-     * Resolve this discrepancy.
+     * Tutarsizligi bir kez cozer; zaten cozulmusse hicbir sey yazmaz.
+     *
+     * Form "not daha sonra degistirilemez" diyor. Kosul PHP'de degil
+     * UPDATE'in icinde: eski sekme, ikinci yonetici ya da cift tiklama
+     * ayni anda gelse de yalnizca ilk yazan kazanir (StudySession::closeOnce
+     * ile ayni yol). Donus: bu cagri mi cozdu.
      */
-    public function resolve(User $admin, string $notes = null): void
+    public function resolve(User $admin, ?string $notes = null): bool
     {
-        $this->update([
-            'resolved' => true,
-            'resolution_notes' => $notes,
-            'resolved_by' => $admin->id,
-            'resolved_at' => now(),
-        ]);
+        $etkilenen = static::whereKey($this->getKey())
+            ->where('resolved', false)
+            ->update([
+                'resolved' => true,
+                'resolution_notes' => $notes,
+                'resolved_by' => $admin->id,
+                'resolved_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+        // Kaybeden kopya da veritabanindaki notu ve cozeni gostersin.
+        $this->refresh();
+
+        return $etkilenen === 1;
     }
 
     /**

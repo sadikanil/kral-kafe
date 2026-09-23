@@ -210,10 +210,12 @@
                                                 value="{{ old('products.' . $product->id . '.ai_suggested_quantity', $aiQuantity ?? '') }}">
                                             <input type="hidden" name="products[{{ $product->id }}][ai_confidence]"
                                                 value="{{ old('products.' . $product->id . '.ai_confidence', $aiConfidence ?? '') }}">
-                                            <input type="number"
+                                            {{-- Telefonda rakam klavyesi; tarayici dunku sayimi oneri olarak sunmasin. --}}
+                                            <input type="number" inputmode="numeric" autocomplete="off"
                                                 class="form-control js-counted @error('products.' . $product->id . '.verified_quantity') is-invalid @enderror"
                                                 name="products[{{ $product->id }}][verified_quantity]"
                                                 value="{{ old('products.' . $product->id . '.verified_quantity', $defaultQuantity) }}"
+                                                aria-label="{{ $product->name }} sayılan adet"
                                                 min="0" step="1" required
                                                 style="max-width: 110px;"
                                                 data-expected="{{ $expectedQuantity ?? '' }}"
@@ -236,6 +238,7 @@
                                             <input type="text" class="form-control"
                                                 name="products[{{ $product->id }}][notes]"
                                                 value="{{ old('products.' . $product->id . '.notes') }}"
+                                                aria-label="{{ $product->name }} notu"
                                                 placeholder="Opsiyonel">
                                         </td>
                                     </tr>

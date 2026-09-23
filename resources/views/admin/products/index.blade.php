@@ -61,12 +61,17 @@
                                         <a href="{{ route('admin.products.edit', $product) }}"
                                             class="btn btn-sm btn-secondary" title="Düzenle" aria-label="Düzenle">✏️</a>
 
+                                        {{-- A5: ⏸️ Duzenle'nin hemen yaninda ve dokunmatikte title
+                                             gorunmuyor; yanlis dokunus urunu aninda satistan kaldiriyordu.
+                                             Ad @js ile: kesme isaretli ad onay kutusunu bozmasin. --}}
                                         <form action="{{ route('admin.products.toggle-status', $product) }}" method="POST"
-                                            class="d-inline-block">
+                                            class="d-inline-block"
+                                            onsubmit="return confirm(@js($product->name . ($product->is_active ? ' satıştan kaldırılsın mı?' : ' yeniden satışa açılsın mı?')))">
                                             @csrf
                                             <button type="submit"
                                                 class="btn btn-sm btn-{{ $product->is_active ? 'warning' : 'success' }}"
-                                                title="{{ $product->is_active ? 'Devre Dışı' : 'Aktifleştir' }}">
+                                                title="{{ $product->is_active ? 'Pasifleştir' : 'Aktifleştir' }}"
+                                                aria-label="{{ ($product->is_active ? 'Pasifleştir: ' : 'Aktifleştir: ') . $product->name }}">
                                                 {{ $product->is_active ? '⏸️' : '▶️' }}
                                             </button>
                                         </form>
@@ -76,7 +81,8 @@
                                             onsubmit="return confirm('Bu ürünü silmek istediğinize emin misiniz?')">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Sil"
+                                                aria-label="Sil: {{ $product->name }}">🗑️</button>
                                         </form>
                                     </div>
                                 </td>

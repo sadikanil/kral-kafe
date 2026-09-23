@@ -1,19 +1,26 @@
 <!DOCTYPE html>
 <html lang="tr">
 
+{{--
+    Giris sayfalari ve hata sayfalari (errors/*) bu duzeni kullanir. Hata
+    sayfasi oturum baslamadan da cizilebilir (bilinmeyen adres, bakim): burada
+    veritabanina ya da giris yapmis kullaniciya dayanan hicbir sey yok.
+--}}
+@php
+    // Surum icerikten; ayrintisi layouts/app'te.
+    $surumlu = fn (string $yol) => asset($yol) . (is_file($dosya = public_path($yol)) ? '?v=' . substr(md5_file($dosya), 0, 12) : '');
+@endphp
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Giriş - Kral Kafe')</title>
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Styles -->
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    {{-- Yazi tipi sistemden (app.css --font-sans); ucuncu taraf font yok. --}}
+    <link rel="stylesheet" href="{{ $surumlu('css/app.css') }}">
+    {{-- Cift gonderim kilidi: sifre sifirlama e-postasi iki kez gitmesin. --}}
+    <script src="{{ $surumlu('js/kabuk.js') }}" defer></script>
 
     <style>
         .auth-page {
@@ -82,11 +89,17 @@
     <div class="auth-page">
         <div class="auth-container">
             <div class="auth-logo">
-                <div class="auth-logo-icon">☕</div>
+                <div class="auth-logo-icon" aria-hidden="true">☕</div>
                 <div class="auth-logo-text">Kral Kafe</div>
             </div>
 
             <div class="auth-card animate-slide-up">
+                {{-- Suresi dolan sayfadan (419) donuste mesaj burada; giris
+                     ekraninin kendisi yalnizca 'status' gosteriyor. --}}
+                @if(session('error'))
+                    <div class="alert alert-danger mb-3" role="alert"><span aria-hidden="true">❌</span> {{ session('error') }}</div>
+                @endif
+
                 @yield('content')
             </div>
         </div>

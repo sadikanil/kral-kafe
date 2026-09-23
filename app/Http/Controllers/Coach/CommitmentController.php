@@ -23,16 +23,29 @@ class CommitmentController extends Controller
     {
         $this->kapiyiAc($student);
 
+        // Alanlar commitment_ onekli: plan formu ayni sayfada ve kendi
+        // title/starts_at alanlarini tasiyor. Ortak ad, bir formun hatasinda
+        // eski girdiyi ve hata durumunu obur forma da yaziyordu (program
+        // saati plan maddesine sessizce kaydolabiliyordu). Kolonlar ayni.
         $v = $request->validate([
             'kind' => ['required', Rule::enum(CommitmentKind::class)],
             'commitment_title' => ['nullable', 'string', 'max:100'],
             'weekdays' => ['required', 'array', 'min:1'],
             'weekdays.*' => ['integer', 'between:1,7'],
-            'starts_at' => ['required', 'date_format:H:i'],
-            'ends_at' => ['required', 'date_format:H:i', 'after:starts_at'],
+            'commitment_starts_at' => ['required', 'date_format:H:i'],
+            'commitment_ends_at' => ['required', 'date_format:H:i', 'after:commitment_starts_at'],
         ], [
             'weekdays.required' => 'En az bir gün seçin.',
-            'ends_at.after' => 'Bitiş başlangıçtan sonra olmalı.',
+            'commitment_ends_at.after' => 'Bitiş başlangıçtan sonra olmalı.',
+        ], [
+            // Onekli adlar dil dosyasindaki starts_at karsiligini tutmaz;
+            // kind ve weekdays'in orada hic karsiligi yok ("weekdays.0").
+            'kind' => 'tür',
+            'weekdays' => 'günler',
+            'weekdays.*' => 'gün',
+            'commitment_title' => 'ad',
+            'commitment_starts_at' => 'başlangıç saati',
+            'commitment_ends_at' => 'bitiş saati',
         ]);
 
         foreach (array_unique(array_map('intval', $v['weekdays'])) as $gun) {
@@ -41,8 +54,8 @@ class CommitmentController extends Controller
                 'kind' => $v['kind'],
                 'title' => $v['commitment_title'] ?? null,
                 'weekday' => $gun,
-                'starts_at' => $v['starts_at'],
-                'ends_at' => $v['ends_at'],
+                'starts_at' => $v['commitment_starts_at'],
+                'ends_at' => $v['commitment_ends_at'],
                 'created_by' => auth()->id(),
             ]);
         }

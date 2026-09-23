@@ -3,7 +3,7 @@
 @section('title', 'Şifre Belirle - Kral Kafe')
 
 @section('content')
-    <h2 class="auth-title">Yeni Şifre Belirle</h2>
+    <h1 class="auth-title">Yeni Şifre Belirle</h1>
     <p class="auth-subtitle">Hesabınız için yeni bir şifre oluşturun.</p>
 
     <form method="POST" action="{{ route('password.store') }}">
@@ -17,6 +17,7 @@
                 type="email"
                 id="email"
                 name="email"
+                autocomplete="username"
                 class="form-control @error('email') is-invalid @enderror"
                 value="{{ old('email', $email) }}"
                 required
@@ -33,6 +34,7 @@
                 type="password"
                 id="password"
                 name="password"
+                autocomplete="new-password"
                 class="form-control @error('password') is-invalid @enderror"
                 placeholder="••••••••"
                 required
@@ -48,6 +50,7 @@
                 type="password"
                 id="password_confirmation"
                 name="password_confirmation"
+                autocomplete="new-password"
                 class="form-control"
                 placeholder="••••••••"
                 required

@@ -24,40 +24,37 @@
     @if($todayEntries->isNotEmpty())
         <div class="card mb-3">
             <div class="card-header"><h4>Bugün eklediklerim</h4></div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead><tr><th>Saat</th><th>Ürün</th><th>Nereden</th><th>Adet</th><th>Tutar</th><th></th></tr></thead>
-                        <tbody>
-                            @foreach($todayEntries as $kayit)
-                                <tr>
-                                    <td>{{ $kayit->consumed_at->timezone(config('kafe.timezone'))->format('H:i') }}</td>
-                                    <td>{{ $kayit->product->name }}</td>
-                                    <td class="text-muted">{{ $kayit->location->name }}</td>
-                                    <td>{{ $kayit->quantity }}</td>
-                                    <td>
-                                        @if($kayit->isCoveredByPackage())
-                                            <span class="badge badge-success">Paketinde</span>
-                                        @else
-                                            {{ $kayit->formatted_total }}
-                                            @if($kayit->covered_quantity > 0)
-                                                <span class="badge badge-info">{{ $kayit->covered_quantity }} paketten</span>
-                                            @endif
-                                        @endif
-                                    </td>
-                                    <td class="text-right">
-                                        @if($kayit->canUndo())
-                                            <form action="{{ route('user.tab.undo', $kayit) }}" method="POST" class="d-inline-block">
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm btn-secondary">Geri al</button>
-                                            </form>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
+            {{-- Tablo degil liste: 390px telefonda alti sutunlu tablo kutudan
+                 tasiyor, "Geri al" yatay kaydirmanin arkasinda kaliyordu. Satir:
+                 saat, urun ve tutar solda; geri al her zaman gorunur sagda. --}}
+            <div class="card-body">
+                <ul class="log-list">
+                    @foreach($todayEntries as $kayit)
+                        <li>
+                            <span class="text-muted">{{ $kayit->consumed_at->timezone(config('kafe.timezone'))->format('H:i') }}</span>
+                            <span class="log-label">
+                                {{ $kayit->product->name }} ×{{ $kayit->quantity }}
+                                <small class="text-muted">· {{ $kayit->location->name }}</small>
+                                <br>
+                                @if($kayit->isCoveredByPackage())
+                                    <span class="badge badge-success">Paketinde</span>
+                                @else
+                                    <strong>{{ $kayit->formatted_total }}</strong>
+                                    @if($kayit->covered_quantity > 0)
+                                        <span class="badge badge-info">{{ $kayit->covered_quantity }} paketten</span>
+                                    @endif
+                                @endif
+                            </span>
+                            @if($kayit->canUndo())
+                                <form action="{{ route('user.tab.undo', $kayit) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="btn btn-secondary"
+                                        aria-label="{{ $kayit->product->name }} ×{{ $kayit->quantity }} kaydını geri al">Geri al</button>
+                                </form>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
             </div>
         </div>
     @endif
@@ -90,7 +87,8 @@
 
 
                             <div class="d-flex gap-1 justify-content-center align-items-center mt-2">
-                                <select name="quantity" class="form-control" style="width: 64px; padding: 4px;">
+                                <select name="quantity" class="form-control" style="width: 64px; padding: 4px;"
+                                    aria-label="{{ $product->name }} adet">
                                     @for($i = 1; $i <= 5; $i++)
                                         <option value="{{ $i }}">{{ $i }}</option>
                                     @endfor

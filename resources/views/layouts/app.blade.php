@@ -10,9 +10,19 @@
     $gruplar = \App\Support\Navigation::groups($kullanici);
     $aktif = fn (array $oge) => request()->routeIs(...explode('|', $oge['match'] ?? $oge['route']));
 
-    // Bildirim zili (Dalga 27)
-    $okunmamis = \App\Models\Notification::for($kullanici)->whereNull('read_at')->count();
-    $sonBildirimler = \App\Models\Notification::for($kullanici)->latest()->limit(6)->get();
+    // Bildirim zili (Dalga 27). Her sayfada calistigi icin tek sorgu: son 6
+    // bildirim, okunmamis sayisi alt sorgu olarak her satirda. Hic satir
+    // yoksa okunmamis da yoktur.
+    $sonBildirimler = \App\Models\Notification::for($kullanici)
+        ->addSelect(['okunmamis_sayisi' => \App\Models\Notification::selectRaw('count(*)')
+            ->where('user_id', $kullanici->id)->whereNull('read_at')])
+        ->latest()->limit(6)->get();
+    $okunmamis = (int) ($sonBildirimler->first()?->okunmamis_sayisi ?? 0);
+
+    // Surum icerikten: dosya degisince adres de degisir. vercel.json ?v=
+    // tasiyan istegi bir yil onbellekte tutar; dosya pakette yoksa parametre
+    // eklenmez ve tarayici her seferinde sorar - bayat CSS riski yok.
+    $surumlu = fn (string $yol) => asset($yol) . (is_file($dosya = public_path($yol)) ? '?v=' . substr(md5_file($dosya), 0, 12) : '');
 @endphp
 
 <head>
@@ -21,34 +31,39 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Kral Kafe')</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    {{-- Yazi tipi sistemden (app.css --font-sans); Google Fonts ilk boyamayi
+         ucuncu taraf baglantisi kadar bekletiyordu. --}}
+    <link rel="stylesheet" href="{{ $surumlu('css/app.css') }}">
+    {{-- Cift gonderim kilidi, menu, zil ve hata ozeti (bkz. dosya basi). --}}
+    <script src="{{ $surumlu('js/kabuk.js') }}" defer></script>
 
     @stack('styles')
 </head>
 
 <body>
+    <a href="#icerik" class="skip-link">İçeriğe geç</a>
+
     <div class="layout">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <a href="{{ route($kullanici->homeRoute()) }}" class="sidebar-logo">
-                    <span class="sidebar-logo-icon">☕</span>
+                    <span class="sidebar-logo-icon" aria-hidden="true">☕</span>
                     <span>Kral Kafe</span>
                 </a>
             </div>
 
-            <nav class="sidebar-nav">
+            {{-- Ekran okuyucu emojiyi okur ("ev", "kapi"); simgeler gizli, ad
+                 metinde. Etkin sayfa yalnizca renkle degil aria-current ile. --}}
+            <nav class="sidebar-nav" aria-label="Ana menü">
                 @foreach($gruplar as $grup)
                     <div class="sidebar-nav-section">
                         <span class="sidebar-nav-section-title">{{ $grup['title'] }}</span>
                     </div>
 
                     @foreach($grup['items'] as $oge)
-                        <a href="{{ route($oge['route']) }}" class="sidebar-nav-link {{ $aktif($oge) ? 'active' : '' }}">
-                            <span class="sidebar-nav-link-icon">{{ $oge['icon'] }}</span>
+                        @php($etkin = $aktif($oge))
+                        <a href="{{ route($oge['route']) }}" class="sidebar-nav-link{{ $etkin ? ' active' : '' }}"@if($etkin) aria-current="page"@endif>
+                            <span class="sidebar-nav-link-icon" aria-hidden="true">{{ $oge['icon'] }}</span>
                             <span>{{ $oge['label'] }}</span>
                         </a>
                     @endforeach
@@ -78,15 +93,18 @@
                     </div>
                     <form action="{{ route('logout') }}" method="POST" class="d-inline-block">
                         @csrf
-                        <button type="submit" class="btn btn-sm btn-secondary" title="Çıkış">🚪</button>
+                        <button type="submit" class="btn btn-sm btn-secondary" aria-label="Çıkış yap" title="Çıkış yap"><span aria-hidden="true">🚪</span></button>
                     </form>
                 </div>
             </div>
         </aside>
 
-        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+        {{-- Karartma dugme: dokununca menu kapanir. Tab sirasinda yok; klavyede
+             Escape ve Menü dugmesi ayni isi yapiyor. --}}
+        <button type="button" class="sidebar-overlay js-menu-kapat" id="sidebarOverlay" aria-label="Menüyü kapat" tabindex="-1"></button>
 
-        <main class="main-content has-bottom-nav">
+        {{-- "Icerige gec" hedefi; menu acikken betik burayi inert yapar. --}}
+        <main class="main-content has-bottom-nav" id="icerik" tabindex="-1">
             <header class="topbar">
                 <div class="d-flex align-items-center gap-2">
                     <h1 class="topbar-title">@yield('page-title', 'Panel')</h1>
@@ -95,10 +113,12 @@
                 <div class="topbar-actions">
                     @yield('topbar-actions')
 
-                    {{-- Zil: son bildirimler altinda listelenir; "Tumu" okundu sayar. --}}
+                    {{-- Zil: son bildirimler altinda listelenir; "Tumu" okundu sayar.
+                         Ad metinde ("Bildirimler, 2 okunmamış"); emoji ve rozet
+                         ekran okuyucudan gizli, yoksa "zil 2" okunuyordu. --}}
                     <details class="notif-bell">
-                        <summary class="btn btn-icon btn-secondary" title="Bildirimler">
-                            🔔@if($okunmamis > 0)<span class="notif-count">{{ $okunmamis }}</span>@endif
+                        <summary class="btn btn-icon btn-secondary" title="Bildirimler" aria-label="Bildirimler{{ $okunmamis > 0 ? ', ' . $okunmamis . ' okunmamış' : '' }}">
+                            <span aria-hidden="true">🔔</span>@if($okunmamis > 0)<span aria-hidden="true" class="notif-count">{{ $okunmamis }}</span>@endif
                         </summary>
                         <div class="notif-panel">
                             @forelse($sonBildirimler as $bildirim)
@@ -119,21 +139,29 @@
             </header>
 
             <div class="page-content">
+                {{-- Yonlendirmeden sonra gelen mesajlar ekran okuyucuya duyurulur:
+                     basari role=status (sirasini bekler), hata role=alert. Hata
+                     kutulari acilista odak alir (data-odakla, kabuk.js); uzun
+                     formda neyin yanlis gittigi boylece hemen okunur. --}}
                 @if(session('success'))
-                    <div class="alert alert-success animate-slide-up">✅ {{ session('success') }}</div>
+                    <div class="alert alert-success animate-slide-up" role="status"><span aria-hidden="true">✅</span> {{ session('success') }}</div>
                 @endif
 
                 @if(session('error'))
-                    <div class="alert alert-danger animate-slide-up">❌ {{ session('error') }}</div>
+                    <div class="alert alert-danger animate-slide-up" role="alert" tabindex="-1" data-odakla><span aria-hidden="true">❌</span> {{ session('error') }}</div>
                 @endif
 
+                {{-- data-hata-alani: hatanin anahtari. kabuk.js alan sayfadaysa satiri
+                     ona goturen baglantiya cevirir ve alani aria-invalid yapar. --}}
                 @if($errors->any())
-                    <div class="alert alert-danger animate-slide-up">
+                    <div class="alert alert-danger animate-slide-up" role="alert" tabindex="-1" data-odakla>
                         <div>
                             <strong>Hata!</strong>
                             <ul class="mb-0 mt-1">
-                                @foreach($errors->all() as $error)
-                                    <li>{{ $error }}</li>
+                                @foreach($errors->getMessages() as $alan => $mesajlar)
+                                    @foreach($mesajlar as $mesaj)
+                                        <li data-hata-alani="{{ $alan }}">{{ $mesaj }}</li>
+                                    @endforeach
                                 @endforeach
                             </ul>
                         </div>
@@ -144,13 +172,6 @@
             </div>
         </main>
     </div>
-
-    <script>
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
-            document.getElementById('sidebarOverlay').classList.toggle('open');
-        }
-    </script>
 
     @include('layouts._bottom-nav', ['tabs' => \App\Support\Navigation::quick($kullanici), 'aktif' => $aktif])
 

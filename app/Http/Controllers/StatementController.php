@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Services\PaymentStatement;
 use App\Support\ExamCalendar;
+use App\Support\MonthParameter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
@@ -30,7 +31,7 @@ class StatementController extends Controller
 
     private function render(Request $request, User $student, string $rota, array $rotaParametresi): View
     {
-        [$yil, $ay] = ExamCalendar::parseMonth($request->query('ay'));
+        [$yil, $ay] = MonthParameter::resolve($request->query('ay'));
 
         return view('payments.statement', [
             'student' => $student,

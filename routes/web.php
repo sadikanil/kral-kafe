@@ -74,17 +74,32 @@ Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')-
     Route::redirect('/gecmis', '/kullanici/odemeler')->name('history');
     Route::get('/denemeler', [ExamCalendarController::class, 'student'])->name('exams');
 
-    // Deneme sonuc raporlari (PDF + yapay zeka analizi), salt okunur
-    // Haftalik calisma plani (Dalga 13): ogrenci yalnizca tamamlar
-    Route::post('/plan/{item}/tamamla', [\App\Http\Controllers\User\StudyPlanController::class, 'complete'])
-        ->name('study-plan.complete');
-    // Takvimli plan (Dalga 30c): kendi haftasi; serbest denemeyi gune koyar.
-    Route::get('/plan', [\App\Http\Controllers\User\StudyPlanController::class, 'show'])->name('plan');
-    Route::post('/plan/deneme', [\App\Http\Controllers\User\StudyPlanController::class, 'scheduleExam'])->name('plan.exam');
-    Route::delete('/plan/deneme/{item}', [\App\Http\Controllers\User\StudyPlanController::class, 'removeExam'])->name('plan.exam.destroy');
+    // Ogrencinin KENDI verisi: plan, haftalik rapor, adisyon. Rol kapisi
+    // yalnizca bu uclarda, grubun tamaminda degil: panel ogretmen ve
+    // gorevlinin ana sayfasi (Role::homeRoute), deneme raporunu da koc ve
+    // veli okuyor. Kapi yokken veli /kullanici/rapor'u acinca kendi adina
+    // haftalik rapor donduruluyor, adisyondan kendi adina urun ekleyip stok
+    // dusurebiliyordu - bu kayitlari hicbir ekran faturalamiyordu.
+    Route::middleware('role:student')->group(function () {
+        // Haftalik calisma plani (Dalga 13): ogrenci yalnizca tamamlar
+        Route::post('/plan/{item}/tamamla', [\App\Http\Controllers\User\StudyPlanController::class, 'complete'])
+            ->name('study-plan.complete');
+        // Yanlis "✓ Bitti"yi geri alma (QA a11y A15)
+        Route::post('/plan/{item}/geri-al', [\App\Http\Controllers\User\StudyPlanController::class, 'reopen'])
+            ->name('study-plan.reopen');
+        // Takvimli plan (Dalga 30c): kendi haftasi; serbest denemeyi gune koyar.
+        Route::get('/plan', [\App\Http\Controllers\User\StudyPlanController::class, 'show'])->name('plan');
+        Route::post('/plan/deneme', [\App\Http\Controllers\User\StudyPlanController::class, 'scheduleExam'])->name('plan.exam');
+        Route::delete('/plan/deneme/{item}', [\App\Http\Controllers\User\StudyPlanController::class, 'removeExam'])->name('plan.exam.destroy');
 
-    // Kendi haftalik raporu. SS6.1-3: veliye giden ogrenciye de gorunur.
-    Route::get('/rapor', [\App\Http\Controllers\User\WeeklyReportController::class, 'show'])->name('report');
+        // Kendi haftalik raporu. SS6.1-3: veliye giden ogrenciye de gorunur.
+        Route::get('/rapor', [\App\Http\Controllers\User\WeeklyReportController::class, 'show'])->name('report');
+
+        // Self adisyon: QR'siz, panelden urun ekleme
+        Route::get('/adisyon', [TabController::class, 'index'])->name('tab');
+        Route::post('/adisyon', [TabController::class, 'store'])->name('tab.store');
+        Route::post('/adisyon/{consumption}/geri-al', [TabController::class, 'undo'])->name('tab.undo');
+    });
 
     // Deneme sonuclari ve raporlari: yalnizca deneme kulubu (Dalga 19)
     Route::middleware('entitlement:examClub')->group(function () {
@@ -96,11 +111,6 @@ Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')-
         Route::get('/deneme-raporlari/{report}', [UserExamReportController::class, 'show'])->name('exam-reports.show');
         Route::get('/deneme-raporlari/{report}/pdf', [UserExamReportController::class, 'pdf'])->name('exam-reports.pdf');
     });
-
-    // Self adisyon: QR'siz, panelden urun ekleme
-    Route::get('/adisyon', [TabController::class, 'index'])->name('tab');
-    Route::post('/adisyon', [TabController::class, 'store'])->name('tab.store');
-    Route::post('/adisyon/{consumption}/geri-al', [TabController::class, 'undo'])->name('tab.undo');
 
 });
 

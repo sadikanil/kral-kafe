@@ -59,13 +59,15 @@ class NotificationBuilder
                 continue;
             }
 
+            // Anahtar ogrenciyi de tasir: iki kardes ayni veliye bagliysa
+            // ikinci cocugun bildirimi "cron tekrari" sanilip yutuluyordu.
             foreach ($ogrenci->parents as $veli) {
                 $uretilen += $this->kaydet(
                     NotificationType::Absence,
                     $veli,
                     $ogrenci,
                     null,
-                    "absence:{$veli->id}:{$gun}",
+                    "absence:{$veli->id}:{$ogrenci->id}:{$gun}",
                     "{$ogrenci->name} bugün kafeye gelmedi",
                     Carbon::parse($gun, LocalDay::timezone())->translatedFormat('d F Y') . ' tarihinde çalışma oturumu açılmadı.',
                 ) ? 1 : 0;
@@ -95,6 +97,13 @@ class NotificationBuilder
         $uretilen = 0;
 
         foreach ($denemeler as $deneme) {
+            // Resmi sinav (YKS) bir deneme DEGIL, hedefin kendisi; ayrim
+            // ExamType::isPractice'te (tek karar noktasi). Hatirlatma yine
+            // gider, yalnizca adi dogru konur.
+            $baslik = $deneme->exam_type->isPractice()
+                ? "Yarın deneme var: {$deneme->title}"
+                : "Yarın sınav günü: {$deneme->title}";
+
             foreach ($this->ogrenciler() as $ogrenci) {
                 $alicilar = collect([$ogrenci])->concat($ogrenci->parents);
 
@@ -105,7 +114,7 @@ class NotificationBuilder
                         $ogrenci,
                         $deneme->id,
                         "exam:{$alici->id}:{$deneme->id}",
-                        "Yarın deneme var: {$deneme->title}",
+                        $baslik,
                         $deneme->starts_at ? "Başlangıç saati {$deneme->starts_at}." : null,
                     ) ? 1 : 0;
                 }

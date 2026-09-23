@@ -345,8 +345,6 @@ class CoachSmokeTest extends TestCase
      */
     public function test_an_item_on_sunday_shows_on_the_calendar(): void
     {
-        $this->markTestSkipped('BUG: Pazar gunu plan maddeleri takvimde gorunmuyor (SQLite, date cast + whereBetween)');
-
         $ogrenci = $this->ogrenci();
         $koc = $this->koc($ogrenci);
 
@@ -650,8 +648,8 @@ class CoachSmokeTest extends TestCase
                 'commitment_title' => 'Limit Dershanesi Kadıköy',
                 // Cift gonderilen gun tek satir olmali.
                 'weekdays' => ['1', '3', '5', '3'],
-                'starts_at' => '17:00',
-                'ends_at' => '20:30',
+                'commitment_starts_at' => '17:00',
+                'commitment_ends_at' => '20:30',
             ])
             ->assertRedirect($this->planSayfasi($ogrenci))
             ->assertSessionHas('success', 'Programa eklendi.')
@@ -683,7 +681,7 @@ class CoachSmokeTest extends TestCase
         $this->actingAs($koc)->from($this->planSayfasi($ogrenci))
             ->post(route('coach.commitments.store', $ogrenci), [
                 'kind' => 'okul', 'commitment_title' => '', 'weekdays' => [1, 2, 3, 4, 5],
-                'starts_at' => '08:00', 'ends_at' => '15:00',
+                'commitment_starts_at' => '08:00', 'commitment_ends_at' => '15:00',
             ])->assertSessionHasNoErrors();
 
         $this->assertSame(5, StudentCommitment::whereNull('title')->count());
@@ -693,15 +691,15 @@ class CoachSmokeTest extends TestCase
     {
         $ogrenci = $this->ogrenci();
         $koc = $this->koc($ogrenci);
-        $gecerli = ['kind' => 'okul', 'weekdays' => [1], 'starts_at' => '08:00', 'ends_at' => '15:00'];
+        $gecerli = ['kind' => 'okul', 'weekdays' => [1], 'commitment_starts_at' => '08:00', 'commitment_ends_at' => '15:00'];
 
         $vakalar = [
             'gun yok' => [['weekdays' => []], 'weekdays'],
-            'bitis once' => [['starts_at' => '15:00', 'ends_at' => '08:00'], 'ends_at'],
-            'esit saat' => [['starts_at' => '15:00', 'ends_at' => '15:00'], 'ends_at'],
+            'bitis once' => [['commitment_starts_at' => '15:00', 'commitment_ends_at' => '08:00'], 'commitment_ends_at'],
+            'esit saat' => [['commitment_starts_at' => '15:00', 'commitment_ends_at' => '15:00'], 'commitment_ends_at'],
             'bilinmeyen tur' => [['kind' => 'kurs'], 'kind'],
             'gecersiz gun' => [['weekdays' => [8]], 'weekdays.0'],
-            'gecersiz saat' => [['starts_at' => '8'], 'starts_at'],
+            'gecersiz saat' => [['commitment_starts_at' => '8'], 'commitment_starts_at'],
         ];
 
         foreach ($vakalar as $ad => [$degisim, $alan]) {
@@ -713,34 +711,39 @@ class CoachSmokeTest extends TestCase
         $this->assertDatabaseCount('student_commitments', 0);
 
         $this->actingAs($koc)->from($this->planSayfasi($ogrenci))
-            ->post(route('coach.commitments.store', $ogrenci), array_merge($gecerli, ['starts_at' => '15:00', 'ends_at' => '08:00']))
-            ->assertSessionHasErrors(['ends_at' => 'Bitiş başlangıçtan sonra olmalı.']);
+            ->post(route('coach.commitments.store', $ogrenci), array_merge($gecerli, ['commitment_starts_at' => '15:00', 'commitment_ends_at' => '08:00']))
+            ->assertSessionHasErrors(['commitment_ends_at' => 'Bitiş başlangıçtan sonra olmalı.']);
     }
 
     /**
      * Plan formu ile sabit program formu ayni sayfada ve ikisi de
-     * "starts_at" adini kullaniyor. Program formundaki bir hata, katli
+     * "starts_at" adini kullaniyordu. Program formundaki bir hata, katli
      * "Plana ekle" formunu aciyor ve Saat alanina programin saatini
-     * yaziyor; koc o formdan madde eklerse yanlis saat sessizce kaydolur.
+     * yaziyordu; koc o formdan madde eklerse yanlis saat sessizce kaydolurdu.
+     * Program alanlari artik commitment_ onekli.
      */
     public function test_a_program_form_error_does_not_leak_into_the_plan_form(): void
     {
-        $this->markTestSkipped('BUG: Sabit program hatasi Plana ekle formunu aciyor ve Saat alanini dolduruyor (ortak starts_at adi)');
-
         $ogrenci = $this->ogrenci();
         $koc = $this->koc($ogrenci);
 
         $sayfa = $this->actingAs($koc)->from($this->planSayfasi($ogrenci))
             ->followingRedirects()
             ->post(route('coach.commitments.store', $ogrenci), [
-                'kind' => 'okul', 'weekdays' => [1], 'starts_at' => '17:45', 'ends_at' => '08:00',
+                'kind' => 'okul', 'weekdays' => [1],
+                'commitment_starts_at' => '17:45', 'commitment_ends_at' => '08:00',
             ])
             ->assertOk()
             ->assertSee('Bitiş başlangıçtan sonra olmalı.');
 
         // Plan formu katli kalmali ve Saat alani bos olmali.
-        $sayfa->assertDontSee('id="planaEkle" open', false)
-            ->assertDontSee('id="starts_at" name="starts_at" class="form-control" value="17:45"', false);
+        $html = $sayfa->getContent();
+        $sayfa->assertDontSee('id="planaEkle" open', false);
+        $this->assertMatchesRegularExpression('/<input[^>]*name="starts_at"[^>]*value=""/', $html);
+
+        // Program formu kendi girdisini geri alir ve hatasini kendisi gosterir.
+        $this->assertMatchesRegularExpression('/<input[^>]*name="commitment_starts_at"[^>]*value="17:45"/', $html);
+        $this->assertMatchesRegularExpression('/<input[^>]*name="commitment_ends_at"[^>]*is-invalid[^>]*value="08:00"/', $html);
     }
 
     public function test_a_coach_removes_a_single_day_of_the_program(): void
@@ -767,7 +770,7 @@ class CoachSmokeTest extends TestCase
         $satir = StudentCommitment::create(['student_id' => $baskasi->id, 'kind' => 'okul', 'weekday' => 1, 'starts_at' => '08:00', 'ends_at' => '15:00']);
 
         $this->actingAs($koc)->post(route('coach.commitments.store', $baskasi), [
-            'kind' => 'okul', 'weekdays' => [2], 'starts_at' => '08:00', 'ends_at' => '15:00',
+            'kind' => 'okul', 'weekdays' => [2], 'commitment_starts_at' => '08:00', 'commitment_ends_at' => '15:00',
         ])->assertForbidden();
         $this->actingAs($koc)->delete(route('coach.commitments.destroy', $satir))->assertForbidden();
 
@@ -967,16 +970,22 @@ class CoachSmokeTest extends TestCase
      */
     public function test_open_topics_are_listed_before_closed_ones(): void
     {
-        $this->markTestSkipped('BUG: Zayif konular sayfasinda kapanmis konular acik konularin ustunde');
-
         $ogrenci = $this->ogrenci();
         $koc = $this->koc($ogrenci);
+        // Kapanmis konu bir acik konudan YENI: yalnizca tarihe gore siralama
+        // onu ustte birakir. Saat donuk oldugu icin araya zaman konuyor;
+        // esit created_at'te SQLite ekleme sirasina dusup testi yanlislikla
+        // gecirirdi.
         WeakTopic::create(['student_id' => $ogrenci->id, 'topic' => 'Açık konu: türev']);
+        $this->travel(1)->hours();
         WeakTopic::create(['student_id' => $ogrenci->id, 'topic' => 'Kapanmış konu: limit', 'status' => 'closed', 'closed_at' => now()]);
+        $this->travel(1)->hours();
+        WeakTopic::create(['student_id' => $ogrenci->id, 'topic' => 'Açık konu: yeni']);
 
+        // Acik grubun icinde de en yeni ustte.
         $this->actingAs($koc)->get(route('coach.topics.index', $ogrenci))
             ->assertOk()
-            ->assertSeeInOrder(['Açık konu: türev', 'Kapanmış konu: limit']);
+            ->assertSeeInOrder(['Açık konu: yeni', 'Açık konu: türev', 'Kapanmış konu: limit']);
     }
 
     public function test_the_topics_page_has_an_empty_state(): void

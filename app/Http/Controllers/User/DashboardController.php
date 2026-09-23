@@ -23,24 +23,30 @@ class DashboardController extends Controller
     public function index(StudyStats $istatistik)
     {
         $user = Auth::user();
+        // Bugun/hafta/ay/seri tek okumayla (QA perf P3): dort ayri cagri
+        // seriyle birlikte gun basina bir sorgu daha aciyordu.
+        $ozet = $istatistik->summary($user);
 
         return view('user.dashboard', [
             'user' => $user,
             // Acik calisma oturumu: ogrenci masaya donmeden panelden bitirebilsin.
             'openSession' => app(StudySessionService::class)->openFor($user),
             // Masasiz paket (yalnizca deneme) okuyucuya giremez; panel
-            // onu oraya cagirmasin.
-            'canScan' => $user->entitlements()->table,
+            // onu oraya cagirmasin. Rol de sart: ogretmen ve gorevlinin ana
+            // sayfasi bu panel ve entitlements() onlara her hakki veriyor;
+            // dugme onlari "yalnizca ogrenciler" uyarisina goturuyordu.
+            // Kural TableSessionController::start() ile ayni.
+            'canScan' => $user->isStudent() && $user->entitlements()->table,
             // Bugun: sabit program, ozel ders, deneme ve plan maddeleri.
             // Planim'daki takvimle AYNI hesap (WeekPlan) ve ayni parca.
             'today' => collect(WeekPlan::for($user, LocalDay::today()))->firstWhere('isToday', true),
             // Calisma istatistikleri (Dalga 5). Hedef yoksa null gecer ve
             // ilerleme cubugu hic cizilmez - bos bir cubuk "hedefin yok" demez,
             // "hedefin var ama hic calismadin" der.
-            'todayMinutes' => $istatistik->todayMinutes($user),
-            'weekMinutes' => $istatistik->weekMinutes($user),
-            'monthMinutes' => $istatistik->monthMinutes($user),
-            'streak' => $istatistik->streak($user),
+            'todayMinutes' => $ozet['today'],
+            'weekMinutes' => $ozet['week'],
+            'monthMinutes' => $ozet['month'],
+            'streak' => $ozet['streak'],
             'weeklyGoal' => StudyGoal::activeFor($user, LocalDay::today()),
             // Ders etiketi ve kirilimi (Dalga 17a).
             // Acik zayif konular (Dalga 17b). Kapanmislar listeden cikar.

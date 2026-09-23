@@ -53,8 +53,8 @@
                         <div class="form-group mb-0" style="flex: 1;">
                             <label for="year" class="form-label">Yıl</label>
                             <select id="year" name="year" class="form-control">
-                                @for($y = date('Y'); $y >= date('Y') - 2; $y--)
-                                    <option value="{{ $y }}" {{ $y == date('Y') ? 'selected' : '' }}>{{ $y }}</option>
+                                @for($y = $year; $y >= $year - 2; $y--)
+                                    <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>{{ $y }}</option>
                                 @endfor
                             </select>
                         </div>
@@ -66,7 +66,7 @@
                                     $months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
                                 @endphp
                                 @for($m = 1; $m <= 12; $m++)
-                                    <option value="{{ $m }}" {{ $m == date('n') ? 'selected' : '' }}>{{ $months[$m - 1] }}</option>
+                                    <option value="{{ $m }}" {{ $m == $month ? 'selected' : '' }}>{{ $months[$m - 1] }}</option>
                                 @endfor
                             </select>
                         </div>
@@ -86,17 +86,17 @@
             </div>
             <div class="card-body">
                 <div class="d-flex gap-2 mb-3" style="flex-wrap: wrap;">
-                    <a href="{{ route('admin.reports.export-summary', ['year' => date('Y'), 'month' => date('n')]) }}"
+                    <a href="{{ route('admin.reports.export-summary', ['year' => $year, 'month' => $month]) }}"
                         class="btn btn-secondary" style="flex: 1;">
                         📊 Özet Rapor (CSV)
                     </a>
-                    <a href="{{ route('admin.reports.export-detailed', ['year' => date('Y'), 'month' => date('n')]) }}"
+                    <a href="{{ route('admin.reports.export-detailed', ['year' => $year, 'month' => $month]) }}"
                         class="btn btn-secondary" style="flex: 1;">
                         📋 Detaylı Rapor (CSV)
                     </a>
                 </div>
 
-                <a href="{{ route('admin.reports.monthly', ['year' => date('Y'), 'month' => date('n')]) }}"
+                <a href="{{ route('admin.reports.monthly', ['year' => $year, 'month' => $month]) }}"
                     class="btn btn-primary btn-block">
                     📈 Aylık Raporu Görüntüle
                 </a>
@@ -133,9 +133,9 @@
                                     <td>{{ $bill->period_name }}</td>
                                     <td>{{ $bill->formatted_total }}</td>
                                     <td>
-                                        <span
-                                            class="badge badge-{{ $bill->status == 'paid' ? 'success' : ($bill->status == 'pending' ? 'warning' : 'info') }}">
-                                            {{ ucfirst($bill->status) }}
+                                        {{-- Aylik rapordaki rozetle ayni: faturada 'paid' durumu yok --}}
+                                        <span class="badge badge-{{ $bill->status === 'pending' ? 'warning' : ($bill->status === 'sent' ? 'success' : 'info') }}">
+                                            {{ $bill->status_name }}
                                         </span>
                                     </td>
                                     <td>{{ $bill->created_at->timezone(config('kafe.timezone'))->format('d.m.Y') }}</td>

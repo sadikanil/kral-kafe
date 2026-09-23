@@ -386,8 +386,6 @@ class ParentSmokeTest extends TestCase
     /** Takvimin PAZAR sutunu: hafta sinirindaki madde kaybolmamali. */
     public function test_child_page_calendar_shows_items_on_every_day_of_the_week_including_sunday(): void
     {
-        $this->markTestSkipped('BUG: date sutunlarinda whereBetween(Y-m-d) SQLite\'ta son gunu disarida birakiyor (deger "Y-m-d 00:00:00" saklaniyor)');
-
         [$veli, $cagla] = $this->ucCocukluVeli();
 
         foreach (['2026-09-28' => 'Pazartesi maddesi', '2026-10-03' => 'Cumartesi maddesi', '2026-10-04' => 'Pazar tekrarı: türev'] as $gun => $baslik) {
@@ -684,8 +682,6 @@ class ParentSmokeTest extends TestCase
 
     public function test_payments_page_with_an_array_month_value_falls_back_instead_of_crashing(): void
     {
-        $this->markTestSkipped('BUG: ?ay[]= dizisi ExamCalendar::parseMonth(?string) icinde TypeError -> 500');
-
         [$veli, $cagla] = $this->ucCocukluVeli();
 
         $this->actingAs($veli)->get(route('parent.payments', $cagla) . '?ay[]=2026-08')
@@ -700,8 +696,6 @@ class ParentSmokeTest extends TestCase
      */
     public function test_payments_page_shows_an_unpaid_past_package_as_overdue(): void
     {
-        $this->markTestSkipped('BUG: Odemeler sayfasi odeme durumunu senkronlamiyor; vadesi gecmis eski paket "Bekliyor" gorunuyor');
-
         [$veli, $cagla] = $this->ucCocukluVeli();
         Subscription::factory()->create([
             'student_id' => $cagla->id,
@@ -722,8 +716,6 @@ class ParentSmokeTest extends TestCase
     /** Ayin son gunu baslayan paket o ayin dokumunde gorunmeli. */
     public function test_payments_page_lists_a_package_that_starts_on_the_last_day_of_the_month(): void
     {
-        $this->markTestSkipped('BUG: date sutunlarinda whereBetween(Y-m-d) SQLite\'ta son gunu disarida birakiyor (deger "Y-m-d 00:00:00" saklaniyor)');
-
         [$veli, $cagla] = $this->ucCocukluVeli();
         Subscription::factory()->create([
             'student_id' => $cagla->id,
@@ -796,8 +788,6 @@ class ParentSmokeTest extends TestCase
     /** Ayin SON gunundeki deneme izgarada gorunmeli. */
     public function test_exam_calendar_grid_includes_the_last_day_of_the_month(): void
     {
-        $this->markTestSkipped('BUG: date sutunlarinda whereBetween(Y-m-d) SQLite\'ta son gunu disarida birakiyor (deger "Y-m-d 00:00:00" saklaniyor)');
-
         [$veli] = $this->ucCocukluVeli();
         ExamEvent::create(['title' => 'Ağustos İlk Gün Denemesi', 'exam_type' => 'tyt', 'exam_date' => '2026-08-01']);
         ExamEvent::create(['title' => 'Ağustos Son Gün Denemesi', 'exam_type' => 'tyt', 'exam_date' => '2026-08-31']);
@@ -837,8 +827,6 @@ class ParentSmokeTest extends TestCase
 
     public function test_exam_calendar_with_an_array_month_value_falls_back_instead_of_crashing(): void
     {
-        $this->markTestSkipped('BUG: ?ay[]= dizisi ExamCalendar::parseMonth(?string) icinde TypeError -> 500');
-
         [$veli] = $this->ucCocukluVeli();
 
         $this->actingAs($veli)->get(route('parent.exams') . '?ay[]=2026-08')

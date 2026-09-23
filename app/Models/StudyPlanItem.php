@@ -109,6 +109,26 @@ class StudyPlanItem extends Model
     }
 
     /**
+     * Tamamlanmis maddeyi yeniden acar (QA a11y A15): "✓ Bitti"ye yanlislikla
+     * dokunan ogrenci geri alabilsin; koc ve veli aksi halde bitmemis bir
+     * maddeyi bitmis goruyordu. Kosul markDone() gibi WHERE'de.
+     */
+    public function reopen(): bool
+    {
+        $etkilenen = static::whereKey($this->getKey())
+            ->where('status', 'done')
+            ->update([
+                'status' => 'open',
+                'completed_at' => null,
+                'updated_at' => now(),
+            ]);
+
+        $this->refresh();
+
+        return $etkilenen === 1;
+    }
+
+    /**
      * Bir donemin ilerlemesi: [tamamlanan, toplam].
      *
      * @return array{0:int,1:int}

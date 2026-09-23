@@ -324,6 +324,12 @@ class ParentPanelTest extends TestCase
         $this->assertEqualsCanonicalizing([$cocuk1->id, $cocuk2->id], $veli->students()->pluck('users.id')->all());
         $this->assertSame($yonetici->id, $veli->students()->first()->pivot->created_by);
 
+        // Ogrencinin son velisi kaldirilamaz (Dalga 20, QA 29); kaldirma
+        // adimlari icin iki cocugun da ikinci velisi olsun.
+        foreach ([$cocuk1, $cocuk2] as $cocuk) {
+            StudentParent::factory()->create(['student_id' => $cocuk->id, 'parent_id' => User::factory()->parent()->create()->id]);
+        }
+
         // Birini kaldir: created_by kalanda korunur, kaldirilan gider.
         $this->actingAs($yonetici)
             ->put(route('admin.users.update', $veli), $this->guncellemeVerisi($veli, [

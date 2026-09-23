@@ -15,7 +15,8 @@
         </div>
     @endif
 
-    <div class="mini-stats mb-3">
+    {{-- A20: sayilar (iceride, onay, kritik stok) sekme acikken dakikada bir tazelenir. --}}
+    <div class="mini-stats mb-3" data-kendini-yenile="60">
         <a href="{{ route('admin.live') }}" class="mini-stat mini-stat-link">
             <div class="mini-stat-value">{{ $occupancy['inside'] }}</div>
             <div class="mini-stat-label">İçeride · {{ $occupancy['free'] }} boş yer</div>
@@ -158,3 +159,22 @@
     </div>
 
 @endsection
+
+@push('scripts')
+<script>
+    (function () {
+        const bekleme = Number(document.querySelector('[data-kendini-yenile]').dataset.kendiniYenile) * 1000;
+        const yuklendi = Date.now();
+
+        // Arka plandaki sekme sunucuyu yormasin; gorunur olunca hemen tazelenir.
+        function tazele() {
+            if (document.visibilityState === 'visible' && Date.now() - yuklendi >= bekleme) {
+                location.reload();
+            }
+        }
+
+        document.addEventListener('visibilitychange', tazele);
+        setInterval(tazele, 15000);
+    })();
+</script>
+@endpush

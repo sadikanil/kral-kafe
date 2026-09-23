@@ -506,8 +506,6 @@ class StudentStudySmokeTest extends TestCase
      */
     public function test_a_session_started_after_closing_does_not_run_overnight(): void
     {
-        $this->markTestSkipped('BUG: a session started after closing time stays open overnight');
-
         $ogrenci = $this->ogrenci();
         $masa = $this->masa('Masa 1');
         $diger = $this->masa('Masa 2');
@@ -858,8 +856,6 @@ class StudentStudySmokeTest extends TestCase
      */
     public function test_a_teacher_home_panel_does_not_invite_them_to_scan(): void
     {
-        $this->markTestSkipped('BUG: non-student roles see the "Çalışmaya başla" CTA that dead-ends');
-
         $ogretmen = User::factory()->create(['role' => Role::Teacher->value, 'subscription_status' => 'active']);
 
         $this->actingAs($ogretmen)->get(route('user.dashboard'))
@@ -870,8 +866,6 @@ class StudentStudySmokeTest extends TestCase
     /** Ogrenci olmayan hesap ogrenci uclarindan kendi adina veri yazmamali. */
     public function test_a_parent_opening_student_pages_writes_no_student_data(): void
     {
-        $this->markTestSkipped('BUG: student-only endpoints have no role gate and write data for parents');
-
         $ogrenci = $this->ogrenci();
         $veli = $this->veli($ogrenci);
         $deneme = $this->serbestDeneme();
@@ -898,8 +892,6 @@ class StudentStudySmokeTest extends TestCase
      */
     public function test_the_panel_totals_do_not_credit_the_lunch_break(): void
     {
-        $this->markTestSkipped('BUG: StudyStats totals count pauses (lunch/break) as study time');
-
         $ogrenci = $this->ogrenci();
         $masa = $this->masa('Masa 5');
         $yonetici = User::factory()->admin()->create();
@@ -956,8 +948,6 @@ class StudentStudySmokeTest extends TestCase
      */
     public function test_a_plan_item_on_sunday_is_shown_in_its_week(): void
     {
-        $this->markTestSkipped('BUG: Sunday plan items vanish from the week calendar on SQLite');
-
         $ogrenci = $this->ogrenci();
         $this->madde($ogrenci, '2026-10-04', ['title' => 'Pazar tekrarı']);
 
@@ -1066,8 +1056,6 @@ class StudentStudySmokeTest extends TestCase
     /** "Ekle"ye iki kez dokunmak ayni denemeyi takvime iki kez koymamali. */
     public function test_double_tapping_add_does_not_schedule_the_same_flexible_exam_twice(): void
     {
-        $this->markTestSkipped('BUG: flexible exam can be scheduled twice (double-submit duplicates)');
-
         $ogrenci = $this->ogrenci();
         $deneme = $this->serbestDeneme();
 
@@ -1149,8 +1137,6 @@ class StudentStudySmokeTest extends TestCase
     /** Rapor "Onaylanmis sure" diyor; ogle arasi onaylanmis calisma degil. */
     public function test_the_weekly_report_minutes_are_net_of_breaks(): void
     {
-        $this->markTestSkipped('BUG: StudyStats totals count pauses (lunch/break) as study time');
-
         $ogrenci = $this->ogrenci();
         $oturum = $this->bitmisOturum($ogrenci, '2026-09-23 10:00', '2026-09-23 14:00');
         $oturum->pauses()->create([

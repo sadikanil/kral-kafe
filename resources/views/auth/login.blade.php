@@ -9,16 +9,16 @@
       belirle -> yonetici yeni ekledi, sifre hic yok
 --}}
 @php
-    $telefonGibi = $kimlik && ! str_contains($kimlik, '@');
-    $gorunen = $telefonGibi ? \App\Support\Telefon::format($kimlik) : $kimlik;
+    $eposta = str_contains((string) $kimlik, '@');
+    $gorunen = $kimlik && ! $eposta ? \App\Support\Telefon::format($kimlik) : $kimlik;
 @endphp
 
 @section('content')
     @if($adim === 'belirle')
-        <h2 class="auth-title">Hoş Geldiniz</h2>
+        <h1 class="auth-title">Hoş Geldiniz</h1>
         <p class="auth-subtitle">İlk girişiniz. Kendinize bir şifre belirleyin.</p>
     @else
-        <h2 class="auth-title">Hoş Geldiniz</h2>
+        <h1 class="auth-title">Hoş Geldiniz</h1>
         <p class="auth-subtitle">Devam etmek için giriş yapın</p>
     @endif
 
@@ -30,17 +30,30 @@
         @csrf
 
         @if($adim === 'kimlik')
+            {{--
+                type="tel" telefon tus takimini acar ve orada harf ya da '@'
+                yok; yalnizca e-postali hesap (koc, yonetici) telefondan
+                giremiyordu. Duz metin + inputmode ayni klavyeyi verir, e-posta
+                klavyesi baglantiyla acilir. Mod hata donusunde gizli alandan
+                geri gelir.
+            --}}
+            @if($epostaIle)
+                <input type="hidden" name="ile" value="eposta">
+            @endif
+
             <div class="form-group">
-                <label for="kimlik" class="form-label">Telefon numarası</label>
+                <label for="kimlik" class="form-label">{{ $epostaIle ? 'E-posta adresi' : 'Telefon numarası' }}</label>
                 <input
-                    type="tel"
+                    type="text"
                     id="kimlik"
                     name="kimlik"
-                    inputmode="tel"
+                    inputmode="{{ $epostaIle ? 'email' : 'tel' }}"
                     autocomplete="username"
+                    autocapitalize="off"
+                    spellcheck="false"
                     class="form-control @error('kimlik') is-invalid @enderror"
                     value="{{ $kimlik }}"
-                    placeholder="05XX XXX XX XX"
+                    placeholder="{{ $epostaIle ? 'ornek@eposta.com' : '05XX XXX XX XX' }}"
                     required
                     autofocus
                 >
@@ -50,14 +63,35 @@
             </div>
 
             <button type="submit" class="btn btn-primary btn-block btn-lg">Devam</button>
+
+            <p class="text-center mt-3 mb-0">
+                @if($epostaIle)
+                    <a href="{{ route('login') }}">Telefonla gir</a>
+                @else
+                    <a href="{{ route('login', ['ile' => 'eposta']) }}">E-posta ile gir</a>
+                @endif
+            </p>
         @else
-            <input type="hidden" name="kimlik" value="{{ $kimlik }}">
             <input type="hidden" name="adim" value="{{ $adim }}">
 
+            {{--
+                Kimlik gizli alan DEGIL: sifre yoneticileri kullanici adini
+                sifreyle ayni formdaki gorunur alandan okur. Gizli alanla sifreyi
+                adsiz kaydediyor, sonraki giriste dolduramiyordu. Gonderilen
+                bicimli numara (0532 123 45 67) da Telefon::normalize'dan gecer.
+            --}}
             <div class="form-group">
-                <label class="form-label">Telefon numarası</label>
-                <div class="form-control" style="display:flex;justify-content:space-between;align-items:center">
-                    <span>{{ $gorunen }}</span>
+                <label for="kimlik" class="form-label">{{ $eposta ? 'E-posta adresi' : 'Telefon numarası' }}</label>
+                <div class="form-control" style="display:flex;justify-content:space-between;align-items:center;gap:.5rem">
+                    <input
+                        type="text"
+                        id="kimlik"
+                        name="kimlik"
+                        value="{{ $gorunen }}"
+                        autocomplete="username"
+                        readonly
+                        style="flex:1;min-width:0;border:0;padding:0;background:transparent;font:inherit;color:inherit"
+                    >
                     <a href="{{ route('login') }}" class="form-check-link">Değiştir</a>
                 </div>
                 @error('kimlik')

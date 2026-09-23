@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -20,6 +21,9 @@ use Illuminate\View\View;
  */
 class ExamResultController extends Controller
 {
+    /** Siralama seviyeleri: sutun soneki => formdaki ad. */
+    private const SEVIYELER = ['institution' => 'kurum', 'district' => 'ilçe', 'city' => 'il', 'country' => 'Türkiye'];
+
     public function edit(ExamEvent $examEvent, User $student): View
     {
         abort_unless($student->isStudent(), 404);
@@ -37,23 +41,45 @@ class ExamResultController extends Controller
     {
         abort_unless($student->isStudent(), 404);
 
-        $dogrulanmis = $request->validate([
-            // Siralamalar SONRADAN aciklaniyor; hepsi istege bagli.
-            'rank_institution' => ['nullable', 'integer', 'min:1'],
-            'total_institution' => ['nullable', 'integer', 'min:1'],
-            'rank_district' => ['nullable', 'integer', 'min:1'],
-            'total_district' => ['nullable', 'integer', 'min:1'],
-            'rank_city' => ['nullable', 'integer', 'min:1'],
-            'total_city' => ['nullable', 'integer', 'min:1'],
-            'rank_country' => ['nullable', 'integer', 'min:1'],
-            'total_country' => ['nullable', 'integer', 'min:1'],
-            'note' => ['nullable', 'string', 'max:1000'],
+        $dersler = Subject::forExam($examEvent->exam_type, $student)->get();
+        $kurallar = [];
+        $adlar = ['subjects' => 'dersler'];
 
-            'subjects' => ['required', 'array'],
-            'subjects.*.correct' => ['required', 'integer', 'min:0', 'max:200'],
-            'subjects.*.wrong' => ['required', 'integer', 'min:0', 'max:200'],
-            'subjects.*.blank' => ['required', 'integer', 'min:0', 'max:200'],
-        ]);
+        foreach (self::SEVIYELER as $alan => $etiket) {
+            // Siralamalar SONRADAN aciklaniyor; hepsi istege bagli. Sira
+            // katilimciyi gecemez (kutular karisirsa "87 kişide 1.240.");
+            // katilimci bos ya da hataliysa kiyas yok, sira tek basina kalir.
+            $kurallar["rank_{$alan}"] = ['nullable', 'integer', 'min:1',
+                Rule::when(filter_var($request->input("total_{$alan}"), FILTER_VALIDATE_INT) !== false, "lte:total_{$alan}")];
+            $kurallar["total_{$alan}"] = ['nullable', 'integer', 'min:1'];
+            $adlar["rank_{$alan}"] = "{$etiket} sırası";
+            $adlar["total_{$alan}"] = "{$etiket} katılımcı sayısı";
+        }
+
+        // Anahtarlar dogrudan subject_id oluyor: yalnizca bu denemenin
+        // (tur + alan) dersleri. Bilinmeyen id FK hatasiyla 500, kapsam
+        // disi ders ise ogrencinin netini haksiz yere sisiriyordu.
+        $kurallar['subjects'] = ['required', 'array:' . $dersler->pluck('id')->implode(',')];
+        foreach (['correct', 'wrong', 'blank'] as $sayi) {
+            $kurallar["subjects.*.{$sayi}"] = ['required', 'integer', 'min:0', 'max:200'];
+        }
+        $kurallar['note'] = ['nullable', 'string', 'max:1000'];
+
+        // 10+ derslik formda "subjects.7.correct" hangi kutu belli degil
+        foreach ($dersler as $ders) {
+            $adlar["subjects.{$ders->id}.correct"] = "{$ders->name} doğru sayısı";
+            $adlar["subjects.{$ders->id}.wrong"] = "{$ders->name} yanlış sayısı";
+            $adlar["subjects.{$ders->id}.blank"] = "{$ders->name} boş sayısı";
+        }
+
+        // Sayfa ustundeki hata ozeti dort seviyeyi alt alta dizer; mesaj
+        // seviyeyi (kurum/ilce/il/Turkiye) adlandirmazsa hangi cift karisti
+        // belli olmaz. :Attribute degil: Str::ucfirst Turkce i'yi noktali I
+        // yerine duz I yapar (ilce -> Ilce).
+        $dogrulanmis = $request->validate($kurallar, [
+            'rank_*.lte' => ':attribute, katılımcı sayısından büyük olamaz.',
+            'subjects.array' => 'Bu denemede olmayan bir ders gönderildi.',
+        ], $adlar);
 
         DB::transaction(function () use ($dogrulanmis, $examEvent, $student) {
             // Ayni denemeye ikinci kez girmek YENI KAYIT acmaz, mevcudu

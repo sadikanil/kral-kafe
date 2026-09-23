@@ -122,7 +122,14 @@ class PackageController extends Controller
     {
         $gecerli = Product::whereIn('id', array_keys($kalemler))->pluck('id')->all();
 
-        $paket->items()->whereNotIn('product_id', $gecerli)->delete();
+        // Yalnizca FORMDA GORUNEN (aktif) urunlerin kalemleri cikarilabilir.
+        // Form pasif urunu cizmiyor, yani onun kalemi hic gonderilemez; eskiden
+        // her kayitta siliniyordu - yazin kapatilan Sahlep donunce paket onu
+        // artik kapsamiyor, ogrenci ucret oduyordu.
+        $paket->items()
+            ->whereNotIn('product_id', $gecerli)
+            ->whereIn('product_id', Product::where('is_active', true)->select('id'))
+            ->delete();
 
         foreach ($gecerli as $urunId) {
             $paket->items()->updateOrCreate(['product_id' => $urunId], $kalemler[$urunId]);

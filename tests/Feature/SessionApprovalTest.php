@@ -24,6 +24,15 @@ class SessionApprovalTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Kafe 09:00-21:00 arasi oturum acar (QA hata 7); saat sabit olmazsa
+        // takim gece calistiginda her baslatma reddedilir. Ay ortasi: "3 gun
+        // sonra" gibi kurulumlar ay degistirmesin.
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-09-16 14:00', config('kafe.timezone')));
+    }
+
     private function ogrenci(): User
     {
         return User::factory()->create([

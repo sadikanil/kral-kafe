@@ -151,17 +151,26 @@ class DeclineSignals
         return new DeclineSignal('goal', "Geçen hafta hedefin %{$oran}'i", 'warning');
     }
 
-    /** @return array<int,string> ogrenci -> son gelis gunu (Y-m-d) */
+    /**
+     * Ogrenci basina son gelis gunu (Y-m-d, kafe saati).
+     *
+     * max() veritabaninda (QA perf P12): eskiden ogrencinin butun sayilabilir
+     * gecmisi PHP'ye tasiniyordu ve okul yili boyunca buyuyordu. Ham deger
+     * UTC ("timestamp without time zone"); gune cevirme yine LocalDay'de.
+     *
+     * @return array<int,string>
+     */
     private function lastVisits(array $ids): array
     {
         return StudySession::whereIn('student_id', $ids)
             ->countable()
-            ->get(['student_id', 'ended_at'])
             ->groupBy('student_id')
-            ->map(fn (Collection $satirlar) => LocalDay::of(
-                $satirlar->max(fn (StudySession $o) => $o->ended_at)
-            ))
-            ->mapWithKeys(fn (string $gun, $id) => [(int) $id => $gun])
+            ->selectRaw('student_id, max(ended_at) as son_gelis')
+            ->toBase()
+            ->get()
+            ->mapWithKeys(fn ($satir) => [
+                (int) $satir->student_id => LocalDay::of(Carbon::parse($satir->son_gelis, 'UTC')),
+            ])
             ->all();
     }
 

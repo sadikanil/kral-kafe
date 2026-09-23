@@ -5,11 +5,13 @@ namespace App\Models;
 use App\Enums\Role;
 use App\Support\Entitlements;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
@@ -56,6 +58,20 @@ class User extends Authenticatable
             'subscription_start' => 'date',
             'subscription_end' => 'date',
         ];
+    }
+
+    /**
+     * E-posta tek bicimde saklanir: kirpilmis, kucuk harf. Giris aramayi
+     * kucuk harfle yapiyor ve '=' Postgres'te de SQLite'ta da harf duyarli;
+     * yonetici "Ad.Soyad@Kafe.com" diye kaydettiginde kullanici yazdigi
+     * adresle hic giremiyordu. Model katinda, cunku seeder, factory ve formun
+     * hepsi buradan yaziyor.
+     */
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $deger) => $deger === null ? null : Str::lower(trim($deger)),
+        );
     }
 
     /**

@@ -397,26 +397,26 @@ class AdminCafeSmokeTest extends TestCase
 
     public function test_deleting_a_sold_product_keeps_the_consumption_history(): void
     {
-        $this->markTestSkipped('BUG: deleting a product cascades and erases its consumption (billing) history');
-
         $ogrenci = $this->ogrenci();
         $urun = $this->urun('Coca-Cola', null, null, null, ['unit_price' => 40]);
         $tuketim = $this->tuketim($ogrenci, $urun, '2026-09-28 15:00', 2);
         $this->assertEquals(80, $tuketim->total_price);
 
-        $this->actingAs($this->yonetici())->delete(route('admin.products.destroy', $urun));
+        // Beklenen: silme reddedilir (masalardaki gibi "pasife alin") ve
+        // gecmis tuketim korunur. Once satir sessizce siliniyordu; ayin geliri,
+        // ogrencinin adisyonu ve detay CSV'si geriye donuk degisiyordu.
+        $this->actingAs($this->yonetici())->from(route('admin.products.index'))
+            ->delete(route('admin.products.destroy', $urun))
+            ->assertRedirect(route('admin.products.index'))
+            ->assertSessionHas('error', fn ($m) => str_contains($m, 'Pasifleştir'));
 
-        // Beklenen: ya silme reddedilir (masalardaki gibi "pasife alin") ya da
-        // gecmis tuketim korunur. Su an satir sessizce siliniyor; ayin geliri,
-        // ogrencinin adisyonu ve detay CSV'si geriye donuk degisiyor.
+        $this->assertModelExists($urun);
         $this->assertModelExists($tuketim);
         $this->assertEquals(80, Consumption::inLocalMonth(2026, 9)->sum('total_price'));
     }
 
     public function test_opening_a_product_address_directly_does_not_crash(): void
     {
-        $this->markTestSkipped('BUG: GET /yonetim/urunler/{product} is registered but has no show() method (500)');
-
         $urun = $this->urun('Ayran');
 
         $yanit = $this->actingAs($this->yonetici())->get('/yonetim/urunler/' . $urun->id);
@@ -609,8 +609,6 @@ class AdminCafeSmokeTest extends TestCase
 
     public function test_count_page_still_opens_after_a_count_was_confirmed(): void
     {
-        $this->markTestSkipped('BUG: count page 500s once a stock record exists (undefined recorder relation)');
-
         [$dolap, $kola] = $this->buzdolabi();
         $yonetici = $this->yonetici();
 
@@ -956,8 +954,6 @@ class AdminCafeSmokeTest extends TestCase
 
     public function test_a_resolved_discrepancy_note_cannot_be_overwritten(): void
     {
-        $this->markTestSkipped('BUG: resolving an already resolved discrepancy overwrites the note and resolver');
-
         $fark = $this->tutarsizlik();
         $ilk = $this->yonetici('Yönetici Ali');
         $ikinci = $this->yonetici('Yönetici Veli');
@@ -966,8 +962,11 @@ class AdminCafeSmokeTest extends TestCase
         $cozumAni = $fark->fresh()->resolved_at;
 
         $this->travel(10)->minutes();
-        // Eski sekmeden ikinci gonderim (ya da cift tiklama).
-        $this->actingAs($ikinci)->post(route('admin.stock.resolve-discrepancy', $fark), ['resolution_notes' => 'Sayım hatası']);
+        // Eski sekmeden ikinci gonderim (ya da cift tiklama): reddedilir ve
+        // yonetici mevcut notu gorsun diye tutarsizlik sayfasina doner.
+        $this->actingAs($ikinci)->post(route('admin.stock.resolve-discrepancy', $fark), ['resolution_notes' => 'Sayım hatası'])
+            ->assertRedirect(route('admin.stock.discrepancy', $fark))
+            ->assertSessionHas('error', 'Bu tutarsızlık zaten çözümlenmiş; not değiştirilemez.');
 
         // Sayfa "Bu not kayda işlenir ve daha sonra değiştirilemez" diyor.
         $fark->refresh();
@@ -1212,8 +1211,6 @@ class AdminCafeSmokeTest extends TestCase
 
     public function test_reports_index_shows_recent_bill_status_in_turkish(): void
     {
-        $this->markTestSkipped('BUG: recent bills on the reports page show the raw English status ("Pending")');
-
         MonthlyBill::create([
             'user_id' => $this->ogrenci('Ayşe Yılmaz')->id, 'bill_month' => '2026-08-01',
             'total_items' => 3, 'total_amount' => 60, 'status' => 'pending',
@@ -1262,8 +1259,6 @@ class AdminCafeSmokeTest extends TestCase
 
     public function test_generating_last_months_bills_includes_a_student_suspended_since(): void
     {
-        $this->markTestSkipped('BUG: bills are generated only for currently active students; a suspended student\'s consumption is never billed');
-
         $borclu = $this->ogrenci('Borçlu Öğrenci');
         $kola = $this->urun('Coca-Cola', null, null, null, ['unit_price' => 40]);
         $this->tuketim($borclu, $kola, '2026-08-20 15:00', 3);   // 120 TL, Agustos
@@ -1311,8 +1306,6 @@ class AdminCafeSmokeTest extends TestCase
 
     public function test_report_pages_default_to_the_local_month_right_after_midnight_on_the_first(): void
     {
-        $this->markTestSkipped('BUG: report period defaults and links use the UTC month; 00:00-03:00 on the 1st shows the previous month');
-
         // Yerel 1 Ekim 01:00 = UTC 30 Eylul 22:00
         $this->travelTo(Carbon::parse('2026-10-01 01:00', config('kafe.timezone')));
         $yonetici = $this->yonetici();
@@ -1365,8 +1358,6 @@ class AdminCafeSmokeTest extends TestCase
 
     public function test_csv_exports_keep_columns_when_a_name_contains_a_quote(): void
     {
-        $this->markTestSkipped('BUG: CSV exports do not escape double quotes inside names; rows break apart');
-
         $ogrenci = $this->ogrenci('Ali "Kral" Öztürk');
         $urun = $this->urun('Tost "Karışık", büyük', null, null, null, ['unit_price' => 60]);
         $this->tuketim($ogrenci, $urun, '2026-09-10 12:00', 1);

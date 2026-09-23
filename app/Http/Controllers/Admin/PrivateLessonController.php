@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\PrivateLessonException;
 use App\Models\PrivateLessonSlot;
 use App\Models\User;
 use App\Support\LocalDay;
@@ -33,7 +34,10 @@ class PrivateLessonController extends Controller
             'ends_at' => ['required', self::SAAT, 'after:starts_at'],
         ], ['ends_at.after' => 'Bitiş saati başlangıçtan sonra olmalı.']);
 
-        $student->privateLessonSlots()->create($veri + [
+        // Cift tiklanan "Ekle" ayni saati ikinci kez yazmasin: takvim her
+        // satiri ayri acar, ders her hafta iki kez gorunurdu. Ayni saat zaten
+        // varsa sessizce ayni sonuca doner (koc atamasindaki syncWithoutDetaching gibi).
+        $student->privateLessonSlots()->firstOrCreate($veri + ['ends_on' => null], [
             'starts_on' => LocalDay::today(),
             'created_by' => auth()->id(),
         ]);
@@ -45,9 +49,9 @@ class PrivateLessonController extends Controller
     {
         $tarih = $this->occurrenceDate($request, $slot);
 
-        $slot->exceptions()->updateOrCreate(['date' => $tarih], [
+        $this->exceptionOn($slot, $tarih)->fill([
             'cancelled' => true, 'new_date' => null, 'new_starts_at' => null, 'new_ends_at' => null,
-        ]);
+        ])->save();
 
         return back()->with('success', 'Ders iptal edildi.');
     }
@@ -62,7 +66,7 @@ class PrivateLessonController extends Controller
             'new_ends_at' => ['required', self::SAAT, 'after:new_starts_at'],
         ], ['new_ends_at.after' => 'Bitiş saati başlangıçtan sonra olmalı.']);
 
-        $slot->exceptions()->updateOrCreate(['date' => $tarih], $veri + ['cancelled' => false]);
+        $this->exceptionOn($slot, $tarih)->fill($veri + ['cancelled' => false])->save();
 
         return back()->with('success', 'Ders taşındı.');
     }
@@ -72,6 +76,20 @@ class PrivateLessonController extends Controller
         $slot->delete();
 
         return back()->with('success', 'Özel ders saati kaldırıldı.');
+    }
+
+    /**
+     * O tarihin mevcut istisnasi ya da yeni (kaydedilmemis) bir tane.
+     *
+     * updateOrCreate(['date' => 'Y-m-d']) kullanilamaz: 'date' cast'i SQLite'ta
+     * "Y-m-d 00:00:00" yazar, duz esitlik ikinci istekte satiri bulamaz ve
+     * (slot, date) tekil indeksine carpip 500 verir. whereDate iki surucude de
+     * eslesir (projede date sutunlarinin yerlesik yolu).
+     */
+    private function exceptionOn(PrivateLessonSlot $slot, string $tarih): PrivateLessonException
+    {
+        return $slot->exceptions()->whereDate('date', $tarih)->first()
+            ?? $slot->exceptions()->make(['date' => $tarih]);
     }
 
     /** Istisna yalnizca bu saatin GERCEKTEN ders oldugu bir gune yazilir. */

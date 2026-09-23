@@ -45,11 +45,8 @@
                     @enderror
                 </div>
 
-                <div class="form-group">
-                    <label for="notes" class="form-label">Notlar (Opsiyonel)</label>
-                    <textarea id="notes" name="notes" class="form-control" rows="2"
-                        placeholder="Varsa eklemek istediğiniz notlar..."></textarea>
-                </div>
+                {{-- Genel not kutusu kalkti: hic kaydedilmiyordu (stock_photos'ta
+                     sutunu yok). Urun basina not inceleme adiminda, kayda islenir. --}}
 
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">

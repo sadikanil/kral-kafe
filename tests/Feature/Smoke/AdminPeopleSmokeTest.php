@@ -538,8 +538,6 @@ class AdminPeopleSmokeTest extends TestCase
 
     public function test_the_parent_search_on_the_create_form_finds_names_with_turkish_i(): void
     {
-        $this->markTestSkipped('BUG: yeni ogrenci formundaki veli aramasi I/İ ile yazilan adlari bulamiyor');
-
         $this->veli(['name' => 'İsmail Işık', 'phone' => '5321112233']);
 
         // Arama kutusu yazilani toLocaleLowerCase('tr') ile kucultup data-ara
@@ -834,8 +832,6 @@ class AdminPeopleSmokeTest extends TestCase
 
     public function test_the_parent_form_cannot_leave_a_student_without_any_parent(): void
     {
-        $this->markTestSkipped('BUG: veli formundan ogrencinin tek velisi kaldirilabiliyor');
-
         $veli = $this->veli();
         $ogrenci = $this->ogrenci(Package::factory()->tier1());
         $this->bagla($ogrenci, $veli);
@@ -850,8 +846,6 @@ class AdminPeopleSmokeTest extends TestCase
 
     public function test_the_admin_cannot_demote_themself(): void
     {
-        $this->markTestSkipped('BUG: yonetici kendi rolunu dusurup kendini kilitleyebiliyor');
-
         $this->actingAs($this->yonetici)->from(route('admin.users.edit', $this->yonetici))
             ->put(route('admin.users.update', $this->yonetici), $this->formVerisi($this->yonetici, ['role' => 'coach']))
             ->assertRedirect(route('admin.users.edit', $this->yonetici))
@@ -936,8 +930,6 @@ class AdminPeopleSmokeTest extends TestCase
 
     public function test_deleting_a_former_admin_who_resolved_a_discrepancy_does_not_crash(): void
     {
-        $this->markTestSkipped('BUG: tutarsizlik cozmus yonetici silinince 500 (resolved_by FK)');
-
         $eskiYonetici = User::factory()->admin()->create();
         $kayit = DiscrepancyLog::create([
             'location_id' => Location::first()->id, 'product_id' => $this->urun()->id,
@@ -956,8 +948,6 @@ class AdminPeopleSmokeTest extends TestCase
 
     public function test_deleting_an_admin_keeps_the_stock_counts_they_recorded(): void
     {
-        $this->markTestSkipped('BUG: yonetici silinince kaydettigi stok sayimlari da siliniyor');
-
         $eskiYonetici = User::factory()->admin()->create();
         $sayim = StockRecord::create([
             'location_id' => Location::first()->id, 'product_id' => $this->urun()->id,
@@ -997,8 +987,6 @@ class AdminPeopleSmokeTest extends TestCase
 
     public function test_the_user_show_address_does_not_crash(): void
     {
-        $this->markTestSkipped('BUG: /yonetim/kullanicilar/{id} 500 veriyor (show metodu yok)');
-
         $ogrenci = $this->ogrenci();
 
         $yanit = $this->actingAs($this->yonetici)->get('/yonetim/kullanicilar/' . $ogrenci->id);
@@ -1092,8 +1080,6 @@ class AdminPeopleSmokeTest extends TestCase
 
     public function test_a_double_tapped_package_assignment_opens_one_subscription(): void
     {
-        $this->markTestSkipped('BUG: cift tiklanan paket atama ayni donem icin iki abonelik aciyor');
-
         $paket = Package::factory()->tier1()->create(['monthly_price' => 7500]);
         $ogrenci = $this->ogrenci();
         $veri = ['package_id' => $paket->id, 'starts_on' => '2026-10-01', 'ends_on' => '', 'price' => '7500', 'note' => ''];
@@ -1157,8 +1143,6 @@ class AdminPeopleSmokeTest extends TestCase
 
     public function test_a_double_tapped_payment_is_recorded_once(): void
     {
-        $this->markTestSkipped('BUG: cift tiklanan odeme iki kez kaydediliyor');
-
         $ogrenci = $this->ogrenci(Package::factory()->tier1());
         $abonelik = $ogrenci->subscriptions()->sole();
         $veri = ['amount' => '3000', 'paid_at' => '2026-09-29', 'method' => 'cash', 'note' => ''];
@@ -1486,8 +1470,6 @@ class AdminPeopleSmokeTest extends TestCase
 
     public function test_editing_a_package_keeps_items_of_temporarily_closed_products(): void
     {
-        $this->markTestSkipped('BUG: paket duzenlenince pasif urunlerin kalemleri sessizce siliniyor');
-
         $kahve = $this->urun('Türk Kahvesi');
         $sahlep = $this->urun('Sahlep', 50, false); // yazin satista degil
         $paket = Package::factory()->tier1()->create(['name' => 'Standart', 'monthly_price' => 7000]);
@@ -1606,8 +1588,6 @@ class AdminPeopleSmokeTest extends TestCase
 
     public function test_a_double_tapped_weekly_lesson_is_added_once(): void
     {
-        $this->markTestSkipped('BUG: ayni haftalik ozel ders saati iki kez eklenebiliyor');
-
         $ogrenci = $this->kralOgrenci();
         $veri = ['weekday' => '3', 'starts_at' => '17:00', 'ends_at' => '18:30'];
 
@@ -1689,8 +1669,6 @@ class AdminPeopleSmokeTest extends TestCase
 
     public function test_a_cancelled_lesson_can_then_be_moved_instead(): void
     {
-        $this->markTestSkipped('BUG: ayni ders once iptal sonra tasininca (ya da iki kez iptal) 500 - SQLite tarih eslesmesi');
-
         $ogrenci = $this->kralOgrenci();
         $saat = $this->dersSaati($ogrenci);
 

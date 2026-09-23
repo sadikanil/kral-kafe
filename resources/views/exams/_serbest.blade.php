@@ -1,7 +1,10 @@
 {{--
     Serbest denemeler (Dalga 30a): tarihi ogrenci secer, ay icinde.
     Beklenen: $flexible (ExamEvent koleksiyonu).
+    Deneme adi ve notu yalnizca deneme kulubunde (Dalga 19, tarihli
+    denemelerle ayni kural); tur ve pencere herkese. Yonetici her seyi gorur.
 --}}
+@php $detay = $detay ?? auth()->user()?->entitlements()->examClub; @endphp
 @if($flexible->isNotEmpty())
     <div class="card mb-3">
         <div class="card-header"><h4>🗓️ Serbest denemeler</h4></div>
@@ -12,8 +15,8 @@
                     <li>
                         <span class="badge badge-{{ $deneme->exam_type->badgeClass() }}">{{ $deneme->exam_type->label() }}</span>
                         <span class="log-label">
-                            <strong>{{ $deneme->title }}</strong>
-                            @if($deneme->note)<small class="text-muted">· {{ $deneme->note }}</small>@endif
+                            <strong>{{ $detay ? $deneme->title : 'Deneme' }}</strong>
+                            @if($detay && $deneme->note)<small class="text-muted">· {{ $deneme->note }}</small>@endif
                         </span>
                         <span class="text-muted">{{ $deneme->windowLabel() }}</span>
                         @if($editable ?? false)

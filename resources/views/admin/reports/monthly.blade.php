@@ -48,7 +48,7 @@
                 <div class="form-group mb-0" style="flex: 1; max-width: 160px;">
                     <label for="year" class="form-label">Yıl</label>
                     <select id="year" name="year" class="form-control">
-                        @for($y = date('Y'); $y >= date('Y') - 2; $y--)
+                        @for($y = $currentYear; $y >= $currentYear - 2; $y--)
                             <option value="{{ $y }}" {{ $y == $year ? 'selected' : '' }}>{{ $y }}</option>
                         @endfor
                     </select>

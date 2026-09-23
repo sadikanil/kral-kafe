@@ -428,8 +428,6 @@ class StudentMoneyExamsSmokeTest extends TestCase
      */
     public function test_a_parent_cannot_put_items_on_a_tab(): void
     {
-        $this->markTestSkipped('BUG: veli (ogrenci olmayan) /kullanici/adisyon ile kendi adina adisyon acip stok dusurebiliyor');
-
         $veli = User::factory()->parent()->create(['name' => 'Veli Hanım']);
         $urun = $this->urun('Çikolatalı Gofret', 25, stok: 10);
 
@@ -535,8 +533,6 @@ class StudentMoneyExamsSmokeTest extends TestCase
 
     public function test_a_tampered_array_month_parameter_does_not_crash_the_payments_page(): void
     {
-        $this->markTestSkipped('BUG: ?ay[]= dizi parametresi Odemeler ve Deneme Takvimi sayfalarinda 500 veriyor');
-
         $ogrenci = $this->ogrenci();
 
         $this->actingAs($ogrenci)->get('/kullanici/odemeler?ay[]=2026-08')->assertOk()->assertSee('Eylül 2026');
@@ -564,8 +560,6 @@ class StudentMoneyExamsSmokeTest extends TestCase
      */
     public function test_a_package_starting_on_the_last_day_of_the_month_is_on_that_months_statement(): void
     {
-        $this->markTestSkipped('BUG: SQLite - ayin son gunu baslayan paket o ayin Odemeler dokumunde yok (scopeStartingIn)');
-
         $ogrenci = User::factory()->student()->create();
         $this->abonelik($ogrenci, '2026-09-30', 9000, 'Ay Sonu Paketi');
 
@@ -585,8 +579,6 @@ class StudentMoneyExamsSmokeTest extends TestCase
      */
     public function test_an_unpaid_package_past_its_due_date_shows_as_overdue(): void
     {
-        $this->markTestSkipped('BUG: Odemeler sayfasi vadesi gecmis odenmemis paketi Gecikmis degil Bekliyor gosteriyor');
-
         $ogrenci = User::factory()->student()->create();
         $this->abonelik($ogrenci, '2026-09-01', 12000, 'Vadesi Geçmiş Paket'); // vade 08.09, bugun 29.09
 
@@ -627,8 +619,6 @@ class StudentMoneyExamsSmokeTest extends TestCase
      */
     public function test_deleting_a_product_does_not_erase_students_charges(): void
     {
-        $this->markTestSkipped('BUG: urun silinince o urunun tum adisyon kayitlari (fatura gecmisi) cascade ile siliniyor');
-
         $ogrenci = $this->ogrenci(Package::factory()->tier1());
         $urun = $this->urun('Sezonluk Limonata', 35, stok: 10);
         $this->ekle($ogrenci, $urun, 2)->assertRedirect(route('user.tab'));
@@ -912,8 +902,6 @@ class StudentMoneyExamsSmokeTest extends TestCase
     /** Dosyasi depodan kaybolmus rapor 500 degil, anlasilir bir 404 vermeli. */
     public function test_a_report_whose_file_is_missing_is_not_found_rather_than_a_crash(): void
     {
-        $this->markTestSkipped('BUG: dosyasi depoda olmayan raporun PDF adresi 500 veriyor (UnableToRetrieveMetadata)');
-
         $ogrenci = $this->ogrenci();
         $rapor = $this->rapor($ogrenci, ['title' => 'Dosyasız'], icerik: '');
 
@@ -976,8 +964,6 @@ class StudentMoneyExamsSmokeTest extends TestCase
      */
     public function test_an_exam_on_the_last_day_of_the_month_is_in_that_months_grid(): void
     {
-        $this->markTestSkipped('BUG: SQLite - ayin son gunundeki deneme takvim izgarasinda yok (ExamEvent::scopeInMonth)');
-
         $ogrenci = $this->ogrenci(Package::factory()->tier3());
         // Gecmis ay: "yaklasan" listesine girmez, yalnizca izgarada gorunur.
         $this->deneme('Ağustos Son Gün Denemesi', '2026-08-31');
@@ -1007,8 +993,6 @@ class StudentMoneyExamsSmokeTest extends TestCase
      */
     public function test_without_the_exam_club_flexible_exam_names_are_hidden_too(): void
     {
-        $this->markTestSkipped('BUG: kulupsuz ogrenci serbest denemelerin adini ve notunu goruyor');
-
         $ogrenci = $this->ogrenci(Package::factory()->tier1());
         $this->deneme('Gizli Serbest Deneme', '2026-09-01', 'tyt', [
             'is_flexible' => true, 'available_until' => '2026-10-15', 'note' => 'Gizli serbest not',

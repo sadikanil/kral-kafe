@@ -104,7 +104,9 @@ class StockController extends Controller
                 ->where('resolved', false)
                 ->orderBy('created_at', 'desc')
                 ->get(),
-            'recentRecords' => StockRecord::with('location', 'product', 'recorder')
+            // Kaydeden yonetici 'admin' iliskisi (admin_id); 'recorder' diye
+            // bir iliski yok, ilk kayittan sonra sayfa 500 veriyordu.
+            'recentRecords' => StockRecord::with('location', 'product', 'admin')
                 ->orderBy('recorded_at', 'desc')
                 ->limit(20)
                 ->get(),
@@ -310,7 +312,12 @@ class StockController extends Controller
             'resolution_notes' => ['required', 'string'],
         ]);
 
-        $discrepancy->resolve(Auth::user(), $validated['resolution_notes']);
+        // Zaten cozulmusse not ezilmez; yonetici mevcut notu gorsun diye
+        // tutarsizlik sayfasina doner.
+        if (! $discrepancy->resolve(Auth::user(), $validated['resolution_notes'])) {
+            return redirect()->route('admin.stock.discrepancy', $discrepancy)
+                ->with('error', 'Bu tutarsızlık zaten çözümlenmiş; not değiştirilemez.');
+        }
 
         return redirect()->route('admin.stock.counts')
             ->with('success', 'Tutarsızlık çözümlendi.');

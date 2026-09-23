@@ -113,13 +113,14 @@
                                     <td>{{ $record->recorded_at->timezone(config('kafe.timezone'))->format('d.m.Y H:i') }}</td>
                                     <td>{{ $record->location->name }}</td>
                                     <td>{{ $record->product->name }}</td>
-                                    <td>{{ $record->quantity }}</td>
+                                    {{-- Sutun verified_quantity: 'quantity' yok, hucre bos kaliyordu. --}}
+                                    <td>{{ $record->verified_quantity }}</td>
                                     <td>
                                         <span class="badge badge-{{ $record->record_type == 'ai_verified' ? 'success' : 'info' }}">
                                             {{ $record->record_type_name }}
                                         </span>
                                     </td>
-                                    <td>{{ $record->recorder->name ?? '-' }}</td>
+                                    <td>{{ $record->admin->name ?? '-' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

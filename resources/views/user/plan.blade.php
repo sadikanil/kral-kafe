@@ -23,18 +23,29 @@
                 @error('exam_event_id')<p class="text-danger">{{ $message }}</p>@enderror
                 <ul class="log-list">
                     @foreach($flexible as $deneme)
-                        @php $ilk = max($deneme->exam_date->toDateString(), \App\Support\LocalDay::today()); @endphp
+                        @php
+                            $ilk = max($deneme->exam_date->toDateString(), \App\Support\LocalDay::today());
+                            $planGunu = $scheduled->get($deneme->id);
+                        @endphp
                         <li>
                             <span class="badge badge-{{ $deneme->exam_type->badgeClass() }}">{{ $deneme->exam_type->label() }}</span>
                             <span class="log-label"><strong>{{ $deneme->title }}</strong>
-                                <small class="text-muted">· {{ $deneme->windowLabel() }}</small></span>
-                            <form method="POST" action="{{ route('user.plan.exam') }}" class="d-flex gap-1">
+                                <small class="text-muted">· {{ $deneme->windowLabel() }}</small>
+                                @if($planGunu)
+                                    <small class="text-muted">· Planında: {{ $planGunu->locale('tr')->translatedFormat('j F') }}</small>
+                                @endif
+                            </span>
+                            {{-- Dugme ilk gonderimde kilitlenir: es zamanli cift
+                                 dokunusta iki istek de "yok" gorup iki satir acardi. --}}
+                            <form method="POST" action="{{ route('user.plan.exam') }}" class="d-flex gap-1"
+                                  onsubmit="this.querySelector('button').disabled = true">
                                 @csrf
                                 <input type="hidden" name="exam_event_id" value="{{ $deneme->id }}">
                                 <input type="date" name="plan_date" class="form-control" required
-                                       min="{{ $ilk }}" max="{{ $deneme->available_until->toDateString() }}" value="{{ $ilk }}"
+                                       min="{{ $ilk }}" max="{{ $deneme->available_until->toDateString() }}"
+                                       value="{{ max($planGunu?->toDateString() ?? $ilk, $ilk) }}"
                                        aria-label="{{ $deneme->title }} günü">
-                                <button type="submit" class="btn btn-sm btn-primary">Ekle</button>
+                                <button type="submit" class="btn btn-sm btn-primary">{{ $planGunu ? 'Taşı' : 'Ekle' }}</button>
                             </form>
                         </li>
                     @endforeach

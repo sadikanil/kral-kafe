@@ -35,6 +35,13 @@ class StudyPlanController extends Controller
             'days' => WeekPlan::for($ogrenci, $hafta),
             'examClub' => $ogrenci->entitlements()->examClub,
             'flexible' => ExamEvent::flexibleOpen()->get(),
+            // Planina koydugu serbest denemeler (deneme id => gun): form
+            // "Ekle" yerine gunu ve "Tasi"yi gostersin.
+            'scheduled' => StudyPlanItem::where('student_id', $ogrenci->id)
+                ->where('created_by', $ogrenci->id)
+                ->whereNotNull('exam_event_id')
+                ->get(['exam_event_id', 'plan_date'])
+                ->mapWithKeys(fn (StudyPlanItem $m) => [$m->exam_event_id => $m->plan_date]),
         ]);
     }
 
@@ -64,17 +71,26 @@ class StudyPlanController extends Controller
             throw ValidationException::withMessages(['plan_date' => "Bu deneme için {$deneme->windowLabel()} arasında bir gün seçin."]);
         }
 
-        StudyPlanItem::create([
-            'student_id' => $ogrenci->id,
-            'exam_event_id' => $deneme->id,
-            'title' => "{$deneme->title} ({$deneme->exam_type->label()})",
-            'plan_date' => $v['plan_date'],
-            'period' => PlanPeriod::Week->value,
-            'week_start' => PlanPeriod::Week->startFor($v['plan_date']),
-            'created_by' => $ogrenci->id,
-        ]);
+        // Ogrenci basina deneme basina TEK madde: cift dokunus ya da yeniden
+        // gonderilen POST ikinci satir acmasin, farkli gun secmek var olani
+        // tasisin (QA hata 8). Anahtarda created_by da var: ogrenci yalnizca
+        // kendi koydugunu tasir, baskasinin maddesine dokunmaz (removeExam
+        // ile ayni sinir).
+        $madde = StudyPlanItem::updateOrCreate(
+            ['student_id' => $ogrenci->id, 'exam_event_id' => $deneme->id, 'created_by' => $ogrenci->id],
+            [
+                'title' => "{$deneme->title} ({$deneme->exam_type->label()})",
+                'plan_date' => $v['plan_date'],
+                'period' => PlanPeriod::Week->value,
+                'week_start' => PlanPeriod::Week->startFor($v['plan_date']),
+            ],
+        );
 
-        return redirect()->route('user.plan', ['hafta' => $v['plan_date']])->with('success', 'Deneme planına eklendi.');
+        $mesaj = $madde->wasRecentlyCreated
+            ? 'Deneme planına eklendi.'
+            : 'Deneme ' . $madde->plan_date->locale('tr')->translatedFormat('j F') . ' gününe taşındı.';
+
+        return redirect()->route('user.plan', ['hafta' => $v['plan_date']])->with('success', $mesaj);
     }
 
     /** Yalnizca kendi koydugu deneme; kocun maddesine dokunamaz. */
@@ -97,6 +113,30 @@ class StudyPlanController extends Controller
 
         $item->markDone();
 
-        return back()->with('success', 'Tamamlandı olarak işaretlendi.');
+        return $this->backToItem($item)->with('success', 'Tamamlandı olarak işaretlendi.');
+    }
+
+    /** Yanlis dokunusu geri alir; complete() ile ayni sahiplik siniri. */
+    public function reopen(StudyPlanItem $item): RedirectResponse
+    {
+        abort_unless($item->student_id === auth()->id(), 403);
+
+        $item->reopen();
+
+        return $this->backToItem($item)->with('success', 'Madde yeniden açıldı.');
+    }
+
+    /**
+     * Haftalik takvimden gelindiyse maddenin hizasina doner (QA a11y A15):
+     * uzun hafta izgarasi her dokunustan sonra en uste atiyordu. Paneldeki
+     * "Bugun" karti zaten ustte; oraya capa eklemek gereksiz.
+     */
+    private function backToItem(StudyPlanItem $item): RedirectResponse
+    {
+        $geri = back();
+
+        return parse_url(url()->previous(), PHP_URL_PATH) === parse_url(route('user.plan'), PHP_URL_PATH)
+            ? $geri->withFragment('madde-' . $item->id)
+            : $geri;
     }
 }

@@ -5,18 +5,27 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\Consumption;
 use App\Models\MonthlyBill;
+use App\Models\Subscription;
 use Illuminate\Support\Collection;
 use Carbon\Carbon;
 
 class BillingService
 {
     /**
-     * Generate monthly bills for all active users.
+     * Ayin faturalari: bugun aktif olanlar ARTI o ay tuketimi ya da o ay
+     * baslayan paketi olan her ogrenci.
+     *
+     * subscription_status bir erisim anahtaridir, ticari gercek degil (README
+     * SS9.2). Yalnizca bugun aktif olanlari secmek, Agustos'ta tuketip sonra
+     * askiya alinan ogrencinin Agustos borcunu hic faturalamamak demekti; ozet
+     * CSV de detay CSV'siyle tutmuyordu.
      */
     public function generateMonthlyBills(int $year, int $month): Collection
     {
         $users = User::where('role', 'student')
-            ->where('subscription_status', 'active')
+            ->where(fn ($q) => $q->where('subscription_status', 'active')
+                ->orWhereHas('consumptions', fn ($c) => $c->inLocalMonth($year, $month)->where('is_undone', false))
+                ->orWhereIn('id', Subscription::startingIn($year, $month)->select('student_id')))
             ->get();
 
         $bills = collect();
@@ -86,18 +95,18 @@ class BillingService
             ->orderBy('user_id')
             ->get();
 
-        $csv = "Kullanıcı ID,İsim,E-posta,Toplam Ürün,Tüketim Tutarı,Paket Tutarı,Genel Toplam\n";
+        $csv = $this->csvSatiri(['Kullanıcı ID', 'İsim', 'E-posta', 'Toplam Ürün', 'Tüketim Tutarı', 'Paket Tutarı', 'Genel Toplam']);
 
         foreach ($bills as $bill) {
-            $csv .= implode(',', [
+            $csv .= $this->csvSatiri([
                 $bill->user_id,
-                '"' . $bill->user->name . '"',
+                $bill->user->name,
                 $bill->user->email,
                 $bill->total_items,
                 number_format($bill->total_amount, 2, '.', ''),
                 number_format((float) $bill->package_amount, 2, '.', ''),
                 number_format($bill->grandTotal(), 2, '.', ''),
-            ]) . "\n";
+            ]);
         }
 
         return $csv;
@@ -114,21 +123,43 @@ class BillingService
             ->orderBy('consumed_at')
             ->get();
 
-        $csv = "Tarih,Kullanıcı,Ürün,Lokasyon,Adet,Birim Fiyat,Toplam\n";
+        $csv = $this->csvSatiri(['Tarih', 'Kullanıcı', 'Ürün', 'Lokasyon', 'Adet', 'Birim Fiyat', 'Toplam']);
 
         foreach ($consumptions as $c) {
-            $csv .= implode(',', [
+            $csv .= $this->csvSatiri([
                 $c->consumed_at->timezone(config('kafe.timezone'))->format('d.m.Y H:i'),
-                '"' . $c->user->name . '"',
-                '"' . $c->product->name . '"',
-                '"' . $c->location->name . '"',
+                $c->user->name,
+                $c->product->name,
+                $c->location->name,
                 $c->quantity,
                 number_format($c->unit_price, 2, '.', ''),
                 number_format($c->total_price, 2, '.', ''),
-            ]) . "\n";
+            ]);
         }
 
         return $csv;
+    }
+
+    /**
+     * Tek CSV satiri, fputcsv kacislariyla.
+     *
+     * Adlar elle '"' . $ad . '"' ile sariliyordu: icindeki cift tirnak
+     * ikilenmedigi icin 'Ali "Kral" Ozturk' ya da 'Tost "Karisik", buyuk'
+     * satiri fazladan sutuna boluyor, tablo sagdan kayiyordu. Kacis karakteri
+     * bos (''): PHP'nin standart disi ters bolu kacisi kapali, yalnizca
+     * RFC 4180 tirnak ikilemesi.
+     *
+     * @param  array<int,string|int|float|null>  $alanlar
+     */
+    private function csvSatiri(array $alanlar): string
+    {
+        $akis = fopen('php://temp', 'r+');
+        fputcsv($akis, $alanlar, ',', '"', '');
+        rewind($akis);
+        $satir = stream_get_contents($akis);
+        fclose($akis);
+
+        return $satir;
     }
 
     /**

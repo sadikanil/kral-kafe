@@ -34,7 +34,9 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'kimlik.required' => 'Telefon numaranızı girin.',
+            'kimlik.required' => $this->input('ile') === 'eposta'
+                ? 'E-posta adresinizi girin.'
+                : 'Telefon numaranızı girin.',
         ];
     }
 
@@ -52,22 +54,37 @@ class LoginRequest extends FormRequest
      */
     public function identifiedUser(): User
     {
-        $kimlik = trim($this->string('kimlik'));
+        // Mesaj ekranin moduna gore: e-posta ekraninda '@' unutana telefon
+        // bicimi tarif etmek yanlis alani isaret ederdi.
+        $kimlik = $this->normalizedIdentity()
+            ?? throw ValidationException::withMessages([
+                'kimlik' => $this->input('ile') === 'eposta'
+                    ? 'Geçerli bir e-posta adresi girin.'
+                    : 'Geçerli bir cep telefonu numarası girin (05XX XXX XX XX).',
+            ]);
 
-        if (str_contains($kimlik, '@')) {
-            $kullanici = User::where('email', Str::lower($kimlik))->first();
-        } else {
-            $telefon = Telefon::normalize($kimlik)
-                ?? throw ValidationException::withMessages([
-                    'kimlik' => 'Geçerli bir cep telefonu numarası girin (05XX XXX XX XX).',
-                ]);
-
-            $kullanici = User::where('phone', $telefon)->first();
-        }
+        $kullanici = str_contains($kimlik, '@')
+            ? User::where('email', $kimlik)->first()
+            : User::where('phone', $kimlik)->first();
 
         return $kullanici ?? throw ValidationException::withMessages([
             'kimlik' => 'Bu bilgiyle kayıtlı bir kullanıcı yok.',
         ]);
+    }
+
+    /**
+     * Kimligin tek bicimi: e-posta kirpilmis ve kucuk harf, telefon
+     * Telefon::normalize. Arama da kilit anahtari da BURADAN okur; ikisi ayri
+     * yazildiginda ayni numarayi her seferinde baska bosluklarla yazan biri
+     * kilide hic takilmadan sinirsiz sifre deneyebiliyordu.
+     *
+     * null: e-posta degil ve gecerli bir cep telefonu da degil.
+     */
+    private function normalizedIdentity(): ?string
+    {
+        $kimlik = trim($this->string('kimlik'));
+
+        return str_contains($kimlik, '@') ? Str::lower($kimlik) : Telefon::normalize($kimlik);
     }
 
     /**
@@ -119,8 +136,14 @@ class LoginRequest extends FormRequest
         ]);
     }
 
+    /**
+     * Kilit HESAP + IP basina sayilir. Gecersiz kimlik ham haliyle kalabilir:
+     * identifiedUser() onu sifre denenmeden reddeder, sayaca hic yazilmaz.
+     */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('kimlik')) . '|' . $this->ip());
+        $hesap = $this->normalizedIdentity() ?? Str::lower(trim($this->string('kimlik')));
+
+        return Str::transliterate($hesap . '|' . $this->ip());
     }
 }

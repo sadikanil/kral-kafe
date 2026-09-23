@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Support\SqlDialect;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
@@ -84,6 +85,7 @@ class UserController extends Controller
     public function store(Request $request, SubscriptionOpener $abonelikler)
     {
         $this->normalizePhone($request);
+        $this->normalizeEmail($request);
         $this->normalizePhone($request, 'new_parent_phone');
 
         // Dalga 18: telefon birincil kimlik; e-posta ve sifre istege bagli.
@@ -235,6 +237,16 @@ class UserController extends Controller
     }
 
     /**
+     * Route::resource show adresini de kaydediyor (rotalar B'de). Ayri bir
+     * profil sayfasi yok; duzenleme adresinden kirpilmis ya da yer imine
+     * alinmis adres 500 yerine duzenleme sayfasina gider.
+     */
+    public function show(User $user)
+    {
+        return redirect()->route('admin.users.edit', $user);
+    }
+
+    /**
      * Show the form for editing a user.
      */
     public function edit(User $user)
@@ -285,6 +297,7 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $this->normalizePhone($request);
+        $this->normalizeEmail($request);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -303,11 +316,46 @@ class UserController extends Controller
             ...$this->gradeRules(),
         ], $this->identityMessages());
 
+        // Kendi rolunu dusuren yonetici bir sonraki istekte 403 alir; baska
+        // yonetici yoksa panele kimse giremez ve geri donus yalnizca
+        // veritabanindan olur. Kendini silme ve sifre sifirlama da ayni
+        // sebeple kapali (destroy, resetPassword).
+        if ($user->is($request->user()) && $validated['role'] !== Role::Admin->value) {
+            throw ValidationException::withMessages(['role' => 'Kendi rolünü buradan değiştiremezsin.']);
+        }
+
         // Dalga 20: ogrencinin son velisi kaldirilamaz. Anahtar formda yoksa
         // bag degismiyor demektir (bolum o rol icin cizilmemis).
         if ($validated['role'] === Role::Student->value
             && $request->has('parent_ids') && empty($validated['parent_ids'])) {
             throw ValidationException::withMessages(['parent_ids' => 'Öğrencinin en az bir velisi olmalı.']);
+        }
+
+        // Ayni kural veli tarafindan: veli formunda isareti kaldirilan ogrencinin
+        // tek velisi bu kisiyse bag kopmaz. Kontrol update'ten ONCE ki form
+        // yarim kaydedilmesin (ad degisip bag kalmasi gibi).
+        if ($request->has('student_ids')) {
+            $kalan = array_map('intval', $validated['student_ids'] ?? []);
+            $yetim = $user->students()->whereNotIn('users.id', $kalan)
+                ->withCount('parents')->get()->where('parents_count', 1);
+
+            if ($yetim->isNotEmpty()) {
+                throw ValidationException::withMessages(['student_ids' => 'Öğrencinin en az bir velisi olmalı: '
+                    . $yetim->pluck('name')->join(', ') . ' için tek veli bu. Önce öğrenciye başka bir veli bağlayın.']);
+            }
+        }
+
+        // Ayni kuralin rol kapisi: tek veliyi baska role cevirmek bagi birakir
+        // ama veli panelini kapatir; ogrenci formu yalnizca veli rolundekileri
+        // listeledigi icin o form da bundan sonra hep reddedilirdi. Yalnizca
+        // veliden cikis bakilir ki eski bozuk veride ad duzeltmek takilmasin.
+        if ($user->hasRole(Role::Parent) && $validated['role'] !== Role::Parent->value) {
+            $yetim = $user->students()->withCount('parents')->get()->where('parents_count', 1);
+
+            if ($yetim->isNotEmpty()) {
+                throw ValidationException::withMessages(['role' => 'Bu velinin rolü değiştirilemez: '
+                    . $yetim->pluck('name')->join(', ') . ' için tek veli. Önce öğrenciye başka bir veli bağlayın.']);
+            }
         }
 
         $user->update([
@@ -459,6 +507,19 @@ class UserController extends Controller
             $request->merge([
                 $alan => Telefon::normalize($request->input($alan)) ?? $request->input($alan),
             ]);
+        }
+    }
+
+    /**
+     * User e-postayi kirpip kucuk harfle kaydeder; tekillik kurali ise
+     * yazilani harf duyarli karsilastirir. Onceden "DUP@..." dogrulamadan
+     * gecip tekil indekse carpiyordu (500). Dizi gelirse dokunulmaz: kural
+     * onu reddeder.
+     */
+    private function normalizeEmail(Request $request): void
+    {
+        if (is_string($request->input('email')) && filled($request->input('email'))) {
+            $request->merge(['email' => Str::lower(trim($request->input('email')))]);
         }
     }
 

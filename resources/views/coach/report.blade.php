@@ -23,9 +23,12 @@
 
                 <form method="POST" action="{{ route('coach.report.comment', [$student, 'hafta' => $hafta]) }}">
                     @csrf
+                    {{-- Gorunur etiket: placeholder yazinca kaybolur, ekran
+                         okuyucu icin ad sayilmaz. --}}
                     <div class="form-group">
-                        <textarea name="coach_comment" class="form-control" rows="3" maxlength="2000"
-                                  placeholder="Tempo iyi, deneme sayısını artıralım.">{{ $report->coach_comment }}</textarea>
+                        <label for="coach_comment" class="form-label">Yorum</label>
+                        <textarea id="coach_comment" name="coach_comment" class="form-control" rows="3" maxlength="2000"
+                                  placeholder="Örn. Tempo iyi, deneme sayısını artıralım.">{{ $report->coach_comment }}</textarea>
                     </div>
                     <button type="submit" class="btn btn-primary">Kaydet</button>
                 </form>

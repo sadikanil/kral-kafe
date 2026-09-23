@@ -64,18 +64,35 @@ class Subscription extends Model
             ->whereDate('ends_on', '>=', $gun);
     }
 
-    /** Fatura ayinda baslayanlar (fiyat basladigi ayda yazilir). */
+    /**
+     * Fatura ayinda baslayanlar (fiyat basladigi ayda yazilir).
+     *
+     * Yari acik aralik (>= ayin 1'i, < sonraki ayin 1'i): 'date' cast SQLite'a
+     * "2026-09-30 00:00:00" yaziyor ve kapali whereBetween('...', '2026-09-30')
+     * metin karsilastirmasinda ayin SON gununu disarida birakiyordu - o gun
+     * baslayan paket hicbir ayin dokumune ve faturasina girmiyordu. whereDate
+     * yerine bu bicim: sutuna fonksiyon uygulanmaz, indeks kullanilir.
+     */
     public function scopeStartingIn(Builder $query, int $year, int $month): Builder
     {
         $bas = Carbon::create($year, $month, 1);
 
         return $query->where('payment_status', '!=', PaymentStatus::Cancelled->value)
-            ->whereBetween('starts_on', [$bas->toDateString(), $bas->copy()->endOfMonth()->toDateString()]);
+            ->where('starts_on', '>=', $bas->toDateString())
+            ->where('starts_on', '<', $bas->copy()->addMonthNoOverflow()->toDateString());
     }
 
+    /**
+     * On yuklenmis odemeler varsa onlardan: odeme takibi listesi senkron,
+     * "Odenen" ve "Kalan" icin satir basina uc ayri sum() atiyordu (40
+     * abonelikte 120 fazla sorgu). Iliski yuklu degilse taze sorgu - yeni
+     * yazilan odeme kalani hemen dusurmeli.
+     */
     public function paidTotal(): float
     {
-        return (float) $this->payments()->sum('amount');
+        return (float) ($this->relationLoaded('payments')
+            ? $this->payments->sum('amount')
+            : $this->payments()->sum('amount'));
     }
 
     public function balance(): float

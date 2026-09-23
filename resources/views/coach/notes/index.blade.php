@@ -31,7 +31,7 @@
                 <div class="form-group">
                     <label for="body" class="form-label">Not</label>
                     <textarea id="body" name="body" class="form-control" rows="3" maxlength="2000"
-                              placeholder="Matematikte tempo düştü, hafta içi tekrar ekledik." required>{{ old('body') }}</textarea>
+                              placeholder="Örn. Matematikte tempo düştü, hafta içi tekrar ekledik." required>{{ old('body') }}</textarea>
                     @error('body')<span class="invalid-feedback">{{ $message }}</span>@enderror
                 </div>
 

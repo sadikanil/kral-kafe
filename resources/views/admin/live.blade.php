@@ -8,6 +8,17 @@
 @endsection
 
 @section('content')
+    {{--
+        A20: ekran gun boyu acik duruyor; elle "Yenile"ye basmadan da taze
+        kalsin. Sekme gorunurken dakikada bir yeniden yuklenir (bkz. betik).
+        role=status: yeni onay geldiginde ekran okuyucu kibarca duyurur;
+        onceki sayi sessionStorage'da tutulur.
+    --}}
+    <p class="text-muted mb-2" style="font-size: 0.8125rem;" id="canli-durum" role="status" aria-live="polite"
+       data-kendini-yenile="60" data-onay-sayisi="{{ $pending->count() }}">
+        Dakikada bir kendini yeniler · son güncelleme {{ now()->timezone(config('kafe.timezone'))->format('H:i') }}
+    </p>
+
     <div class="mini-stats mini-stats-3 mb-3">
         <div class="mini-stat">
             <div class="mini-stat-value">{{ $sessions->count() }}</div>
@@ -74,7 +85,9 @@
                         @if($dakika >= config('kafe.azami_saat') * 60)
                             <span class="badge badge-danger">Süre aşımı</span>
                         @endif
-                        <span class="live-row-time">{{ sprintf('%02d:%02d', intdiv($dakika, 60), $dakika % 60) }}</span>
+                        {{-- data-*: sayfa yenilenene kadar sure tarayicida ilerler;
+                             moladaki oturumun suresi durur. --}}
+                        <span class="live-row-time" data-dakika="{{ $dakika }}" data-akiyor="{{ $mola ? 0 : 1 }}">{{ sprintf('%02d:%02d', intdiv($dakika, 60), $dakika % 60) }}</span>
                     </div>
                 @endforeach
             </div>
@@ -151,7 +164,10 @@
 
                     <form method="POST" action="{{ route('admin.sessions.reject', $bekleyen) }}" class="reject-form">
                         @csrf
-                        <input type="text" name="reason" class="form-control" placeholder="Red sebebi" maxlength="255" required>
+                        {{-- Satir ici form: gorunur etiket yer yok; ad hangi ogrencinin
+                             reddi oldugunu soyler (placeholder ad sayilmaz). --}}
+                        <input type="text" name="reason" class="form-control" placeholder="Red sebebi" maxlength="255" required
+                            aria-label="{{ $bekleyen->student->name }} için red sebebi" enterkeyhint="send">
                         <button type="submit" class="btn btn-danger">Reddet</button>
                     </form>
                 </div>
@@ -159,3 +175,52 @@
     @endforeach
 @endif
 @endsection
+
+@push('scripts')
+<script>
+    (function () {
+        const durum = document.getElementById('canli-durum');
+        const bekleme = Number(durum.dataset.kendiniYenile) * 1000;
+        const yuklendi = Date.now();
+        let gonderiliyor = false;
+
+        // Yeni onaylari duyur (ekran okuyucu; gorene de bilgi).
+        try {
+            const simdi = Number(durum.dataset.onaySayisi);
+            const onceki = sessionStorage.getItem('canli-onay-sayisi');
+            if (onceki !== null && simdi > Number(onceki)) {
+                // Yukleme bitince yazilir ki canli bolge degisikligi duyursun.
+                setTimeout(function () { durum.textContent = (simdi - Number(onceki)) + ' yeni onay bekliyor'; }, 400);
+            }
+            sessionStorage.setItem('canli-onay-sayisi', String(simdi));
+        } catch (e) { /* gizli pencere: duyuru yok, sayfa yine calisir */ }
+
+        function saatleriIlerlet() {
+            const gecen = Math.floor((Date.now() - yuklendi) / 60000);
+            document.querySelectorAll('.live-row-time[data-akiyor="1"]').forEach(function (s) {
+                const dk = Number(s.dataset.dakika) + gecen;
+                s.textContent = String(Math.floor(dk / 60)).padStart(2, '0') + ':' + String(dk % 60).padStart(2, '0');
+            });
+        }
+
+        // Red sebebi yazilirken ya da bir form gonderilirken yenileme yazilani silerdi.
+        function mesgulMu() {
+            if (gonderiliyor) return true;
+            const odak = document.activeElement;
+            if (odak && odak.matches('input, textarea, select')) return true;
+            return Array.from(document.querySelectorAll('input[name="reason"]')).some(function (a) { return a.value.trim() !== ''; });
+        }
+
+        function tazele() {
+            if (document.visibilityState === 'visible' && Date.now() - yuklendi >= bekleme && !mesgulMu()) {
+                location.reload();
+            }
+        }
+
+        // Iptal edilen (confirm'e hayir denmis) gonderim yenilemeyi durdurmaz.
+        document.addEventListener('submit', function (e) { if (!e.defaultPrevented) gonderiliyor = true; });
+        document.addEventListener('visibilitychange', tazele);
+        setInterval(function () { saatleriIlerlet(); tazele(); }, 15000);
+    })();
+</script>
+@endpush

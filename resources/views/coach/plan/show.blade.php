@@ -23,8 +23,10 @@
     @endif
 
     {{-- Katli durur ki telefonda takvim ilk ekranda gorunsun. Gundeki "+"
-         acar ve tarihi yazar; dogrulama hatasi varsa acik gelir. --}}
-    <details class="card mb-3 plan-add" id="planaEkle" {{ $errors->any() ? 'open' : '' }}>
+         acar ve tarihi yazar; dogrulama hatasi varsa acik gelir. Yalnizca
+         KENDI alanlarinin hatasinda: $errors->any() alttaki sabit program
+         formunun hatasinda da aciyordu. --}}
+    <details class="card mb-3 plan-add" id="planaEkle" {{ $errors->hasAny(['plan_date', 'subject_id', 'subject_topic_id', 'title', 'starts_at', 'duration_minutes']) ? 'open' : '' }}>
         <summary class="card-header"><h4>➕ Plana ekle</h4></summary>
         <div class="card-body">
             <form method="POST" action="{{ route('coach.plan.store', $student) }}" class="plan-form">
@@ -63,12 +65,16 @@
                 </div>
                 <div class="form-group">
                     <label for="starts_at" class="form-label">Saat</label>
-                    <input type="time" id="starts_at" name="starts_at" class="form-control" value="{{ old('starts_at') }}">
+                    <input type="time" id="starts_at" name="starts_at" class="form-control @error('starts_at') is-invalid @enderror" value="{{ old('starts_at') }}">
+                    @error('starts_at')<span class="invalid-feedback">{{ $message }}</span>@enderror
                 </div>
                 <div class="form-group">
                     <label for="duration_minutes" class="form-label">Süre (dk)</label>
+                    {{-- Ciplak "60" dolu deger sanilir; bos gonderilince sure
+                         kaydolmaz. Placeholder yalnizca ornek. --}}
                     <input type="number" id="duration_minutes" name="duration_minutes" min="5" max="720" step="5"
-                           class="form-control" value="{{ old('duration_minutes') }}" placeholder="60">
+                           class="form-control @error('duration_minutes') is-invalid @enderror" value="{{ old('duration_minutes') }}" placeholder="Örn. 60">
+                    @error('duration_minutes')<span class="invalid-feedback">{{ $message }}</span>@enderror
                 </div>
                 <div class="form-group plan-wide plan-form-submit">
                     <button type="submit" class="btn btn-primary btn-block">Ekle</button>
@@ -120,17 +126,23 @@
                         <input type="text" id="commitment_title" name="commitment_title" maxlength="100" class="form-control"
                                value="{{ old('commitment_title') }}" placeholder="Örn. Limit Dershanesi">
                     </div>
+                    {{-- commitment_ onekli: plan formunun starts_at alaniyla
+                         ayni ad eski girdiyi ve hatayi iki forma birden
+                         yaziyordu. Kolon adi yine starts_at/ends_at. --}}
                     <div class="form-group">
                         <label for="c_starts" class="form-label">Başlangıç</label>
-                        <input type="time" id="c_starts" name="starts_at" class="form-control @error('starts_at') is-invalid @enderror" value="{{ old('starts_at', '08:00') }}" required>
+                        <input type="time" id="c_starts" name="commitment_starts_at" class="form-control @error('commitment_starts_at') is-invalid @enderror" value="{{ old('commitment_starts_at', '08:00') }}" required>
+                        @error('commitment_starts_at')<span class="invalid-feedback">{{ $message }}</span>@enderror
                     </div>
                     <div class="form-group">
                         <label for="c_ends" class="form-label">Bitiş</label>
-                        <input type="time" id="c_ends" name="ends_at" class="form-control @error('ends_at') is-invalid @enderror" value="{{ old('ends_at', '15:00') }}" required>
-                        @error('ends_at')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                        <input type="time" id="c_ends" name="commitment_ends_at" class="form-control @error('commitment_ends_at') is-invalid @enderror" value="{{ old('commitment_ends_at', '15:00') }}" required>
+                        @error('commitment_ends_at')<span class="invalid-feedback">{{ $message }}</span>@enderror
                     </div>
                 </div>
-                <div class="d-flex gap-2 mb-2" style="flex-wrap: wrap;">
+                {{-- Kutularin her biri kendi etiketinde; grup adi olmadan
+                     ekran okuyucu yalnizca "Pzt, onay kutusu" der. --}}
+                <div class="d-flex gap-2 mb-2" style="flex-wrap: wrap;" role="group" aria-label="Günler">
                     @foreach(['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'] as $i => $gunAdi)
                         <label class="d-flex align-items-center gap-1">
                             <input type="checkbox" name="weekdays[]" value="{{ $i + 1 }}" @checked(in_array($i + 1, old('weekdays', [])))> {{ $gunAdi }}

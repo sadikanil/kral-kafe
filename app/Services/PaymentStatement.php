@@ -36,7 +36,11 @@ final class PaymentStatement
                 ->startingIn($year, $month)
                 ->with(['package', 'payments'])
                 ->orderBy('starts_on')
-                ->get(),
+                ->get()
+                // Durum turetilir (Dalga 7): vadenin gecmesi bir yazma degil,
+                // saklanan deger ancak bir ekran senkronlayinca guncellenir.
+                // Senkronlamasak gecen ayin odenmemis paketi "Bekliyor" kalirdi.
+                ->each->syncPaymentStatus(),
             Consumption::with('product')
                 ->where('user_id', $student->id)
                 ->where('is_undone', false)

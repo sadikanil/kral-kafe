@@ -181,8 +181,6 @@ class AdminExamsSmokeTest extends TestCase
 
     public function test_an_array_month_parameter_does_not_crash_the_calendar(): void
     {
-        $this->markTestSkipped('BUG: ?ay[]= query string crashes the exam calendar with a TypeError (500)');
-
         $this->actingAs($this->yonetici())->get('/yonetim/denemeler?ay[]=2026-10')
             ->assertOk()
             ->assertSee('Eylül 2026');
@@ -432,8 +430,6 @@ class AdminExamsSmokeTest extends TestCase
 
     public function test_unticking_flexible_with_a_stale_last_day_still_saves(): void
     {
-        $this->markTestSkipped('BUG: available_until is validated even when the exam is not flexible');
-
         // Duzenleme formu eski pencerenin son gununu dolu getirir; yonetici
         // "Serbest" kutusunu kaldirip tarihi pencereden sonraya alir.
         $serbest = $this->serbest('2026-10-01', '2026-10-31');
@@ -482,8 +478,6 @@ class AdminExamsSmokeTest extends TestCase
 
     public function test_every_kind_of_exam_can_be_removed_from_the_admin_screens(): void
     {
-        $this->markTestSkipped('BUG: flexible and official exams have no remove button anywhere in the admin UI');
-
         $yonetici = $this->yonetici();
         $resmi = $this->deneme('2026-10-20', ['title' => 'YKS Provası', 'exam_type' => ExamType::Official->value]);
         $serbest = $this->serbest();
@@ -518,8 +512,6 @@ class AdminExamsSmokeTest extends TestCase
 
     public function test_validation_messages_name_the_fields_in_turkish(): void
     {
-        $this->markTestSkipped('BUG: exam form errors show raw field keys ("available until", "rank institution", "subjects.1.correct")');
-
         $yonetici = $this->yonetici();
         $ogrenci = $this->ogrenci();
         $deneme = $this->deneme('2026-09-27');
@@ -633,8 +625,6 @@ class AdminExamsSmokeTest extends TestCase
 
     public function test_the_correct_wrong_blank_boxes_are_labelled_when_prefilled(): void
     {
-        $this->markTestSkipped('BUG: Doğru/Yanlış/Boş inputs are labelled only by placeholder, hidden by the prefilled 0');
-
         $ogrenci = $this->ogrenci();
         $deneme = $this->deneme('2026-09-27');
 
@@ -722,8 +712,6 @@ class AdminExamsSmokeTest extends TestCase
 
     public function test_a_rank_cannot_exceed_the_number_of_participants(): void
     {
-        $this->markTestSkipped('BUG: rank larger than participant count is accepted (swapped fields saved as "87 kişide 1.240.")');
-
         $yonetici = $this->yonetici();
         $ogrenci = $this->ogrenci();
         $deneme = $this->deneme('2026-09-27');
@@ -741,8 +729,6 @@ class AdminExamsSmokeTest extends TestCase
 
     public function test_an_unknown_subject_is_a_validation_error_not_a_server_error(): void
     {
-        $this->markTestSkipped('BUG: posting a subject id that does not exist returns 500 (FK violation) instead of a validation error');
-
         $yonetici = $this->yonetici();
         $ogrenci = $this->ogrenci();
         $deneme = $this->deneme('2026-09-27');
@@ -950,12 +936,13 @@ class AdminExamsSmokeTest extends TestCase
         $this->assertNull($rapor->error);
         $this->assertSame('Yeniden okundu: Türkçe güçlü.', $rapor->analysis['summary']);
 
-        // Servis hata verirse durum 'failed' olur
+        // Servis hata verirse hata yoneticiye flash olur; az once alinan iyi
+        // analiz yerinde kalir (Faz 2 bug 45)
         $this->actingAs($yonetici)->from($sayfa)->post(route('admin.exam-reports.analyze', $rapor))
             ->assertRedirect($sayfa)
-            ->assertSessionHas('error');
-        $this->assertSame(ExamReport::FAILED, $rapor->fresh()->status);
-        $this->assertStringContainsString('503', $rapor->fresh()->error);
+            ->assertSessionHas('error', fn ($mesaj) => str_contains($mesaj, '503'));
+        $this->assertSame(ExamReport::DONE, $rapor->fresh()->status);
+        $this->assertSame('Yeniden okundu: Türkçe güçlü.', $rapor->fresh()->analysis['summary']);
     }
 
     public function test_admin_downloads_the_pdf_inline(): void
@@ -973,8 +960,6 @@ class AdminExamsSmokeTest extends TestCase
 
     public function test_a_failed_reanalysis_keeps_the_previous_good_analysis_visible(): void
     {
-        $this->markTestSkipped('BUG: a failed re-analysis hides the previous successful analysis behind "Analiz yapılamadı"');
-
         Http::fake(['api.openai.com/*' => Http::response('patladı', 503)]);
         $yonetici = $this->yonetici();
         $rapor = ExamReport::factory()->analyzed()->create(['title' => 'TG TYT 3 — sonuç']);
@@ -994,8 +979,6 @@ class AdminExamsSmokeTest extends TestCase
 
     public function test_a_report_whose_file_is_gone_is_a_404_not_a_500(): void
     {
-        $this->markTestSkipped('BUG: PDF link returns 500 (UnableToRetrieveMetadata) when the stored file is missing');
-
         $rapor = ExamReport::factory()->create();
 
         $this->actingAs($this->yonetici())->get(route('admin.exam-reports.pdf', $rapor))->assertNotFound();

@@ -12,7 +12,7 @@
 
                 <div class="form-group">
                     <label for="name" class="form-label">Ad Soyad *</label>
-                    <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror"
+                    <input type="text" id="name" name="name" autocomplete="off" class="form-control @error('name') is-invalid @enderror"
                         value="{{ old('name', $user->name) }}" required>
                     @error('name')
                         <span class="invalid-feedback">{{ $message }}</span>
@@ -21,7 +21,7 @@
 
                 <div class="form-group">
                     <label for="phone" class="form-label">Telefon</label>
-                    <input type="tel" inputmode="tel" id="phone" name="phone" class="form-control @error('phone') is-invalid @enderror"
+                    <input type="tel" inputmode="tel" id="phone" name="phone" autocomplete="off" class="form-control @error('phone') is-invalid @enderror"
                         value="{{ old('phone', $user->phone ? \App\Support\Telefon::format($user->phone) : '') }}" placeholder="05XX XXX XX XX">
                     @error('phone')
                         <span class="invalid-feedback">{{ $message }}</span>
@@ -30,7 +30,7 @@
 
                 <div class="form-group">
                     <label for="email" class="form-label">E-posta <span class="text-muted">(isteğe bağlı)</span></label>
-                    <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror"
+                    <input type="email" id="email" name="email" autocomplete="off" class="form-control @error('email') is-invalid @enderror"
                         value="{{ old('email', $user->email) }}">
                     @error('email')
                         <span class="invalid-feedback">{{ $message }}</span>
@@ -39,11 +39,24 @@
 
                 <div class="form-group">
                     <label for="role" class="form-label">Rol *</label>
-                    <select id="role" name="role" class="form-control @error('role') is-invalid @enderror" required>
+                    {{-- Kendi hesabinda yalnizca yonetici secilebilir: baska rol hesabi
+                         panelden kilitlerdi; sunucu da reddediyor (UserController::update).
+                         Orada eski girdi yok sayilir: reddedilen istekten donen old('role')
+                         kilitli bir secenegi secili cizerdi. Boylece selected yalnizca
+                         yoneticiye, disabled yalnizca digerlerine duser, ikisi cakismaz. --}}
+                    @php
+                        $kendisi = $user->is(auth()->user());
+                        $seciliRol = $kendisi ? \App\Enums\Role::Admin->value : old('role', $user->role);
+                    @endphp
+                    <select id="role" name="role" class="form-control @error('role') is-invalid @enderror" required
+                        @if($kendisi) aria-describedby="role-kendi" @endif>
                         @foreach (\App\Enums\Role::cases() as $rol)
-                            <option value="{{ $rol->value }}" {{ old('role', $user->role) === $rol->value ? 'selected' : '' }}>{{ $rol->label() }}</option>
+                            <option value="{{ $rol->value }}" {{ $seciliRol === $rol->value ? 'selected' : '' }}{{ $kendisi && $rol !== \App\Enums\Role::Admin ? 'disabled' : '' }}>{{ $rol->label() }}</option>
                         @endforeach
                     </select>
+                    @if($kendisi)
+                        <small class="text-muted" id="role-kendi">Kendi rolünü değiştiremezsin; başka bir yönetici değiştirebilir.</small>
+                    @endif
                     @error('role')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
@@ -148,7 +161,7 @@
 
                 <div class="form-group">
                     <label for="password" class="form-label">Yeni Şifre</label>
-                    <input type="password" id="password" name="password"
+                    <input type="password" id="password" name="password" autocomplete="new-password"
                         class="form-control @error('password') is-invalid @enderror">
                     @error('password')
                         <span class="invalid-feedback">{{ $message }}</span>
@@ -157,7 +170,7 @@
 
                 <div class="form-group">
                     <label for="password_confirmation" class="form-label">Şifre Tekrar</label>
-                    <input type="password" id="password_confirmation" name="password_confirmation" class="form-control">
+                    <input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password" class="form-control">
                 </div>
 
                 <div class="d-flex gap-2">
@@ -183,8 +196,11 @@
                     </div>
                 </div>
                 @if($user->password !== null)
+                    {{-- Ad @js ile: {{ }} kesme isaretini HTML'de kacirir ama tarayici onu
+                         JS'ten once geri cevirir; "O'Neil" gibi bir ad onay kutusunu JS
+                         hatasina dusurup formu ONAYSIZ gonderirdi. --}}
                     <form method="POST" action="{{ route('admin.users.reset-password', $user) }}"
-                        onsubmit="return confirm('{{ $user->name }} her cihazdan çıkarılacak ve yeni şifre belirlemesi gerekecek. Emin misin?')">
+                        onsubmit="return confirm(@js($user->name . ' her cihazdan çıkarılacak ve yeni şifre belirlemesi gerekecek. Emin misin?'))">
                         @csrf
                         <button type="submit" class="btn btn-secondary">Şifreyi sıfırla</button>
                     </form>
@@ -228,7 +244,7 @@
                 <form method="POST" action="{{ route('admin.coaches.attach', $user) }}"
                       class="d-flex align-items-center gap-2 mb-3">
                     @csrf
-                    <select name="coach_id" class="form-control" required>
+                    <select name="coach_id" class="form-control" aria-label="Atanacak koç" required>
                         <option value="">Koç seç</option>
                         @foreach($assignableCoaches as $aday)
                             <option value="{{ $aday->id }}">

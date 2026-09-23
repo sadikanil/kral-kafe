@@ -14,16 +14,20 @@
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" class="d-flex gap-2" style="flex-wrap: wrap;">
-                <input type="text" name="search" class="form-control" placeholder="İsim veya e-posta ara..." value="{{ request('search') }}" style="max-width: 250px;">
-                
-                <select name="role" class="form-control" style="max-width: 150px;">
+                {{-- Suzgec satirinda gorunur etiket yer tutar; ad aria-label ile
+                     (placeholder yazinca kaybolur, ekran okuyucuya ad degildir). --}}
+                <input type="search" name="search" class="form-control" enterkeyhint="search"
+                    aria-label="Ad, telefon ya da e-posta ara" placeholder="Ad, telefon ya da e-posta…"
+                    value="{{ request('search') }}" style="max-width: 250px;">
+
+                <select name="role" class="form-control" aria-label="Rol" style="max-width: 150px;">
                     <option value="all">Tüm Roller</option>
                     @foreach (\App\Enums\Role::cases() as $rol)
                         <option value="{{ $rol->value }}" {{ request('role') === $rol->value ? 'selected' : '' }}>{{ $rol->label() }}</option>
                     @endforeach
                 </select>
                 
-                <select name="status" class="form-control" style="max-width: 150px;">
+                <select name="status" class="form-control" aria-label="Durum" style="max-width: 150px;">
                     <option value="all">Tüm Durumlar</option>
                     <option value="active" {{ request('status') == 'active' ? 'selected' : '' }}>Aktif</option>
                     <option value="inactive" {{ request('status') == 'inactive' ? 'selected' : '' }}>Pasif</option>
@@ -101,10 +105,17 @@
                                         @endif
                                         
                                         @if($user->id !== auth()->id())
-                                            <form action="{{ route('admin.users.toggle-status', $user) }}" method="POST" class="d-inline-block">
+                                            {{-- A5: ⏸️ Duzenle'nin hemen yaninda ve dokunmatikte title
+                                                 gorunmuyor; yanlis dokunus ogrenciyi aninda askiya aliyordu.
+                                                 Ad @js ile: kesme isaretli ad onay kutusunu bozmasin. --}}
+                                            @php $askiyaAl = $user->subscription_status == 'active'; @endphp
+                                            <form action="{{ route('admin.users.toggle-status', $user) }}" method="POST" class="d-inline-block"
+                                                onsubmit="return confirm(@js($user->name . ($askiyaAl ? ' askıya alınsın mı?' : ' aktifleştirilsin mi?')))">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-{{ $user->subscription_status == 'active' ? 'warning' : 'success' }}" title="{{ $user->subscription_status == 'active' ? 'Askıya Al' : 'Aktifleştir' }}">
-                                                    {{ $user->subscription_status == 'active' ? '⏸️' : '▶️' }}
+                                                <button type="submit" class="btn btn-sm btn-{{ $askiyaAl ? 'warning' : 'success' }}"
+                                                    title="{{ $askiyaAl ? 'Askıya al' : 'Aktifleştir' }}"
+                                                    aria-label="{{ ($askiyaAl ? 'Askıya al: ' : 'Aktifleştir: ') . $user->name }}">
+                                                    {{ $askiyaAl ? '⏸️' : '▶️' }}
                                                 </button>
                                             </form>
                                             

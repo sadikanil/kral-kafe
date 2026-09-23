@@ -70,6 +70,15 @@ class ProductController extends Controller
     }
 
     /**
+     * Route::resource bu adresi kaydediyor; ayri bir urun sayfasi yok.
+     * Yazilan ya da yer imine alinan adres 500 vermek yerine duzenlemeye gider.
+     */
+    public function show(Product $product)
+    {
+        return redirect()->route('admin.products.edit', $product);
+    }
+
+    /**
      * Show the form for editing a product.
      */
     public function edit(Product $product)
@@ -151,6 +160,14 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
+        // Satilmis ya da sayilmis urun SILINMEZ, pasife alinir (masa, paket
+        // ve dersteki kuralin aynisi). consumptions ve stock_records urune
+        // ON DELETE CASCADE bagli: silme ogrencinin adisyonunu, ayin gelirini,
+        // CSV'yi ve sayim gecmisini sessizce geriye donuk degistiriyordu.
+        if ($product->consumptions()->exists() || $product->stockRecords()->exists()) {
+            return back()->with('error', 'Bu ürünün satış ya da sayım geçmişi var; geçmiş kaybolmasın diye silinemez. Satıştan kaldırmak için Pasifleştir düğmesini kullanın.');
+        }
+
         // Delete image if exists
         if ($product->image_url) {
             Storage::disk(config('filesystems.uploads'))->delete($product->image_url);

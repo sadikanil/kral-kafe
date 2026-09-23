@@ -30,6 +30,12 @@ class NewPasswordController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Baglantiyi isteyen adimla ayni bicim ve ayni dizi korumasi
+        // (PasswordResetLinkController).
+        if (is_string($request->input('email')) && filled($request->input('email'))) {
+            $request->merge(['email' => Str::lower(trim($request->input('email')))]);
+        }
+
         $request->validate([
             'token' => ['required'],
             'email' => ['required', 'email'],

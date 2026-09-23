@@ -6,6 +6,7 @@ use App\Enums\ExamType;
 use App\Http\Controllers\Controller;
 use App\Models\ExamEvent;
 use App\Support\ExamCalendar;
+use App\Support\MonthParameter;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -20,7 +21,9 @@ class ExamEventController extends Controller
 {
     public function index(Request $request)
     {
-        [$yil, $ay] = ExamCalendar::parseMonth($request->query('ay'));
+        // ?ay[]= bir DIZI getirir; parseMonth(?string) onu gorunce TypeError
+        // ile 500 veriyordu. Metin olmayan deger kafe ayina duser.
+        [$yil, $ay] = MonthParameter::resolve($request->query('ay'));
 
         return view('admin.exams.index', [
             'upcoming' => ExamEvent::upcoming()->get(),
@@ -82,8 +85,14 @@ class ExamEventController extends Controller
             'note' => ['nullable', 'string', 'max:255'],
             // Serbest deneme (Dalga 30a): tarih pencerenin ilk gunu.
             'is_flexible' => ['nullable', 'boolean'],
-            'available_until' => ['nullable', 'required_if_accepted:is_flexible', 'date_format:Y-m-d', 'after_or_equal:exam_date'],
-        ], ['available_until.required_if_accepted' => 'Serbest denemenin son gününü seçin.']);
+            // Serbest degilse alan hic dogrulanmaz: duzenleme formu eski
+            // pencerenin son gununu dolu getiriyor ve kutu kaldirilip tarih
+            // ileri alininca kaydedilmeyecek bir deger kaydi engelliyordu.
+            'available_until' => [Rule::excludeIf(! $request->boolean('is_flexible')), 'nullable', 'required_if_accepted:is_flexible', 'date_format:Y-m-d', 'after_or_equal:exam_date'],
+        ], [
+            'available_until.required_if_accepted' => 'Serbest denemenin son gününü seçin.',
+            'available_until.after_or_equal' => 'Serbest denemenin son günü, ilk günden (Tarih) önce olamaz.',
+        ], ['available_until' => 'serbest denemenin son günü']);
 
         $veri['starts_at'] = $veri['starts_at'] ?? null;
         $veri['note'] = $veri['note'] ?? null;

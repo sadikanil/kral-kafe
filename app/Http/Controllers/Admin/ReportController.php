@@ -7,6 +7,7 @@ use App\Models\Consumption;
 use App\Models\MonthlyBill;
 use App\Models\User;
 use App\Services\BillingService;
+use App\Support\LocalDay;
 use App\Support\Period;
 use Illuminate\Http\Request;
 
@@ -24,7 +25,7 @@ class ReportController extends Controller
      */
     public function index()
     {
-        [$year, $month] = \App\Support\LocalDay::yearMonth();
+        [$year, $month] = LocalDay::yearMonth();
 
         // Monthly stats
         $monthlyRevenue = Consumption::inLocalMonth($year, $month)
@@ -66,6 +67,11 @@ class ReportController extends Controller
             ->get();
 
         return view('admin.reports.index', [
+            // Secicilerin ve baglantilarin varsayilani kartlarla AYNI ay:
+            // gorunumdeki date('n') UTC ayiydi, 1'inin ilk 3 saatinde kartlar
+            // Ekim'i gosterirken baglantilar Eylul'e gidiyordu.
+            'year' => $year,
+            'month' => $month,
             'stats' => $stats,
             'recentBills' => $recentBills,
             'topConsumers' => $topConsumers,
@@ -98,7 +104,7 @@ class ReportController extends Controller
      */
     public function monthly(Request $request)
     {
-        [$year, $month] = Period::normalize($request->get('year'), $request->get('month'));
+        [$year, $month] = $this->donem($request);
 
         $bills = MonthlyBill::with('user')
             ->whereYear('bill_month', $year)
@@ -115,6 +121,7 @@ class ReportController extends Controller
             ->sum('total_items');
 
         return view('admin.reports.monthly', [
+            'currentYear' => LocalDay::yearMonth()[0],
             'bills' => $bills,
             'year' => $year,
             'month' => $month,
@@ -128,7 +135,7 @@ class ReportController extends Controller
      */
     public function exportSummary(Request $request)
     {
-        [$year, $month] = Period::normalize($request->get('year'), $request->get('month'));
+        [$year, $month] = $this->donem($request);
 
         $csv = $this->billingService->exportToCsv($year, $month);
 
@@ -144,7 +151,7 @@ class ReportController extends Controller
      */
     public function exportDetailed(Request $request)
     {
-        [$year, $month] = Period::normalize($request->get('year'), $request->get('month'));
+        [$year, $month] = $this->donem($request);
 
         $csv = $this->billingService->exportDetailedToCsv($year, $month);
 
@@ -160,15 +167,32 @@ class ReportController extends Controller
      */
     public function userReport(User $user, Request $request)
     {
-        [$year, $month] = Period::normalize($request->get('year'), $request->get('month'));
+        [$year, $month] = $this->donem($request);
 
         $summary = $this->billingService->getUserMonthlySummary($user, $year, $month);
 
         return view('admin.reports.user', [
+            'currentYear' => LocalDay::yearMonth()[0],
             'user' => $user,
             'summary' => $summary,
             'year' => $year,
             'month' => $month,
         ]);
+    }
+
+    /**
+     * Adresteki donem; verilmezse KAFE ayi.
+     *
+     * Period::normalize'in yedegi Carbon::now(), yani UTC ayi: yerel ayin
+     * ilk 3 saatinde parametresiz rapor, CSV ve ogrenci raporu bir onceki
+     * ayi aciyordu. Bos ya da eksik deger once kafe ayina tamamlanir.
+     *
+     * @return array{0:int,1:int}
+     */
+    private function donem(Request $request): array
+    {
+        [$yil, $ay] = LocalDay::yearMonth();
+
+        return Period::normalize($request->get('year') ?? $yil, $request->get('month') ?? $ay);
     }
 }

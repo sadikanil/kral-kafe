@@ -16,6 +16,15 @@
     $calisiyor = $pause === null;
 @endphp
 
+{{-- Hatirlatici yerel <dialog>: .reminder'in gorunumu korunur; arka plan
+     ::backdrop ile karartilir (satir ici stil ::backdrop'a ulasamiyor). --}}
+@push('styles')
+    <style>
+        #hatirlatici { padding: 0; border: 0; background: transparent; width: calc(100% - 2rem); max-width: 380px; }
+        #hatirlatici::backdrop { background: rgba(0, 0, 0, 0.55); }
+    </style>
+@endpush
+
 @section('content')
     <div class="session-card mb-3 text-center" id="sayac"
          data-net="{{ $session->minutesSoFar() * 60 }}"
@@ -31,13 +40,11 @@
             @endif
         </div>
 
-        <div class="session-timer js-net">
-            {{ sprintf('%02d:%02d', intdiv($session->minutesSoFar(), 60), $session->minutesSoFar() % 60) }}
-        </div>
+        @include('study._net-saat', ['saniye' => $session->minutesSoFar() * 60, 'akiyor' => $calisiyor])
         <p class="text-muted mb-3">Net çalışma · molalar sayılmaz</p>
 
         @if(! $calisiyor && $pause->secondsLeft() !== null)
-            <p class="mb-3">Molanın bitmesine <strong class="js-kalan">{{ gmdate('i:s', $pause->secondsLeft()) }}</strong></p>
+            <p class="mb-3">Molanın bitmesine <strong class="js-kalan" role="timer" aria-live="off">{{ gmdate('i:s', $pause->secondsLeft()) }}</strong></p>
         @endif
 
         @if($calisiyor)
@@ -123,18 +130,20 @@
         <button type="submit" class="btn btn-danger btn-block">Çalışmayı bitir</button>
     </form>
 
-    {{-- Hatirlatici penceresi (Dalga 24) --}}
-    <div class="reminder" id="hatirlatici" hidden>
+    {{-- Hatirlatici penceresi (Dalga 24). Gercek modal pencere (QA a11y
+         A12): odak icine gider, arka sayfa dokunulmaz, Escape kapatir;
+         ekran okuyucu basligi ve metni okur - eskiden yalnizca titresim. --}}
+    <dialog id="hatirlatici" aria-labelledby="hatirlatici-baslik" aria-describedby="hatirlatici-metin">
         <div class="reminder-box">
-            <h3 class="js-baslik"></h3>
-            <p class="js-metin"></p>
+            <h3 id="hatirlatici-baslik" class="js-baslik"></h3>
+            <p id="hatirlatici-metin" class="js-metin"></p>
             <div class="d-flex gap-2" style="justify-content: center; flex-wrap: wrap;">
                 <button type="button" class="btn btn-warning js-mola" hidden>☕ 15 dk mola ver</button>
                 <button type="button" class="btn btn-primary js-devam" hidden>▶ Devam et</button>
                 <button type="button" class="btn btn-secondary js-tamam">Tamam</button>
             </div>
         </div>
-    </div>
+    </dialog>
 @endsection
 
 @push('scripts')
@@ -144,41 +153,53 @@
     const hatirlaticilar = @json($reminders);
     const yuklendi = Date.now();
     const calisiyor = kutu.dataset.calisiyor === '1';
-    const net0 = Number(kutu.dataset.net);
     const araliksiz0 = Number(kutu.dataset.araliksiz);
     const kalan0 = kutu.dataset.kalan === '' ? null : Number(kutu.dataset.kalan);
 
     // Sayfa acildiginda zamani gecmis olanlar tekrar gosterilmez.
     let siradaki = hatirlaticilar.findIndex(h => h.at > araliksiz0);
+    if (siradaki === -1) { siradaki = hatirlaticilar.length; }
     let molaBittiGosterildi = false;
 
     const pencere = document.getElementById('hatirlatici');
+    const molaDugmesi = pencere.querySelector('.js-mola');
+    const devamDugmesi = pencere.querySelector('.js-devam');
+    const tamamDugmesi = pencere.querySelector('.js-tamam');
+
+    function kapat() {
+        if (typeof pencere.close === 'function') { pencere.close(); } else { pencere.removeAttribute('open'); }
+    }
+
     function goster(baslik, metin, secenek) {
         pencere.querySelector('.js-baslik').textContent = baslik;
         pencere.querySelector('.js-metin').textContent = metin;
-        pencere.querySelector('.js-mola').hidden = secenek !== 'mola';
-        pencere.querySelector('.js-devam').hidden = secenek !== 'devam';
-        pencere.hidden = false;
+        molaDugmesi.hidden = secenek !== 'mola';
+        devamDugmesi.hidden = secenek !== 'devam';
+
+        if (!pencere.open) {
+            if (typeof pencere.showModal === 'function') { pencere.showModal(); } else { pencere.setAttribute('open', ''); }
+        }
+
+        // Odak birincil secenege: klavye ve ekran okuyucu dogrudan oradan devam etsin.
+        (secenek === 'mola' ? molaDugmesi : secenek === 'devam' ? devamDugmesi : tamamDugmesi).focus();
         if (navigator.vibrate) { navigator.vibrate([200, 100, 200]); }
     }
-    pencere.querySelector('.js-tamam').onclick = () => { pencere.hidden = true; };
-    pencere.querySelector('.js-mola').onclick = () => document.getElementById('molaFormu').submit();
-    pencere.querySelector('.js-devam').onclick = () => document.getElementById('devamFormu').submit();
+    tamamDugmesi.onclick = kapat;
+    molaDugmesi.onclick = () => document.getElementById('molaFormu').submit();
+    devamDugmesi.onclick = () => document.getElementById('devamFormu').submit();
 
     const ikili = n => String(n).padStart(2, '0');
 
+    // Net saat _net-saat parcasinda akar; burada hatirlaticilar ve mola geri sayimi.
     function tik() {
         const gecen = Math.floor((Date.now() - yuklendi) / 1000);
 
         if (calisiyor) {
-            const net = net0 + gecen;
-            kutu.querySelector('.js-net').textContent = ikili(Math.floor(net / 3600)) + ':' + ikili(Math.floor(net % 3600 / 60));
-
-            const araliksiz = araliksiz0 + gecen;
-            if (siradaki !== -1 && siradaki < hatirlaticilar.length && araliksiz >= hatirlaticilar[siradaki].at) {
-                const h = hatirlaticilar[siradaki];
+            const i = NetSaat.gosterilecek(hatirlaticilar, siradaki, araliksiz0 + gecen);
+            if (i !== -1) {
+                const h = hatirlaticilar[i];
                 goster(h.title, h.text, h.kind === 'mola' ? 'mola' : null);
-                siradaki++;
+                siradaki = i + 1;
             }
         } else if (kalan0 !== null) {
             const kalan = Math.max(0, kalan0 - gecen);

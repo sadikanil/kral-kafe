@@ -26,8 +26,11 @@
                 <strong>Çalışıyorsun · {{ $openSession->table->name }}</strong>
             </div>
 
-            @php $dakika = $openSession->minutesSoFar(); @endphp
-            <div class="session-timer">{{ sprintf('%02d:%02d', intdiv($dakika, 60), $dakika % 60) }}</div>
+            {{-- Sayacla ayni parca: kart donuk degil, dakika dakika akar. --}}
+            @include('study._net-saat', [
+                'saniye' => $openSession->minutesSoFar() * 60,
+                'akiyor' => $openSession->openPause() === null,
+            ])
 
             <p class="text-muted mb-3">
                 giriş {{ $openSession->started_at->timezone(config('kafe.timezone'))->format('H:i') }} · net süre
@@ -68,7 +71,11 @@
                     </span>
                 @endif
             </h4>
-            <a href="{{ route('user.plan') }}" class="btn btn-sm btn-secondary">Haftam →</a>
+            {{-- Planim yalnizca ogrenciye acik (role:student); ogretmen ve
+                 gorevlinin ana sayfasi da bu panel, onlari 403'e gondermesin. --}}
+            @if($user->isStudent())
+                <a href="{{ route('user.plan') }}" class="btn btn-sm btn-secondary">Haftam →</a>
+            @endif
         </div>
         <div class="card-body">
             @include('_plan-gunu', ['gun' => $today, 'mode' => 'student', 'bos' => 'Bugün için plan yok.'])

@@ -19,6 +19,14 @@ return [
     'default' => env('DB_CONNECTION', 'sqlite'),
 
     /*
+    | Server-Timing basligi (App\Http\Middleware\ServerTiming): sorgu sayisi
+    | ve sureleri tarayicinin gelistirici aracinda gorunur. Zamanlama bilgisi
+    | disari sizdigi icin kapali; olcum yapilacak ortamda SERVER_TIMING=true.
+    */
+
+    'server_timing' => (bool) env('SERVER_TIMING', false),
+
+    /*
     |--------------------------------------------------------------------------
     | Database Connections
     |--------------------------------------------------------------------------
@@ -96,13 +104,22 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
-            'options' => extension_loaded('pdo_pgsql') && env('DB_EMULATE_PREPARES', false) ? [
+            // Kapali ayarlar diziye hic girmez (array_filter): varsayilan
+            // baglanti eskisiyle birebir ayni.
+            'options' => extension_loaded('pdo_pgsql') ? array_filter([
                 // Supabase'in transaction pooler'i (port 6543) sunucu tarafi
                 // prepared statement'lari oturumlar arasinda tasimiyor; emulasyon
                 // acilmazsa istekler SQLSTATE[42P05] "duplicate prepared statement"
                 // ile duser.
-                PDO::ATTR_EMULATE_PREPARES => true,
-            ] : [],
+                PDO::ATTR_EMULATE_PREPARES => (bool) env('DB_EMULATE_PREPARES', false),
+                // vercel-php kapsayici basina tek "php -S" sureci tutuyor; kalici
+                // baglanti her istekte TCP + TLS + SCRAM el sikismasini (5-7
+                // gidis-donus) atlar. Kapali: donmus kapsayicidan donuste ilk
+                // sorgu olu sokete carpabilir, her sicak kopya bir pooler yeri
+                // tutar. Once onizlemede Server-Timing ile olculup acilir;
+                // transaction pooler ile birlikte kullanilmaz.
+                PDO::ATTR_PERSISTENT => (bool) env('DB_PERSISTENT', false),
+            ]) : [],
         ],
 
         'sqlsrv' => [

@@ -72,16 +72,20 @@ class SessionController extends Controller
         return redirect()->route('session.timer');
     }
 
+    /**
+     * Bitirince dogrudan panel (QA perf P7): back() sayaca donuyordu, sayac
+     * acik oturum bulamayip panele yonlendiriyordu - uc sirali gidis-donus.
+     */
     public function end(): RedirectResponse
     {
         $oturum = $this->sessions->endFor(auth()->user());
 
         if ($oturum === null) {
-            return back()->with('error', 'Açık bir çalışma oturumunuz yok.');
+            return redirect()->route('user.dashboard')->with('error', 'Açık bir çalışma oturumunuz yok.');
         }
 
         $sure = $oturum->duration_minutes;
 
-        return back()->with('success', "Çalışma bitti. Süre: {$sure} dakika.");
+        return redirect()->route('user.dashboard')->with('success', "Çalışma bitti. Süre: {$sure} dakika.");
     }
 }

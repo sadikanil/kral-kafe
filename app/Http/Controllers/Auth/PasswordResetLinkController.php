@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class PasswordResetLinkController extends Controller
@@ -23,6 +24,14 @@ class PasswordResetLinkController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // E-posta kucuk harfle saklaniyor (User::email); broker birebir
+        // esledigi icin "Koc@..." yazan kullanici aksi halde bulunamazdi.
+        // Yalnizca metin: dizi gelirse (email[]=...) trim 500 verirdi;
+        // dokunmayinca asagidaki dogrulama onu reddeder.
+        if (is_string($request->input('email')) && filled($request->input('email'))) {
+            $request->merge(['email' => Str::lower(trim($request->input('email')))]);
+        }
+
         $request->validate([
             'email' => ['required', 'email'],
         ]);

@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // adreslerin http olmasina yol acar.
         $middleware->trustProxies(at: '*');
 
+        // Olcum (SERVER_TIMING=true iken): en basta, oturum sorgulari da sayilsin.
+        $middleware->prepend(\App\Http\Middleware\ServerTiming::class);
+
         // Bayat calisma oturumlarini, biri onlara bakmadan once kapatir.
         // "Tembel kapatma birincil" karari: cron kacsa da veri dogru gorunur.
         $middleware->appendToGroup('web', \App\Http\Middleware\SettleStaleSessions::class);
@@ -33,5 +36,20 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Telefonda sekme gunlerce acik kalir; ertesi gun basilan dugmenin
+        // jetonu (CSRF) oturumla birlikte dolmustur. Laravel'in 419 sayfasi
+        // yazilan notu da kaybettiriyordu: forma geri donulur, girilenler
+        // (sifre haric) doldurulmus gelir. Istisna buraya 419 HttpException
+        // olarak sarilmis gelir; asil neden getPrevious()'ta.
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, \Illuminate\Http\Request $request) {
+            if ($e->getStatusCode() !== 419
+                || ! $e->getPrevious() instanceof \Illuminate\Session\TokenMismatchException
+                || $request->expectsJson()) {
+                return null;
+            }
+
+            return redirect()->back()
+                ->withInput($request->except('password', 'password_confirmation', '_token'))
+                ->with('error', 'Sayfanın süresi dolmuştu, tekrar dene.');
+        });
     })->create();

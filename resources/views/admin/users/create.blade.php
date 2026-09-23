@@ -18,14 +18,14 @@
                 {{-- 1 · Kisi --}}
                 <div class="form-group">
                     <label for="name" class="form-label">Ad Soyad *</label>
-                    <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror"
+                    <input type="text" id="name" name="name" autocomplete="off" class="form-control @error('name') is-invalid @enderror"
                         value="{{ old('name') }}" required autofocus>
                     @error('name')<span class="invalid-feedback">{{ $message }}</span>@enderror
                 </div>
 
                 <div class="form-group">
                     <label for="phone" class="form-label">Telefon *</label>
-                    <input type="tel" inputmode="tel" id="phone" name="phone" class="form-control @error('phone') is-invalid @enderror"
+                    <input type="tel" inputmode="tel" id="phone" name="phone" autocomplete="off" class="form-control @error('phone') is-invalid @enderror"
                         value="{{ old('phone') }}" placeholder="05XX XXX XX XX" required>
                     <span class="text-muted" style="font-size:.85rem">Kullanıcı bu numarayla giriş yapar; şifresini ilk girişte kendisi belirler.</span>
                     @error('phone')<span class="invalid-feedback">{{ $message }}</span>@enderror
@@ -33,7 +33,7 @@
 
                 <div class="form-group">
                     <label for="email" class="form-label">E-posta <span class="text-muted">(isteğe bağlı)</span></label>
-                    <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror"
+                    <input type="email" id="email" name="email" autocomplete="off" class="form-control @error('email') is-invalid @enderror"
                         value="{{ old('email') }}">
                     @error('email')<span class="invalid-feedback">{{ $message }}</span>@enderror
                 </div>
@@ -102,10 +102,16 @@
                         @error('parent_ids.*')<div class="alert alert-danger mb-2">{{ $message }}</div>@enderror
 
                         @if($parents->isNotEmpty())
-                            <input type="search" id="veliAra" class="form-control mb-2" placeholder="Kayıtlı veli ara…">
+                            <input type="search" id="veliAra" class="form-control mb-2" aria-label="Kayıtlı veli ara"
+                                enterkeyhint="search" autocomplete="off" placeholder="Kayıtlı veli ara…">
                             <div class="rounded p-2 mb-2" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--gray-200);">
                                 @foreach($parents as $veli)
-                                    <label class="d-flex align-items-center gap-2 mb-1 js-veli" data-ara="{{ mb_strtolower($veli->name . ' ' . $veli->phone) }}">
+                                    {{-- Arama metni JS'teki toLocaleLowerCase('tr') ile ayni kuralla
+                                         kucultulur: mb_strtolower Turkce degil ('İ' -> i + birlesik
+                                         nokta, 'I' -> i), "İsmail" ya da "Işık" yazan hic bulamazdi.
+                                         Telefon ekranda gorundugu bicimiyle de aranir ("0532 111"). --}}
+                                    <label class="d-flex align-items-center gap-2 mb-1 js-veli"
+                                        data-ara="{{ mb_strtolower(str_replace(['I', 'İ'], ['ı', 'i'], $veli->name . ' ' . $veli->contactLabel() . ' ' . $veli->phone)) }}">
                                         <input type="checkbox" name="parent_ids[]" value="{{ $veli->id }}"
                                             {{ in_array($veli->id, old('parent_ids', [])) ? 'checked' : '' }}>
                                         {{ $veli->name }} <span class="text-muted">({{ $veli->contactLabel() }})</span>
@@ -115,11 +121,19 @@
                             <div class="text-muted mb-2" style="font-size:.85rem">Listede yoksa aşağıya yeni veli yaz:</div>
                         @endif
 
+                        {{-- Gorunur etiket: placeholder yazmaya baslayinca kayboluyordu. --}}
                         <div class="d-flex gap-2" style="flex-wrap: wrap;">
-                            <input type="text" name="new_parent_name" class="form-control @error('new_parent_name') is-invalid @enderror"
-                                style="flex: 1 1 200px;" value="{{ old('new_parent_name') }}" placeholder="Yeni veli adı soyadı">
-                            <input type="tel" inputmode="tel" name="new_parent_phone" class="form-control @error('new_parent_phone') is-invalid @enderror"
-                                style="flex: 1 1 160px;" value="{{ old('new_parent_phone') }}" placeholder="05XX XXX XX XX">
+                            <div style="flex: 1 1 200px;">
+                                <label for="new_parent_name" class="form-label">Yeni veli adı soyadı</label>
+                                <input type="text" id="new_parent_name" name="new_parent_name" autocomplete="off"
+                                    class="form-control @error('new_parent_name') is-invalid @enderror" value="{{ old('new_parent_name') }}">
+                            </div>
+                            <div style="flex: 1 1 160px;">
+                                <label for="new_parent_phone" class="form-label">Yeni velinin telefonu</label>
+                                <input type="tel" inputmode="tel" id="new_parent_phone" name="new_parent_phone" autocomplete="off"
+                                    class="form-control @error('new_parent_phone') is-invalid @enderror"
+                                    value="{{ old('new_parent_phone') }}" placeholder="05XX XXX XX XX">
+                            </div>
                         </div>
                         @error('new_parent_phone')<span class="invalid-feedback" style="display:block">{{ $message }}</span>@enderror
                     </div>

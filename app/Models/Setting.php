@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Once;
 
 /**
  * Panelden degistirilebilen ayarlar (anahtar/deger).
@@ -32,6 +33,22 @@ class Setting extends Model
      * @return array{lat: float, lng: float}|null
      */
     public static function cafeLocation(): ?array
+    {
+        // Istek basina bir kez (P9): canli ekran her bekleyen oturum icin
+        // mesafeyi iki kez soruyor, kuyruk uzadikca ayni satir 2N kez
+        // okunuyordu. once() testler arasinda da temizlenir; yazma aninda
+        // booted() temizler ki ayni istekte kaydedilen konum gorulsun.
+        return once(fn () => static::readCafeLocation());
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(fn () => Once::flush());
+        static::deleted(fn () => Once::flush());
+    }
+
+    /** @return array{lat: float, lng: float}|null */
+    private static function readCafeLocation(): ?array
     {
         $deger = static::where('key', self::KAFE_KONUM)->value('value');
 

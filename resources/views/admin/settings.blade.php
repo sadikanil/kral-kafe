@@ -21,14 +21,23 @@
             <p class="text-muted">Henüz konum girilmedi; uzaklık hesaplanmıyor.</p>
         @endif
 
-        <form method="POST" action="{{ route('admin.settings.location') }}">
+        <form method="POST" action="{{ route('admin.settings.location') }}" id="js-konum-formu">
             @csrf
 
-            <div class="d-flex align-items-center gap-2 mb-2">
-                <input type="text" name="latitude" id="js-konum-enlem" class="form-control"
-                       placeholder="Enlem" value="{{ old('latitude', $cafeLocation['lat'] ?? '') }}" required>
-                <input type="text" name="longitude" id="js-konum-boylam" class="form-control"
-                       placeholder="Boylam" value="{{ old('longitude', $cafeLocation['lng'] ?? '') }}" required>
+            {{-- inputmode=decimal: tam klavye yerine sayi tuslari. Turkce iOS o
+                 tuslarda nokta yerine virgul gosterir; asagidaki betik gondermeden
+                 once virgulu noktaya cevirir (sunucu "41,0082"yi reddeder). --}}
+            <div class="d-flex align-items-end gap-2 mb-2">
+                <div style="flex: 1 1 0;">
+                    <label for="js-konum-enlem" class="form-label">Enlem</label>
+                    <input type="text" name="latitude" id="js-konum-enlem" class="form-control" inputmode="decimal" autocomplete="off"
+                           placeholder="örn. 41.0082" value="{{ old('latitude', $cafeLocation['lat'] ?? '') }}" required>
+                </div>
+                <div style="flex: 1 1 0;">
+                    <label for="js-konum-boylam" class="form-label">Boylam</label>
+                    <input type="text" name="longitude" id="js-konum-boylam" class="form-control" inputmode="decimal" autocomplete="off"
+                           placeholder="örn. 28.9784" value="{{ old('longitude', $cafeLocation['lng'] ?? '') }}" required>
+                </div>
             </div>
 
             @error('latitude') <p class="text-danger">{{ $message }}</p> @enderror
@@ -47,6 +56,14 @@
 
 @push('scripts')
     <script>
+        // Ondalik virgul (Turkce klavye) sunucuya nokta olarak gitsin.
+        document.getElementById('js-konum-formu').addEventListener('submit', function () {
+            ['js-konum-enlem', 'js-konum-boylam'].forEach(function (id) {
+                const alan = document.getElementById(id);
+                alan.value = alan.value.trim().replace(',', '.');
+            });
+        });
+
         document.getElementById('js-konum-al').addEventListener('click', function () {
             const durum = document.getElementById('js-konum-durum');
 
