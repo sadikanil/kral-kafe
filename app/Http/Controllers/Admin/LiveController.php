@@ -22,7 +22,7 @@ class LiveController extends Controller
             ->orderBy('started_at')
             ->get();
 
-        $acikMasaSayisi = StudyTable::active()->count();
+        $doluluk = StudyTable::occupancy();
 
         // "12 saati asan oturum yoneticiye anomali olarak duser" (FEATURE 1).
         // Sessizce kapatmak kurali uygulamak sayilmaz; birinin gormesi gerek.
@@ -54,8 +54,8 @@ class LiveController extends Controller
             'sessions' => $acikOturumlar,
             'pending' => $onayBekleyenler,
             'anomalies' => $anomaliler,
-            'tableCount' => $acikMasaSayisi,
-            'freeTables' => max(0, $acikMasaSayisi - $acikOturumlar->count()),
+            'tableCount' => $doluluk['total'],
+            'freeTables' => $doluluk['free'],
         ]);
     }
 }

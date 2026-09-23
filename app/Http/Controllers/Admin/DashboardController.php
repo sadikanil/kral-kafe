@@ -8,6 +8,8 @@ use App\Models\Product;
 use App\Models\Location;
 use App\Models\Consumption;
 use App\Models\DiscrepancyLog;
+use App\Models\StudySession;
+use App\Models\StudyTable;
 use App\Services\BillingService;
 use Illuminate\Http\Request;
 
@@ -51,6 +53,12 @@ class DashboardController extends Controller
             ->get();
 
         return view('admin.dashboard', [
+            // UX turu (23 Eyl): "simdi" satiri - iceride kim var, onay
+            // bekleyen var mi, biten urun var mi. Para ondan sonra.
+            'occupancy' => StudyTable::occupancy(),
+            'pendingApprovals' => StudySession::awaitingApproval()->count(),
+            // Stok sayfasinin "kritik" suzgeciyle AYNI kural (tukenenler dahil).
+            'criticalStock' => Product::active()->withStockStatus('critical')->count(),
             'stats' => $stats,
             'totalProducts' => $totalProducts,
             'totalLocations' => $totalLocations,

@@ -1913,3 +1913,93 @@ select.form-control {
     white-space: normal;
 }
 .pause-icon { font-size: 1.35rem; }
+
+/* Yonetim (UX turu, 23 Eyl) */
+.mini-stats-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 640px) {
+    .mini-stats-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .mini-stats-3 .mini-stat { padding: 0.6rem 0.75rem; }
+    .mini-stats-3 .mini-stat-value { font-size: 1.05rem; }
+}
+.mini-stat-link { display: block; color: inherit; text-decoration: none; }
+.mini-stat-link:hover { border-color: var(--primary-light); color: inherit; }
+.mini-stat.is-warning { background: var(--warning-light); border-color: var(--warning); }
+.mini-stat.is-danger { background: var(--danger-light); border-color: var(--danger); }
+.mini-stat-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Canli ekran: oturum basina tek satir. */
+.live-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 1.25rem;
+    border-top: 1px solid var(--gray-200);
+}
+.live-row:first-child { border-top: 0; }
+.live-row .live-dot { margin-right: 0; flex-shrink: 0; }
+.live-row-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.5rem;
+    align-items: baseline;
+}
+.live-row-main .text-muted { font-size: 0.8125rem; }
+.live-row-time {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--gray-900);
+}
+
+/* Onay karti: genis ekranda tek satir, telefonda bilgi ustte kararlar altta. */
+.approval-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 1rem 1.25rem;
+}
+.approval-info { flex: 1 1 16rem; min-width: 0; }
+.approval-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    flex: 1 1 22rem;
+    justify-content: flex-end;
+}
+.reject-form { display: flex; gap: 0.5rem; flex: 1 1 15rem; }
+.reject-form .form-control { flex: 1; min-width: 0; }
+@media (max-width: 640px) {
+    .approve-form { flex: 1 1 100%; }
+    .approve-form .btn { width: 100%; }
+}
+
+/* Telefonda ikincil sutunlar gizlenir, ozetleri birincil hucrede gorunur
+   (show-sm). Tablo yine kayabilir; ama gunluk is kaydirmadan gorunsun. */
+@media (max-width: 640px) {
+    .hide-sm { display: none !important; }
+}
+@media (min-width: 641px) {
+    .show-sm { display: none !important; }
+}
+.text-inherit { color: inherit; text-decoration: none; }
+.text-inherit:hover { color: var(--primary); }
+/* Stok ve kritik kutulari: dar sutunda iki basamak bile sigmiyordu. */
+.stock-input { width: 5.5rem; min-width: 4.5rem; }
+
+/* Satir islemleri tek satirda: dar hucrede alt alta dizilip satiri
+   uc katina cikariyordu. Hucre icerigi kadar, geri kalani ad alir. */
+.row-actions { display: flex; flex-wrap: nowrap; gap: 0.25rem; }
+.actions-cell { width: 1%; }
+@media (max-width: 640px) {
+    .table-responsive .table td.wrap-sm { white-space: normal; }
+    .row-actions { gap: 0.15rem; }
+    .row-actions .btn-sm { padding: 0.25rem 0.3rem; }
+    .stock-input { width: 4.5rem; min-width: 0; }
+}

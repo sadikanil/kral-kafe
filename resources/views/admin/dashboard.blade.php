@@ -4,42 +4,52 @@
 @section('page-title', 'Panel')
 
 @section('content')
-    <!-- İstatistik Kartları -->
-    <div class="stats-grid">
-        <div class="stat-card animate-slide-up">
-            <div class="stat-icon primary">💰</div>
-            <div class="stat-content">
-                <div class="stat-value">{{ number_format($stats['this_month_total'], 2, ',', '.') }} ₺</div>
-                <div class="stat-label">Bu Ay Toplam</div>
-            </div>
+    {{--
+        UX turu (23 Eyl): ust satir "simdi" - yoneticinin gunluk sorulari.
+        Her kart ilgili sayfaya goturur; dikkat isteyen sayi renklenir.
+    --}}
+    @if($unresolvedDiscrepancies > 0)
+        <div class="alert alert-warning mb-3">
+            ⚠️ <strong>{{ $unresolvedDiscrepancies }}</strong> adet çözülmemiş stok tutarsızlığı var.
+            <a href="{{ route('admin.stock.counts') }}" class="btn btn-sm btn-warning ml-2">İncele</a>
         </div>
+    @endif
 
-        <div class="stat-card animate-slide-up" style="animation-delay: 50ms">
-            <div class="stat-icon success">📦</div>
-            <div class="stat-content">
-                <div class="stat-value">{{ number_format($stats['this_month_items']) }}</div>
-                <div class="stat-label">Bu Ay Ürün</div>
-            </div>
-        </div>
-
-        <div class="stat-card animate-slide-up" style="animation-delay: 100ms">
-            <div class="stat-icon warning">👥</div>
-            <div class="stat-content">
-                <div class="stat-value">{{ $stats['active_users'] }}</div>
-                <div class="stat-label">Aktif Üye</div>
-            </div>
-        </div>
-
-        <div class="stat-card animate-slide-up" style="animation-delay: 150ms">
-            <div class="stat-icon danger">📊</div>
-            <div class="stat-content">
-                <div class="stat-value">{{ number_format($stats['today_total'], 2, ',', '.') }} ₺</div>
-                <div class="stat-label">Bugün</div>
-            </div>
+    <div class="mini-stats mb-3">
+        <a href="{{ route('admin.live') }}" class="mini-stat mini-stat-link">
+            <div class="mini-stat-value">{{ $occupancy['inside'] }}</div>
+            <div class="mini-stat-label">İçeride · {{ $occupancy['free'] }} boş yer</div>
+        </a>
+        <a href="{{ route('admin.live') }}#onay" class="mini-stat mini-stat-link {{ $pendingApprovals > 0 ? 'is-warning' : '' }}">
+            <div class="mini-stat-value">{{ $pendingApprovals }}</div>
+            <div class="mini-stat-label">Onay bekliyor</div>
+        </a>
+        <a href="{{ route('admin.stock.index', ['durum' => 'critical']) }}" class="mini-stat mini-stat-link {{ $criticalStock > 0 ? 'is-danger' : '' }}">
+            <div class="mini-stat-value">{{ $criticalStock }}</div>
+            <div class="mini-stat-label">Ürün kritik</div>
+        </a>
+        <div class="mini-stat">
+            <div class="mini-stat-value">{{ number_format($stats['today_total'], 2, ',', '.') }} ₺</div>
+            <div class="mini-stat-label">Bugün</div>
         </div>
     </div>
 
-    <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));">
+    <div class="mini-stats mini-stats-3 mb-3">
+        <div class="mini-stat">
+            <div class="mini-stat-value">{{ number_format($stats['this_month_total'], 2, ',', '.') }} ₺</div>
+            <div class="mini-stat-label">Bu ay</div>
+        </div>
+        <div class="mini-stat">
+            <div class="mini-stat-value">{{ number_format($stats['this_month_items']) }}</div>
+            <div class="mini-stat-label">Bu ay ürün</div>
+        </div>
+        <div class="mini-stat">
+            <div class="mini-stat-value">{{ $stats['active_users'] }}</div>
+            <div class="mini-stat-label">Aktif üye</div>
+        </div>
+    </div>
+
+    <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));">
         <!-- Bugünkü Tüketimler -->
         <div class="card animate-slide-up" style="animation-delay: 200ms">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -147,10 +157,4 @@
         </div>
     </div>
 
-    @if($unresolvedDiscrepancies > 0)
-        <div class="alert alert-warning mt-4 animate-slide-up">
-            ⚠️ <strong>{{ $unresolvedDiscrepancies }}</strong> adet çözülmemiş stok tutarsızlığı var.
-            <a href="{{ route('admin.stock.counts') }}" class="btn btn-sm btn-warning ml-2">İncele</a>
-        </div>
-    @endif
 @endsection

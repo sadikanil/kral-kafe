@@ -57,35 +57,37 @@
                     <thead>
                         <tr>
                             <th>Ürün</th>
-                            <th>Konum</th>
-                            <th style="width: 110px;">Stok</th>
-                            <th style="width: 110px;">Kritik</th>
-                            <th>Durum</th>
+                            <th class="hide-sm">Konum</th>
+                            <th>Stok</th>
+                            <th>Kritik</th>
+                            <th class="hide-sm">Durum</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($products as $urun)
                             @php [$etiket, $renk] = $rozetler[$urun->stockStatus()]; @endphp
                             <tr>
-                                <td>
+                                <td class="wrap-sm">
                                     <a href="{{ route('admin.products.edit', $urun) }}">{{ $urun->emoji ?: '📦' }} {{ $urun->name }}</a>
                                     <div class="text-muted" style="font-size: .8rem;">{{ $urun->category ?? '' }}</div>
+                                    {{-- Telefonda durum sutunu gizli; rozet burada. --}}
+                                    <span class="show-sm badge badge-{{ $renk }}">{{ $etiket }}</span>
                                 </td>
-                                <td>{{ $urun->location->name ?? '—' }}</td>
+                                <td class="hide-sm">{{ $urun->location->name ?? '—' }}</td>
                                 <td>
                                     <input type="number" min="0" name="stok[{{ $urun->id }}][quantity]" inputmode="numeric"
-                                           class="form-control @error("stok.{$urun->id}.quantity") is-invalid @enderror"
+                                           class="form-control stock-input @error("stok.{$urun->id}.quantity") is-invalid @enderror"
                                            value="{{ old("stok.{$urun->id}.quantity", $urun->stock_quantity) }}" placeholder="—"
                                            aria-label="{{ $urun->name }} stok">
                                 </td>
                                 <td>
                                     <input type="number" min="0" name="stok[{{ $urun->id }}][critical]" inputmode="numeric"
-                                           class="form-control @error("stok.{$urun->id}.critical") is-invalid @enderror"
+                                           class="form-control stock-input @error("stok.{$urun->id}.critical") is-invalid @enderror"
                                            value="{{ old("stok.{$urun->id}.critical", $urun->critical_quantity) }}" placeholder="—"
                                            aria-label="{{ $urun->name }} kritik stok">
                                     @error("stok.{$urun->id}.critical")<span class="invalid-feedback">{{ $message }}</span>@enderror
                                 </td>
-                                <td><span class="badge badge-{{ $renk }}">{{ $etiket }}</span></td>
+                                <td class="hide-sm"><span class="badge badge-{{ $renk }}">{{ $etiket }}</span></td>
                             </tr>
                         @empty
                             <tr>

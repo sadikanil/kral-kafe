@@ -59,6 +59,21 @@ class StudyTable extends Model
         return $this->hasMany(StudySession::class);
     }
 
+    /**
+     * Doluluk: bir masa kaydi bir oturma yeri (QR sandalye basina). Canli
+     * ekran ve yonetim paneli ayni sayiyi gostersin diye tek yerde.
+     * Kapatilmis masada unutulan oturum bos yeri eksiye dusurmez.
+     *
+     * @return array{total: int, inside: int, free: int}
+     */
+    public static function occupancy(): array
+    {
+        $toplam = self::active()->count();
+        $iceride = StudySession::open()->count();
+
+        return ['total' => $toplam, 'inside' => $iceride, 'free' => max(0, $toplam - $iceride)];
+    }
+
     /** "Masa 2" "Masa 10"dan once; duz isim sirasi bunu tersine cevirir. */
     public static function sortedByNumber(Builder $query): Collection
     {

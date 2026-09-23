@@ -44,26 +44,33 @@
                     <thead>
                         <tr>
                             <th>İsim</th>
-                            <th>Telefon / E-posta</th>
-                            <th>Rol</th>
-                            <th>Durum</th>
-                            <th>Kayıt Tarihi</th>
+                            <th class="hide-sm">Telefon / E-posta</th>
+                            <th class="hide-sm">Rol</th>
+                            <th class="hide-sm">Durum</th>
+                            <th class="hide-sm">Kayıt Tarihi</th>
                             <th>İşlemler</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($users as $user)
                             <tr>
-                                <td>
+                                <td class="wrap-sm">
                                     <div class="d-flex align-items-center gap-2">
-                                        <div class="sidebar-user-avatar" style="width: 32px; height: 32px; font-size: 0.75rem;">
-                                            {{ strtoupper(substr($user->name, 0, 2)) }}
+                                        <div class="sidebar-user-avatar hide-sm" style="width: 32px; height: 32px; font-size: 0.75rem;">
+                                            {{ mb_strtoupper(mb_substr($user->name, 0, 2)) }}
                                         </div>
-                                        <span>{{ $user->name }}</span>
+                                        <div>
+                                            <a href="{{ route('admin.users.edit', $user) }}" class="text-inherit">{{ $user->name }}</a>
+                                            {{-- Telefonda gizlenen sutunlarin ozeti --}}
+                                            <div class="show-sm text-muted" style="font-size: 0.75rem;">
+                                                {{ $user->contactLabel() }} · {{ $user->role()?->label() ?? $user->role }}
+                                                @if($user->subscription_status !== 'active') · {{ $user->subscription_status === 'suspended' ? 'Askıda' : 'Pasif' }} @endif
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
-                                <td>{{ $user->contactLabel() }}</td>
-                                <td>
+                                <td class="hide-sm">{{ $user->contactLabel() }}</td>
+                                <td class="hide-sm">
                                     <span class="badge badge-{{ $user->role()?->badgeClass() ?? 'info' }}">
                                         {{ $user->role()?->label() ?? $user->role }}
                                     </span>
@@ -71,7 +78,7 @@
                                         <small class="text-muted d-block">{{ $user->students_count }} öğrenci</small>
                                     @endif
                                 </td>
-                                <td>
+                                <td class="hide-sm">
                                     @switch($user->subscription_status)
                                         @case('active')
                                             <span class="badge badge-success">Aktif</span>
@@ -84,13 +91,13 @@
                                             @break
                                     @endswitch
                                 </td>
-                                <td>{{ $user->created_at->timezone(config('kafe.timezone'))->format('d.m.Y') }}</td>
-                                <td>
-                                    <div class="d-flex gap-1">
-                                        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-secondary">✏️</a>
+                                <td class="hide-sm">{{ $user->created_at->timezone(config('kafe.timezone'))->format('d.m.Y') }}</td>
+                                <td class="actions-cell">
+                                    <div class="row-actions">
+                                        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-secondary" title="Düzenle" aria-label="Düzenle">✏️</a>
                                         @if($user->isStudent())
-                                            <a href="{{ route('admin.subscriptions.index', $user) }}" class="btn btn-sm btn-secondary" title="Paket ve ödeme">💳</a>
-                                            <a href="{{ route('admin.exam-reports.index', $user) }}" class="btn btn-sm btn-secondary" title="Deneme raporları">📄</a>
+                                            <a href="{{ route('admin.subscriptions.index', $user) }}" class="btn btn-sm btn-secondary" title="Paket ve ödeme" aria-label="Paket ve ödeme">💳</a>
+                                            <a href="{{ route('admin.exam-reports.index', $user) }}" class="btn btn-sm btn-secondary" title="Deneme raporları" aria-label="Deneme raporları">📄</a>
                                         @endif
                                         
                                         @if($user->id !== auth()->id())
@@ -104,7 +111,7 @@
                                             <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Sil" aria-label="Sil">🗑️</button>
                                             </form>
                                         @endif
                                     </div>

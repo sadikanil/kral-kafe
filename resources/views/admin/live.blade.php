@@ -8,24 +8,18 @@
 @endsection
 
 @section('content')
-    <div class="d-flex gap-2 mb-3" style="flex-wrap: wrap;">
-        <div class="card" style="flex: 1; min-width: 150px;">
-            <div class="card-body text-center">
-                <div class="session-timer">{{ $sessions->count() }}</div>
-                <div class="text-muted">İçeride</div>
-            </div>
+    <div class="mini-stats mini-stats-3 mb-3">
+        <div class="mini-stat">
+            <div class="mini-stat-value">{{ $sessions->count() }}</div>
+            <div class="mini-stat-label">İçeride</div>
         </div>
-        <div class="card" style="flex: 1; min-width: 150px;">
-            <div class="card-body text-center">
-                <div class="session-timer">{{ $freeTables }}</div>
-                <div class="text-muted">Boş yer</div>
-            </div>
+        <div class="mini-stat">
+            <div class="mini-stat-value">{{ $freeTables }}</div>
+            <div class="mini-stat-label">Boş yer</div>
         </div>
-        <div class="card" style="flex: 1; min-width: 150px;">
-            <div class="card-body text-center">
-                <div class="session-timer">{{ $tableCount }}</div>
-                <div class="text-muted">Toplam yer</div>
-            </div>
+        <div class="mini-stat">
+            <div class="mini-stat-value">{{ $tableCount }}</div>
+            <div class="mini-stat-label">Toplam yer</div>
         </div>
     </div>
 
@@ -56,43 +50,42 @@
         </div>
     @endif
 
-    @forelse($sessions as $session)
-        @php $dakika = $session->minutesSoFar(); @endphp
+    {{-- UX turu (23 Eyl): tek satirlik liste. Her oturum ~120 px'lik bir
+         karttiysa 32 yer doldugunda ekran bitmiyordu. --}}
+    @if($sessions->isNotEmpty())
+        <div class="card mb-3">
+            <div class="card-body p-0">
+                @foreach($sessions as $session)
+                    @php $dakika = $session->minutesSoFar(); @endphp
 
-        <div class="session-card mb-2">
-            <div class="d-flex align-items-center justify-content-between gap-2">
-                <div>
-                    <div class="d-flex align-items-center gap-2">
+                    <div class="live-row">
                         @if($mola = $session->openPause())
                             <span class="badge badge-warning">⏸ {{ $mola->kind->label() }}</span>
                         @else
                             <span class="live-dot"></span>
                         @endif
-                        <strong>{{ $session->student->name }}</strong>
+                        <div class="live-row-main">
+                            <strong>{{ $session->student->name }}</strong>
+                            <span class="text-muted">
+                                {{ $session->table->name }} ·
+                                {{ $session->started_at->timezone(config('kafe.timezone'))->format('H:i') }}'den beri
+                            </span>
+                        </div>
+                        @if($dakika >= config('kafe.azami_saat') * 60)
+                            <span class="badge badge-danger">Süre aşımı</span>
+                        @endif
+                        <span class="live-row-time">{{ sprintf('%02d:%02d', intdiv($dakika, 60), $dakika % 60) }}</span>
                     </div>
-                    <div class="text-muted">
-                        {{ $session->table->name }} ·
-                        {{ $session->started_at->timezone(config('kafe.timezone'))->format('H:i') }}'den beri
-                    </div>
-                </div>
-
-                <div class="text-right">
-                    <div class="session-timer">
-                        {{ sprintf('%02d:%02d', intdiv($dakika, 60), $dakika % 60) }}
-                    </div>
-                    @if($dakika >= config('kafe.azami_saat') * 60)
-                        <span class="badge badge-danger">Süre aşımı</span>
-                    @endif
-                </div>
+                @endforeach
             </div>
         </div>
-    @empty
+    @else
         <div class="empty-state">
             <div class="empty-state-icon">🪑</div>
             <div class="empty-state-title">Şu anda içeride kimse yok</div>
             <p class="text-muted">Bir öğrenci masadaki QR'ı okutunca burada görünür.</p>
         </div>
-    @endforelse
+    @endif
 
 {{--
     Onay kuyrugu (Dalga 9).
@@ -105,7 +98,7 @@
     hatirlatmak, ikna etmek degil.
 --}}
 @if($pending->isNotEmpty())
-    <h2 class="mt-4">Onay bekleyen oturumlar ({{ $pending->count() }})</h2>
+    <h2 class="mt-4" id="onay">Onay bekleyen oturumlar ({{ $pending->count() }})</h2>
     <p class="text-muted">Onaylanana kadar bu süreler öğrencinin toplamına ve velinin paneline girmez.</p>
 
     <form method="POST" action="{{ route('admin.sessions.approve-many') }}" class="mb-2">
@@ -119,9 +112,10 @@
     @foreach($pending as $bekleyen)
         @php $dakika = $bekleyen->duration_minutes ?? $bekleyen->minutesSoFar(); @endphp
 
-        <div class="session-card mb-2">
-            <div class="d-flex align-items-center justify-content-between gap-2">
-                <div>
+        {{-- Telefonda bilgi ustte, kararlar altta; eskiden uc sutun sikisip
+             saat araligi bes satira bolunuyordu. --}}
+        <div class="approval-card mb-2">
+                <div class="approval-info">
                     <strong>{{ $bekleyen->student->name }}</strong>
                     <div class="text-muted">
                         {{ $bekleyen->table->name }} ·
@@ -149,19 +143,18 @@
                     @endif
                 </div>
 
-                <div class="d-flex align-items-center gap-2">
-                    <form method="POST" action="{{ route('admin.sessions.approve', $bekleyen) }}">
+                <div class="approval-actions">
+                    <form method="POST" action="{{ route('admin.sessions.approve', $bekleyen) }}" class="approve-form">
                         @csrf
                         <button type="submit" class="btn btn-primary">Onayla</button>
                     </form>
 
-                    <form method="POST" action="{{ route('admin.sessions.reject', $bekleyen) }}" class="d-flex align-items-center gap-2">
+                    <form method="POST" action="{{ route('admin.sessions.reject', $bekleyen) }}" class="reject-form">
                         @csrf
                         <input type="text" name="reason" class="form-control" placeholder="Red sebebi" maxlength="255" required>
                         <button type="submit" class="btn btn-danger">Reddet</button>
                     </form>
                 </div>
-            </div>
         </div>
     @endforeach
 @endif
