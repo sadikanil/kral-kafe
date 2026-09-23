@@ -81,7 +81,7 @@
                 </tr>
                 <tr>
                     <td class="text-muted">Kayıt Tarihi</td>
-                    <td>{{ $user->created_at->format('d.m.Y') }}</td>
+                    <td>{{ $user->created_at->timezone(config('kafe.timezone'))->format('d.m.Y') }}</td>
                 </tr>
             </table>
         </div>

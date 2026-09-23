@@ -68,7 +68,7 @@
                                         <td>{{ $consumption->user->name }}</td>
                                         <td>{{ $consumption->product->name }}</td>
                                         <td>{{ $consumption->quantity }}</td>
-                                        <td>{{ $consumption->consumed_at->format('H:i') }}</td>
+                                        <td>{{ $consumption->consumed_at->timezone(config('kafe.timezone'))->format('H:i') }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>

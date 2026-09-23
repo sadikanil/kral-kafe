@@ -107,12 +107,13 @@ class MonthlyBill extends Model
     public static function generateForUserMonth(User $user, int $year, int $month): self
     {
         $consumptions = Consumption::where('user_id', $user->id)
-            ->whereYear('consumed_at', $year)
-            ->whereMonth('consumed_at', $month)
+            ->inLocalMonth($year, $month)
             ->where('is_undone', false)
             ->get();
 
-        $billMonth = now()->setYear($year)->setMonth($month)->startOfMonth();
+        // now()->setMonth() ayin 31'inde tasiyordu (31 Eki'de "31 Eylul" =
+        // 1 Ekim) ve fatura yanlis aya yaziliyordu.
+        $billMonth = \Illuminate\Support\Carbon::create($year, $month, 1)->startOfDay();
 
         return self::updateOrCreate(
             [

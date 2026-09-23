@@ -84,7 +84,7 @@
                                             @break
                                     @endswitch
                                 </td>
-                                <td>{{ $user->created_at->format('d.m.Y') }}</td>
+                                <td>{{ $user->created_at->timezone(config('kafe.timezone'))->format('d.m.Y') }}</td>
                                 <td>
                                     <div class="d-flex gap-1">
                                         <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-secondary">✏️</a>

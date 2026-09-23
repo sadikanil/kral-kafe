@@ -24,22 +24,18 @@ class ReportController extends Controller
      */
     public function index()
     {
-        $year = now()->year;
-        $month = now()->month;
+        [$year, $month] = \App\Support\LocalDay::yearMonth();
 
         // Monthly stats
-        $monthlyRevenue = Consumption::whereYear('consumed_at', $year)
-            ->whereMonth('consumed_at', $month)
+        $monthlyRevenue = Consumption::inLocalMonth($year, $month)
             ->where('is_undone', false)
             ->sum('total_price');
 
-        $monthlyItems = Consumption::whereYear('consumed_at', $year)
-            ->whereMonth('consumed_at', $month)
+        $monthlyItems = Consumption::inLocalMonth($year, $month)
             ->where('is_undone', false)
             ->sum('quantity');
 
-        $activeConsumers = Consumption::whereYear('consumed_at', $year)
-            ->whereMonth('consumed_at', $month)
+        $activeConsumers = Consumption::inLocalMonth($year, $month)
             ->where('is_undone', false)
             ->distinct('user_id')
             ->count('user_id');
@@ -61,8 +57,7 @@ class ReportController extends Controller
 
         // Top consumers this month
         $topConsumers = Consumption::selectRaw('user_id, SUM(quantity) as total_items, SUM(total_price) as total_spent')
-            ->whereYear('consumed_at', $year)
-            ->whereMonth('consumed_at', $month)
+            ->inLocalMonth($year, $month)
             ->where('is_undone', false)
             ->groupBy('user_id')
             ->orderByDesc('total_spent')

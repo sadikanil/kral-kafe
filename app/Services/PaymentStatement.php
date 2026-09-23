@@ -40,8 +40,7 @@ final class PaymentStatement
             Consumption::with('product')
                 ->where('user_id', $student->id)
                 ->where('is_undone', false)
-                ->whereYear('consumed_at', $year)
-                ->whereMonth('consumed_at', $month)
+                ->inLocalMonth($year, $month)
                 ->orderBy('consumed_at')
                 ->get(),
         );

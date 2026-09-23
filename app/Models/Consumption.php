@@ -138,7 +138,7 @@ class Consumption extends Model
      */
     public function getFormattedDateAttribute(): string
     {
-        return $this->consumed_at->format('d.m.Y H:i');
+        return $this->consumed_at->timezone(config('kafe.timezone'))->format('d.m.Y H:i');
     }
 
     /**
@@ -150,11 +150,24 @@ class Consumption extends Model
     }
 
     /**
-     * Scope for current month.
+     * KAFE saatine gore ay (README SS9.1.3). consumed_at UTC; whereMonth UTC
+     * ayina baktigi icin yerel ayin ilk 3 saati onceki aya dusuyordu.
+     * whereBetween indeksi de kullanir.
      */
+    public function scopeInLocalMonth($query, int $year, int $month)
+    {
+        return $query->whereBetween('consumed_at', \App\Support\LocalDay::monthBounds($year, $month));
+    }
+
+    /** KAFE saatine gore gun (Y-m-d). */
+    public function scopeOnLocalDay($query, string $day)
+    {
+        return $query->whereBetween('consumed_at', \App\Support\LocalDay::bounds($day));
+    }
+
+    /** Kafe saatine gore bu ay. */
     public function scopeCurrentMonth($query)
     {
-        return $query->whereMonth('consumed_at', now()->month)
-            ->whereYear('consumed_at', now()->year);
+        return $query->inLocalMonth(...\App\Support\LocalDay::yearMonth());
     }
 }

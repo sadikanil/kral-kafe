@@ -34,7 +34,7 @@ class DashboardController extends Controller
 
         // Today's consumptions
         $todayConsumptions = Consumption::with('user', 'product', 'location')
-            ->whereDate('consumed_at', today())
+            ->onLocalDay(\App\Support\LocalDay::today())
             ->where('is_undone', false)
             ->orderBy('consumed_at', 'desc')
             ->limit(10)
@@ -42,8 +42,7 @@ class DashboardController extends Controller
 
         // Top products this month
         $topProducts = Consumption::selectRaw('product_id, SUM(quantity) as total_quantity, SUM(total_price) as total_revenue')
-            ->whereMonth('consumed_at', now()->month)
-            ->whereYear('consumed_at', now()->year)
+            ->currentMonth()
             ->where('is_undone', false)
             ->groupBy('product_id')
             ->orderByDesc('total_quantity')

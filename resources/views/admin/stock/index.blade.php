@@ -59,7 +59,7 @@
                         <tbody>
                             @foreach($unresolvedDiscrepancies as $discrepancy)
                                 <tr>
-                                    <td>{{ $discrepancy->created_at->format('d.m.Y H:i') }}</td>
+                                    <td>{{ $discrepancy->created_at->timezone(config('kafe.timezone'))->format('d.m.Y H:i') }}</td>
                                     <td>{{ $discrepancy->location->name ?? '-' }}</td>
                                     <td>{{ $discrepancy->product->name ?? '-' }}</td>
                                     <td>
@@ -108,7 +108,7 @@
                         <tbody>
                             @foreach($recentRecords as $record)
                                 <tr>
-                                    <td>{{ $record->recorded_at->format('d.m.Y H:i') }}</td>
+                                    <td>{{ $record->recorded_at->timezone(config('kafe.timezone'))->format('d.m.Y H:i') }}</td>
                                     <td>{{ $record->location->name }}</td>
                                     <td>{{ $record->product->name }}</td>
                                     <td>{{ $record->quantity }}</td>

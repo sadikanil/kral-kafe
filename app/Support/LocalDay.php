@@ -47,6 +47,19 @@ class LocalDay
     }
 
     /**
+     * Kafenin saatine gore bu yil ve ay. now()->month UTC ayidir; yerel
+     * ayin ilk 3 saatinde bir onceki ayi verirdi.
+     *
+     * @return array{0:int,1:int}
+     */
+    public static function yearMonth(): array
+    {
+        $simdi = Carbon::now(self::timezone());
+
+        return [$simdi->year, $simdi->month];
+    }
+
+    /**
      * Bir yerel gunun baslangic ve bitis ani.
      *
      * @return array{0:Carbon,1:Carbon}

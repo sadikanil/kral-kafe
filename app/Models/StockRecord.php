@@ -116,6 +116,7 @@ class StockRecord extends Model
      */
     public function scopeToday($query)
     {
-        return $query->whereDate('recorded_at', today());
+        // Kafe saatine gore bugun; whereDate UTC gunune bakardi.
+        return $query->whereBetween('recorded_at', \App\Support\LocalDay::bounds(\App\Support\LocalDay::today()));
     }
 }

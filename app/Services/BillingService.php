@@ -36,8 +36,7 @@ class BillingService
     {
         $consumptions = Consumption::with('product', 'location')
             ->where('user_id', $user->id)
-            ->whereYear('consumed_at', $year)
-            ->whereMonth('consumed_at', $month)
+            ->inLocalMonth($year, $month)
             ->where('is_undone', false)
             ->orderBy('consumed_at', 'desc')
             ->get();
@@ -53,7 +52,7 @@ class BillingService
         })->values();
 
         $byDay = $consumptions->groupBy(function ($item) {
-            return $item->consumed_at->format('Y-m-d');
+            return \App\Support\LocalDay::of($item->consumed_at);
         })->map(function ($items, $date) {
             return [
                 'date' => $date,
@@ -110,8 +109,7 @@ class BillingService
     public function exportDetailedToCsv(int $year, int $month): string
     {
         $consumptions = Consumption::with('user', 'product', 'location')
-            ->whereYear('consumed_at', $year)
-            ->whereMonth('consumed_at', $month)
+            ->inLocalMonth($year, $month)
             ->where('is_undone', false)
             ->orderBy('consumed_at')
             ->get();
@@ -120,7 +118,7 @@ class BillingService
 
         foreach ($consumptions as $c) {
             $csv .= implode(',', [
-                $c->consumed_at->format('d.m.Y H:i'),
+                $c->consumed_at->timezone(config('kafe.timezone'))->format('d.m.Y H:i'),
                 '"' . $c->user->name . '"',
                 '"' . $c->product->name . '"',
                 '"' . $c->location->name . '"',
@@ -162,16 +160,11 @@ class BillingService
      */
     public function getDashboardStats(): array
     {
-        $currentMonth = now()->month;
-        $currentYear = now()->year;
-
-        $thisMonthTotal = Consumption::whereYear('consumed_at', $currentYear)
-            ->whereMonth('consumed_at', $currentMonth)
+        $thisMonthTotal = Consumption::currentMonth()
             ->where('is_undone', false)
             ->sum('total_price');
 
-        $thisMonthItems = Consumption::whereYear('consumed_at', $currentYear)
-            ->whereMonth('consumed_at', $currentMonth)
+        $thisMonthItems = Consumption::currentMonth()
             ->where('is_undone', false)
             ->sum('quantity');
 
@@ -179,7 +172,7 @@ class BillingService
             ->where('subscription_status', 'active')
             ->count();
 
-        $todayTotal = Consumption::whereDate('consumed_at', today())
+        $todayTotal = Consumption::onLocalDay(\App\Support\LocalDay::today())
             ->where('is_undone', false)
             ->sum('total_price');
 

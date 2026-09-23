@@ -41,7 +41,7 @@
     <!-- Üst Durum Uyarısı -->
     @if($discrepancy->resolved)
         <div class="alert alert-success mb-4">
-            ✅ Bu tutarsızlık {{ $discrepancy->resolved_at?->format('d.m.Y H:i') ?? '-' }} tarihinde
+            ✅ Bu tutarsızlık {{ $discrepancy->resolved_at?->timezone(config('kafe.timezone'))->format('d.m.Y H:i') ?? '-' }} tarihinde
             {{ $discrepancy->resolver?->name ?? 'bilinmeyen yönetici' }} tarafından çözümlendi.
         </div>
     @else
@@ -108,7 +108,7 @@
                 </tr>
                 <tr>
                     <td class="text-muted">Tespit Tarihi</td>
-                    <td>{{ $discrepancy->detected_at?->format('d.m.Y H:i') ?? $discrepancy->created_at->format('d.m.Y H:i') }}</td>
+                    <td>{{ $discrepancy->detected_at?->timezone(config('kafe.timezone'))->format('d.m.Y H:i') ?? $discrepancy->created_at->timezone(config('kafe.timezone'))->format('d.m.Y H:i') }}</td>
                 </tr>
                 <tr>
                     <td class="text-muted">Durum</td>
@@ -125,7 +125,7 @@
                     </tr>
                     <tr>
                         <td class="text-muted">Çözüm Tarihi</td>
-                        <td>{{ $discrepancy->resolved_at?->format('d.m.Y H:i') ?? '-' }}</td>
+                        <td>{{ $discrepancy->resolved_at?->timezone(config('kafe.timezone'))->format('d.m.Y H:i') ?? '-' }}</td>
                     </tr>
                 @endif
             </table>

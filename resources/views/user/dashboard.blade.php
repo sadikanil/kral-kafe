@@ -96,7 +96,7 @@
                         <tbody>
                             @foreach($recentConsumptions as $consumption)
                                 <tr>
-                                    <td>{{ $consumption->consumed_at->format('d.m.Y H:i') }}</td>
+                                    <td>{{ $consumption->consumed_at->timezone(config('kafe.timezone'))->format('d.m.Y H:i') }}</td>
                                     <td>{{ $consumption->product->name }}</td>
                                     <td>
                                         <span class="badge badge-info">{{ $consumption->location->name }}</span>

@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 627 test / 1546 doğrulama yeşil._
+_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 647 test / 1575 doğrulama yeşil._
 
 ---
 
@@ -40,6 +40,9 @@ _Son güncelleme: 23 Eylül 2026 · Laravel 12 · 627 test / 1546 doğrulama ye�
 - [x] **24 · Esneme hatırlatıcıları** — aralıksız çalışmada 30 dk'da göz/boyun, 60 dk'da kalk-esne, 2 saatte 15 dk mola önerisi. Kaynak: [Wu 2023](https://onlinelibrary.wiley.com/doi/full/10.1111/sms.14277), [AOA 20-20-20](https://www.aoa.org/AOA/Images/Patients/Eye%20Conditions/20-20-20-rule.pdf), [Albulescu 2022](https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0272460).
 - [x] **25 · Özel ders takvimi** — admin kullanıcı sayfasından haftalık saat ekler, tek dersi iptal eder/taşır. Öğrenci takviminde, veli çocuk sayfasında görür.
 - [x] **26 · Adisyon sadeleştirme** — öğrenci yer seçmez (stok en dolu yerden düşer); lokasyon QR'ları kalktı; ürün formunda "nerede, kaç adet".
+- [x] **Saat dilimi** — fatura, Ödemeler, raporlar, paneller ay/gün sınırını ve saati kafe saatiyle (İstanbul) kullanıyor. 31'inde üretilen faturanın yanlış aya düşmesi de düzeldi.
+- [x] **`brashlab` remote'u kaldırıldı** — `.git` 30 MB → 1,1 MB (§13.2).
+- [ ] **Frankfurt'a taşıma** — §12.7 (senin adımların + benim adımlarım).
 - [x] **27 · Bildirim zili** — herkesin üst barında 🔔 + okunmamış sayısı + son bildirimler; "Tümü" okundu sayar. Stok sayımı 7 günü geçince admin'e (sayım yoksa 7 günde bir tekrar).
 
 ---
@@ -2236,7 +2239,7 @@ taşınırken `git filter-branch` ile geçmişten temizlendiler; depo 21 MB'tan
 Geçmiş yeniden yazıldığı için **eski ve yeni commit SHA'ları farklı**. Bu,
 aşağıdaki tuzağın kaynağı.
 
-### 13.2 Kalan tuzak: `brashlab` remote'u
+### 13.2 ~~Kalan tuzak: `brashlab` remote'u~~ · ✅ 23 Eylül 2026'da kaldırıldı
 
 `brashlab` remote'u silinmedi, yalnızca adı değiştirildi. Dolayısıyla depoda
 **yeniden yazılmadan önceki geçmişe işaret eden canlı bir ref** duruyor:

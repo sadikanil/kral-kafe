@@ -44,8 +44,7 @@ class DashboardController extends Controller
         // Monthly summary for current year
         $monthlySummary = $this->billingService->getUserMonthlySummary(
             $user,
-            now()->year,
-            now()->month
+            ...LocalDay::yearMonth()
         );
 
         return view('user.dashboard', [

@@ -108,7 +108,7 @@
                                         {{ $bill->status_name }}
                                     </span>
                                 </td>
-                                <td class="text-muted">{{ $bill->generated_at?->format('d.m.Y H:i') ?? '—' }}</td>
+                                <td class="text-muted">{{ $bill->generated_at?->timezone(config('kafe.timezone'))->format('d.m.Y H:i') ?? '—' }}</td>
                             </tr>
                         @empty
                             <tr>

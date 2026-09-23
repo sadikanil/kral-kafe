@@ -304,8 +304,7 @@ class User extends Authenticatable
     public function getCurrentMonthTotal(): float
     {
         return $this->consumptions()
-            ->whereMonth('consumed_at', now()->month)
-            ->whereYear('consumed_at', now()->year)
+            ->currentMonth()
             ->where('is_undone', false)
             ->sum('total_price');
     }
@@ -316,8 +315,7 @@ class User extends Authenticatable
     public function getCurrentMonthItemCount(): int
     {
         return $this->consumptions()
-            ->whereMonth('consumed_at', now()->month)
-            ->whereYear('consumed_at', now()->year)
+            ->currentMonth()
             ->where('is_undone', false)
             ->sum('quantity');
     }

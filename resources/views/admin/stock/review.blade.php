@@ -313,7 +313,7 @@
                     <div>
                         <img src="{{ $photo->photo_url }}" alt="Stok fotoğrafı"
                             style="width: 100%; height: 140px; object-fit: cover; border-radius: var(--radius); background: var(--gray-100);">
-                        <div class="mt-1 text-muted">{{ $photo->uploaded_at->format('d.m.Y H:i') }}</div>
+                        <div class="mt-1 text-muted">{{ $photo->uploaded_at->timezone(config('kafe.timezone'))->format('d.m.Y H:i') }}</div>
                         <span class="badge badge-{{ $photo->isProcessed() ? 'success' : 'warning' }}">
                             {{ $photo->isProcessed() ? 'Analiz edildi' : 'İşlenmedi' }}
                         </span>

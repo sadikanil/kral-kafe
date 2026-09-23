@@ -138,7 +138,7 @@
                                             {{ ucfirst($bill->status) }}
                                         </span>
                                     </td>
-                                    <td>{{ $bill->created_at->format('d.m.Y') }}</td>
+                                    <td>{{ $bill->created_at->timezone(config('kafe.timezone'))->format('d.m.Y') }}</td>
                                 </tr>
                             @endforeach
                         </tbody>
