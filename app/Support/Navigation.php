@@ -54,7 +54,7 @@ final class Navigation
     {
         $tercih = match ($u->role()) {
             Role::Admin => ['admin.dashboard', 'admin.live', 'admin.users.index', 'coach.plan.index'],
-            Role::Student => ['user.dashboard', 'table.scanner', 'user.tab', 'user.exams'],
+            Role::Student => ['user.dashboard', 'table.scanner', 'user.plan', 'user.tab'],
             default => [],
         };
 

@@ -438,17 +438,6 @@ class CoachPlanTest extends TestCase
         $this->actingAs($koc)->get(route('user.exam-reports.show', $rapor))->assertForbidden();
     }
 
-    public function test_a_student_sees_the_monthly_plan_on_the_dashboard(): void
-    {
-        $ogrenci = $this->ogrenci();
-        $this->haftayaGit();
-        $this->madde($ogrenci, 'Bu ay 8 deneme', PlanPeriod::Month);
-
-        $this->actingAs($ogrenci)->get(route('user.dashboard'))
-            ->assertOk()
-            ->assertSee('Bu ay 8 deneme');
-    }
-
     public function test_a_student_marks_a_monthly_item_done(): void
     {
         $ogrenci = $this->ogrenci();

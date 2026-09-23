@@ -126,7 +126,7 @@
                     <div class="text-muted">
                         {{ $bekleyen->table->name }} ·
                         {{ $bekleyen->started_at->timezone(config('kafe.timezone'))->format('H:i') }}–{{ $bekleyen->ended_at->timezone(config('kafe.timezone'))->format('H:i') }}
-                        · {{ sprintf('%ds %ddk', intdiv($dakika, 60), $dakika % 60) }}
+                        · {{ \App\Support\Duration::human($dakika) }}
                     </div>
 
                     {{--

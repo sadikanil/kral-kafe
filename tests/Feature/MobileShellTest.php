@@ -89,7 +89,8 @@ class MobileShellTest extends TestCase
 
     public function test_the_student_panel_offers_the_scanner(): void
     {
-        $this->actingAs($this->ogrenci())
+        // Masa hakki paketten gelir; paketsiz ogrenciye okuyucu sunulmaz.
+        $this->actingAs(User::factory()->student()->withPackage(\App\Models\Package::factory()->tier1())->create())
             ->get(route('user.dashboard'))
             ->assertOk()
             ->assertSee('QR Okut');

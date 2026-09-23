@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 744 test / 1817 doğrulama yeşil._
+_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 755 test / 1830 doğrulama yeşil._
 
 ---
 
@@ -60,6 +60,12 @@ Kararlar: plan **günlük** (haftalık/aylık hedef kalkar) · okul/dershane/dı
 ### Masa düzeni (23 Eyl) · ✅ bitti
 
 - [x] **32 yer, 32 QR** — 11 çift kişilik masa (`Masa 1 · A` / `Masa 1 · B` … `Masa 11 · B`) + 10 tek kişilik (`Masa 12` … `Masa 21`). QR **sandalye başına**: sistem bir QR'ı bir oturma yeri sayar (canlı ekrandaki "Boş yer", "Bu masada X oturuyor" uyarısı). Liste ve yazdırma sayı sırasında; çıktı A4'e 9 etiket, 4 sayfa. Eski deneme masaları (Masa 1–3) kodlarını ve geçmişlerini koruyarak A sandalyesi oldu.
+
+### UX/UI turu (23 Eyl)
+
+Ekranlar telefon genişliğinde (390 px) görüntülenip denetlendi.
+
+- [x] **1 · Öğrenci ekranları** — Panel "çalışma önce": üstte oturum ya da büyük "Çalışmaya başla", sonra **Bugün** (Planım'daki takvimin bugünü: okul, özel ders, deneme, plan maddesi ✓), sonra süreler. Para kartları panelden kalktı (Adisyon'da ve Ödemeler'de). Alt menü: Panel · QR Okut · Planım · Adisyon · Menü. Süre "1 sa 35 dk" (eskiden "1s 35dk", saniye gibi okunuyordu). Düzeltilen hatalar: üst barda zil ikinci satıra düşüyordu; geniş tablolar tüm sayfayı ekrandan taşırıyordu (her rolde); QR okuyucuda boş mavi şerit; paneldeki eski "raflardaki QR ile tüketim" ipucu; masasız pakete QR düğmesi; sayaçta dağınık mola düğmeleri ve kesilen ders adı; Planım'da kırılan hafta okları ve görünmeyen "plan" rengi.
 
 ---
 

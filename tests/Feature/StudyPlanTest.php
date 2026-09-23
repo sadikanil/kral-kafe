@@ -198,7 +198,8 @@ class StudyPlanTest extends TestCase
         $this->haftayaGit();
         $this->madde($ogrenci, 'Türev 40 soru');
 
-        $this->actingAs($ogrenci)->get(route('user.dashboard'))
+        // UX turu (23 Eyl): panel yalnizca BUGUNU gosterir; hafta Planim'da.
+        $this->actingAs($ogrenci)->get(route('user.plan'))
             ->assertOk()
             ->assertSee('Türev 40 soru');
     }

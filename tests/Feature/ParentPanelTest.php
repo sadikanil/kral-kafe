@@ -186,7 +186,7 @@ class ParentPanelTest extends TestCase
             ->assertSee('16.09.2026')
             ->assertSee('10:00')
             ->assertSee('12:30')
-            ->assertSee('2s 30dk')
+            ->assertSee('2 sa 30 dk')
             ->assertSee('Pencere Kenarı')
             ->assertSee('Son geliş');
     }
@@ -275,7 +275,7 @@ class ParentPanelTest extends TestCase
         $this->actingAs($veli)->get('/veli')
             ->assertOk()
             ->assertSee('Haftalık hedef')
-            ->assertSee('3s 0dk / 10s 0dk');
+            ->assertSee('3 sa / 10 sa');
     }
 
     public function test_the_parent_panel_has_no_writing_routes(): void

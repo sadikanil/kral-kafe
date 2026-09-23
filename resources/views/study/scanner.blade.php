@@ -34,9 +34,9 @@
         <video id="js-scanner-video" playsinline muted></video>
     </div>
 
-    <div id="js-scanner-durum" class="alert alert-info" hidden></div>
+    <div id="js-scanner-durum" class="alert alert-info mt-3" hidden></div>
 
-    <div class="session-card">
+    <div class="session-card mt-3">
         <strong>Masadaki kodu yaz</strong>
         <p class="text-muted">Kamera açılmazsa, masadaki etikette QR'ın altında yazan kodu buraya yazabilirsin.</p>
 

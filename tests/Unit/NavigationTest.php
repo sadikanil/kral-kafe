@@ -96,4 +96,18 @@ class NavigationTest extends TestCase
 
         $this->assertSame(['user.dashboard', 'table.scanner'], array_slice(array_column(Navigation::quick($ogrenci), 'route'), 0, 2));
     }
+
+    /**
+     * UX turu (23 Eyl): Planim ve Adisyon her gun acilir, deneme takvimi
+     * ayda birkac kez. Deneme takvimi Menu'de kalir.
+     */
+    public function test_the_student_quick_bar_has_the_daily_pages(): void
+    {
+        $ogrenci = User::factory()->student()->withPackage(Package::factory()->tier1())->create();
+
+        $this->assertSame(
+            ['user.dashboard', 'table.scanner', 'user.plan', 'user.tab'],
+            array_column(Navigation::quick($ogrenci), 'route'),
+        );
+    }
 }

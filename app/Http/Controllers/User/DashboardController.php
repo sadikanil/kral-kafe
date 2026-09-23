@@ -3,54 +3,37 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use App\Models\Consumption;
 use App\Models\ExamEvent;
-use App\Services\BillingService;
 use App\Models\StudyGoal;
 use App\Models\StudySession;
 use App\Services\StudySessionService;
 use App\Services\StudyStats;
 use App\Support\LocalDay;
+use App\Support\WeekPlan;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * Ogrenci paneli. UX turu (23 Eyl): "calisma once" - ustte oturum ya da
+ * baslat dugmesi, sonra BUGUN (takvimin bugunu), sonra sureler. Para
+ * kartlari ve tuketim listesi Adisyon'da ve Odemeler'de; panelde tekrar
+ * etmiyor.
+ */
 class DashboardController extends Controller
 {
-    protected BillingService $billingService;
-
-    public function __construct(BillingService $billingService)
-    {
-        $this->billingService = $billingService;
-    }
-
-    /**
-     * Show user dashboard.
-     */
     public function index(StudyStats $istatistik)
     {
         $user = Auth::user();
-
-        // Current month summary
-        $currentMonthTotal = $user->getCurrentMonthTotal();
-        $currentMonthItems = $user->getCurrentMonthItemCount();
-
-        // Recent consumptions
-        $recentConsumptions = Consumption::with('product', 'location')
-            ->where('user_id', $user->id)
-            ->where('is_undone', false)
-            ->orderBy('consumed_at', 'desc')
-            ->limit(20)
-            ->get();
-
-        // Monthly summary for current year
-        $monthlySummary = $this->billingService->getUserMonthlySummary(
-            $user,
-            ...LocalDay::yearMonth()
-        );
 
         return view('user.dashboard', [
             'user' => $user,
             // Acik calisma oturumu: ogrenci masaya donmeden panelden bitirebilsin.
             'openSession' => app(StudySessionService::class)->openFor($user),
+            // Masasiz paket (yalnizca deneme) okuyucuya giremez; panel
+            // onu oraya cagirmasin.
+            'canScan' => $user->entitlements()->table,
+            // Bugun: sabit program, ozel ders, deneme ve plan maddeleri.
+            // Planim'daki takvimle AYNI hesap (WeekPlan) ve ayni parca.
+            'today' => collect(WeekPlan::for($user, LocalDay::today()))->firstWhere('isToday', true),
             // Calisma istatistikleri (Dalga 5). Hedef yoksa null gecer ve
             // ilerleme cubugu hic cizilmez - bos bir cubuk "hedefin yok" demez,
             // "hedefin var ama hic calismadin" der.
@@ -70,15 +53,6 @@ class DashboardController extends Controller
                 $user,
                 ...LocalDay::weekBounds(LocalDay::today()),
             ),
-            // Calisma plani (Dalga 13; aylik donem Dalga 14). Hedefin
-            // yaninda "ne" sorusunun cevabi. Iki donem ayri listeleniyor
-            // cunku "bu hafta" ile "bu ay" farkli aciliyor: haftalik madde
-            // bugun icin, aylik madde ayin geneli icin anlamli.
-            'planItems' => \App\Models\StudyPlanItem::forPeriod(
-                $user,
-                \App\Enums\PlanPeriod::Week,
-                \App\Enums\PlanPeriod::Week->startFor(LocalDay::today()),
-            )->with('subject')->orderBy('id')->get(),
             // Paylasilan koc notlari (Dalga 14b). Ogrenci veliyle AYNI
             // kumeyi gorur (SS6.1-3): gizli izleme yok.
             'coachNotes' => \App\Models\CoachNote::forStudent($user)
@@ -87,11 +61,6 @@ class DashboardController extends Controller
                 ->orderByDesc('created_at')
                 ->limit(5)
                 ->get(),
-            'monthlyPlanItems' => \App\Models\StudyPlanItem::forPeriod(
-                $user,
-                \App\Enums\PlanPeriod::Month,
-                \App\Enums\PlanPeriod::Month->startFor(LocalDay::today()),
-            )->with('subject')->orderBy('id')->get(),
             // Onay bekleyen / reddedilen oturumlar (Dalga 9): yukaridaki
             // sureler yalnizca ONAYLI oturumlari sayiyor. Bu liste olmadan
             // ogrenci calistigi halde sifir goruyor ve sebebini bilmiyor.
@@ -107,10 +76,6 @@ class DashboardController extends Controller
             // YKS bir deneme degil, hedefin kendisi.
             'officialExam' => ExamEvent::upcomingOfficial()->first(),
             'subscription' => $user->currentSubscription(),
-            'currentMonthTotal' => $currentMonthTotal,
-            'currentMonthItems' => $currentMonthItems,
-            'recentConsumptions' => $recentConsumptions,
-            'monthlySummary' => $monthlySummary,
         ]);
     }
 }

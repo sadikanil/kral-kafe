@@ -3,21 +3,27 @@
 @section('title', 'Panel - Kral Kafe')
 @section('page-title', 'Hoş Geldin, ' . auth()->user()->name . '!')
 
+{{--
+    Ogrenci paneli. UX turu (23 Eyl): "calisma once".
+      1. Acik oturum ya da "Calismaya basla" (QR)
+      2. Bugun: takvimin bugunu (sabit program, ozel ders, deneme, plan)
+      3. Sureler + haftalik hedef
+      4. Paket, ders kirilimi, zayif konular, koc notlari, sayilmayanlar
+    Para kartlari Adisyon'da, tuketim dokumu Odemeler'de.
+--}}
+@php
+    use App\Support\Duration;
+    $hedefDakika = $weeklyGoal?->target_minutes;
+    $yuzde = $hedefDakika ? min(100, (int) round($weekMinutes / $hedefDakika * 100)) : null;
+    $bugunMaddeleri = $today['items'];
+@endphp
+
 @section('content')
-    @include('exams._geri-sayim')
-
-    @include('exams._hatirlatici', ['calendarRoute' => 'user.exams'])
-
-    @unless($openSession)
-        {{-- Gunun ilk dokunusu: kamerayi uygulamanin icinde acar. --}}
-        <a href="{{ route('table.scanner') }}" class="btn btn-primary mb-3">QR Okut</a>
-    @endunless
-
     @if($openSession)
         <div class="session-card mb-3">
-            <div class="d-flex align-items-center gap-2 mb-2">
+            <div class="d-flex align-items-center gap-2 mb-2" style="justify-content: center;">
                 <span class="live-dot"></span>
-                <strong>Çalışma sürüyor — {{ $openSession->table->name }}</strong>
+                <strong>Çalışıyorsun · {{ $openSession->table->name }}</strong>
             </div>
 
             @php $dakika = $openSession->minutesSoFar(); @endphp
@@ -28,153 +34,69 @@
             </p>
 
             {{-- Dalga 23: duraklat, mola, ders etiketi sayacta. --}}
-            <a href="{{ route('session.timer') }}" class="btn btn-primary btn-block mb-2">⏱ Sayaca git</a>
-
-            <form action="{{ route('session.end') }}" method="POST">
-                @csrf
-                <button type="submit" class="btn btn-danger">Çalışmayı Bitir</button>
-            </form>
-        </div>
-    @endif
-    @if($subscription)
-        @php $subscription->syncPaymentStatus(); @endphp
-        <div class="card mb-3">
-            <div class="card-body d-flex justify-content-between align-items-center" style="flex-wrap: wrap; gap: 8px;">
-                <div>
-                    🎫 <strong>{{ $subscription->package->name }}</strong>
-                    <span class="text-muted">· {{ $subscription->starts_on->format('d.m.Y') }} – {{ $subscription->ends_on->format('d.m.Y') }}</span>
-                </div>
-                <span class="badge badge-{{ $subscription->payment_status->badgeClass() }}">
-                    Ödeme: {{ $subscription->payment_status->label() }}
-                </span>
+            <div class="session-actions">
+                <a href="{{ route('session.timer') }}" class="btn btn-primary">⏱ Sayaca git</a>
+                <form action="{{ route('session.end') }}" method="POST"
+                      onsubmit="return confirm('Bugünkü çalışmayı bitirmek istiyor musun?')">
+                    @csrf
+                    <button type="submit" class="btn btn-secondary">Bitir</button>
+                </form>
             </div>
         </div>
+    @elseif($canScan)
+        {{-- Gunun ilk dokunusu: kamerayi uygulamanin icinde acar. --}}
+        <a href="{{ route('table.scanner') }}" class="start-card mb-3">
+            <span class="start-card-icon" aria-hidden="true">📷</span>
+            <span>
+                <span class="start-card-title">Çalışmaya başla</span>
+                <span class="start-card-sub">Masandaki QR'ı okut</span>
+            </span>
+        </a>
     @endif
 
-    <!-- Bu Ay Özeti -->
-    <div class="stats-grid">
-        <div class="stat-card animate-slide-up">
-            <div class="stat-icon primary">💰</div>
-            <div class="stat-content">
-                <div class="stat-value">{{ number_format($currentMonthTotal, 2, ',', '.') }} ₺</div>
-                <div class="stat-label">Bu Ay Toplam</div>
-            </div>
-        </div>
+    @include('exams._geri-sayim')
 
-        <div class="stat-card animate-slide-up" style="animation-delay: 50ms">
-            <div class="stat-icon success">📦</div>
-            <div class="stat-content">
-                <div class="stat-value">{{ $currentMonthItems }}</div>
-                <div class="stat-label">Ürün Adedi</div>
-            </div>
-        </div>
-    </div>
+    @include('exams._hatirlatici', ['calendarRoute' => 'user.exams'])
 
-    <!-- Son Tüketimler -->
-    <div class="card animate-slide-up" style="animation-delay: 100ms">
+    <div class="card mb-3">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h4>Son Tüketimlerim</h4>
-            <a href="{{ route('user.payments') }}" class="btn btn-sm btn-secondary">Tümünü Gör</a>
+            <h4>
+                Bugün
+                @if($bugunMaddeleri->isNotEmpty())
+                    <span class="badge {{ $bugunMaddeleri->every(fn ($m) => $m->status === 'done') ? 'badge-success' : 'badge-info' }}">
+                        {{ $bugunMaddeleri->where('status', 'done')->count() }} / {{ $bugunMaddeleri->count() }}
+                    </span>
+                @endif
+            </h4>
+            <a href="{{ route('user.plan') }}" class="btn btn-sm btn-secondary">Haftam →</a>
         </div>
-        <div class="card-body p-0">
-            @if($recentConsumptions->isEmpty())
-                <div class="p-4 text-center text-muted">
-                    Henüz tüketim kaydınız bulunmuyor.
-                </div>
-            @else
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Tarih</th>
-                                <th>Ürün</th>
-                                <th>Lokasyon</th>
-                                <th>Adet</th>
-                                <th>Tutar</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($recentConsumptions as $consumption)
-                                <tr>
-                                    <td>{{ $consumption->consumed_at->timezone(config('kafe.timezone'))->format('d.m.Y H:i') }}</td>
-                                    <td>{{ $consumption->product->name }}</td>
-                                    <td>
-                                        <span class="badge badge-info">{{ $consumption->location->name }}</span>
-                                    </td>
-                                    <td>{{ $consumption->quantity }}</td>
-                                    <td>{{ $consumption->formatted_total }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
+        <div class="card-body">
+            @include('_plan-gunu', ['gun' => $today, 'mode' => 'student', 'bos' => 'Bugün için plan yok.'])
         </div>
     </div>
 
-    <!-- Bu Ay Ürün Dağılımı -->
-    @if(!empty($monthlySummary['by_product']) && count($monthlySummary['by_product']) > 0)
-        <div class="card mt-4 animate-slide-up" style="animation-delay: 150ms">
-            <div class="card-header">
-                <h4>Bu Ay Tüketim Dağılımı</h4>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Ürün</th>
-                                <th>Adet</th>
-                                <th>Toplam</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($monthlySummary['by_product'] as $product)
-                                <tr>
-                                    <td>{{ $product['product_name'] }}</td>
-                                    <td>{{ $product['quantity'] }}</td>
-                                    <td>{{ number_format($product['total'], 2, ',', '.') }} ₺</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="mini-stats mb-2">
+        <div class="mini-stat">
+            <div class="mini-stat-value">{{ Duration::human($todayMinutes) }}</div>
+            <div class="mini-stat-label">Bugün</div>
         </div>
-    @endif
-
-    @php
-        use App\Support\Duration;
-        $hedefDakika = $weeklyGoal?->target_minutes;
-        $yuzde = $hedefDakika ? min(100, (int) round($weekMinutes / $hedefDakika * 100)) : null;
-    @endphp
-
-    <div class="d-flex gap-2 mb-3" style="flex-wrap: wrap;">
-        <div class="card" style="flex: 1; min-width: 140px;">
-            <div class="card-body text-center">
-                <div class="session-timer">{{ Duration::human($todayMinutes) }}</div>
-                <div class="text-muted">Bugün</div>
-            </div>
+        <div class="mini-stat">
+            <div class="mini-stat-value">{{ Duration::human($weekMinutes) }}</div>
+            <div class="mini-stat-label">Bu hafta</div>
         </div>
-        <div class="card" style="flex: 1; min-width: 140px;">
-            <div class="card-body text-center">
-                <div class="session-timer">{{ Duration::human($weekMinutes) }}</div>
-                <div class="text-muted">Bu hafta</div>
-            </div>
+        <div class="mini-stat">
+            <div class="mini-stat-value">{{ Duration::human($monthMinutes) }}</div>
+            <div class="mini-stat-label">Bu ay</div>
         </div>
-        <div class="card" style="flex: 1; min-width: 140px;">
-            <div class="card-body text-center">
-                <div class="session-timer">{{ Duration::human($monthMinutes) }}</div>
-                <div class="text-muted">Bu ay</div>
-            </div>
-        </div>
-        <div class="card" style="flex: 1; min-width: 140px;">
-            <div class="card-body text-center">
-                <div class="session-timer">{{ $streak }} gün</div>
-                <div class="text-muted">Üst üste</div>
-            </div>
+        <div class="mini-stat">
+            <div class="mini-stat-value">{{ $streak }} gün</div>
+            <div class="mini-stat-label">Üst üste</div>
         </div>
     </div>
+    {{-- Sureler yalnizca ONAYLI oturumlari sayar (Dalga 9); acik oturum
+         sayacta. Bu satir olmadan ogrenci calisirken "Bugun 0 dk" gorup
+         sebebini bilmiyordu. --}}
+    <p class="text-muted mb-3" style="font-size: 0.8125rem;">Süreler görevli onayından sonra eklenir.</p>
 
     {{-- Hedef yoksa cubuk HIC cizilmez: bos bir cubuk "hedefin yok" demez,
          "hedefin var ama hic calismadin" der. --}}
@@ -195,44 +117,20 @@
         </div>
     @endif
 
-    {{--
-        Calisma plani (Dalga 13; aylik donem Dalga 14). Hedef cubugunun
-        ALTINDA: once "ne kadar", sonra "ne". Madde yoksa bolum hic
-        cizilmez - bos bir liste "plansizsin" demez, "plan var ama bos" der.
-
-        Iki donem ayri listeleniyor cunku farkli aciliyorlar: haftalik madde
-        bugun icin, aylik madde ayin geneli icin anlamli. Tek listede
-        birlestirmek, ay basindaki bir aylik hedefi "bugun yapilacak" gibi
-        gosterirdi.
-    --}}
-    @foreach([['Bu haftanın planı', $planItems], ['Bu ayın planı', $monthlyPlanItems]] as [$baslik, $liste])
-    @if($liste->isNotEmpty())
-        @php $tamamlanan = $liste->where('status', 'done')->count(); @endphp
-
-        <h2 class="mt-4">{{ $baslik }} ({{ $tamamlanan }} / {{ $liste->count() }})
-            <a href="{{ route('user.plan') }}" class="btn btn-sm btn-secondary">🗓️ Takvimde gör</a></h2>
-
-        @foreach($liste as $madde)
-            <div class="session-card mb-2">
-                <div class="d-flex align-items-center justify-content-between gap-2">
-                    <div>
-                        <strong>{{ $madde->title }}</strong>
-                        <div class="text-muted">{{ $madde->subject?->name ?? 'Genel' }}</div>
-                    </div>
-
-                    @if($madde->status === 'done')
-                        <span class="badge badge-success">Tamamlandı</span>
-                    @else
-                        <form method="POST" action="{{ route('user.study-plan.complete', $madde) }}">
-                            @csrf
-                            <button type="submit" class="btn btn-primary">Tamamladım</button>
-                        </form>
-                    @endif
+    @if($subscription)
+        @php $subscription->syncPaymentStatus(); @endphp
+        <div class="card mb-3">
+            <div class="card-body d-flex justify-content-between align-items-center" style="flex-wrap: wrap; gap: 8px;">
+                <div>
+                    🎫 <strong>{{ $subscription->package->name }}</strong>
+                    <span class="text-muted">· bitiş {{ $subscription->ends_on->locale('tr')->translatedFormat('j F') }}</span>
                 </div>
+                <span class="badge badge-{{ $subscription->payment_status->badgeClass() }}">
+                    Ödeme: {{ $subscription->payment_status->label() }}
+                </span>
             </div>
-        @endforeach
+        </div>
     @endif
-    @endforeach
 
     {{--
         Bu haftanin ders kirilimi (Dalga 17a). "12 saat calisti" yerine
@@ -256,8 +154,6 @@
 
     @include('_koc-notlari')
 
-
-
     {{--
         Onay bekleyen / reddedilen oturumlar (Dalga 9).
 
@@ -277,7 +173,7 @@
                         <strong>{{ $oturum->table->name }}</strong>
                         <div class="text-muted">
                             {{ $oturum->started_at->timezone(config('kafe.timezone'))->format('d.m H:i') }}–{{ $oturum->ended_at->timezone(config('kafe.timezone'))->format('H:i') }}
-                            · {{ sprintf('%ds %ddk', intdiv($dakika, 60), $dakika % 60) }}
+                            · {{ \App\Support\Duration::human($dakika) }}
                         </div>
                         @if($oturum->rejection_reason)
                             <div class="text-muted">{{ $oturum->rejection_reason }}</div>
@@ -291,11 +187,4 @@
             </div>
         @endforeach
     @endif
-
-    <!-- Bilgilendirme -->
-    <div class="alert alert-info mt-4 animate-slide-up" style="animation-delay: 200ms">
-        💡 <strong>Nasıl tüketim eklerim?</strong><br>
-        Kafe içindeki raflarda, dolaplarda veya buzdolaplarında bulunan QR kodları telefonunuzla tarayarak kolayca tüketim
-        kaydı ekleyebilirsiniz.
-    </div>
 @endsection

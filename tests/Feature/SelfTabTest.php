@@ -55,10 +55,11 @@ class SelfTabTest extends TestCase
         $this->assertSame(2, $kayit->quantity);
         $this->assertSame('50.00', (string) $kayit->total_price);
 
-        // Aylik toplam ve panel gecmisi degisiklik olmadan bunu da sayar.
+        // Aylik toplam ve Odemeler dokumu degisiklik olmadan bunu da sayar
+        // (UX turu, 23 Eyl: tuketim listesi panelden Odemeler'e tasindi).
         $this->assertSame(50.0, (float) $ogrenci->getCurrentMonthTotal());
         $this->actingAs($ogrenci)->get('/kullanici/adisyon')->assertOk()->assertSee('Bugün eklediklerim')->assertSee('Geri al');
-        $this->actingAs($ogrenci)->get('/kullanici/panel')->assertOk()->assertSee('Self Adisyon');
+        $this->actingAs($ogrenci)->get(route('user.payments'))->assertOk()->assertSee('Filtre Kahve ×2');
     }
 
     public function test_an_inactive_product_or_bad_quantity_is_refused(): void

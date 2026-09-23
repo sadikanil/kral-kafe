@@ -41,21 +41,21 @@
         @endif
 
         @if($calisiyor)
-            <div class="d-flex gap-2 mb-2" style="justify-content: center; flex-wrap: wrap;">
+            <div class="pause-actions">
                 <form action="{{ route('session.pause') }}" method="POST">
                     @csrf <input type="hidden" name="tur" value="pause">
-                    <button type="submit" class="btn btn-secondary btn-lg">⏸ Duraklat</button>
+                    <button type="submit" class="btn btn-secondary"><span class="pause-icon">⏸</span>Duraklat</button>
                 </form>
                 <form action="{{ route('session.pause') }}" method="POST" id="molaFormu">
                     @csrf <input type="hidden" name="tur" value="break">
-                    <button type="submit" class="btn btn-warning btn-lg">☕ 15 dk mola</button>
+                    <button type="submit" class="btn btn-warning"><span class="pause-icon">☕</span>15 dk mola</button>
                 </form>
                 <form action="{{ route('session.pause') }}" method="POST">
                     @csrf <input type="hidden" name="tur" value="lunch">
-                    <button type="submit" class="btn btn-warning btn-lg">🍽 Öğle arası (1 saat)</button>
+                    <button type="submit" class="btn btn-warning"><span class="pause-icon">🍽</span>Öğle arası</button>
                 </form>
             </div>
-            <p class="text-muted" style="font-size:.85rem">Öğle arasında kafeden çıkabilirsin.</p>
+            <p class="text-muted" style="font-size:.85rem">Öğle arası 1 saat; bu sürede kafeden çıkabilirsin.</p>
         @else
             <form action="{{ route('session.resume') }}" method="POST" class="mb-2" id="devamFormu">
                 @csrf
@@ -70,7 +70,7 @@
         <div class="card-body">
             <form action="{{ route('session.logs.store') }}" method="POST" class="log-form">
                 @csrf
-                <select name="subject_id" class="form-control" aria-label="Ders">
+                <select name="subject_id" class="form-control log-subject" aria-label="Ders">
                     <option value="">Genel</option>
                     @foreach($subjects as $ders)
                         <option value="{{ $ders->id }}" @selected((int) old('subject_id', $session->subject_id) === $ders->id)>{{ $ders->name }}</option>
@@ -78,7 +78,7 @@
                 </select>
                 <input type="number" name="amount" class="form-control" min="1" max="10000" inputmode="numeric"
                        placeholder="200" value="{{ old('amount') }}" aria-label="Sayı" required>
-                <select name="unit" class="form-control" aria-label="Birim">
+                <select name="unit" class="form-control log-unit" aria-label="Birim">
                     @foreach(\App\Enums\StudyUnit::cases() as $birim)
                         <option value="{{ $birim->value }}" @selected(old('unit') === $birim->value)>{{ $birim->label() }}</option>
                     @endforeach
@@ -99,7 +99,7 @@
                     @foreach($logs as $kayit)
                         <li>
                             <span class="text-muted">{{ $kayit->created_at->timezone(config('kafe.timezone'))->format('H:i') }}</span>
-                            <span class="log-label">{{ $kayit->label() }} ✓
+                            <span class="log-label">{{ $kayit->label() }}
                                 @if($kayit->note)<small class="text-muted">— {{ $kayit->note }}</small>@endif
                             </span>
                             @if($kayit->session?->ended_at === null)

@@ -597,6 +597,10 @@ select.form-control {
 /* Main Content */
 .main-content {
     flex: 1;
+    /* Flex ogesi varsayilan olarak icerigi kadar genisler: genis bir tablo
+       tum sayfayi ekrandan tasiriyor, ust bardaki dugmeler disarida
+       kaliyordu. Tablo .table-responsive icinde kendi kaysin. */
+    min-width: 0;
     margin-left: 280px;
     min-height: 100vh;
     display: flex;
@@ -1357,10 +1361,13 @@ select.form-control {
         font-size: 1rem;
     }
 
-    /* Topbar Actions */
+    /* Topbar Actions: basligin YANINDA; sigmazsa alt satira sagda kirilir.
+       Eskiden her zaman tam genislik aliyordu - ogrencide tek bir zil icin
+       ikinci satir aciliyordu (UX turu, 23 Eyl). */
     .topbar-actions {
-        width: 100%;
+        margin-left: auto;
         justify-content: flex-end;
+        flex-wrap: wrap;
         gap: 0.5rem;
     }
 
@@ -1624,11 +1631,15 @@ select.form-control {
 
 
 /* Calisma kaydi (Dalga 28) */
+/* Ders tam satir (dar sutunda "AYT Fizi" diye kesiliyordu); altinda
+   sayi + birim, en altta not + Ekle. */
 .log-form {
     display: grid;
-    grid-template-columns: 1fr 5.5rem 6.5rem;
+    grid-template-columns: 5.5rem 1fr auto;
     gap: 0.5rem;
 }
+.log-form .log-subject { grid-column: 1 / -1; }
+.log-form .log-unit { grid-column: 2 / -1; }
 .log-form .log-note { grid-column: 1 / 3; }
 .log-list {
     list-style: none;
@@ -1749,6 +1760,27 @@ select.form-control {
     vertical-align: middle;
     padding: 0;
 }
+.cal-legend-item { white-space: nowrap; }
+.cal-dot.cal-commit { background: var(--gray-400); }
+.cal-dot.cal-lesson { background: var(--primary); }
+.cal-dot.cal-exam { background: var(--warning); }
+.cal-dot.cal-item { background: var(--info); }
+
+/* Hafta basligi: oklar ve tarih TEK satir, rozet tarihin altinda. */
+.week-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+.week-nav-title {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+}
+.week-nav-title strong { display: block; }
+.week-nav-title .badge { margin-top: 0.25rem; }
+
 .plan-form {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -1756,3 +1788,73 @@ select.form-control {
     align-items: end;
 }
 .plan-form-submit { align-self: end; }
+
+/* Gizli olan gizlidir: display veren kurallar (.alert gibi) [hidden]'i
+   ezmesin. QR okuyucuda mesaj yokken bos bir mavi serit gorunuyordu. */
+[hidden] { display: none !important; }
+
+/* Ogrenci paneli (UX turu, 23 Eyl): calisma once. */
+.start-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: #fff;
+    text-decoration: none;
+    box-shadow: var(--shadow-md);
+}
+.start-card:hover { color: #fff; box-shadow: var(--shadow-lg); }
+.start-card-icon { font-size: 2rem; line-height: 1; }
+.start-card-title { display: block; font-size: 1.125rem; font-weight: 700; }
+.start-card-sub { display: block; font-size: 0.875rem; opacity: 0.85; }
+
+.session-actions {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 0.5rem;
+}
+.session-actions .btn { width: 100%; }
+
+.mini-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+@media (max-width: 640px) {
+    .mini-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.mini-stat {
+    background: #fff;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 0.75rem 1rem;
+}
+.mini-stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+.mini-stat-label { font-size: 0.8125rem; color: var(--gray-500); }
+
+/* Sayac: uc mola dugmesi esit genislikte, simge ustte. */
+.pause-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.pause-actions form { display: flex; }
+.pause-actions .btn {
+    width: 100%;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.65rem 0.25rem;
+    font-size: 0.8125rem;
+    line-height: 1.2;
+    white-space: normal;
+}
+.pause-icon { font-size: 1.35rem; }

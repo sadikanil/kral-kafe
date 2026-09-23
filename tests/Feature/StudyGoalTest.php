@@ -169,9 +169,9 @@ class StudyGoalTest extends TestCase
         $this->actingAs($ogrenci)
             ->get(route('user.dashboard'))
             ->assertOk()
-            ->assertSee('2s 0dk')        // bugun
-            ->assertSee('5s 0dk')        // bu hafta
-            ->assertSee('10s 0dk')       // haftalik hedef
+            ->assertSee('2 sa')        // bugun
+            ->assertSee('5 sa')        // bu hafta
+            ->assertSee('10 sa')       // haftalik hedef
             ->assertSee('progress-bar', false)
             ->assertSee('2 gün');        // devamlilik serisi
 

@@ -149,10 +149,11 @@ class LocalTimeBucketsTest extends TestCase
         $this->assertSame([2026, 10], LocalDay::yearMonth());
     }
 
-    public function test_the_student_panel_summarises_the_local_month(): void
+    /** UX turu (23 Eyl): ay toplami panelden Adisyon'a tasindi. */
+    public function test_the_student_tab_summarises_the_local_month(): void
     {
-        $this->actingAs($this->ogrenci)->get(route('user.dashboard'))
-            ->assertViewHas('monthlySummary', fn ($ozet) => $ozet['month'] === 10 && (float) $ozet['total_amount'] === 45.0);
+        $this->actingAs($this->ogrenci)->get(route('user.tab'))
+            ->assertViewHas('monthTotal', fn ($toplam) => (float) $toplam === 45.0);
     }
 
     public function test_the_report_page_opens_on_the_local_month(): void
@@ -164,11 +165,11 @@ class LocalTimeBucketsTest extends TestCase
     // --- Gosterim: saatler kafe saatiyle -------------------------------------
     // Ekran goruntusu (23 Eyl): 18:33'te eklenen adisyon "15:23" gorunuyordu.
 
-    public function test_the_student_panel_shows_local_times(): void
+    public function test_the_student_tab_shows_local_times(): void
     {
-        $this->actingAs($this->ogrenci)->get(route('user.dashboard'))
-            ->assertSee('01.10.2026 00:10')
-            ->assertDontSee('30.09.2026 21:10');
+        $this->actingAs($this->ogrenci)->get(route('user.tab'))
+            ->assertSee('00:10')
+            ->assertDontSee('21:10');
     }
 
     public function test_the_admin_panel_shows_local_times(): void
