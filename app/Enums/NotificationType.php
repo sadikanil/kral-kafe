@@ -16,11 +16,15 @@ enum NotificationType: string
     /** Yarin deneme var; ogrenciye ve velisine. */
     case ExamTomorrow = 'exam_tomorrow';
 
+    /** Stok sayimi zamani geldi; yoneticiye (Dalga 27). */
+    case StockCount = 'stock_count';
+
     public function label(): string
     {
         return match ($this) {
             self::Absence => 'Devamsızlık',
             self::ExamTomorrow => 'Yarın deneme var',
+            self::StockCount => 'Stok sayımı',
         };
     }
 }

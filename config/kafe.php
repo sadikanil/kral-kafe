@@ -118,6 +118,10 @@ return [
     |
     */
 
+    // Stok sayimi hatirlatmasi (Dalga 27): son sayimdan bu kadar gun sonra
+    // yoneticiye zil bildirimi; sayim yapilmazsa her bu kadar gunde bir tekrar.
+    'stok_sayim_gun' => (int) env('KAFE_STOK_SAYIM_GUN', 7),
+
     // Degisken adi CRON_SECRET olmak ZORUNDA: Vercel Cron yalnizca bu
     // degiskeni okuyup "Authorization: Bearer" basligina koyar.
     'cron_anahtari' => (string) env('CRON_SECRET', env('KAFE_CRON_ANAHTARI', '')),

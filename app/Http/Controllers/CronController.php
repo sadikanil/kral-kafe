@@ -39,6 +39,7 @@ class CronController extends Controller
             'gun' => $gun,
             'devamsizlik' => $bildirimler->absenceNotices($gun),
             'deneme_hatirlatmasi' => $bildirimler->examReminders($gun),
+            'stok_sayimi' => $bildirimler->stockCountReminders($gun),
         ]);
     }
 }

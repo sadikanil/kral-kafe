@@ -8,13 +8,15 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 617 test / 1527 doğrulama yeşil._
+_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 627 test / 1546 doğrulama yeşil._
 
 ---
 
-## 0. Şimdiki plan (23 Eylül 2026) · ▶️ onaylandı
+## 0. Şimdiki plan (23 Eylül 2026) · ✅ bitti
 
 > Tek bakışta takip için. Biten satır `[x]` olur. Bu bölüm §1'le çelişirse **bu geçerli**.
+>
+> ⚠️ **Senin yapacağın tek şey:** Vercel → Environment Variables → `CRON_SECRET` ekle (uzun rastgele değer). Yoksa günlük bildirimler gitmez.
 
 **Paketler** — veli ayrı etiket taşımaz, çocuğunun paketini görür. Deneme adı, sonuçları ve raporları = **deneme kulübü**. Personel (admin, koç) pakete bağlı değil.
 
@@ -38,13 +40,13 @@ _Son güncelleme: 23 Eylül 2026 · Laravel 12 · 617 test / 1527 doğrulama ye�
 - [x] **24 · Esneme hatırlatıcıları** — aralıksız çalışmada 30 dk'da göz/boyun, 60 dk'da kalk-esne, 2 saatte 15 dk mola önerisi. Kaynak: [Wu 2023](https://onlinelibrary.wiley.com/doi/full/10.1111/sms.14277), [AOA 20-20-20](https://www.aoa.org/AOA/Images/Patients/Eye%20Conditions/20-20-20-rule.pdf), [Albulescu 2022](https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0272460).
 - [x] **25 · Özel ders takvimi** — admin kullanıcı sayfasından haftalık saat ekler, tek dersi iptal eder/taşır. Öğrenci takviminde, veli çocuk sayfasında görür.
 - [x] **26 · Adisyon sadeleştirme** — öğrenci yer seçmez (stok en dolu yerden düşer); lokasyon QR'ları kalktı; ürün formunda "nerede, kaç adet".
-- [ ] **27 · Bildirim zili** — herkesin üst barında zil + son bildirimler listesi; stok sayımı hatırlatması admin'e buradan düşer.
+- [x] **27 · Bildirim zili** — herkesin üst barında 🔔 + okunmamış sayısı + son bildirimler; "Tümü" okundu sayar. Stok sayımı 7 günü geçince admin'e (sayım yoksa 7 günde bir tekrar).
 
 ---
 
 ## İçindekiler
 
-0. [Şimdiki plan](#0-şimdiki-plan-23-eylül-2026--️-onaylandı) — **buradan başla**
+0. [Şimdiki plan](#0-şimdiki-plan-23-eylül-2026---bitti) — **buradan başla**
 1. [Hedef akış](#1-hedef-akış) — sistemin bütünü, uçtan uca
 2. [Akış değişiklikleri](#2-akış-değişiklikleri-22-eylül-2026) — hangi eski karar değişti
 3. [Bugün canlıda ne var](#3-bugün-canlıda-ne-var)

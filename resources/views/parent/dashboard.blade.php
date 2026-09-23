@@ -5,7 +5,7 @@
 
 @section('content')
 
-    @include('_bildirimler')
+
 
     @include('exams._geri-sayim')
 

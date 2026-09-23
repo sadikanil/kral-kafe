@@ -9,6 +9,10 @@
     $kullanici = auth()->user();
     $gruplar = \App\Support\Navigation::groups($kullanici);
     $aktif = fn (array $oge) => request()->routeIs(...explode('|', $oge['match'] ?? $oge['route']));
+
+    // Bildirim zili (Dalga 27)
+    $okunmamis = \App\Models\Notification::for($kullanici)->whereNull('read_at')->count();
+    $sonBildirimler = \App\Models\Notification::for($kullanici)->latest()->limit(6)->get();
 @endphp
 
 <head>
@@ -90,6 +94,27 @@
 
                 <div class="topbar-actions">
                     @yield('topbar-actions')
+
+                    {{-- Zil: son bildirimler altinda listelenir; "Tumu" okundu sayar. --}}
+                    <details class="notif-bell">
+                        <summary class="btn btn-icon btn-secondary" title="Bildirimler">
+                            🔔@if($okunmamis > 0)<span class="notif-count">{{ $okunmamis }}</span>@endif
+                        </summary>
+                        <div class="notif-panel">
+                            @forelse($sonBildirimler as $bildirim)
+                                <div class="notif-item {{ $bildirim->read_at ? '' : 'is-unread' }}">
+                                    <strong>{{ $bildirim->title }}</strong>
+                                    @if($bildirim->body)<div class="text-muted">{{ $bildirim->body }}</div>@endif
+                                    <div class="text-muted" style="font-size: .75rem;">
+                                        {{ $bildirim->created_at->timezone(config('kafe.timezone'))->format('d.m H:i') }}
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="notif-item text-muted">Bildirim yok.</div>
+                            @endforelse
+                            <a href="{{ route('notifications.index') }}" class="notif-all">Tümü →</a>
+                        </div>
+                    </details>
                 </div>
             </header>
 

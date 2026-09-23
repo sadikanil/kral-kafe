@@ -132,6 +132,48 @@ class NotificationBuilder
     }
 
     /**
+     * Stok sayimi hatirlatmasi (Dalga 27).
+     *
+     * Son sayimdan N gun (kafe.stok_sayim_gun) gectiyse her yoneticiye. Sayim
+     * yapilmazsa HER GUN degil her N gunde bir: anahtar gunu degil "kacinci
+     * N'lik dilim"i tasir. Tam gunu tutturmaya dayanmaz - Hobby cron'u bir
+     * gun kacirirsa hatirlatma ertesi gun yine gider.
+     */
+    public function stockCountReminders(string $gun): int
+    {
+        $aralik = max(1, (int) config('kafe.stok_sayim_gun'));
+        $sonAn = \App\Models\StockRecord::max('recorded_at');
+        $son = $sonAn ? LocalDay::of(Carbon::parse($sonAn)) : null;
+
+        // Hic sayim yoksa dilim takvimden sayilir (yine N gunde bir).
+        $gecen = (int) Carbon::parse($son ?? '1970-01-01')->diffInDays(Carbon::parse($gun), false);
+
+        if ($son !== null && $gecen < $aralik) {
+            return 0;
+        }
+
+        $dilim = intdiv($gecen, $aralik);
+        $govde = $son === null
+            ? 'Sistemde henüz stok sayımı yok.'
+            : "Son sayım {$gecen} gün önce (" . Carbon::parse($son)->format('d.m.Y') . ').';
+
+        $yeni = 0;
+        foreach (User::where('role', Role::Admin->value)->get() as $yonetici) {
+            $yeni += (int) $this->kaydet(
+                NotificationType::StockCount,
+                $yonetici,
+                null,
+                null,
+                "stock_count:{$yonetici->id}:" . ($son ?? 'yok') . ":{$dilim}",
+                'Stok sayımı zamanı 📦',
+                $govde,
+            );
+        }
+
+        return $yeni;
+    }
+
+    /**
      * Bildirimi yazar; ayni anahtar zaten varsa hicbir sey yapmaz.
      *
      * @return bool Yeni kayit olustu mu

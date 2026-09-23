@@ -52,12 +52,6 @@ class DashboardController extends Controller
             // Resmi sinav geri sayimi (Dalga 15b). Hatirlaticidan AYRI:
             // YKS bir deneme degil, hedefin kendisi.
             'officialExam' => ExamEvent::upcomingOfficial()->first(),
-            // Bildirimler (Dalga 11): teslim kanali su an yalnizca panel.
-            // E-posta gelince ayni kayitlarin uzerine binecek.
-            'notifications' => \App\Models\Notification::for(auth()->user())
-                ->latest()
-                ->limit(10)
-                ->get(),
         ]);
     }
 

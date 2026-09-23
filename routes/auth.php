@@ -33,4 +33,8 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('cikis', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
+
+    // Bildirim zili (Dalga 27): her rol icin ortak
+    Route::get('bildirimler', [\App\Http\Controllers\NotificationController::class, 'index'])
+        ->name('notifications.index');
 });
