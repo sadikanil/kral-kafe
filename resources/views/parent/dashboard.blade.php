@@ -4,9 +4,6 @@
 @section('page-title', 'Çocuklarım')
 
 @section('content')
-
-
-
     @include('exams._geri-sayim')
 
     @include('exams._hatirlatici', ['calendarRoute' => 'parent.exams'])
@@ -27,12 +24,12 @@
     @else
         @foreach($students as $summary)
             <div class="card mb-3 animate-slide-up">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h4>{{ $summary['student']->name }}</h4>
+                <div class="card-header d-flex justify-content-between align-items-center gap-2" style="flex-wrap: wrap;">
+                    <h4><a href="{{ route('parent.student', $summary['student']) }}" class="text-inherit">{{ $summary['student']->name }}</a></h4>
                     <div class="d-flex gap-1">
-                        <a href="{{ route('parent.report', $summary['student']) }}" class="btn btn-sm btn-primary">Rapor</a>
+                        <a href="{{ route('parent.student', $summary['student']) }}" class="btn btn-sm btn-primary">Ayrıntı</a>
+                        <a href="{{ route('parent.report', $summary['student']) }}" class="btn btn-sm btn-secondary">Rapor</a>
                         <a href="{{ route('parent.payments', $summary['student']) }}" class="btn btn-sm btn-secondary">Ödemeler</a>
-                        <a href="{{ route('parent.student', $summary['student']) }}" class="btn btn-sm btn-secondary">Ayrıntı</a>
                     </div>
                 </div>
                 <div class="card-body">

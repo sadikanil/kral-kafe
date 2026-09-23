@@ -16,7 +16,7 @@
         <div class="empty-state">
             <div class="empty-state-icon">📚</div>
             <div class="empty-state-title">Önce ders tanımlamalısın</div>
-            <p class="text-muted">Sonuç girebilmek için Yönetim → Dersler'den en az bir ders ekle.</p>
+            <p class="text-muted">Bu deneme türü için tanımlı ders yok; dersler müfredattan gelir.</p>
         </div>
     @else
         <form method="POST" action="{{ route('admin.exam-results.store', [$event, $student]) }}">

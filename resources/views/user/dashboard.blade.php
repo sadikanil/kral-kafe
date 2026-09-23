@@ -30,7 +30,7 @@
             <div class="session-timer">{{ sprintf('%02d:%02d', intdiv($dakika, 60), $dakika % 60) }}</div>
 
             <p class="text-muted mb-3">
-                {{ $openSession->started_at->timezone(config('kafe.timezone'))->format('H:i') }}'den beri · net
+                giriş {{ $openSession->started_at->timezone(config('kafe.timezone'))->format('H:i') }} · net süre
             </p>
 
             {{-- Dalga 23: duraklat, mola, ders etiketi sayacta. --}}

@@ -1,12 +1,22 @@
 @extends('layouts.app')
 
 @section('title', 'Ödemeler - Kral Kafe')
-@section('page-title', auth()->user()->is($student) ? 'Ödemelerim' : 'Ödemeler · ' . $student->name)
+@section('page-title', auth()->user()->is($student) ? 'Ödemelerim' : $student->name)
 
 {{-- Dalga 22: ay ay paket bedeli + adisyon dokumu. Salt okunur. --}}
 @php $para = fn ($t) => \App\Services\PaymentStatement::money($t); @endphp
 
+@if(request()->routeIs('parent.payments'))
+    @section('topbar-actions')
+        <a href="{{ route('parent.dashboard') }}" class="btn btn-sm btn-secondary">← Çocuklarım</a>
+    @endsection
+@endif
+
 @section('content')
+    @if(request()->routeIs('parent.payments'))
+        @include('parent._sekmeler')
+    @endif
+
     <div class="d-flex justify-content-between align-items-center mb-3">
         <a href="{{ route($route, $routeParams + ['ay' => $neighbours['prev']]) }}" class="btn btn-secondary btn-sm">‹ Önceki</a>
         <strong>{{ $monthLabel }}</strong>

@@ -11,21 +11,21 @@
 @if($summary['subscription'] ?? null)
     <p class="mb-2">
         🎫 {{ $summary['subscription']->package->name }}
-        <span class="text-muted">({{ $summary['subscription']->ends_on->format('d.m.Y') }}'e kadar)</span>
-        · <span class="badge badge-{{ $summary['subscription']->payment_status->badgeClass() }}">Ödeme: {{ $summary['subscription']->payment_status->label() }}</span>
+        <span class="text-muted">· bitiş {{ $summary['subscription']->ends_on->locale('tr')->translatedFormat('j F') }}</span>
+        <span class="badge badge-{{ $summary['subscription']->payment_status->badgeClass() }}">Ödeme: {{ $summary['subscription']->payment_status->label() }}</span>
     </p>
 @endif
 
 @if($summary['openSession'])
-    <div class="d-flex align-items-center gap-2 mb-3">
+    <p class="mb-3">
         <span class="live-dot"></span>
         <strong>Şu an içeride</strong>
         <span class="text-muted">
-            — {{ $summary['openSession']->table->name }},
-            {{ $summary['openSession']->started_at->timezone($tz)->format('H:i') }}'den beri
-            ({{ Duration::human($summary['openSession']->minutesSoFar()) }})
+            · {{ $summary['openSession']->table->name }}
+            · giriş {{ $summary['openSession']->started_at->timezone($tz)->format('H:i') }}
+            <span style="white-space: nowrap;">({{ Duration::human($summary['openSession']->minutesSoFar()) }})</span>
         </span>
-    </div>
+    </p>
 @elseif($summary['lastSession'])
     <p class="text-muted mb-3">
         Son geliş: {{ $summary['lastSession']->started_at->timezone($tz)->format('d.m.Y H:i') }}
@@ -36,30 +36,23 @@
     <p class="text-muted mb-3">Henüz kayıtlı bir çalışma yok.</p>
 @endif
 
-<div class="d-flex gap-2 mb-3" style="flex-wrap: wrap;">
-    <div class="card" style="flex: 1; min-width: 120px;">
-        <div class="card-body text-center">
-            <div class="session-timer">{{ Duration::human($summary['todayMinutes']) }}</div>
-            <div class="text-muted">Bugün</div>
-        </div>
+{{-- Ogrenci panelindeki kucuk kartlar: dev puntoda "3 sa 30 dk" uc satira kiriliyordu. --}}
+<div class="mini-stats mb-3">
+    <div class="mini-stat">
+        <div class="mini-stat-value">{{ Duration::human($summary['todayMinutes']) }}</div>
+        <div class="mini-stat-label">Bugün</div>
     </div>
-    <div class="card" style="flex: 1; min-width: 120px;">
-        <div class="card-body text-center">
-            <div class="session-timer">{{ Duration::human($summary['weekMinutes']) }}</div>
-            <div class="text-muted">Bu hafta</div>
-        </div>
+    <div class="mini-stat">
+        <div class="mini-stat-value">{{ Duration::human($summary['weekMinutes']) }}</div>
+        <div class="mini-stat-label">Bu hafta</div>
     </div>
-    <div class="card" style="flex: 1; min-width: 120px;">
-        <div class="card-body text-center">
-            <div class="session-timer">{{ Duration::human($summary['monthMinutes']) }}</div>
-            <div class="text-muted">Bu ay</div>
-        </div>
+    <div class="mini-stat">
+        <div class="mini-stat-value">{{ Duration::human($summary['monthMinutes']) }}</div>
+        <div class="mini-stat-label">Bu ay</div>
     </div>
-    <div class="card" style="flex: 1; min-width: 120px;">
-        <div class="card-body text-center">
-            <div class="session-timer">{{ $summary['streak'] }} gün</div>
-            <div class="text-muted">Üst üste</div>
-        </div>
+    <div class="mini-stat">
+        <div class="mini-stat-value">{{ $summary['streak'] }} gün</div>
+        <div class="mini-stat-label">Üst üste</div>
     </div>
 </div>
 

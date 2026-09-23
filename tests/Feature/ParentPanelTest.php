@@ -204,7 +204,7 @@ class ParentPanelTest extends TestCase
             ->assertOk()
             ->assertSee('Şu an içeride')
             ->assertSee('Köşe')
-            ->assertSee("10:00'den beri", false);
+            ->assertSee('giriş 10:00');
     }
 
     public function test_short_sessions_are_left_out_of_the_parent_list(): void
@@ -404,5 +404,26 @@ class ParentPanelTest extends TestCase
             ->get(route('admin.users.index', ['role' => 'parent']))
             ->assertOk()
             ->assertSee('2 öğrenci');
+    }
+
+    /**
+     * UX turu (23 Eyl): cocugun uc sayfasi (ozet, haftalik rapor, odemeler)
+     * ust bardaki dugmeler yerine sekmeyle bagli; sekme tek gecis yolu.
+     */
+    public function test_each_child_page_links_the_others_as_tabs(): void
+    {
+        $veli = User::factory()->parent()->create();
+        $cocuk = User::factory()->student()->create();
+        $this->bagla($veli, $cocuk);
+        $rotalar = ['parent.student', 'parent.report', 'parent.payments'];
+
+        foreach ($rotalar as $sayfa) {
+            $yanit = $this->actingAs($veli)->get(route($sayfa, $cocuk))->assertOk();
+
+            $yanit->assertSee('class="page-tab active"', false);
+            foreach ($rotalar as $hedef) {
+                $yanit->assertSee(route($hedef, $cocuk), false);
+            }
+        }
     }
 }

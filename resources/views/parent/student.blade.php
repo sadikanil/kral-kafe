@@ -4,12 +4,19 @@
 @section('page-title', $summary['student']->name)
 
 @section('topbar-actions')
-    <a href="{{ route('parent.report', $summary['student']) }}" class="btn btn-sm btn-primary">Haftalık rapor</a>
-    <a href="{{ route('parent.payments', $summary['student']) }}" class="btn btn-sm btn-secondary">Ödemeler</a>
     <a href="{{ route('parent.dashboard') }}" class="btn btn-sm btn-secondary">← Çocuklarım</a>
 @endsection
 
 @section('content')
+    @include('parent._sekmeler', ['student' => $summary['student']])
+
+    {{-- Ozet en ustte: velinin ilk sorusu "simdi iceride mi, bu hafta ne kadar". --}}
+    <div class="card mb-3">
+        <div class="card-body">
+            @include('parent._ozet', ['summary' => $summary])
+        </div>
+    </div>
+
     @if($lessons !== [])
         <div class="card mb-3">
             <div class="card-header"><h4>👨‍🏫 Özel dersler · önümüzdeki 2 hafta</h4></div>
@@ -50,12 +57,6 @@
         $tz = config('kafe.timezone');
         $gunAdlari = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
     @endphp
-
-    <div class="card mb-3">
-        <div class="card-body">
-            @include('parent._ozet', ['summary' => $summary])
-        </div>
-    </div>
 
     <div class="card mb-3">
         <div class="card-header">

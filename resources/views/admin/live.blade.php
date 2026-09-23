@@ -68,7 +68,7 @@
                             <strong>{{ $session->student->name }}</strong>
                             <span class="text-muted">
                                 {{ $session->table->name }} ·
-                                {{ $session->started_at->timezone(config('kafe.timezone'))->format('H:i') }}'den beri
+                                giriş {{ $session->started_at->timezone(config('kafe.timezone'))->format('H:i') }}
                             </span>
                         </div>
                         @if($dakika >= config('kafe.azami_saat') * 60)
