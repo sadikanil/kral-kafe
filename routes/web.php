@@ -241,6 +241,7 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     Route::get('/odemeler', [SubscriptionController::class, 'overview'])->name('subscriptions.overview');
     Route::get('/kullanicilar/{user}/abonelikler', [SubscriptionController::class, 'index'])->name('subscriptions.index');
     Route::post('/kullanicilar/{user}/abonelikler', [SubscriptionController::class, 'store'])->name('subscriptions.store');
+    Route::post('/kullanicilar/{user}/paket-degistir', [SubscriptionController::class, 'switch'])->name('subscriptions.switch');
     Route::post('/abonelikler/{subscription}/iptal', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
     Route::post('/abonelikler/{subscription}/odeme', [SubscriptionController::class, 'storePayment'])->name('subscriptions.payments.store');
     Route::delete('/odemeler/{payment}', [SubscriptionController::class, 'destroyPayment'])->name('subscriptions.payments.destroy');

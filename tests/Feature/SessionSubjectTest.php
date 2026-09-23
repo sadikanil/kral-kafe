@@ -29,6 +29,16 @@ class SessionSubjectTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Sabit gunduz saati: testler "bir saat once acilmis" oturum kuruyor;
+     * gercek saat kapanistan (21:00) sonraysa oturum kendiliginden kapanir.
+     */
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-09-16 14:00', config('kafe.timezone')));
+    }
+
     private function ogrenci(): User
     {
         return User::factory()->create([

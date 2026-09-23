@@ -84,7 +84,9 @@ class NotificationBuilder
     {
         $yarin = Carbon::parse($gun, LocalDay::timezone())->addDay()->toDateString();
 
-        $denemeler = ExamEvent::whereDate('exam_date', $yarin)->get();
+        // Serbest deneme (Dalga 30a) bir gune bagli degil; exam_date yalnizca
+        // pencerenin ilk gunu.
+        $denemeler = ExamEvent::whereDate('exam_date', $yarin)->where('is_flexible', false)->get();
 
         if ($denemeler->isEmpty()) {
             return 0;

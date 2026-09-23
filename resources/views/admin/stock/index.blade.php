@@ -95,6 +95,7 @@
                     </tbody>
                 </table>
             </div>
+            {{ $products->links() }}
         </div>
         @if($products->isNotEmpty())
             <div class="card-footer d-flex justify-content-between align-items-center gap-2" style="flex-wrap: wrap;">

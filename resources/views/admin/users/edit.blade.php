@@ -189,6 +189,10 @@
         </div>
     @endif
 
+    @if($user->isStudent())
+        @include('admin.users._paket')
+    @endif
+
     @if($lessonSlots !== null)
         @include('admin.users._ozel-ders')
     @endif

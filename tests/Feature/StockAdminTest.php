@@ -219,6 +219,47 @@ class StockAdminTest extends TestCase
             ->assertForbidden();
     }
 
+    // --- Sayfalama (Dalga 30a) ------------------------------------------------
+
+    private function cokUrun(int $adet, ?Location $konum = null): void
+    {
+        for ($i = 1; $i <= $adet; $i++) {
+            $this->urun(sprintf('Ürün %02d', $i), $konum, 10);
+        }
+    }
+
+    /** HATA: liste 20'de kesiliyordu ama sonraki sayfaya gecis yoktu. */
+    public function test_the_product_list_shows_20_and_links_the_next_page(): void
+    {
+        $this->cokUrun(25);
+
+        $this->actingAs($this->yonetici())->get(route('admin.products.index'))
+            ->assertOk()
+            ->assertSee('Ürün 20')
+            ->assertDontSee('Ürün 21')
+            ->assertSee(route('admin.products.index', ['page' => 2]), false);
+    }
+
+    public function test_the_stock_page_shows_20_per_page(): void
+    {
+        $this->cokUrun(25);
+
+        $this->actingAs($this->yonetici())->get(route('admin.stock.index', ['page' => 2]))
+            ->assertOk()
+            ->assertSee('Ürün 21')
+            ->assertDontSee('Ürün 20');
+    }
+
+    public function test_the_stock_page_links_keep_the_filter(): void
+    {
+        $raf = Location::create(['name' => 'Raf 3']);
+        $this->cokUrun(25, $raf);
+
+        $this->actingAs($this->yonetici())->get(route('admin.stock.index', ['konum' => $raf->id]))
+            ->assertOk()
+            ->assertSee('konum=' . $raf->id . '&amp;page=2', false);
+    }
+
     // --- Sayim ve menu -------------------------------------------------------
 
     public function test_the_count_page_offers_each_location_tag(): void

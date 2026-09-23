@@ -1658,3 +1658,28 @@ select.form-control {
     border-bottom-color: var(--primary);
     font-weight: 600;
 }
+
+/* Sayfalama (Dalga 30a) */
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    justify-content: center;
+    padding: 0.75rem;
+}
+.page-link {
+    min-width: 2.25rem;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    text-align: center;
+    text-decoration: none;
+    color: var(--gray-600);
+    background: #fff;
+}
+.page-link.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+.page-link.disabled { opacity: 0.5; }

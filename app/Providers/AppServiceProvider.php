@@ -22,5 +22,8 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('production') || !empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https') {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
+
+        // Dalga 30a: varsayilan sayfalama Tailwind'e gore; bizimki elle CSS.
+        \Illuminate\Pagination\Paginator::defaultView('vendor.pagination.kafe');
     }
 }

@@ -91,6 +91,7 @@
                     </tbody>
                 </table>
             </div>
+            {{ $products->withQueryString()->links() }}
         </div>
     </div>
 @endsection

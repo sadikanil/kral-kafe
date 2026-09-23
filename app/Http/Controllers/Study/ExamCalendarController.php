@@ -45,6 +45,7 @@ class ExamCalendarController extends Controller
             'lessons' => $dersler,
             'detay' => $request->user()->entitlements()->examClub,
             'upcoming' => ExamEvent::upcoming()->get(),
+            'flexible' => ExamEvent::flexibleOpen()->get(),
             'weeks' => $haftalar,
             'monthLabel' => ExamCalendar::monthLabel($yil, $ay),
             'neighbours' => ExamCalendar::neighbours($yil, $ay),

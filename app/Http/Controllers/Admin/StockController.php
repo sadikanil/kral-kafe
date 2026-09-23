@@ -38,7 +38,8 @@ class StockController extends Controller
             ->when($filtre['konum'] ?? null, fn ($q, $konum) => $q->where('location_id', $konum))
             ->when($filtre['durum'] ?? null, fn ($q, $durum) => $q->withStockStatus($durum))
             ->orderBy('category')->orderBy('name')
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
         return view('admin.stock.index', [
             'products' => $urunler,

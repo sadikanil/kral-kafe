@@ -27,10 +27,14 @@ class ExamEvent extends Model
         'starts_at',
         'note',
         'created_by',
+        'is_flexible',
+        'available_until',
     ];
 
     protected $casts = [
         'exam_date' => 'date',
+        'available_until' => 'date',
+        'is_flexible' => 'boolean',
         'exam_type' => ExamType::class,
     ];
 
@@ -45,8 +49,32 @@ class ExamEvent extends Model
     {
         return $query->where('exam_date', '>=', LocalDay::today())
             ->where('exam_type', '!=', ExamType::Official->value)
+            ->where('is_flexible', false)
             ->orderBy('exam_date')
             ->orderBy('starts_at');
+    }
+
+    /**
+     * Serbest denemeler (Dalga 30a): penceresi kapanmamis olanlar. Tarihi
+     * ogrenci secer; takvim gunune ve geri sayima girmezler.
+     */
+    public function scopeFlexibleOpen(Builder $query): Builder
+    {
+        return $query->where('is_flexible', true)
+            ->where('available_until', '>=', LocalDay::today())
+            ->orderBy('exam_date')
+            ->orderBy('exam_type');
+    }
+
+    /** "1–30 Kasım" ya da ay atlarsa "15 Kasım – 10 Aralık". */
+    public function windowLabel(): string
+    {
+        $bas = $this->exam_date->copy()->locale('tr');
+        $son = ($this->available_until ?? $this->exam_date)->copy()->locale('tr');
+
+        return $bas->month === $son->month
+            ? $bas->day . '–' . $son->translatedFormat('j F')
+            : $bas->translatedFormat('j F') . ' – ' . $son->translatedFormat('j F');
     }
 
     /** Siradaki resmi sinav (YKS/LGS). Yoksa null. */
@@ -71,7 +99,7 @@ class ExamEvent extends Model
         return $query->whereBetween('exam_date', [
             $bas->toDateString(),
             $bas->copy()->endOfMonth()->toDateString(),
-        ])->orderBy('exam_date')->orderBy('starts_at');
+        ])->where('is_flexible', false)->orderBy('exam_date')->orderBy('starts_at');
     }
 
     /** Y-m-d; takvim hucresi eslestirmesi icin. */

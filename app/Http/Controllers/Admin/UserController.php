@@ -219,6 +219,9 @@ class UserController extends Controller
                 ? \App\Support\PrivateLessonCalendar::between($user, $bugun, Carbon::parse($bugun)->addWeeks(4)->toDateString())
                 : [],
             'weeklyGoal' => StudyGoal::activeFor($user, LocalDay::today()),
+            // Paket (Dalga 30a): simdiki + degistirme formu (ekler haric).
+            'currentSubscription' => $user->isStudent() ? $user->currentSubscription() : null,
+            'switchPackages' => \App\Models\Package::active()->where('is_addon', false)->orderBy('name')->get(),
             // Koc atamasi (Dalga 14). Plan formu bu ekrandan /koc/plan
             // altina TASINDI; burada kalan yalnizca "kim izliyor" sorusu.
             // Ayni formu iki yerde tutmak, birinin gunun birinde

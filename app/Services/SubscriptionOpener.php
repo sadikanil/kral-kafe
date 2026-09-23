@@ -50,4 +50,33 @@ class SubscriptionOpener
 
         return $abonelik;
     }
+
+    /**
+     * Paketi bir tarihten itibaren degistirir (Dalga 30a, karar 23 Eyl).
+     *
+     * Eski ana paket bir gun once biter; yenisi o gun baslar ve eskinin
+     * bitis gununu devralir - odenmis donem yeni paketle surer. Degisim
+     * eskinin ilk gunundeyse eski hic kullanilmamistir: kisaltmak yerine
+     * iptal edilir (bitis < baslangic olan bir satir birakmamak icin).
+     * Ek paketlere dokunulmaz.
+     */
+    public function switch(User $student, Package $package, Carbon $on, ?string $price = null): Subscription
+    {
+        $eski = $student->subscriptions()->activeOn($on->toDateString())
+            ->whereHas('package', fn ($q) => $q->where('is_addon', false))
+            ->orderByDesc('starts_on')->first();
+
+        $bitis = null;
+        if ($eski !== null) {
+            $bitis = $eski->ends_on->copy();
+
+            if ($eski->starts_on->greaterThanOrEqualTo($on->copy()->startOfDay())) {
+                $eski->forceFill(['payment_status' => \App\Enums\PaymentStatus::Cancelled])->save();
+            } else {
+                $eski->update(['ends_on' => $on->copy()->subDay()->toDateString()]);
+            }
+        }
+
+        return $this->open($student, $package, $on, $bitis, $price, 'Paket değişikliği');
+    }
 }

@@ -24,6 +24,7 @@ class ExamEventController extends Controller
 
         return view('admin.exams.index', [
             'upcoming' => ExamEvent::upcoming()->get(),
+            'flexible' => ExamEvent::flexibleOpen()->get(),
             'past' => ExamEvent::past()->limit(10)->get(),
             'weeks' => ExamCalendar::weeks($yil, $ay, ExamEvent::inMonth($yil, $ay)->get()),
             'monthLabel' => ExamCalendar::monthLabel($yil, $ay),
@@ -79,10 +80,15 @@ class ExamEventController extends Controller
             'exam_date' => ['required', 'date_format:Y-m-d'],
             'starts_at' => ['nullable', 'date_format:H:i'],
             'note' => ['nullable', 'string', 'max:255'],
-        ]);
+            // Serbest deneme (Dalga 30a): tarih pencerenin ilk gunu.
+            'is_flexible' => ['nullable', 'boolean'],
+            'available_until' => ['nullable', 'required_if_accepted:is_flexible', 'date_format:Y-m-d', 'after_or_equal:exam_date'],
+        ], ['available_until.required_if_accepted' => 'Serbest denemenin son gününü seçin.']);
 
         $veri['starts_at'] = $veri['starts_at'] ?? null;
         $veri['note'] = $veri['note'] ?? null;
+        $veri['is_flexible'] = $request->boolean('is_flexible');
+        $veri['available_until'] = $veri['is_flexible'] ? $veri['available_until'] : null;
 
         return $veri;
     }

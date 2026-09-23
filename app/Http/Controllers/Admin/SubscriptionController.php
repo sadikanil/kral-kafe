@@ -88,6 +88,27 @@ class SubscriptionController extends Controller
         return redirect()->route('admin.subscriptions.index', $user)->with('success', 'Paket atandı.');
     }
 
+    /** Dalga 30a: paketi tarihten itibaren degistir (kullanici sayfasindan). */
+    public function switch(Request $request, User $user, \App\Services\SubscriptionOpener $abonelikler)
+    {
+        abort_unless($user->isStudent(), 404);
+
+        $veri = $request->validate([
+            'package_id' => ['required', 'integer', Rule::exists('packages', 'id')->where('is_active', 1)->where('is_addon', 0)],
+            'switch_on' => ['required', 'date_format:Y-m-d'],
+            'price' => ['nullable', 'numeric', 'min:0', 'max:999999'],
+        ], ['package_id.exists' => 'Ek paket ana paketin yerine geçemez; ödeme ekranından ekleyin.']);
+
+        DB::transaction(fn () => $abonelikler->switch(
+            $user,
+            Package::findOrFail($veri['package_id']),
+            Carbon::parse($veri['switch_on']),
+            isset($veri['price']) ? (string) $veri['price'] : null,
+        ));
+
+        return back()->with('success', 'Paket değiştirildi.');
+    }
+
     public function cancel(Subscription $subscription)
     {
         $subscription->forceFill(['payment_status' => PaymentStatus::Cancelled])->save();

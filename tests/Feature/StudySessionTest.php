@@ -143,9 +143,12 @@ class StudySessionTest extends TestCase
         $a = $this->masa('Masa A');
         $b = $this->masa('Masa B');
 
-        Carbon::setTestNow(now()->subMinutes(45));
+        // Sabit gunduz saati: gercek saat kapanistan (21:00) sonraysa acik
+        // oturum kendiliginden kapanir ve test gunun saatine bagli kalirdi.
+        $simdi = Carbon::parse('2026-09-16 14:00', config('kafe.timezone'));
+        Carbon::setTestNow($simdi->copy()->subMinutes(45));
         $this->actingAs($ogrenci)->post(route('table.session.start', $a->qr_code));
-        Carbon::setTestNow();
+        Carbon::setTestNow($simdi);
 
         $this->actingAs($ogrenci)->post(route('table.session.start', $b->qr_code));
 
@@ -163,9 +166,12 @@ class StudySessionTest extends TestCase
         $ogrenci = $this->ogrenci();
         $masa = $this->masa();
 
-        Carbon::setTestNow(now()->subMinutes(90));
+        // Sabit gunduz saati: gercek saat kapanistan (21:00) sonraysa acik
+        // oturum kendiliginden kapanir ve test gunun saatine bagli kalirdi.
+        $simdi = Carbon::parse('2026-09-16 14:00', config('kafe.timezone'));
+        Carbon::setTestNow($simdi->copy()->subMinutes(90));
         $this->actingAs($ogrenci)->post(route('table.session.start', $masa->qr_code));
-        Carbon::setTestNow();
+        Carbon::setTestNow($simdi);
 
         $this->actingAs($ogrenci)->post(route('session.end'))->assertRedirect();
 

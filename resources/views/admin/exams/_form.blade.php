@@ -42,3 +42,18 @@
     @error('note')<span class="invalid-feedback">{{ $message }}</span>@enderror
     <small class="text-muted">Öğrenci ve veli panelinde hatırlatıcıda görünür.</small>
 </div>
+
+{{-- Serbest deneme (Dalga 30a): ogrenci tarihi kendisi secer. --}}
+<div class="form-check mb-2">
+    <input type="hidden" name="is_flexible" value="0">
+    <input type="checkbox" id="is_flexible" name="is_flexible" value="1" class="form-check-input"
+        @checked(old('is_flexible', $exam?->is_flexible))>
+    <label for="is_flexible" class="form-check-label">Serbest: öğrenci tarihi kendisi seçer (Tarih = ilk gün)</label>
+</div>
+<div class="form-group">
+    <label for="available_until" class="form-label">Serbest ise son gün</label>
+    <input type="date" id="available_until" name="available_until"
+        class="form-control @error('available_until') is-invalid @enderror"
+        value="{{ old('available_until', $exam?->available_until?->toDateString()) }}">
+    @error('available_until')<span class="invalid-feedback">{{ $message }}</span>@enderror
+</div>

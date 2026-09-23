@@ -14,6 +14,8 @@
         </div>
     </div>
 
+    @include('exams._serbest')
+
     <div class="card">
         <div class="card-header"><h4>Yaklaşan denemeler</h4></div>
         <div class="card-body p-0">
