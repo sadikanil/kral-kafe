@@ -88,7 +88,7 @@ class SessionLocationTest extends TestCase
 
     private function ogrenci(): \App\Models\User
     {
-        return \App\Models\User::factory()->create([
+        return \App\Models\User::factory()->withPackage(\App\Models\Package::factory()->tier3())->create([
             'role' => \App\Enums\Role::Student->value,
             'subscription_status' => 'active',
         ]);

@@ -33,6 +33,7 @@ class ExamCalendarController extends Controller
 
         return view('exams.calendar', [
             'layout' => $layout,
+            'detay' => $request->user()->entitlements()->examClub,
             'upcoming' => ExamEvent::upcoming()->get(),
             'weeks' => ExamCalendar::weeks($yil, $ay, ExamEvent::inMonth($yil, $ay)->get()),
             'monthLabel' => ExamCalendar::monthLabel($yil, $ay),

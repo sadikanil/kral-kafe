@@ -167,8 +167,10 @@ class ExamScheduleTest extends TestCase
         $this->deneme('2026-09-27', ['title' => 'Eylül Denemesi']);
         $this->deneme('2026-10-10', ['title' => 'Ekim Denemesi']);
 
-        $ogrenci = User::factory()->student()->create();
+        $ogrenci = User::factory()->student()->withPackage(\App\Models\Package::factory()->tier3())->create();
         $veli = User::factory()->parent()->create();
+        // Veli cocugunun paketini gorur (Dalga 19): deneme adlari kulupte.
+        $veli->students()->attach($ogrenci);
 
         $this->get('/kullanici/denemeler')->assertRedirect(route('login'));
 
@@ -198,8 +200,10 @@ class ExamScheduleTest extends TestCase
         $this->deneme('2026-09-27', ['title' => 'Yakın Deneme']);
         $this->deneme('2026-10-15', ['title' => 'Uzak Deneme']);
 
-        $ogrenci = User::factory()->student()->create();
+        $ogrenci = User::factory()->student()->withPackage(\App\Models\Package::factory()->tier3())->create();
         $veli = User::factory()->parent()->create();
+        // Veli cocugunun paketini gorur (Dalga 19): deneme adlari kulupte.
+        $veli->students()->attach($ogrenci);
 
         $this->actingAs($ogrenci)->get('/kullanici/panel')
             ->assertOk()
@@ -219,7 +223,7 @@ class ExamScheduleTest extends TestCase
     public function test_a_distant_exam_is_informational_and_no_exam_shows_nothing(): void
     {
         $this->bugun();
-        $ogrenci = User::factory()->student()->create();
+        $ogrenci = User::factory()->student()->withPackage(\App\Models\Package::factory()->tier3())->create();
 
         $this->actingAs($ogrenci)->get('/kullanici/panel')->assertOk()->assertDontSee('Sıradaki deneme');
 

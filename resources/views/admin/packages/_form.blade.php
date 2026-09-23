@@ -7,6 +7,19 @@
 </div>
 
 <div class="form-group">
+    <label for="tier" class="form-label">Seviye</label>
+    <select id="tier" name="tier" class="form-control @error('tier') is-invalid @enderror">
+        @php $seviye = (string) old('tier', $package?->tier); @endphp
+        <option value="" {{ $seviye === '' ? 'selected' : '' }}>Yok (ek paket / sadece deneme)</option>
+        <option value="1" {{ $seviye === '1' ? 'selected' : '' }}>Tier 1 · Standart</option>
+        <option value="2" {{ $seviye === '2' ? 'selected' : '' }}>Tier 2 · Orta</option>
+        <option value="3" {{ $seviye === '3' ? 'selected' : '' }}>Tier 3 · Kral</option>
+    </select>
+    <small class="text-muted">Yalnızca etiket. Öğrencinin neye erişeceğini aşağıdaki kutular belirler.</small>
+    @error('tier')<span class="invalid-feedback">{{ $message }}</span>@enderror
+</div>
+
+<div class="form-group">
     <label for="monthly_price" class="form-label">Aylık Fiyat (₺) *</label>
     <input type="number" id="monthly_price" name="monthly_price" step="0.01" min="0" required
         class="form-control @error('monthly_price') is-invalid @enderror" value="{{ old('monthly_price', $package?->monthly_price) }}" placeholder="7500">
@@ -28,6 +41,18 @@
     <label class="form-label d-flex align-items-center gap-2">
         <input type="checkbox" name="includes_coaching" value="1" {{ old('includes_coaching', $package?->includes_coaching) ? 'checked' : '' }}>
         Koçluk dahil
+    </label>
+    <label class="form-label d-flex align-items-center gap-2">
+        <input type="checkbox" name="includes_exam_club" value="1" {{ old('includes_exam_club', $package?->includes_exam_club) ? 'checked' : '' }}>
+        Deneme kulübü (deneme detayları ve sonuçlar)
+    </label>
+    <label class="form-label d-flex align-items-center gap-2">
+        <input type="checkbox" name="includes_private_lessons" value="1" {{ old('includes_private_lessons', $package?->includes_private_lessons) ? 'checked' : '' }}>
+        Özel ders
+    </label>
+    <label class="form-label d-flex align-items-center gap-2">
+        <input type="checkbox" name="is_addon" value="1" {{ old('is_addon', $package?->is_addon) ? 'checked' : '' }}>
+        Ek paket (ana paketin üstüne eklenir)
     </label>
 </div>
 

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Role;
+use App\Support\Entitlements;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -230,6 +231,32 @@ class User extends Authenticatable
     }
 
     /**
+     * Paketlerden dogan haklar (Dalga 19). Istek boyunca bir kez hesaplanir.
+     *
+     * Ogrenci: bugun yururlukteki paketlerinin birlesimi (ana + ekler).
+     * Veli: cocuklarinin birlesimi - ayri etiket tasimaz (karar, 23 Eyl).
+     * Personel (yonetici, koc, ogretmen, gorevli): paketle SINIRLANMAZ; kime
+     * erisecegini kendi kurallari belirler (ornegin koc yalnizca atanan
+     * ogrencisinin raporunu acar).
+     */
+    public function entitlements(): Entitlements
+    {
+        return $this->entitlementsCache ??= match (true) {
+            $this->isStudent() => Entitlements::fromPackages(
+                Package::whereIn('id', $this->subscriptions()->activeOn()->select('package_id'))->get()
+            ),
+            $this->role() === Role::Parent => Entitlements::fromPackages(
+                Package::whereIn('id', Subscription::activeOn()
+                    ->whereIn('student_id', $this->students()->select('users.id'))
+                    ->select('package_id'))->get()
+            ),
+            default => Entitlements::all(),
+        };
+    }
+
+    private ?Entitlements $entitlementsCache = null;
+
+    /**
      * Ogrencinin paket gecmisi (Dalga 7).
      */
     public function subscriptions(): HasMany
@@ -242,7 +269,11 @@ class User extends Authenticatable
      */
     public function currentSubscription(): ?Subscription
     {
-        return $this->subscriptions()->activeOn()->with('package')->orderByDesc('starts_on')->first();
+        // Ekler (deneme kulubu eki gibi) "paketin" sayilmaz; haklar icin
+        // entitlements() tum paketleri birlestirir.
+        return $this->subscriptions()->activeOn()
+            ->whereHas('package', fn ($q) => $q->where('is_addon', false))
+            ->with('package')->orderByDesc('starts_on')->first();
     }
 
     /**

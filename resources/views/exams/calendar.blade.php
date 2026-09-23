@@ -30,10 +30,10 @@
                                 <tr>
                                     <td>{{ $deneme->dateLabel() }}</td>
                                     <td>{{ $deneme->starts_at ?? '—' }}</td>
-                                    <td><strong>{{ $deneme->title }}</strong></td>
+                                    <td><strong>{{ $detay ? $deneme->title : 'Deneme' }}</strong></td>
                                     <td><span class="badge badge-{{ $deneme->exam_type->badgeClass() }}">{{ $deneme->exam_type->label() }}</span></td>
                                     <td>{{ $deneme->countdownLabel() }}</td>
-                                    <td class="text-muted">{{ $deneme->note }}</td>
+                                    <td class="text-muted">{{ $detay ? $deneme->note : '' }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

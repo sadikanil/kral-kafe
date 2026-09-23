@@ -28,12 +28,16 @@
                                 <tr>
                                     <td>
                                         <strong>{{ $paket->name }}</strong>
+                                        @if($paket->tier)<span class="badge badge-info">Tier {{ $paket->tier }}</span>@endif
+                                        @if($paket->is_addon)<span class="badge badge-warning">Ek paket</span>@endif
                                         @if($paket->description)<br><small class="text-muted">{{ $paket->description }}</small>@endif
                                     </td>
                                     <td>{{ $paket->formattedPrice() }}</td>
                                     <td style="font-size: 0.8125rem;">
                                         @if($paket->has_reserved_table) 🪑 Rezerve masa<br> @endif
                                         @if($paket->includes_coaching) 🧭 Koçluk<br> @endif
+                                        @if($paket->includes_exam_club) 📝 Deneme kulübü<br> @endif
+                                        @if($paket->includes_private_lessons) 👨‍🏫 Özel ders<br> @endif
                                         @if($paket->weekly_mock_exams) 📝 Haftada {{ $paket->weekly_mock_exams }} deneme<br> @endif
                                         @foreach($paket->items as $kalem)
                                             ☕ {{ $kalem->product->name }} — {{ $kalem->label() }}<br>

@@ -29,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
             'subscription' => \App\Http\Middleware\ActiveSubscription::class,
             'role' => \App\Http\Middleware\EnsureRole::class,
+            'entitlement' => \App\Http\Middleware\EnsureEntitlement::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

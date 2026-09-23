@@ -66,6 +66,51 @@ class PackageSubscriptionTest extends TestCase
         $this->actingAs($yonetici)->get('/yonetim/paketler')->assertOk()->assertSee('Standart')->assertSee('ayda 30 adet');
     }
 
+    /** Dalga 19: seviye etiketi ve yeni hak bayraklari formdan yazilir. */
+    public function test_an_admin_defines_a_tier_with_its_rights(): void
+    {
+        $this->actingAs(User::factory()->admin()->create())
+            ->post(route('admin.packages.store'), [
+                'name' => 'Kral',
+                'tier' => 3,
+                'monthly_price' => 12000,
+                'has_reserved_table' => '1',
+                'includes_coaching' => '1',
+                'includes_exam_club' => '1',
+                'includes_private_lessons' => '1',
+            ])->assertSessionHasNoErrors();
+
+        $paket = \App\Models\Package::where('name', 'Kral')->sole();
+        $this->assertSame(3, $paket->tier);
+        $this->assertTrue($paket->includes_exam_club);
+        $this->assertTrue($paket->includes_private_lessons);
+        $this->assertFalse($paket->is_addon);
+    }
+
+    public function test_an_admin_defines_an_addon_without_a_tier(): void
+    {
+        $this->actingAs(User::factory()->admin()->create())
+            ->post(route('admin.packages.store'), [
+                'name' => 'Deneme Kulübü',
+                'tier' => '',
+                'monthly_price' => 1500,
+                'includes_exam_club' => '1',
+                'is_addon' => '1',
+            ])->assertSessionHasNoErrors();
+
+        $paket = \App\Models\Package::where('name', 'Deneme Kulübü')->sole();
+        $this->assertNull($paket->tier);
+        $this->assertTrue($paket->is_addon);
+    }
+
+    public function test_a_tier_must_be_one_two_or_three(): void
+    {
+        $this->actingAs(User::factory()->admin()->create())
+            ->post(route('admin.packages.store'), [
+                'name' => 'Yanlis', 'tier' => 4, 'monthly_price' => 1,
+            ])->assertSessionHasErrors('tier');
+    }
+
     public function test_only_an_admin_manages_packages(): void
     {
         $this->post('/yonetim/paketler', ['name' => 'X', 'monthly_price' => 1])->assertRedirect(route('login'));

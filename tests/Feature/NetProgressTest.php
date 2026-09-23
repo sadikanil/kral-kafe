@@ -34,7 +34,7 @@ class NetProgressTest extends TestCase
 
     private function ogrenci(string $ad = 'Öğrenci'): User
     {
-        return User::factory()->create([
+        return User::factory()->withPackage(\App\Models\Package::factory()->tier3())->create([
             'name' => $ad,
             'role' => Role::Student->value,
             'subscription_status' => 'active',

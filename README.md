@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 512 test / 1298 doğrulama yeşil._
+_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 535 test / 1343 doğrulama yeşil._
 
 ---
 
@@ -16,12 +16,12 @@ _Son güncelleme: 23 Eylül 2026 · Laravel 12 · 512 test / 1298 doğrulama ye�
 
 > Tek bakışta takip için. Biten satır `[x]` olur. Bu bölüm §1'le çelişirse **bu geçerli**.
 
-**Paketler** — veli ayrı etiket taşımaz, çocuğunun paketini görür.
+**Paketler** — veli ayrı etiket taşımaz, çocuğunun paketini görür. Deneme adı, sonuçları ve raporları = **deneme kulübü**. Personel (admin, koç) pakete bağlı değil.
 
 | Paket | Masa | Deneme takvimi | Koçluk | Deneme kulübü | Özel ders (Cahit Hoca) |
 |---|:--:|:--:|:--:|:--:|:--:|
 | Tier 1 · Standart | ✅ | yalnızca liste | — | — | — |
-| Tier 2 · Orta | ✅ | ✅ | ✅ | ek olarak alınabilir | — |
+| Tier 2 · Orta | ✅ | yalnızca liste | ✅ | ek olarak alınabilir | — |
 | Tier 3 · Kral | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Sadece deneme | — | ✅ | — | ✅ | — |
 
@@ -30,7 +30,7 @@ _Son güncelleme: 23 Eylül 2026 · Laravel 12 · 512 test / 1298 doğrulama ye�
 - [x] **Denetim** — cron canlıda hiç çalışmıyordu (yol + başlık), düzeltildi. 505 test yeşil, migration'lar yerel+canlı tamam, view/route derleniyor. README'deki eski sayılar düzeltildi.
 - [x] **18 · Telefonla giriş** — önce telefon; şifresi varsa şifre sor, yoksa şifre belirlet. E-posta ve şifre isteğe bağlı; admin e-postayla girmeye devam eder.
 - [x] **18b · Şifre sıfırla** — kullanıcı düzenleme sayfasında buton: her cihazdan çıkarılır, sonraki girişte yeni şifre belirler.
-- [ ] **19 · Paket seviyesi** — pakete `tier`; deneme kulübü ek paket olarak eklenebilir; "sadece deneme" paketi tanımlanabilir.
+- [x] **19 · Paket seviyesi** — pakete seviye + deneme kulübü/özel ders/ek paket kutuları. Masa ve deneme detayı artık pakete bağlı.
 - [ ] **20 · Kullanıcı ekleme akışı** — rol → paket → koç (tier 2+) → veli (öğrenciye **en az 1 veli zorunlu**).
 - [ ] **21 · Tek menü** — `/koc/...` ayrımı kalkar; herkes tek düz menüde yetkisi kadarını görür.
 - [ ] **22 · Ödemeler (öğrenci + veli)** — anlaşılan paket bedeli + aylık harcama, ay ay.

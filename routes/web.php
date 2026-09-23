@@ -76,13 +76,16 @@ Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')-
     // Kendi haftalik raporu. SS6.1-3: veliye giden ogrenciye de gorunur.
     Route::get('/rapor', [\App\Http\Controllers\User\WeeklyReportController::class, 'show'])->name('report');
 
-    // Deneme sonuclari (Dalga 12): siralamalar ve yonetici notu
-    Route::get('/deneme-sonuclari', [\App\Http\Controllers\User\ExamResultController::class, 'index'])
-        ->name('exam-results');
+    // Deneme sonuclari ve raporlari: yalnizca deneme kulubu (Dalga 19)
+    Route::middleware('entitlement:examClub')->group(function () {
+        // Deneme sonuclari (Dalga 12): siralamalar ve yonetici notu
+        Route::get('/deneme-sonuclari', [\App\Http\Controllers\User\ExamResultController::class, 'index'])
+            ->name('exam-results');
 
-    Route::get('/deneme-raporlari', [UserExamReportController::class, 'index'])->name('exam-reports.index');
-    Route::get('/deneme-raporlari/{report}', [UserExamReportController::class, 'show'])->name('exam-reports.show');
-    Route::get('/deneme-raporlari/{report}/pdf', [UserExamReportController::class, 'pdf'])->name('exam-reports.pdf');
+        Route::get('/deneme-raporlari', [UserExamReportController::class, 'index'])->name('exam-reports.index');
+        Route::get('/deneme-raporlari/{report}', [UserExamReportController::class, 'show'])->name('exam-reports.show');
+        Route::get('/deneme-raporlari/{report}/pdf', [UserExamReportController::class, 'pdf'])->name('exam-reports.pdf');
+    });
 
     // Self adisyon: QR'siz, panelden urun ekleme
     Route::get('/adisyon', [TabController::class, 'index'])->name('tab');

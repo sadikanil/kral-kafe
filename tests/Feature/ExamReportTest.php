@@ -97,7 +97,7 @@ class ExamReportTest extends TestCase
     {
         $this->apiDonsun($this->analiz());
         $yonetici = User::factory()->admin()->create();
-        $ogrenci = User::factory()->student()->create();
+        $ogrenci = User::factory()->student()->withPackage(\App\Models\Package::factory()->tier3())->create();
         $deneme = ExamEvent::factory()->create(['title' => 'TG TYT 3', 'exam_date' => '2026-09-27']);
 
         $this->actingAs($yonetici)->get(route('admin.exam-reports.index', $ogrenci))->assertOk()->assertSee('PDF yükle');
@@ -154,7 +154,7 @@ class ExamReportTest extends TestCase
     public function test_only_a_pdf_is_accepted_and_only_by_an_admin(): void
     {
         $yonetici = User::factory()->admin()->create();
-        $ogrenci = User::factory()->student()->create();
+        $ogrenci = User::factory()->student()->withPackage(\App\Models\Package::factory()->tier3())->create();
 
         $this->actingAs($yonetici)->from(route('admin.exam-reports.index', $ogrenci))
             ->post(route('admin.exam-reports.store', $ogrenci), ['title' => 'x', 'pdf' => UploadedFile::fake()->image('a.jpg')])
@@ -179,7 +179,7 @@ class ExamReportTest extends TestCase
             ->push('patladi', 502)
             ->push(['choices' => [['message' => ['content' => json_encode($this->analiz())]]]])]);
         $yonetici = User::factory()->admin()->create();
-        $ogrenci = User::factory()->student()->create();
+        $ogrenci = User::factory()->student()->withPackage(\App\Models\Package::factory()->tier3())->create();
 
         $this->actingAs($yonetici)
             ->post(route('admin.exam-reports.store', $ogrenci), ['title' => 'Deneme 1', 'pdf' => $this->pdf()])

@@ -84,6 +84,11 @@ class TableSessionController extends Controller
             return back()->with('error', 'Çalışma oturumu yalnızca öğrenciler içindir.');
         }
 
+        // Dalga 19: masa hakki paketten gelir ("sadece deneme" paketinde yok).
+        if (! $kullanici->entitlements()->table) {
+            return back()->with('error', 'Paketin masa kullanımını kapsamıyor. Yöneticiye danış.');
+        }
+
         // Konum ISTEGE BAGLI: izin reddedilirse oturum yine baslar, sutunlar
         // bos kalir ve onay kuyrugunda "konum yok" gorunur. Zorunlu kilmak,
         // izni kapali ya da GPS'i zayif bir telefondaki gercek ogrenciyi

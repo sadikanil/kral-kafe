@@ -80,6 +80,8 @@ class PackageController extends Controller
     {
         $veri = $request->validate([
             'name' => ['required', 'string', 'max:80'],
+            // Dalga 19: yalnizca etiket; haklar asagidaki bayraklardan gelir
+            'tier' => ['nullable', 'integer', 'in:1,2,3'],
             'monthly_price' => ['required', 'numeric', 'min:0', 'max:999999'],
             'description' => ['nullable', 'string', 'max:255'],
             'weekly_mock_exams' => ['nullable', 'integer', 'min:0', 'max:20'],
@@ -102,11 +104,15 @@ class PackageController extends Controller
 
         return [[
             'name' => $veri['name'],
+            'tier' => $veri['tier'] ?? null,
             'monthly_price' => $veri['monthly_price'],
             'description' => $veri['description'] ?? null,
             'weekly_mock_exams' => (int) ($veri['weekly_mock_exams'] ?? 0),
             'has_reserved_table' => $request->boolean('has_reserved_table'),
             'includes_coaching' => $request->boolean('includes_coaching'),
+            'includes_exam_club' => $request->boolean('includes_exam_club'),
+            'includes_private_lessons' => $request->boolean('includes_private_lessons'),
+            'is_addon' => $request->boolean('is_addon'),
             'is_active' => $request->has('is_active') ? $request->boolean('is_active') : true,
         ], $kalemler];
     }

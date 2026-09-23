@@ -57,6 +57,18 @@ class UserFactory extends Factory
         return $this->state(fn () => ['role' => Role::Student->value, 'subscription_status' => 'active']);
     }
 
+    /**
+     * Ogrenciye bugun yururlukte bir paket atar (Dalga 19). Haklar paketten
+     * geldigi icin masa/deneme kapisindan gecmesi gereken testler bunu kullanir.
+     */
+    public function withPackage(\Database\Factories\PackageFactory|\App\Models\Package $paket): static
+    {
+        return $this->afterCreating(fn (\App\Models\User $ogrenci) => \App\Models\Subscription::factory()->create([
+            'student_id' => $ogrenci->id,
+            'package_id' => $paket instanceof \App\Models\Package ? $paket->id : $paket->create()->id,
+        ]));
+    }
+
     public function parent(): static
     {
         return $this->state(fn () => ['role' => Role::Parent->value, 'subscription_status' => 'active']);

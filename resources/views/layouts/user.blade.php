@@ -58,6 +58,7 @@
                     <span>Tüketim Geçmişi</span>
                 </a>
 
+                @if(auth()->user()->entitlements()->examClub)
                 <a href="{{ route('user.exam-reports.index') }}"
                     class="sidebar-nav-link {{ request()->routeIs('user.exam-reports.*') ? 'active' : '' }}">
                     <span class="sidebar-nav-link-icon">📄</span>
@@ -69,6 +70,7 @@
                     <span class="sidebar-nav-link-icon">📊</span>
                     <span>Deneme Sonuçlarım</span>
                 </a>
+                @endif
 
                 <a href="{{ route('user.exams') }}"
                     class="sidebar-nav-link {{ request()->routeIs('user.exams') ? 'active' : '' }}">

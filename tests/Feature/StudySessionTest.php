@@ -25,7 +25,7 @@ class StudySessionTest extends TestCase
 
     private function ogrenci(): User
     {
-        return User::factory()->create([
+        return User::factory()->withPackage(\App\Models\Package::factory()->tier3())->create([
             'role' => Role::Student->value,
             'subscription_status' => 'active',
         ]);

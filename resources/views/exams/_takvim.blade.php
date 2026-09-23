@@ -1,5 +1,7 @@
 {{-- Aylik takvim izgarasi. Beklenen: $weeks, $monthLabel, $neighbours,
-     $calendarRoute (ay parametresi eklenecek rota adi), istege bagli $editable. --}}
+     $calendarRoute (ay parametresi eklenecek rota adi), istege bagli $editable.
+     Deneme adi yalnizca deneme kulubunde (Dalga 19); yonetici her seyi gorur. --}}
+@php $detay = $detay ?? auth()->user()?->entitlements()->examClub; @endphp
 @php $gunAdlari = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz']; @endphp
 
 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -28,15 +30,15 @@
                             @foreach($gun['events'] as $deneme)
                                 <div class="mt-1">
                                     @if(!empty($editable))
-                                        <a href="{{ route('admin.exams.edit', $deneme) }}" class="badge badge-{{ $deneme->exam_type->badgeClass() }}" title="{{ $deneme->title }}">
+                                        <a href="{{ route('admin.exams.edit', $deneme) }}" class="badge badge-{{ $deneme->exam_type->badgeClass() }}" title="{{ $detay ? $deneme->title : '' }}">
                                             {{ $deneme->exam_type->label() }}{{ $deneme->starts_at ? ' ' . $deneme->starts_at : '' }}
                                         </a>
                                     @else
-                                        <span class="badge badge-{{ $deneme->exam_type->badgeClass() }}" title="{{ $deneme->title }}">
+                                        <span class="badge badge-{{ $deneme->exam_type->badgeClass() }}" title="{{ $detay ? $deneme->title : '' }}">
                                             {{ $deneme->exam_type->label() }}{{ $deneme->starts_at ? ' ' . $deneme->starts_at : '' }}
                                         </span>
                                     @endif
-                                    <div style="font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $deneme->title }}</div>
+                                    <div style="font-size: 0.75rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $detay ? $deneme->title : '' }}</div>
                                 </div>
                             @endforeach
                         </td>

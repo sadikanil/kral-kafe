@@ -61,6 +61,8 @@
 
                 @if(! $table->is_active)
                     <p class="text-danger mb-3">Bu masa şu anda kullanımda değil.</p>
+                @elseif(auth()->user()->hasRole(\App\Enums\Role::Student) && ! auth()->user()->entitlements()->table)
+                    <p class="text-danger mb-0">Paketin masa kullanımını kapsamıyor. Yöneticiye danış.</p>
                 @elseif(auth()->user()->hasRole(\App\Enums\Role::Student))
                     <p class="text-muted mb-3">Hoş geldin {{ auth()->user()->name }}!</p>
                     <form action="{{ route('table.session.start', $table->qr_code) }}" method="POST">

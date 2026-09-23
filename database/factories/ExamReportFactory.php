@@ -17,7 +17,8 @@ class ExamReportFactory extends Factory
     public function definition(): array
     {
         return [
-            'student_id' => User::factory()->student(),
+            // Rapor yalnizca deneme kulubunde gorunur (Dalga 19)
+            'student_id' => User::factory()->student()->withPackage(\App\Models\Package::factory()->tier3()),
             'exam_event_id' => null,
             'title' => 'Deneme ' . fake()->numberBetween(1, 20),
             'file_path' => 'deneme-raporlari/' . Str::uuid() . '.pdf',
