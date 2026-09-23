@@ -12,8 +12,43 @@ _Son güncelleme: 22 Eylül 2026 · Laravel 12 · 294 test / 862 doğrulama yeş
 
 ---
 
+## 0. Şimdiki plan (23 Eylül 2026) · ⏸️ onay bekliyor
+
+> Tek bakışta takip için. Biten satır `[x]` olur. Bu bölüm §1'le çelişirse **bu geçerli**.
+
+**Paketler**
+
+| Paket | Masa | Deneme takvimi | Koçluk | Deneme kulübü | Özel ders (Cahit Hoca) |
+|---|:--:|:--:|:--:|:--:|:--:|
+| Tier 1 · Standart | ✅ | yalnızca liste | — | — | — |
+| Tier 2 · Orta | ✅ | ✅ | ✅ | ❓ | — |
+| Tier 3 · Kral | ✅ | ✅ | ✅ | ✅ | ✅ |
+
+**Dalgalar** (sırayla)
+
+- [ ] **18 · Telefonla giriş** — önce telefon; şifresi varsa şifre sor, yoksa şifre belirlet. E-posta isteğe bağlı.
+- [ ] **19 · Paket seviyesi** — pakete `tier` (1/2/3); erişim kapıları buna bağlanır.
+- [ ] **20 · Kullanıcı ekleme akışı** — rol → paket → koç (tier 2+) → veli (öğrenciye **en az 1 veli zorunlu**).
+- [ ] **21 · Tek menü** — `/koc/...` ayrımı kalkar; herkes tek düz menüde yetkisi kadarını görür.
+- [ ] **22 · Ödemeler (öğrenci + veli)** — anlaşılan paket bedeli + aylık harcama, ay ay.
+- [ ] **23 · Çalışma sayacı sayfası** — duraklat/devam, "15 dk mola", "öğle arası 1 saat"; öğle arasında kafeden çıkmak serbest.
+- [ ] **24 · Esneme hatırlatıcıları** — sayaç sayfasında popup: 25 dk'da göz molası, 50 dk'da kalk-esne (aralıklar kaynaklarla doğrulanacak).
+- [ ] **25 · Özel ders takvimi** — tier 3 öğrencinin takviminde; Cahit Hoca (admin) her zaman düzenler.
+- [ ] **26 · Adisyon sadeleştirme** — öğrenci lokasyon seçmez; lokasyon QR'ları kalkar; ürünün yeri/stoğu yalnızca admin formunda.
+- [ ] **27 · Stok sayımı hatırlatması** — belirli aralıkla admin'e push bildirim.
+
+**Cevabını beklediğim 4 soru**
+
+1. Tier 2'de deneme kulübü var mı, yok mu?
+2. Veli de paket etiketi taşısın mı, yoksa çocuğunun paketini mi görsün? *(öneri: çocuğunun)*
+3. Telefonla ilk girişte doğrulama yok → numarayı bilen biri, öğrenciden önce şifre koyabilir. Kabul mü? *(öneri: kabul, ama admin "şifreyi sıfırla" butonu olsun)*
+4. Push bildirim iPhone'da ancak site ana ekrana eklenirse çalışır. Sorun olur mu? Stok sayımı kaç günde bir?
+
+---
+
 ## İçindekiler
 
+0. [Şimdiki plan](#0-şimdiki-plan-23-eylül-2026--️-onay-bekliyor) — **buradan başla**
 1. [Hedef akış](#1-hedef-akış) — sistemin bütünü, uçtan uca
 2. [Akış değişiklikleri](#2-akış-değişiklikleri-22-eylül-2026) — hangi eski karar değişti
 3. [Bugün canlıda ne var](#3-bugün-canlıda-ne-var)
