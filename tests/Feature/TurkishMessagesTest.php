@@ -15,8 +15,8 @@ class TurkishMessagesTest extends TestCase
         $user = User::factory()->create();
 
         $this->from('/giris')
-            ->post('/giris', ['email' => $user->email, 'password' => 'yanlis-sifre'])
-            ->assertSessionHasErrors(['email' => 'Girdiğiniz bilgiler kayıtlarımızla eşleşmiyor.']);
+            ->post('/giris', ['kimlik' => $user->email, 'password' => 'yanlis-sifre'])
+            ->assertSessionHasErrors(['kimlik' => 'Girdiğiniz bilgiler kayıtlarımızla eşleşmiyor.']);
     }
 
     public function test_unknown_email_on_password_reset_is_reported_in_turkish(): void

@@ -12,6 +12,10 @@ Route::middleware('guest')->group(function () {
 
     Route::post('giris', [AuthenticatedSessionController::class, 'store']);
 
+    // Dalga 18: yonetici ekledi, kullanici ilk giriste sifresini belirler
+    Route::post('giris/sifre-belirle', [AuthenticatedSessionController::class, 'setPassword'])
+        ->name('login.set-password');
+
     Route::get('sifremi-unuttum', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
 

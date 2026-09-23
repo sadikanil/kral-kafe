@@ -44,7 +44,7 @@
                     <thead>
                         <tr>
                             <th>İsim</th>
-                            <th>E-posta</th>
+                            <th>Telefon / E-posta</th>
                             <th>Rol</th>
                             <th>Durum</th>
                             <th>Kayıt Tarihi</th>
@@ -62,7 +62,7 @@
                                         <span>{{ $user->name }}</span>
                                     </div>
                                 </td>
-                                <td>{{ $user->email }}</td>
+                                <td>{{ $user->contactLabel() }}</td>
                                 <td>
                                     <span class="badge badge-{{ $user->role()?->badgeClass() ?? 'info' }}">
                                         {{ $user->role()?->label() ?? $user->role }}

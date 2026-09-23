@@ -19,19 +19,20 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="email" class="form-label">E-posta *</label>
-                    <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                        value="{{ old('email') }}" required>
-                    @error('email')
+                    <label for="phone" class="form-label">Telefon *</label>
+                    <input type="tel" inputmode="tel" id="phone" name="phone" class="form-control @error('phone') is-invalid @enderror"
+                        value="{{ old('phone') }}" placeholder="05XX XXX XX XX" required>
+                    <span class="text-muted" style="font-size:.85rem">Kullanıcı bu numarayla giriş yapar.</span>
+                    @error('phone')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
                 </div>
 
                 <div class="form-group">
-                    <label for="phone" class="form-label">Telefon</label>
-                    <input type="text" id="phone" name="phone" class="form-control @error('phone') is-invalid @enderror"
-                        value="{{ old('phone') }}" placeholder="05XX XXX XX XX">
-                    @error('phone')
+                    <label for="email" class="form-label">E-posta <span class="text-muted">(isteğe bağlı)</span></label>
+                    <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror"
+                        value="{{ old('email') }}">
+                    @error('email')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
                 </div>
@@ -48,20 +49,7 @@
                     @enderror
                 </div>
 
-                <div class="form-group">
-                    <label for="password" class="form-label">Şifre *</label>
-                    <input type="password" id="password" name="password"
-                        class="form-control @error('password') is-invalid @enderror" required>
-                    @error('password')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="password_confirmation" class="form-label">Şifre Tekrar *</label>
-                    <input type="password" id="password_confirmation" name="password_confirmation" class="form-control"
-                        required>
-                </div>
+                <p class="text-muted">Şifre gerekmez: kullanıcı ilk girişinde telefon numarasını yazar ve şifresini kendisi belirler.</p>
 
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">Kullanıcı Ekle</button>

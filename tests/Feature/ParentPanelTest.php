@@ -120,7 +120,7 @@ class ParentPanelTest extends TestCase
     {
         $veli = User::factory()->parent()->create(['password' => bcrypt('Parola-123!')]);
 
-        $this->post(route('login'), ['email' => $veli->email, 'password' => 'Parola-123!'])
+        $this->post(route('login'), ['kimlik' => $veli->email, 'password' => 'Parola-123!'])
             ->assertRedirect(route('parent.dashboard'));
     }
 

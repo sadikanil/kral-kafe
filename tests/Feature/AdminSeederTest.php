@@ -72,7 +72,7 @@ class AdminSeederTest extends TestCase
         $this->assertSame('admin', $admin->role);
 
         $this->post(route('login'), [
-            'email' => 'admin@kralkafe.com',
+            'kimlik' => 'admin@kralkafe.com',
             'password' => 'kurulum-sifresi-123',
         ])->assertRedirect(route('admin.dashboard'));
     }

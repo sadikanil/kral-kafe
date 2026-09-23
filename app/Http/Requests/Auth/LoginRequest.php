@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
+use App\Support\Telefon;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -9,67 +11,99 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * Giris (Dalga 18). Kimlik once telefon, yoksa e-posta. Sifre alani
+ * gelmediyse bu yalnizca birinci adimdir: kimlik taninir, hangi adimin
+ * acilacagina karar verilir.
+ */
 class LoginRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     */
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string'],
+            'kimlik' => ['required', 'string', 'max:255'],
+            'password' => ['sometimes', 'nullable', 'string'],
         ];
     }
 
-    /**
-     * Get custom messages for validator errors.
-     */
     public function messages(): array
     {
         return [
-            'email.required' => 'E-posta adresi gereklidir.',
-            'email.email' => 'Geçerli bir e-posta adresi girin.',
-            'password.required' => 'Şifre gereklidir.',
+            'kimlik.required' => 'Telefon numaranızı girin.',
         ];
     }
 
+    /** Birinci adim mi (yalnizca kimlik), yoksa sifre de geldi mi. */
+    public function isIdentityStep(): bool
+    {
+        return ! $this->has('password');
+    }
+
     /**
-     * Attempt to authenticate the request's credentials.
+     * Kimlige karsilik gelen kullanici. Telefon tek bicimde saklandigi icin
+     * once normalize edilir; '@' iceriyorsa e-posta sayilir.
      *
-     * @throws \Illuminate\Validation\ValidationException
+     * @throws ValidationException
+     */
+    public function identifiedUser(): User
+    {
+        $kimlik = trim($this->string('kimlik'));
+
+        if (str_contains($kimlik, '@')) {
+            $kullanici = User::where('email', Str::lower($kimlik))->first();
+        } else {
+            $telefon = Telefon::normalize($kimlik)
+                ?? throw ValidationException::withMessages([
+                    'kimlik' => 'Geçerli bir cep telefonu numarası girin (05XX XXX XX XX).',
+                ]);
+
+            $kullanici = User::where('phone', $telefon)->first();
+        }
+
+        return $kullanici ?? throw ValidationException::withMessages([
+            'kimlik' => 'Bu bilgiyle kayıtlı bir kullanıcı yok.',
+        ]);
+    }
+
+    /**
+     * Sifreyle giris. Sifresi hic olmayan hesap burada ASLA gecmez - onun
+     * yolu sifre belirleme adimi.
+     *
+     * @throws ValidationException
      */
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
 
-        if (!Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $kullanici = $this->identifiedUser();
+        $sifre = (string) $this->input('password');
+
+        $gecti = $kullanici->password !== null
+            && $sifre !== ''
+            && Auth::getProvider()->validateCredentials($kullanici, ['password' => $sifre]);
+
+        if (! $gecti) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
+                'kimlik' => __('auth.failed'),
             ]);
         }
+
+        Auth::login($kullanici, $this->boolean('remember'));
 
         RateLimiter::clear($this->throttleKey());
     }
 
-    /**
-     * Ensure the login request is not rate limited.
-     *
-     * @throws \Illuminate\Validation\ValidationException
-     */
+    /** @throws ValidationException */
     public function ensureIsNotRateLimited(): void
     {
-        if (!RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             return;
         }
 
@@ -78,18 +112,15 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
+            'kimlik' => trans('auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),
         ]);
     }
 
-    /**
-     * Get the rate limiting throttle key for the request.
-     */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
+        return Str::transliterate(Str::lower($this->string('kimlik')) . '|' . $this->ip());
     }
 }

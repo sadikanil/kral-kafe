@@ -84,6 +84,12 @@ class User extends Authenticatable
      * Rolu taninmayan bir satir (elle duzenlenmis veri, silinmis bir rol)
      * kullaniciyi bosluga dusurmemeli; en dar yetkili panele iner.
      */
+    /** Listelerde kimlik: once telefon (Dalga 18), yoksa e-posta. */
+    public function contactLabel(): string
+    {
+        return $this->phone ? \App\Support\Telefon::format($this->phone) : (string) $this->email;
+    }
+
     public function homeRoute(): string
     {
         return $this->role()?->homeRoute() ?? 'user.dashboard';

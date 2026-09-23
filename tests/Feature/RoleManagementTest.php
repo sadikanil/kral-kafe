@@ -141,7 +141,7 @@ class RoleManagementTest extends TestCase
             });
 
             $this->post(route('login'), [
-                'email' => $kullanici->email,
+                'kimlik' => $kullanici->email,
                 'password' => 'Parola-123!',
             ])->assertRedirect($beklenen);
 

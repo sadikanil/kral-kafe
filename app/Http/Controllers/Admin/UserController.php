@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\StudyGoal;
 use App\Models\User;
 use App\Support\LocalDay;
+use App\Support\Telefon;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -38,9 +39,17 @@ class UserController extends Controller
         if ($request->has('search') && $request->search) {
             $search = $request->search;
             $like = SqlDialect::likeOperator(DB::connection()->getDriverName());
-            $query->where(function ($q) use ($search, $like) {
+            // Telefon rakam olarak saklaniyor; "0532 123" gibi yazilan arama
+            // bastaki sifir ve bosluklardan arindirilir.
+            $rakamlar = ltrim(preg_replace('/\D/', '', $search), '0');
+
+            $query->where(function ($q) use ($search, $like, $rakamlar) {
                 $q->where('name', $like, "%{$search}%")
                     ->orWhere('email', $like, "%{$search}%");
+
+                if ($rakamlar !== '') {
+                    $q->orWhere('phone', $like, "%{$rakamlar}%");
+                }
             });
         }
 
@@ -65,18 +74,21 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        $this->normalizePhone($request);
+
+        // Dalga 18: telefon birincil kimlik; e-posta ve sifre istege bagli.
+        // Sifre bos birakilirsa kullanici ilk giriste kendisi belirler.
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            ...$this->identityRules(),
+            'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', Rule::enum(Role::class)],
-            'phone' => ['nullable', 'string', 'max:20'],
-        ]);
+        ], $this->identityMessages());
 
         $user = User::create([
             'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
+            'email' => $validated['email'] ?? null,
+            'password' => filled($validated['password'] ?? null) ? Hash::make($validated['password']) : null,
             'role' => $validated['role'],
             'phone' => $validated['phone'] ?? null,
             'subscription_status' => 'active',
@@ -126,13 +138,14 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
+        $this->normalizePhone($request);
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            ...$this->identityRules($user),
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', Rule::enum(Role::class)],
             'subscription_status' => ['required', 'in:active,inactive,suspended'],
-            'phone' => ['nullable', 'string', 'max:20'],
             'weekly_goal_hours' => ['nullable', 'integer', 'min:1', 'max:120'],
             // Bag yalnizca dogru rollere kurulabilir: bir veliyi "ogrenci"
             // diye baglamak paneli bos birakir, hata vermez. exists kurali
@@ -141,11 +154,11 @@ class UserController extends Controller
             'student_ids.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Student->value)],
             'parent_ids' => ['sometimes', 'nullable', 'array'],
             'parent_ids.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Parent->value)],
-        ]);
+        ], $this->identityMessages());
 
         $user->update([
             'name' => $validated['name'],
-            'email' => $validated['email'],
+            'email' => $validated['email'] ?? null,
             'role' => $validated['role'],
             'subscription_status' => $validated['subscription_status'],
             'phone' => $validated['phone'] ?? null,
@@ -251,5 +264,38 @@ class UserController extends Controller
         $statusText = $newStatus === 'active' ? 'aktifleştirildi' : 'askıya alındı';
 
         return back()->with('success', "Kullanıcı aboneliği {$statusText}.");
+    }
+
+    /**
+     * Telefon tek bicimde saklanir (App\Support\Telefon). Gecersiz girdi
+     * OLDUGU GIBI birakilir ki asagidaki kural onu reddedebilsin.
+     */
+    private function normalizePhone(Request $request): void
+    {
+        if (filled($request->input('phone'))) {
+            $request->merge([
+                'phone' => Telefon::normalize($request->input('phone')) ?? $request->input('phone'),
+            ]);
+        }
+    }
+
+    /** Telefon ya da e-postadan en az biri; ikisi de tekil. */
+    private function identityRules(?User $user = null): array
+    {
+        return [
+            'phone' => ['nullable', 'required_without:email', 'regex:/^5\d{9}$/',
+                Rule::unique('users', 'phone')->ignore($user)],
+            'email' => ['nullable', 'string', 'email', 'max:255',
+                Rule::unique('users', 'email')->ignore($user)],
+        ];
+    }
+
+    private function identityMessages(): array
+    {
+        return [
+            'phone.required_without' => 'Telefon numarası gerekli (e-posta yoksa).',
+            'phone.regex' => 'Geçerli bir cep telefonu girin (05XX XXX XX XX).',
+            'phone.unique' => 'Bu telefon numarası başka bir kullanıcıda kayıtlı.',
+        ];
     }
 }

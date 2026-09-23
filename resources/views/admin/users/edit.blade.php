@@ -20,19 +20,19 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="email" class="form-label">E-posta *</label>
-                    <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror"
-                        value="{{ old('email', $user->email) }}" required>
-                    @error('email')
+                    <label for="phone" class="form-label">Telefon</label>
+                    <input type="tel" inputmode="tel" id="phone" name="phone" class="form-control @error('phone') is-invalid @enderror"
+                        value="{{ old('phone', $user->phone ? \App\Support\Telefon::format($user->phone) : '') }}" placeholder="05XX XXX XX XX">
+                    @error('phone')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
                 </div>
 
                 <div class="form-group">
-                    <label for="phone" class="form-label">Telefon</label>
-                    <input type="text" id="phone" name="phone" class="form-control @error('phone') is-invalid @enderror"
-                        value="{{ old('phone', $user->phone) }}">
-                    @error('phone')
+                    <label for="email" class="form-label">E-posta <span class="text-muted">(isteğe bağlı)</span></label>
+                    <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror"
+                        value="{{ old('email', $user->email) }}">
+                    @error('email')
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
                 </div>
@@ -80,7 +80,7 @@
                                             name="student_ids[]" value="{{ $ogrenci->id }}"
                                             {{ in_array($ogrenci->id, old('student_ids', $linkedStudentIds) ?: []) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="student_{{ $ogrenci->id }}">
-                                            {{ $ogrenci->name }} <span class="text-muted">({{ $ogrenci->email }})</span>
+                                            {{ $ogrenci->name }} <span class="text-muted">({{ $ogrenci->contactLabel() }})</span>
                                         </label>
                                     </div>
                                 @endforeach
@@ -110,7 +110,7 @@
                                             name="parent_ids[]" value="{{ $veli->id }}"
                                             {{ in_array($veli->id, old('parent_ids', $linkedParentIds) ?: []) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="parent_{{ $veli->id }}">
-                                            {{ $veli->name }} <span class="text-muted">({{ $veli->email }})</span>
+                                            {{ $veli->name }} <span class="text-muted">({{ $veli->contactLabel() }})</span>
                                         </label>
                                     </div>
                                 @endforeach
