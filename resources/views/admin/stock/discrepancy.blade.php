@@ -3,7 +3,7 @@
 @section('title', 'Tutarsızlık Detayı - Kral Kafe')
 @section('page-title', 'Tutarsızlık #' . $discrepancy->id)
 
-@section('topbar-actions')
+@section('page-actions')
     <a href="{{ route('admin.stock.counts') }}" class="btn btn-secondary btn-sm">← Sayıma Dön</a>
     @if($discrepancy->location)
         <a href="{{ route('admin.stock.index', ['konum' => $discrepancy->location]) }}" class="btn btn-primary btn-sm">📍 {{ $discrepancy->location->name }}</a>

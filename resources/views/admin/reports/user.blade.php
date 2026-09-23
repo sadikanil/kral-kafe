@@ -8,7 +8,7 @@
 @section('title', $user->name . ' - Tüketim Raporu - Kral Kafe')
 @section('page-title', $user->name . ' - ' . $periodLabel)
 
-@section('topbar-actions')
+@section('page-actions')
     <a href="{{ route('admin.reports.monthly', ['year' => $year, 'month' => $month]) }}"
         class="btn btn-secondary btn-sm">← Aylık Rapor</a>
     <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-secondary btn-sm">✏️ Kullanıcıyı Düzenle</a>

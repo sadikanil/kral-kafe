@@ -7,6 +7,10 @@
  *  3. Zil paneli: disari dokununca ve Escape ile kapanir.
  *  4. Hata ozeti: acilista odak alir; satirlar hatali alana goturur ve
  *     alanlar aria-invalid / aria-describedby ile hatalarina baglanir.
+ *  5. Onay (Faz 3): data-confirm tasiyan form confirm() yerine alttan
+ *     acilan eylem sayfasiyla sorulur; dialog yoksa tarayicinin onayi.
+ *  6. Bildirim balonu (Faz 3): kapat dugmesi, acilista sesli duyuru, ust
+ *     cubukta kaydirinca kucuk baslik.
  *
  * Mantik asagidaki fonksiyonlarda; tests/js/kabuk.test.mjs onlari sahte
  * elemanlarla cagirir. Tarayicida yalnizca baslat() calisir (module yok).
@@ -255,9 +259,115 @@
         });
     }
 
+    // --- 5. Onay sayfasi --------------------------------------------------------
+
+    /**
+     * Satir ici onsubmit="return confirm(...)" yerine data-confirm="..." (ve
+     * istege bagli data-confirm-ok="Sil"). Gonderen dugmenin kendi sorusu
+     * formunkinden once gelir. Sayfa beklerken form durur; "evet" gelince AYNI
+     * dugmeyle yeniden gonderilir (name=value kaybolmasin) ve o gonderim
+     * sorulmadan gecer.
+     *
+     * Belgede yakalama asamasinda calisir: cift gonderim kilidi (penceredeki
+     * kabarcik) durdurulan ilk gonderimi defaultPrevented gorup atlar.
+     *
+     * @param {function(string, string, function(boolean))} sor
+     */
+    function onay(sor) {
+        return {
+            yakala: function (olay) {
+                var form = olay.target;
+                var gonderen = olay.submitter || null;
+                var nitelik = function (ad) {
+                    return (gonderen && gonderen.getAttribute(ad)) || form.getAttribute(ad);
+                };
+                var metin = nitelik('data-confirm');
+
+                if (!metin) {
+                    return;
+                }
+                if (form.hasAttribute('data-onaylandi')) {
+                    form.removeAttribute('data-onaylandi');
+                    return;
+                }
+
+                olay.preventDefault();
+                sor(metin, nitelik('data-confirm-ok') || 'Onayla', function (evet) {
+                    if (!evet) {
+                        return;
+                    }
+                    form.setAttribute('data-onaylandi', '');
+                    if (typeof form.requestSubmit === 'function') {
+                        form.requestSubmit(gonderen || undefined);
+                    } else {
+                        form.submit();
+                    }
+                });
+            },
+        };
+    }
+
+    /**
+     * Soruyu soran: layouts/app'teki <dialog id="onay">. Eski tarayicida
+     * (showModal yok) ya da dialogsuz sayfada tarayicinin kendi onayi.
+     * Escape ve Vazgec kapanis degerini bos birakir: "hayir".
+     */
+    function sorucu(pencere, pencereOgesi) {
+        var d = pencereOgesi;
+
+        if (!d || typeof d.showModal !== 'function') {
+            return function (metin, etiket, sonuc) {
+                sonuc(pencere.confirm(metin));
+            };
+        }
+
+        var bekleyen = null;
+        d.addEventListener('close', function () {
+            var sonuc = bekleyen;
+            bekleyen = null;
+            if (sonuc) {
+                sonuc(d.returnValue === 'evet');
+            }
+        });
+
+        return function (metin, etiket, sonuc) {
+            d.querySelector('.js-onay-metni').textContent = metin;
+            d.querySelector('.js-onay-evet').textContent = etiket;
+            d.returnValue = '';
+            bekleyen = sonuc;
+            d.showModal();
+        };
+    }
+
+    // --- 6. Bildirim balonu ------------------------------------------------------
+
+    /** Cikis hareketi (.is-leaving, app.css) bittikten sonra sayfadan kalkar. */
+    function balonuKapat(balon, ertele) {
+        balon.classList.add('is-leaving');
+        ertele(function () {
+            balon.remove();
+        });
+    }
+
+    /**
+     * Sayfa acilirken zaten orada olan canli bolgeyi ekran okuyucular
+     * okumuyor; yonlendirmeden sonra gelen "Kaydedildi" hic duyulmazdi. Metin
+     * bir an bosaltilip yeniden yazilir: degisiklik olarak duyurulur.
+     */
+    function duyur(mesaj, ertele) {
+        var metin = mesaj.textContent;
+        mesaj.textContent = '';
+        ertele(function () {
+            mesaj.textContent = metin;
+        });
+    }
+
     // --- Tarayici baglantisi -------------------------------------------------
 
     function baslat(pencere, belge) {
+        var o = onay(sorucu(pencere, belge.getElementById('onay')));
+        belge.addEventListener('submit', o.yakala, true);
+
         var kilit = gonderimKilidi(function (is) { pencere.setTimeout(is, 0); });
         // Pencerede, kabarcik asamasinda: sayfanin kendi dinleyicileri once calisir.
         pencere.addEventListener('submit', kilit.yakala);
@@ -312,6 +422,28 @@
             }
         });
 
+        belge.querySelectorAll('.toast').forEach(function (balon) {
+            var kapat = balon.querySelector('.js-balon-kapat');
+            if (kapat) {
+                kapat.addEventListener('click', function () {
+                    balonuKapat(balon, function (is) { pencere.setTimeout(is, 250); });
+                });
+            }
+            var mesaj = balon.querySelector('.toast-message');
+            if (mesaj && balon.getAttribute('role') === 'status') {
+                duyur(mesaj, function (is) { pencere.setTimeout(is, 150); });
+            }
+        });
+
+        // Buyuk baslik gorunmez olunca ust cubukta kucugu belirir (iOS).
+        var cubuk = belge.querySelector('.topbar');
+        var baslik = belge.querySelector('.page-title');
+        if (cubuk && baslik && 'IntersectionObserver' in pencere) {
+            new pencere.IntersectionObserver(function (girdiler) {
+                cubuk.classList.toggle('is-scrolled', !girdiler[0].isIntersecting);
+            }, { rootMargin: '-' + cubuk.offsetHeight + 'px 0px 0px 0px' }).observe(baslik);
+        }
+
         ozetiBagla(belge, Array.prototype.slice.call(belge.querySelectorAll('[data-hata-alani]')));
         alanlariIsaretle(Array.prototype.slice.call(belge.querySelectorAll('.is-invalid')));
 
@@ -328,6 +460,10 @@
         alanAdlari: alanAdlari,
         ozetiBagla: ozetiBagla,
         alanlariIsaretle: alanlariIsaretle,
+        onay: onay,
+        sorucu: sorucu,
+        balonuKapat: balonuKapat,
+        duyur: duyur,
     };
 
     if (typeof module === 'object' && module && module.exports) {

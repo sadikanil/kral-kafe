@@ -3,7 +3,7 @@
 @section('title', 'Masa Düzenle - Kral Kafe')
 @section('page-title', 'Masa: ' . $table->name)
 
-@section('topbar-actions')
+@section('page-actions')
     <a href="{{ route('admin.tables.qr', $table) }}" class="btn btn-secondary btn-sm">QR Kodu</a>
 @endsection
 

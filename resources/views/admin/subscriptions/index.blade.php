@@ -3,7 +3,7 @@
 @section('title', 'Paket ve Ödeme - ' . $student->name)
 @section('page-title', 'Paket ve Ödeme: ' . $student->name)
 
-@section('topbar-actions')
+@section('page-actions')
     <a href="{{ route('admin.users.edit', $student) }}" class="btn btn-secondary btn-sm">Kullanıcıya dön</a>
 @endsection
 

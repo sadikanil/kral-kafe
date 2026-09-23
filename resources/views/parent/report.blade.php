@@ -3,7 +3,7 @@
 @section('title', $student->name . ' - Haftalık Rapor')
 @section('page-title', $student->name)
 
-@section('topbar-actions')
+@section('page-actions')
     <a href="{{ route('parent.dashboard') }}" class="btn btn-sm btn-secondary">← Çocuklarım</a>
 @endsection
 

@@ -110,6 +110,8 @@ class AppShellTest extends TestCase
         $this->assertTrue($rota['continue'] ?? false);
         $this->assertMatchesRegularExpression('#' . str_replace('#', '\#', $rota['src']) . '#', '/css/app.css');
         $this->assertMatchesRegularExpression('#' . str_replace('#', '\#', $rota['src']) . '#', '/js/kabuk.js');
+        // Simge sprite'i her sayfada onlarca kez istenir (Faz 3).
+        $this->assertMatchesRegularExpression('#' . str_replace('#', '\#', $rota['src']) . '#', '/img/simgeler.svg');
         $this->assertDoesNotMatchRegularExpression('#' . str_replace('#', '\#', $rota['src']) . '#', '/kullanici/panel');
         // Surumsuz adres (eski sekme, elle yazilmis link) uzun onbellege girmesin.
         $this->assertSame([['type' => 'query', 'key' => 'v']], $rota['has'] ?? null);
@@ -216,17 +218,23 @@ class AppShellTest extends TestCase
 
     // --- Duyurular (A10) ---------------------------------------------------------
 
+    /**
+     * Faz 3: mesajlar yuzen balon. Basari role=status (betik acilista yeniden
+     * duyurur), hata role=alert ve acilista odak alir; ikisinin de adli bir
+     * kapat dugmesi var.
+     */
     public function test_flash_messages_are_announced(): void
     {
         $ogrenci = $this->ogrenci();
 
         $this->actingAs($ogrenci)->withSession(['success' => 'Adisyona eklendi'])->get(route('user.dashboard'))
-            ->assertSee('<div class="alert alert-success animate-slide-up" role="status">', false)
-            ->assertSee('Adisyona eklendi');
+            ->assertSee('<div class="toast toast-success" role="status">', false)
+            ->assertSee('<span class="toast-message">Adisyona eklendi</span>', false)
+            ->assertSee('toast-close js-balon-kapat" aria-label="Kapat"', false);
 
         $this->actingAs($ogrenci)->withSession(['error' => 'Olmadı'])->get(route('user.dashboard'))
-            ->assertSee('<div class="alert alert-danger animate-slide-up" role="alert" tabindex="-1" data-odakla>', false)
-            ->assertSee('Olmadı');
+            ->assertSee('<div class="toast toast-error" role="alert" tabindex="-1" data-odakla>', false)
+            ->assertSee('<span class="toast-message">Olmadı</span>', false);
     }
 
     /**

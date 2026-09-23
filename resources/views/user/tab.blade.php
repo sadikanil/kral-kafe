@@ -77,7 +77,7 @@
                             <input type="hidden" name="product_id" value="{{ $product->id }}">
                             <div class="product-card-image">
                                 @if($product->image_url)
-                                    <img src="{{ $product->image_src }}" alt="{{ $product->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius);">
+                                    <img src="{{ $product->image_src }}" alt="{{ $product->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--r);">
                                 @else
                                     {{ $product->emoji ?: '🍫' }}
                                 @endif

@@ -35,7 +35,7 @@
 @section('title', 'Stok Analizi - ' . $location->name)
 @section('page-title', 'Stok Analizi: ' . $location->name)
 
-@section('topbar-actions')
+@section('page-actions')
     <a href="{{ route('admin.stock.capture', $location) }}" class="btn btn-secondary btn-sm">
         📷 Yeniden Fotoğraf Yükle
     </a>
@@ -174,7 +174,7 @@
                                         <td>
                                             <div class="d-flex align-items-center gap-2">
                                                 <div
-                                                    style="width: 40px; height: 40px; background: var(--gray-100); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                                    style="width: 40px; height: 40px; background: var(--fill); border-radius: var(--r); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
                                                     {{ $product->emoji ? $product->emoji : '📦' }}
                                                 </div>
                                                 <span>{{ $product->name }}</span>
@@ -315,7 +315,7 @@
                 @forelse($photos as $photo)
                     <div>
                         <img src="{{ $photo->photo_url }}" alt="Stok fotoğrafı"
-                            style="width: 100%; height: 140px; object-fit: cover; border-radius: var(--radius); background: var(--gray-100);">
+                            style="width: 100%; height: 140px; object-fit: cover; border-radius: var(--r); background: var(--fill);">
                         <div class="mt-1 text-muted">{{ $photo->uploaded_at->timezone(config('kafe.timezone'))->format('d.m.Y H:i') }}</div>
                         <span class="badge badge-{{ $photo->isProcessed() ? 'success' : 'warning' }}">
                             {{ $photo->isProcessed() ? 'Analiz edildi' : 'İşlenmedi' }}

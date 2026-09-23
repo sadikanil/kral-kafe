@@ -3,7 +3,7 @@
 @section('title', 'QR Kod - ' . $table->name)
 @section('page-title', 'QR Kod: ' . $table->name)
 
-@section('topbar-actions')
+@section('page-actions')
     <button onclick="window.print()" class="btn btn-primary btn-sm">🖨️ Yazdır</button>
 @endsection
 
@@ -22,7 +22,7 @@
 
             <div class="mb-4">
                 <img src="{{ \App\Support\QrImage::url($table->qr_url) }}"
-                    alt="{{ $table->name }} QR kodu" style="border-radius: var(--radius); max-width: 100%;">
+                    alt="{{ $table->name }} QR kodu" style="border-radius: var(--r); max-width: 100%;">
             </div>
 
             <p class="mb-1"><code>{{ $table->qr_code }}</code></p>

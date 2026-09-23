@@ -19,7 +19,7 @@
     ],
     "routes": [
         {
-            "src": "^/(css|js)/(.+)$",
+            "src": "^/(css|js|img)/(.+)$",
             "has": [
                 {
                     "type": "query",

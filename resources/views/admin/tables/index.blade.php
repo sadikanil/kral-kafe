@@ -3,7 +3,7 @@
 @section('title', 'Masalar - Kral Kafe')
 @section('page-title', 'Masalar')
 
-@section('topbar-actions')
+@section('page-actions')
     <a href="{{ route('admin.tables.print-qr') }}" class="btn btn-secondary btn-sm">🖨️ QR Yazdır</a>
     <a href="{{ route('admin.tables.create') }}" class="btn btn-primary btn-sm">+ Yeni Masa</a>
 @endsection

@@ -3,7 +3,7 @@
 @section('title', $report->title . ' - Kral Kafe')
 @section('page-title', $report->title)
 
-@section('topbar-actions')
+@section('page-actions')
     <a href="{{ route('user.exam-reports.pdf', $report) }}" class="btn btn-secondary btn-sm" target="_blank">PDF'i aç</a>
     <a href="{{ route('user.exam-reports.index') }}" class="btn btn-secondary btn-sm">← Raporlarım</a>
 @endsection

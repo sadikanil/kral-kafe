@@ -11,7 +11,7 @@
             max-width: 420px;
             aspect-ratio: 1 / 1;
             margin: 0 auto;
-            border-radius: var(--radius);
+            border-radius: var(--r);
             overflow: hidden;
             background: #000;
         }

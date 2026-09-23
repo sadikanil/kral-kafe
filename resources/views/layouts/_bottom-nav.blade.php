@@ -1,9 +1,9 @@
 {{--
-    Alt menu (Dalga 10a, Dalga 21'de yenilendi).
+    Alt sekme cubugu (Dalga 10a, Dalga 21 ve Faz 3'te yenilendi).
 
     $tabs: en sik 4 sayfa (App\Support\Navigation::quick). 5. yer "Menu":
-    kenar cubugunu acar, tum sayfalar ayni gruplu duz listede. Her sayfa en
-    fazla iki dokunusta.
+    tum sayfalarin gruplu listesini alttan acilan sayfa olarak acar. Her
+    sayfa en fazla iki dokunusta.
 
     Yalnizca 1024px altinda cizilir (CSS); masaustunde kenar cubugu var.
 
@@ -15,12 +15,12 @@
     @foreach($tabs as $tab)
         @php($etkin = $aktif($tab))
         <a href="{{ route($tab['route']) }}" class="bottom-nav-item{{ $etkin ? ' is-active' : '' }}"@if($etkin) aria-current="page"@endif>
-            <span class="bottom-nav-icon" aria-hidden="true">{{ $tab['icon'] }}</span>
+            <span class="bottom-nav-icon" aria-hidden="true"><x-icon :name="$tab['icon']" /></span>
             <span>{{ $tab['label'] }}</span>
         </a>
     @endforeach
     <button type="button" class="bottom-nav-item js-menu-dugmesi" aria-controls="sidebar" aria-expanded="false">
-        <span class="bottom-nav-icon" aria-hidden="true">☰</span>
+        <span class="bottom-nav-icon" aria-hidden="true"><x-icon name="menu" /></span>
         <span>Menü</span>
     </button>
 </nav>

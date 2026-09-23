@@ -3,7 +3,7 @@
 @section('title', 'Deneme Takvimi - Kral Kafe')
 @section('page-title', 'Deneme Takvimi')
 
-@section('topbar-actions')
+@section('page-actions')
     <a href="{{ route('admin.exams.create') }}" class="btn btn-primary btn-sm">+ Yeni Deneme</a>
 @endsection
 

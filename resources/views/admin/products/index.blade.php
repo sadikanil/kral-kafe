@@ -3,7 +3,7 @@
 @section('title', 'Ürünler - Kral Kafe')
 @section('page-title', 'Ürünler')
 
-@section('topbar-actions')
+@section('page-actions')
     <a href="{{ route('admin.products.create') }}" class="btn btn-primary btn-sm">
         ➕ Yeni Ürün
     </a>
@@ -33,7 +33,7 @@
                                 <td class="wrap-sm">
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="hide-sm"
-                                            style="width: 40px; height: 40px; background: var(--gray-100); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                            style="width: 40px; height: 40px; background: var(--fill); border-radius: var(--r); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
                                             {{ $product->emoji ? $product->emoji : '📦' }}
                                         </div>
                                         <span>{{ $product->name }}</span>

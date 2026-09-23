@@ -3,7 +3,7 @@
 @section('title', 'Canlı Ekran - Kral Kafe')
 @section('page-title', 'Canlı Ekran')
 
-@section('topbar-actions')
+@section('page-actions')
     <button onclick="window.location.reload()" class="btn btn-secondary btn-sm">↻ Yenile</button>
 @endsection
 

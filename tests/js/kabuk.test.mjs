@@ -287,3 +287,149 @@ test('kirmizi alan hatali isaretlenir ve ardindaki mesaja baglanir', () => {
     assert.equal(mesajsiz.getAttribute('aria-invalid'), 'true');
     assert.equal(mesajsiz.hasAttribute('aria-describedby'), false);
 });
+
+// --- Onay sayfasi (Faz 3) -------------------------------------------------
+
+function sorucuKaydi(cevap) {
+    const sorulan = [];
+    const sor = (metin, etiket, sonuc) => { sorulan.push({ metin, etiket }); if (cevap !== undefined) sonuc(cevap); };
+    return { sor, sorulan };
+}
+
+function onayliForm(nitelik = {}) {
+    const form = new Eleman('form', { method: 'POST', ...nitelik });
+    form.yeniden = [];
+    form.requestSubmit = (dugme) => form.yeniden.push(dugme ?? null);
+    return form;
+}
+
+test('data-confirm olmayan form sorulmadan gider', () => {
+    const { sor, sorulan } = sorucuKaydi(true);
+    const olay = gonderim(onayliForm());
+
+    k.onay(sor).yakala(olay);
+
+    assert.equal(olay.defaultPrevented, false);
+    assert.equal(sorulan.length, 0);
+});
+
+test('onay isteyen form durur ve metinle sorulur', () => {
+    const { sor, sorulan } = sorucuKaydi();
+    const olay = gonderim(onayliForm({ 'data-confirm': 'Bitirmek istiyor musun?' }));
+
+    k.onay(sor).yakala(olay);
+
+    assert.equal(olay.defaultPrevented, true, 'cevap gelene kadar gitmemeli');
+    assert.deepEqual(sorulan, [{ metin: 'Bitirmek istiyor musun?', etiket: 'Onayla' }]);
+});
+
+test('evet denince form ayni dugmeyle yeniden gonderilir ve bu kez gecer', () => {
+    const { sor } = sorucuKaydi(true);
+    const form = onayliForm({ 'data-confirm': 'Silinsin mi?' });
+    const dugme = new Eleman('button', { type: 'submit', name: 'tur', value: 'break' });
+    const o = k.onay(sor);
+
+    o.yakala(gonderim(form, dugme));
+    assert.deepEqual(form.yeniden, [dugme], 'name=value kaybolmasin diye gonderen dugmeyle');
+
+    const ikinci = gonderim(form, dugme);
+    o.yakala(ikinci);
+    assert.equal(ikinci.defaultPrevented, false, 'onaylanmis gonderim yeniden sorulmamali');
+
+    // Bir sonraki basista (ornegin geri gelindiyse) yine sorulur.
+    const ucuncu = gonderim(form, dugme);
+    o.yakala(ucuncu);
+    assert.equal(ucuncu.defaultPrevented, true);
+});
+
+test('vazgecilince hicbir sey gonderilmez', () => {
+    const { sor } = sorucuKaydi(false);
+    const form = onayliForm({ 'data-confirm': 'Silinsin mi?' });
+
+    k.onay(sor).yakala(gonderim(form));
+
+    assert.deepEqual(form.yeniden, []);
+});
+
+test('dugmenin kendi sorusu ve eylem adi formunkinden once gelir', () => {
+    const { sor, sorulan } = sorucuKaydi();
+    const form = onayliForm({ 'data-confirm': 'Form sorusu' });
+    const dugme = new Eleman('button', { type: 'submit', 'data-confirm': 'Paket değişsin mi?', 'data-confirm-ok': 'Değiştir' });
+
+    k.onay(sor).yakala(gonderim(form, dugme));
+
+    assert.deepEqual(sorulan, [{ metin: 'Paket değişsin mi?', etiket: 'Değiştir' }]);
+});
+
+test('requestSubmit olmayan tarayicida form dogrudan gonderilir', () => {
+    const { sor } = sorucuKaydi(true);
+    const form = new Eleman('form', { method: 'POST', 'data-confirm': 'Emin misin?' });
+    let gitti = 0;
+    form.submit = () => { gitti++; };
+
+    k.onay(sor).yakala(gonderim(form));
+
+    assert.equal(gitti, 1);
+});
+
+test('dialog yoksa tarayicinin kendi onayi kullanilir', () => {
+    const pencere = { confirm: (m) => m === 'Emin misin?' };
+    const sonuclar = [];
+
+    k.sorucu(pencere, null)('Emin misin?', 'Sil', (s) => sonuclar.push(s));
+    k.sorucu(pencere, new Eleman('div'))('Başka', 'Sil', (s) => sonuclar.push(s));
+
+    assert.deepEqual(sonuclar, [true, false]);
+});
+
+test('dialog: metin ve eylem adi yazilir, cevap kapanis degerinden okunur', () => {
+    const metin = new Eleman('p');
+    const evet = new Eleman('button');
+    const d = new Eleman('dialog', {}, { '.js-onay-metni': metin, '.js-onay-evet': evet });
+    let acildi = 0;
+    d.showModal = () => { acildi++; };
+    const sonuclar = [];
+    const sor = k.sorucu({}, d);
+
+    sor('Plandan silinsin mi?', 'Sil', (s) => sonuclar.push(s));
+    assert.equal(acildi, 1);
+    assert.equal(metin.textContent, 'Plandan silinsin mi?');
+    assert.equal(evet.textContent, 'Sil');
+
+    d.returnValue = 'evet';
+    d.dinleyiciler.close();
+
+    // Escape ya da Vazgec: deger bos.
+    sor('Tekrar?', 'Onayla', (s) => sonuclar.push(s));
+    assert.equal(d.returnValue, '', 'onceki cevap yeni soruya tasinmamali');
+    d.dinleyiciler.close();
+
+    assert.deepEqual(sonuclar, [true, false]);
+});
+
+// --- Bildirim balonu (Faz 3) ------------------------------------------------
+
+test('balon kapaninca once cikis hareketi, sonra sayfadan kalkar', () => {
+    const bekleyen = [];
+    const balon = new Eleman('div', { class: 'toast' });
+    let kalkti = false;
+    balon.remove = () => { kalkti = true; };
+
+    k.balonuKapat(balon, (is) => bekleyen.push(is));
+
+    assert.equal(balon.classList.contains('is-leaving'), true);
+    assert.equal(kalkti, false);
+    bekleyen.splice(0).forEach((is) => is());
+    assert.equal(kalkti, true);
+});
+
+test('acilista var olan balon metni yeniden yazilir ki ekran okuyucu duysun', () => {
+    const bekleyen = [];
+    const mesaj = new Eleman('span', { metin: 'Adisyona eklendi' });
+
+    k.duyur(mesaj, (is) => bekleyen.push(is));
+
+    assert.equal(mesaj.textContent, '');
+    bekleyen.splice(0).forEach((is) => is());
+    assert.equal(mesaj.textContent, 'Adisyona eklendi');
+});

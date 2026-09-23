@@ -3,7 +3,7 @@
 @section('title', 'Kullanıcılar - Kral Kafe')
 @section('page-title', 'Kullanıcılar')
 
-@section('topbar-actions')
+@section('page-actions')
     <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm">
         ➕ Yeni Kullanıcı
     </a>

@@ -90,7 +90,7 @@
                         @if($linkableStudents->isEmpty())
                             <p class="text-muted mb-0">Sistemde kayıtlı öğrenci yok.</p>
                         @else
-                            <div class="rounded p-2" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--gray-200, #e5e7eb);">
+                            <div class="rounded p-2" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--separator);">
                                 @foreach($linkableStudents as $ogrenci)
                                     <div class="form-check">
                                         <input type="checkbox" class="form-check-input" id="student_{{ $ogrenci->id }}"
@@ -120,7 +120,7 @@
                         @if($linkableParents->isEmpty())
                             <p class="text-muted mb-0">Sistemde kayıtlı veli yok.</p>
                         @else
-                            <div class="rounded p-2" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--gray-200, #e5e7eb);">
+                            <div class="rounded p-2" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--separator);">
                                 @foreach($linkableParents as $veli)
                                     <div class="form-check">
                                         <input type="checkbox" class="form-check-input" id="parent_{{ $veli->id }}"

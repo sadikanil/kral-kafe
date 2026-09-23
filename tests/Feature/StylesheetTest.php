@@ -107,6 +107,36 @@ class StylesheetTest extends TestCase
         $this->assertSame([], array_values(array_unique($eksik)), 'Tanimsiz CSS sinifi');
     }
 
+    /**
+     * Faz 3'te renk ve olcu adlari degisti (--gray-500 yerine --label-2 gibi).
+     * Tanimsiz bir var() hata vermez: satir ici stil sessizce rengini ya da
+     * boslugunu kaybeder. Gorunumlerde ve app.css'te kullanilan her ozel
+     * ozellik app.css'te tanimli olmali (yedek degerli var(--x, ...) haric).
+     */
+    public function test_every_css_variable_used_is_defined(): void
+    {
+        $css = $this->stylesheet();
+        preg_match_all('/(--[a-z0-9-]+)\s*:/', $css, $tanim);
+        $tanimli = array_fill_keys($tanim[1], true);
+        $eksik = [];
+
+        $kaynaklar = ['public/css/app.css' => $css];
+        foreach ($this->bladeDosyalari() as $dosya) {
+            $kaynaklar[str_replace(base_path() . '/', '', $dosya)] = (string) file_get_contents($dosya);
+        }
+
+        foreach ($kaynaklar as $ad => $icerik) {
+            preg_match_all('/var\((--[a-z0-9-]+)\s*\)/', $icerik, $m);
+            foreach ($m[1] as $degisken) {
+                if (! isset($tanimli[$degisken])) {
+                    $eksik[] = "{$ad} -> {$degisken}";
+                }
+            }
+        }
+
+        $this->assertSame([], array_values(array_unique($eksik)), 'Tanimsiz CSS degiskeni');
+    }
+
     /** @return array<string,true> */
     private function tanimliSiniflar(): array
     {

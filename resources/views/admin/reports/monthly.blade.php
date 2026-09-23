@@ -8,7 +8,7 @@
 @section('title', 'Aylık Rapor - Kral Kafe')
 @section('page-title', 'Aylık Rapor: ' . $periodLabel)
 
-@section('topbar-actions')
+@section('page-actions')
     <a href="{{ route('admin.reports.export-summary', ['year' => $year, 'month' => $month]) }}"
         class="btn btn-secondary btn-sm">📥 Özet CSV</a>
     <a href="{{ route('admin.reports.export-detailed', ['year' => $year, 'month' => $month]) }}"

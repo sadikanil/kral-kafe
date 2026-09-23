@@ -3,7 +3,7 @@
 @section('title', $student->name . ' - Haftalık Rapor')
 @section('page-title', $student->name)
 
-@section('topbar-actions')
+@section('page-actions')
     <a href="{{ route('coach.plan.index') }}" class="btn btn-sm btn-secondary">← Öğrenciler</a>
 @endsection
 

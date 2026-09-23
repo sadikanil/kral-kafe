@@ -3,7 +3,7 @@
 @section('title', 'Paketler - Kral Kafe')
 @section('page-title', 'Paketler')
 
-@section('topbar-actions')
+@section('page-actions')
     <a href="{{ route('admin.packages.create') }}" class="btn btn-primary btn-sm">+ Yeni Paket</a>
 @endsection
 

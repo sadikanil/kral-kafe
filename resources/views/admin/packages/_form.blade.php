@@ -68,7 +68,7 @@
     @if($products->isEmpty())
         <p class="text-muted mb-0">Sistemde aktif ürün yok.</p>
     @else
-        <div class="rounded p-2" style="max-height: 280px; overflow-y: auto; border: 1px solid var(--gray-200);">
+        <div class="rounded p-2" style="max-height: 280px; overflow-y: auto; border: 1px solid var(--separator);">
             @foreach($products as $urun)
                 @php
                     $eski = old('items.' . $urun->id);

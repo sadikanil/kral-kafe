@@ -104,7 +104,7 @@
                         @if($parents->isNotEmpty())
                             <input type="search" id="veliAra" class="form-control mb-2" aria-label="Kayıtlı veli ara"
                                 enterkeyhint="search" autocomplete="off" placeholder="Kayıtlı veli ara…">
-                            <div class="rounded p-2 mb-2" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--gray-200);">
+                            <div class="rounded p-2 mb-2" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--separator);">
                                 @foreach($parents as $veli)
                                     {{-- Arama metni JS'teki toLocaleLowerCase('tr') ile ayni kuralla
                                          kucultulur: mb_strtolower Turkce degil ('İ' -> i + birlesik

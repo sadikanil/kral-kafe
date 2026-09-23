@@ -3,7 +3,7 @@
 @section('title', $summary['student']->name . ' - Kral Kafe')
 @section('page-title', $summary['student']->name)
 
-@section('topbar-actions')
+@section('page-actions')
     <a href="{{ route('parent.dashboard') }}" class="btn btn-sm btn-secondary">← Çocuklarım</a>
 @endsection
 
@@ -66,8 +66,8 @@
             <div class="d-flex gap-2" style="flex-wrap: wrap;">
                 @foreach($days as $gun)
                     @php $carbon = \Illuminate\Support\Carbon::parse($gun['date']); @endphp
-                    <div class="text-center rounded p-2 {{ $gun['attended'] ? 'shadow' : '' }}"
-                        style="min-width: 58px; {{ $gun['attended'] ? 'background: var(--success, #16a34a); color: #fff;' : 'background: var(--gray-100, #f3f4f6); color: var(--gray-500, #6b7280);' }}"
+                    <div class="text-center rounded p-2"
+                        style="min-width: 58px; {{ $gun['attended'] ? 'background: var(--accent); color: var(--on-accent);' : 'background: var(--fill); color: var(--label-2);' }}"
                         title="{{ $carbon->format('d.m.Y') }}">
                         <div style="font-size: 0.75rem;">{{ $gunAdlari[$carbon->dayOfWeekIso - 1] }}</div>
                         <div><strong>{{ $carbon->format('d') }}</strong></div>

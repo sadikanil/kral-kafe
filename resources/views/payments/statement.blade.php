@@ -7,7 +7,7 @@
 @php $para = fn ($t) => \App\Services\PaymentStatement::money($t); @endphp
 
 @if(request()->routeIs('parent.payments'))
-    @section('topbar-actions')
+    @section('page-actions')
         <a href="{{ route('parent.dashboard') }}" class="btn btn-sm btn-secondary">← Çocuklarım</a>
     @endsection
 @endif

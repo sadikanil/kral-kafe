@@ -110,4 +110,25 @@ class NavigationTest extends TestCase
             array_column(Navigation::quick($ogrenci), 'route'),
         );
     }
+
+    /**
+     * Menu simgeleri sprite'taki adlar (Faz 3); emoji degil. Olmayan ad
+     * menude bos bir kutu birakirdi.
+     */
+    public function test_every_menu_icon_is_a_symbol_in_the_sprite(): void
+    {
+        preg_match_all('/<symbol id="([a-z0-9-]+)"/', (string) file_get_contents(public_path('img/simgeler.svg')), $m);
+        $kullanicilar = [
+            User::factory()->admin()->create(),
+            User::factory()->student()->withPackage(Package::factory()->tier3())->create(),
+            User::factory()->parent()->create(),
+            User::factory()->create(['role' => Role::Coach->value]),
+        ];
+
+        foreach ($kullanicilar as $u) {
+            foreach (collect(Navigation::groups($u))->flatMap(fn ($g) => $g['items']) as $oge) {
+                $this->assertContains($oge['icon'], $m[1], "{$oge['label']} simgesi sprite'ta yok");
+            }
+        }
+    }
 }

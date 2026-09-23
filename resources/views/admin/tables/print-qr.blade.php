@@ -3,7 +3,7 @@
 @section('title', 'Masa QR Kodları - Kral Kafe')
 @section('page-title', 'Masa QR Kodlarını Yazdır')
 
-@section('topbar-actions')
+@section('page-actions')
     <button onclick="window.print()" class="btn btn-primary btn-sm">🖨️ Yazdır</button>
 @endsection
 
@@ -41,7 +41,7 @@
                 <h4 class="mb-3">{{ $table->name }}</h4>
 
                 <img src="{{ \App\Support\QrImage::url($table->qr_url, 260) }}"
-                    alt="{{ $table->name }} QR kodu" style="border-radius: var(--radius); max-width: 100%;">
+                    alt="{{ $table->name }} QR kodu" style="border-radius: var(--r); max-width: 100%;">
 
                 <p class="text-muted mt-3 mb-0" style="font-size: 0.6875rem; word-break: break-all;">
                     {{ $table->qr_code }}
