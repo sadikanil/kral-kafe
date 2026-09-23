@@ -67,7 +67,7 @@ class StudySessionTest extends TestCase
 
         $this->actingAs($ogrenci)
             ->post(route('table.session.start', $masa->qr_code))
-            ->assertRedirect(route('table.scan', $masa->qr_code));
+            ->assertRedirect(route('session.timer')); // Dalga 23: QR masayi secer, calisma sayacta
 
         $oturum = StudySession::sole();
         $this->assertSame($ogrenci->id, $oturum->student_id);
@@ -86,7 +86,7 @@ class StudySessionTest extends TestCase
 
         $this->actingAs($ogrenci)->post(route('table.session.start', $masa->qr_code));
         $this->actingAs($ogrenci)->post(route('table.session.start', $masa->qr_code))
-            ->assertRedirect(route('table.scan', $masa->qr_code));
+            ->assertRedirect(route('session.timer')); // Dalga 23: QR masayi secer, calisma sayacta
 
         $this->assertSame(1, StudySession::count());
     }

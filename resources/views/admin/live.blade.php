@@ -63,7 +63,11 @@
             <div class="d-flex align-items-center justify-content-between gap-2">
                 <div>
                     <div class="d-flex align-items-center gap-2">
-                        <span class="live-dot"></span>
+                        @if($mola = $session->openPause())
+                            <span class="badge badge-warning">⏸ {{ $mola->kind->label() }}</span>
+                        @else
+                            <span class="live-dot"></span>
+                        @endif
                         <strong>{{ $session->student->name }}</strong>
                     </div>
                     <div class="text-muted">

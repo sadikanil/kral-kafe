@@ -1529,3 +1529,30 @@ select.form-control {
         padding-bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
     }
 }
+
+/* Esneme hatirlaticisi penceresi (Dalga 24) */
+.reminder {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.55);
+}
+
+.reminder[hidden] {
+    display: none;
+}
+
+.reminder-box {
+    width: 100%;
+    max-width: 380px;
+    padding: 1.5rem;
+    border-radius: 16px;
+    background: #fff;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+}
+

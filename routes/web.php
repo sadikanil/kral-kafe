@@ -57,6 +57,10 @@ Route::middleware(['auth', 'subscription'])->group(function () {
     Route::get('/masa/{table:qr_code}', [TableSessionController::class, 'show'])->name('table.scan');
     Route::post('/masa/{table:qr_code}/basla', [TableSessionController::class, 'start'])->name('table.session.start');
     Route::post('/oturum/bitir', [SessionController::class, 'end'])->name('session.end');
+    // Calisma sayaci (Dalga 23): duraklat, 15 dk mola, ogle arasi, devam
+    Route::get('/calisma', [SessionController::class, 'timer'])->name('session.timer');
+    Route::post('/oturum/duraklat', [SessionController::class, 'pause'])->name('session.pause');
+    Route::post('/oturum/devam', [SessionController::class, 'resume'])->name('session.resume');
     // Ders etiketi (Dalga 17a). Yalnizca ACIK oturum; istege bagli.
     Route::post('/oturum/{session}/ders', [\App\Http\Controllers\Study\SessionSubjectController::class, 'update'])
         ->name('session.subject');

@@ -101,8 +101,9 @@ class TableSessionController extends Controller
 
         $oturum = $this->sessions->start($kullanici, $table, $konum);
 
+        // Dalga 23: QR masayi secti; calisma sayacta yonetilir.
         return redirect()
-            ->route('table.scan', $table->qr_code)
+            ->route('session.timer')
             ->with('success', "{$table->name} için çalışma başladı. Kolay gelsin!");
     }
 }

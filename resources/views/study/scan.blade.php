@@ -15,14 +15,12 @@
                 <strong>Çalışma sürüyor — {{ $table->name }}</strong>
             </div>
 
-            <div class="session-timer"
-                data-started-at="{{ $session->started_at->toIso8601String() }}">
-                {{ sprintf('%02d:%02d', intdiv($session->minutesSoFar(), 60), $session->minutesSoFar() % 60) }}
-            </div>
-
             <p class="text-muted mb-3">
                 Başlangıç: {{ $session->started_at->timezone(config('kafe.timezone'))->format('H:i') }}
+                · Net {{ \App\Support\Duration::human($session->minutesSoFar()) }}
             </p>
+
+            <a href="{{ route('session.timer') }}" class="btn btn-primary btn-block mb-2">⏱ Sayaca git</a>
 
             <form action="{{ route('session.end') }}" method="POST">
                 @csrf
@@ -80,26 +78,6 @@
         </div>
     @endif
 @endsection
-
-@push('scripts')
-    <script>
-        // Sayac yalnizca gorunumu tazeler; gercek sure sunucudaki started_at'ten
-        // hesaplanir, sekme kapansa da kayit surer.
-        document.querySelectorAll('.session-timer[data-started-at]').forEach(function (el) {
-            var basladi = new Date(el.dataset.startedAt).getTime();
-
-            function ciz() {
-                var gecen = Math.max(0, Math.floor((Date.now() - basladi) / 1000));
-                var s = Math.floor(gecen / 3600);
-                var d = Math.floor((gecen % 3600) / 60);
-                el.textContent = String(s).padStart(2, '0') + ':' + String(d).padStart(2, '0');
-            }
-
-            ciz();
-            setInterval(ciz, 30000);
-        });
-    </script>
-@endpush
 
 @push('scripts')
     <script>

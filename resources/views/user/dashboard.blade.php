@@ -21,29 +21,14 @@
             </div>
 
             @php $dakika = $openSession->minutesSoFar(); @endphp
-            <div class="session-timer" data-started-at="{{ $openSession->started_at->toIso8601String() }}">
-                {{ sprintf('%02d:%02d', intdiv($dakika, 60), $dakika % 60) }}
-            </div>
+            <div class="session-timer">{{ sprintf('%02d:%02d', intdiv($dakika, 60), $dakika % 60) }}</div>
 
             <p class="text-muted mb-3">
-                {{ $openSession->started_at->timezone(config('kafe.timezone'))->format('H:i') }}'den beri
+                {{ $openSession->started_at->timezone(config('kafe.timezone'))->format('H:i') }}'den beri · net
             </p>
 
-            {{-- Ders etiketi (Dalga 17a). ISTEGE BAGLI: bos birakilan oturum
-                 kirilimda "Genel" kovasina duser. Zorunlu kilmak masaya
-                 oturmanin onune bir soru koyardi. --}}
-            <form action="{{ route('session.subject', $openSession) }}" method="POST"
-                  class="d-flex align-items-center gap-2 mb-3" style="flex-wrap: wrap;">
-                @csrf
-                <label class="text-muted" for="oturum-ders">Ne çalışıyorsun?</label>
-                <select name="subject_id" id="oturum-ders" class="form-control" style="max-width: 220px;">
-                    <option value="">Genel</option>
-                    @foreach($sessionSubjects as $ders)
-                        <option value="{{ $ders->id }}" @selected($openSession->subject_id === $ders->id)>{{ $ders->name }}</option>
-                    @endforeach
-                </select>
-                <button type="submit" class="btn btn-sm btn-secondary">Kaydet</button>
-            </form>
+            {{-- Dalga 23: duraklat, mola, ders etiketi sayacta. --}}
+            <a href="{{ route('session.timer') }}" class="btn btn-primary btn-block mb-2">⏱ Sayaca git</a>
 
             <form action="{{ route('session.end') }}" method="POST">
                 @csrf

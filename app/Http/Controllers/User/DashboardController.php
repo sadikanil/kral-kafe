@@ -67,7 +67,6 @@ class DashboardController extends Controller
                 ->with('subject')
                 ->orderByDesc('created_at')
                 ->get(),
-            'sessionSubjects' => \App\Models\Subject::active()->orderBy('sort_order')->orderBy('name')->get(),
             'subjectBreakdown' => $istatistik->minutesBySubject(
                 $user,
                 ...LocalDay::weekBounds(LocalDay::today()),

@@ -167,14 +167,54 @@ class StudySession extends Model
         return $mesafe !== null && $mesafe > (int) config('kafe.konum_esigi_metre');
     }
 
+    /** Dalga 23: duraklat / 15 dk mola / ogle arasi. */
+    public function pauses(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SessionPause::class)->orderBy('started_at');
+    }
+
+    public function openPause(): ?SessionPause
+    {
+        return $this->pauses->firstWhere('ended_at', null);
+    }
+
     /**
-     * Acik oturumun su ana kadarki suresi; kapali oturumda kayitli sure.
+     * NET calisma suresi: baslangictan bitise (acik oturumda ana) kadar,
+     * duraklamalar DUSULEREK (Dalga 23). Saniyeyle hesaplanip dakikaya
+     * asagi yuvarlanir; dakika dakika dusmek her molada yarim dakika
+     * kaybettirirdi.
      */
     public function minutesSoFar(?Carbon $now = null): int
     {
-        $bitis = $this->ended_at ?? ($now ?? now());
+        // Kapali oturum: kapanista yazilan sure. Listeler (veli, gecmis)
+        // her satir icin duraklamalari sorgulamasin.
+        if ($this->ended_at !== null && $this->duration_minutes !== null) {
+            return (int) $this->duration_minutes;
+        }
 
-        return max(0, (int) $this->started_at->diffInMinutes($bitis));
+        $bitis = $this->ended_at ?? ($now ?? now());
+        $brut = (int) $this->started_at->diffInSeconds($bitis, false);
+        $mola = $this->pauses->sum(fn (SessionPause $p) => $p->secondsUntil($bitis));
+
+        return max(0, intdiv($brut - $mola, 60));
+    }
+
+    /**
+     * Son duraklamadan bu yana ARALIKSIZ calisilan saniye (Dalga 24
+     * hatirlaticilari buna bakar). Duraklamadaysa 0.
+     */
+    public function continuousSeconds(?Carbon $now = null): int
+    {
+        $an = $now ?? now();
+
+        if ($this->openPause() !== null) {
+            return 0;
+        }
+
+        $son = $this->pauses->whereNotNull('ended_at')->max('ended_at');
+        $bas = $son && $son->greaterThan($this->started_at) ? $son : $this->started_at;
+
+        return max(0, (int) $bas->diffInSeconds($an, false));
     }
     /**
      * Oturumu kapatir - ama YALNIZCA hala acikken.
@@ -280,6 +320,13 @@ class StudySession extends Model
                 'end_reason' => $reason->value,
                 'updated_at' => now(),
             ]);
+
+        // Acik duraklama oturumla ayni anda kapanir (ogle arasinda unutulup
+        // otomatik kapanan oturum dahil). Sure yukarida zaten o ana kadar
+        // dusuldu.
+        if ($etkilenen === 1) {
+            $this->pauses()->whereNull('ended_at')->update(['ended_at' => $endedAt, 'updated_at' => now()]);
+        }
 
         $this->refresh();
 

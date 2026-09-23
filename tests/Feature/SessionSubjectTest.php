@@ -225,13 +225,14 @@ class SessionSubjectTest extends TestCase
 
     // --- Ekranda -------------------------------------------------------------
 
-    public function test_the_open_session_card_offers_the_subjects(): void
+    /** Dalga 23: ders secimi calisma sayacinda. */
+    public function test_the_timer_offers_the_subjects(): void
     {
         $ogrenci = $this->ogrenci();
         $this->ders('Matematik');
         $this->acikOturum($ogrenci);
 
-        $this->actingAs($ogrenci)->get(route('user.dashboard'))
+        $this->actingAs($ogrenci)->get(route('session.timer'))
             ->assertOk()
             ->assertSee('Ne çalışıyorsun?')
             ->assertSee('Matematik');

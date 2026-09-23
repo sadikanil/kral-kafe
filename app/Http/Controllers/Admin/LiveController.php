@@ -18,7 +18,7 @@ class LiveController extends Controller
     public function index(): View
     {
         $acikOturumlar = StudySession::open()
-            ->with(['student', 'table'])
+            ->with(['student', 'table', 'pauses'])
             ->orderBy('started_at')
             ->get();
 

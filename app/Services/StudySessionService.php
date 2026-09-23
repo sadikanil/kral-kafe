@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\PauseKind;
 use App\Enums\SessionEndReason;
 use App\Models\StudySession;
 use App\Models\StudyTable;
@@ -88,5 +89,32 @@ class StudySessionService
         $acik = $this->openFor($student);
 
         return $acik ? $this->close($acik, $reason) : null;
+    }
+
+    /**
+     * Dalga 23: oturumu duraklatir. Zaten duraklamadaysa DOKUNMAZ - iki
+     * sekmeden ya da cift dokunusla gelen ikinci istek yeni satir acmasin
+     * (kismi tekil indeks son duvar).
+     */
+    public function pause(StudySession $session, PauseKind $kind): void
+    {
+        if ($session->ended_at !== null || $session->fresh('pauses')->openPause() !== null) {
+            return;
+        }
+
+        try {
+            $session->pauses()->create(['kind' => $kind, 'started_at' => now()]);
+        } catch (UniqueConstraintViolationException) {
+            // Es zamanli ikinci istek: duraklama zaten acik, istenen de buydu.
+        }
+
+        $session->unsetRelation('pauses');
+    }
+
+    /** Acik duraklamayi kapatir; yoksa sessizce gecer. */
+    public function resume(StudySession $session): void
+    {
+        $session->pauses()->whereNull('ended_at')->update(['ended_at' => now(), 'updated_at' => now()]);
+        $session->unsetRelation('pauses');
     }
 }
