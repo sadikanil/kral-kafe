@@ -111,6 +111,25 @@ class PackageSubscriptionTest extends TestCase
             ])->assertSessionHasErrors('tier');
     }
 
+    /** Ek paket (deneme kulubu) ana paketin donem tarihlerini ezmemeli. */
+    public function test_an_addon_keeps_the_main_package_dates(): void
+    {
+        $ogrenci = User::factory()->student()->create();
+        $yonetici = User::factory()->admin()->create();
+
+        $this->actingAs($yonetici)->post(route('admin.subscriptions.store', $ogrenci), [
+            'package_id' => \App\Models\Package::factory()->tier2()->create()->id,
+            'starts_on' => '2026-09-01',
+        ]);
+        $this->actingAs($yonetici)->post(route('admin.subscriptions.store', $ogrenci), [
+            'package_id' => \App\Models\Package::factory()->examClubAddon()->create()->id,
+            'starts_on' => '2026-09-15',
+            'ends_on' => '2026-09-20',
+        ]);
+
+        $this->assertSame('2026-09-30', $ogrenci->fresh()->subscription_end->toDateString());
+    }
+
     public function test_only_an_admin_manages_packages(): void
     {
         $this->post('/yonetim/paketler', ['name' => 'X', 'monthly_price' => 1])->assertRedirect(route('login'));

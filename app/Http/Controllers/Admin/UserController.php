@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Models\Package;
 use App\Models\StudyGoal;
+use App\Services\SubscriptionOpener;
 use App\Models\User;
 use App\Support\LocalDay;
 use App\Support\Telefon;
@@ -15,6 +17,8 @@ use App\Support\SqlDialect;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Carbon;
 
 class UserController extends Controller
 {
@@ -66,15 +70,21 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view('admin.users.create');
+        return view('admin.users.create', [
+            'packages' => Package::active()->where('is_addon', false)->orderBy('tier')->orderBy('name')->get(),
+            'addons' => Package::active()->where('is_addon', true)->orderBy('name')->get(),
+            'coaches' => User::whereIn('role', [Role::Coach->value, Role::Admin->value])->orderBy('name')->get(),
+            'parents' => User::where('role', Role::Parent->value)->orderBy('name')->get(),
+        ]);
     }
 
     /**
      * Store a newly created user.
      */
-    public function store(Request $request)
+    public function store(Request $request, SubscriptionOpener $abonelikler)
     {
         $this->normalizePhone($request);
+        $this->normalizePhone($request, 'new_parent_phone');
 
         // Dalga 18: telefon birincil kimlik; e-posta ve sifre istege bagli.
         // Sifre bos birakilirsa kullanici ilk giriste kendisi belirler.
@@ -85,18 +95,112 @@ class UserController extends Controller
             'role' => ['required', Rule::enum(Role::class)],
         ], $this->identityMessages());
 
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'] ?? null,
-            'password' => filled($validated['password'] ?? null) ? Hash::make($validated['password']) : null,
-            'role' => $validated['role'],
-            'phone' => $validated['phone'] ?? null,
-            'subscription_status' => 'active',
-            'subscription_start' => now(),
-        ]);
+        $ogrenciMi = $validated['role'] === Role::Student->value;
+        $ogrenciVerisi = $ogrenciMi ? $this->validateStudentOnboarding($request) : null;
+
+        // Hepsi ya da hicbiri: paket, koc ya da veli yazilamazsa ogrenci de
+        // olusmamali - velisiz ya da paketsiz ogrenci butunlugu bozar.
+        DB::transaction(function () use ($validated, $ogrenciVerisi, $abonelikler) {
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'] ?? null,
+                'password' => filled($validated['password'] ?? null) ? Hash::make($validated['password']) : null,
+                'role' => $validated['role'],
+                'phone' => $validated['phone'] ?? null,
+                'subscription_status' => 'active',
+                'subscription_start' => now(),
+            ]);
+
+            if ($ogrenciVerisi !== null) {
+                $this->onboardStudent($user, $ogrenciVerisi, $abonelikler);
+            }
+        });
 
         return redirect()->route('admin.users.index')
             ->with('success', 'Kullanıcı başarıyla oluşturuldu.');
+    }
+
+    /**
+     * Dalga 20: ogrenci = paket + (koclukluysa) koc + en az bir veli.
+     *
+     * @return array{package:Package,addons:\Illuminate\Support\Collection<int,Package>,coach_id:?int,parent_ids:array<int,int>,new_parent:?array{name:string,phone:string}}
+     */
+    private function validateStudentOnboarding(Request $request): array
+    {
+        $veri = $request->validate([
+            // exists kurali false'u BOS METNE cevirir ve hicbir satir eslesmez;
+            // bu yuzden 0/1.
+            'package_id' => ['required', 'integer',
+                Rule::exists('packages', 'id')->where('is_active', 1)->where('is_addon', 0)],
+            'addon_ids' => ['nullable', 'array'],
+            'addon_ids.*' => ['integer',
+                Rule::exists('packages', 'id')->where('is_active', 1)->where('is_addon', 1)],
+            'coach_id' => ['nullable', 'integer',
+                Rule::exists('users', 'id')->whereIn('role', [Role::Coach->value, Role::Admin->value])],
+            'parent_ids' => ['nullable', 'array'],
+            'parent_ids.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Parent->value)],
+            'new_parent_name' => ['nullable', 'string', 'max:255'],
+            'new_parent_phone' => ['nullable', 'required_with:new_parent_name', 'regex:/^5\d{9}$/',
+                Rule::unique('users', 'phone'), 'different:phone'],
+        ], [
+            'package_id.required' => 'Öğrenci için paket seçin.',
+            'package_id.exists' => 'Ana paket olarak satıştaki bir paket seçin (ek paket olamaz).',
+            'coach_id.exists' => 'Seçilen kişi koç ya da yönetici değil.',
+            'parent_ids.*.exists' => 'Seçilen kişi veli değil.',
+            'new_parent_phone.required_with' => 'Yeni velinin telefonu gerekli.',
+            'new_parent_phone.regex' => 'Geçerli bir cep telefonu girin (05XX XXX XX XX).',
+            'new_parent_phone.unique' => 'Bu telefon başka bir kullanıcıda kayıtlı; listeden seçin.',
+            'new_parent_phone.different' => 'Velinin telefonu öğrencininkiyle aynı olamaz.',
+        ]);
+
+        $paket = Package::findOrFail($veri['package_id']);
+        $ekler = Package::whereIn('id', $veri['addon_ids'] ?? [])->get();
+        $kocluk = $paket->includes_coaching || $ekler->contains('includes_coaching', true);
+
+        if ($kocluk && empty($veri['coach_id'])) {
+            throw ValidationException::withMessages(['coach_id' => 'Bu paket koçluk içeriyor; bir koç seçin.']);
+        }
+
+        if (empty($veri['parent_ids']) && empty($veri['new_parent_name'])) {
+            throw ValidationException::withMessages(['parent_ids' => 'Öğrencinin en az bir velisi olmalı.']);
+        }
+
+        return [
+            'package' => $paket,
+            'addons' => $ekler,
+            // Koclugu kapsamayan pakette koc ATANMAZ (formdan gelse bile).
+            'coach_id' => $kocluk ? (int) $veri['coach_id'] : null,
+            'parent_ids' => array_map('intval', $veri['parent_ids'] ?? []),
+            'new_parent' => empty($veri['new_parent_name']) ? null
+                : ['name' => $veri['new_parent_name'], 'phone' => $veri['new_parent_phone']],
+        ];
+    }
+
+    private function onboardStudent(User $ogrenci, array $veri, SubscriptionOpener $abonelikler): void
+    {
+        $bugun = Carbon::parse(LocalDay::today());
+
+        $abonelikler->open($ogrenci, $veri['package'], $bugun);
+        foreach ($veri['addons'] as $ek) {
+            $abonelikler->open($ogrenci, $ek, $bugun);
+        }
+
+        if ($veri['coach_id'] !== null) {
+            $ogrenci->coaches()->attach($veri['coach_id'], ['created_by' => auth()->id()]);
+        }
+
+        $veliler = $veri['parent_ids'];
+        if ($veri['new_parent'] !== null) {
+            // Sifresiz: veli ilk giriste kendisi belirler (Dalga 18).
+            $veliler[] = User::create([
+                'name' => $veri['new_parent']['name'],
+                'phone' => $veri['new_parent']['phone'],
+                'role' => Role::Parent->value,
+                'subscription_status' => 'active',
+            ])->id;
+        }
+
+        $ogrenci->parents()->attach(array_unique($veliler));
     }
 
     /**
@@ -156,6 +260,13 @@ class UserController extends Controller
             'parent_ids.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Parent->value)],
         ], $this->identityMessages());
 
+        // Dalga 20: ogrencinin son velisi kaldirilamaz. Anahtar formda yoksa
+        // bag degismiyor demektir (bolum o rol icin cizilmemis).
+        if ($validated['role'] === Role::Student->value
+            && $request->has('parent_ids') && empty($validated['parent_ids'])) {
+            throw ValidationException::withMessages(['parent_ids' => 'Öğrencinin en az bir velisi olmalı.']);
+        }
+
         $user->update([
             'name' => $validated['name'],
             'email' => $validated['email'] ?? null,
@@ -213,6 +324,13 @@ class UserController extends Controller
         // Prevent deleting yourself
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Kendinizi silemezsiniz.');
+        }
+
+        // Dalga 20: tek velisi bu kisi olan ogrenci velisiz kalmasin.
+        $yetim = $user->students()->withCount('parents')->get()->where('parents_count', 1);
+        if ($yetim->isNotEmpty()) {
+            return back()->with('error', 'Bu veli silinemez: ' . $yetim->pluck('name')->join(', ')
+                . ' için tek veli. Önce öğrenciye başka bir veli bağlayın.');
         }
 
         $user->delete();
@@ -291,11 +409,11 @@ class UserController extends Controller
      * Telefon tek bicimde saklanir (App\Support\Telefon). Gecersiz girdi
      * OLDUGU GIBI birakilir ki asagidaki kural onu reddedebilsin.
      */
-    private function normalizePhone(Request $request): void
+    private function normalizePhone(Request $request, string $alan = 'phone'): void
     {
-        if (filled($request->input('phone'))) {
+        if (filled($request->input($alan))) {
             $request->merge([
-                'phone' => Telefon::normalize($request->input('phone')) ?? $request->input('phone'),
+                $alan => Telefon::normalize($request->input($alan)) ?? $request->input($alan),
             ]);
         }
     }

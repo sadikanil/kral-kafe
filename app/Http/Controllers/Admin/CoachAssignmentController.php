@@ -22,6 +22,11 @@ class CoachAssignmentController extends Controller
     {
         abort_unless($student->isStudent(), 404);
 
+        // Dalga 19-20: koclugu kapsamayan pakete (Tier 1) koc atanmaz.
+        if (! $student->entitlements()->coaching) {
+            return back()->with('error', 'Öğrencinin paketi koçluk içermiyor.');
+        }
+
         $request->validate([
             // Koc olarak yalnizca koc ya da yonetici atanabilir. Rol kontrolu
             // SORGUDA: 'exists:users,id' tek basina bir ogrenciyi de

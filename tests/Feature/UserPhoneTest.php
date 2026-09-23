@@ -25,7 +25,8 @@ class UserPhoneTest extends TestCase
             ->post(route('admin.users.store'), [
                 'name' => 'Ayse Yilmaz',
                 'phone' => '0532 123 45 67',
-                'role' => 'student',
+                // Ogrenci paket + veli ister (Dalga 20); kimlik kurali rolden bagimsiz.
+                'role' => 'parent',
             ])->assertSessionHasNoErrors();
 
         $ayse = User::where('name', 'Ayse Yilmaz')->sole();

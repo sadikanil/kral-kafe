@@ -80,29 +80,10 @@ class SubscriptionController extends Controller
 
         $paket = Package::findOrFail($veri['package_id']);
         $bas = Carbon::parse($veri['starts_on']);
-        $bit = isset($veri['ends_on']) ? Carbon::parse($veri['ends_on']) : $bas->copy()->addMonthNoOverflow()->subDay();
+        $bit = isset($veri['ends_on']) ? Carbon::parse($veri['ends_on']) : null;
 
-        DB::transaction(function () use ($user, $paket, $bas, $bit, $veri) {
-            $abonelik = Subscription::create([
-                'student_id' => $user->id,
-                'package_id' => $paket->id,
-                'starts_on' => $bas->toDateString(),
-                'ends_on' => $bit->toDateString(),
-                // Fiyat KOPYALANIR: katalog sonradan degisse de bu satir sabit.
-                'price' => $veri['price'] ?? $paket->monthly_price,
-                'note' => $veri['note'] ?? null,
-                'created_by' => auth()->id(),
-            ]);
-            $abonelik->syncPaymentStatus();
-
-            // Mevcut abonelik kapisi users.subscription_status'a bakiyor;
-            // paket atanan ogrenci icerde. Tarihler de ayni satira yazilir.
-            $user->update([
-                'subscription_status' => 'active',
-                'subscription_start' => $bas->toDateString(),
-                'subscription_end' => $bit->toDateString(),
-            ]);
-        });
+        DB::transaction(fn () => app(\App\Services\SubscriptionOpener::class)
+            ->open($user, $paket, $bas, $bit, isset($veri['price']) ? (string) $veri['price'] : null, $veri['note'] ?? null));
 
         return redirect()->route('admin.subscriptions.index', $user)->with('success', 'Paket atandı.');
     }
