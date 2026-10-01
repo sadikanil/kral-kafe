@@ -54,6 +54,7 @@
     <script src="{{ \App\Support\Asset::url('js/kabuk.js') }}" defer></script>
 
     @stack('styles')
+    @include('layouts._analitik')
 </head>
 
 <body>

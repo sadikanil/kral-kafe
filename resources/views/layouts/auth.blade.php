@@ -28,6 +28,7 @@
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/app.css') }}">
     {{-- Cift gonderim kilidi: sifre sifirlama e-postasi iki kez gitmesin. --}}
     <script src="{{ \App\Support\Asset::url('js/kabuk.js') }}" defer></script>
+    @include('layouts._analitik')
 </head>
 
 <body>
