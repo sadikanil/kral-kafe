@@ -91,6 +91,20 @@ class ExamImportTest extends TestCase
         $this->assertSame(0, ExamImport::count());
     }
 
+    /** S3 anahtari bossa SDK'nin anlasilmaz hatasi yerine eksik degiskenler. */
+    public function test_missing_s3_settings_are_named(): void
+    {
+        config(['filesystems.disks.bulut' => ['driver' => 's3', 'key' => '', 'secret' => null, 'region' => 'ap-southeast-1',
+            'bucket' => 'Kafe', 'endpoint' => 'https://ornek.supabase.co/storage/v1/s3'], 'filesystems.uploads' => 'bulut']);
+
+        $this->actingAs($this->yonetici)->post(route('admin.exam-imports.store'), [
+            'exam_event_id' => $this->deneme->id,
+            'pdf' => UploadedFile::fake()->createWithContent('kurum.pdf', "%PDF-1.7\n"),
+        ])->assertSessionHas('error', "Dosya depolamaya yazılamadı (bulut): Vercel'de tanımlı değil: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY.");
+
+        $this->assertSame(0, ExamImport::count());
+    }
+
     // --- Ad esleme -------------------------------------------------------------
 
     public function test_names_are_normalized_letter_by_letter(): void

@@ -26,6 +26,18 @@ final class Uploads
         $yol = trim($klasor, '/') . '/' . ($ad ?? $dosya->hashName());
         $akis = null;
 
+        // Anahtar bossa AWS SDK sunucunun "instance profile"ina (169.254.169.254)
+        // gider ve anlasilmaz bir cURL hatasi verir; once biz soyleriz.
+        $ayar = (array) config("filesystems.disks.{$diskAdi}");
+        if (($ayar['driver'] ?? null) === 's3') {
+            $eksik = array_keys(array_filter(['AWS_ACCESS_KEY_ID' => $ayar['key'] ?? null, 'AWS_SECRET_ACCESS_KEY' => $ayar['secret'] ?? null,
+                'AWS_BUCKET' => $ayar['bucket'] ?? null, 'AWS_ENDPOINT' => $ayar['endpoint'] ?? null, 'AWS_DEFAULT_REGION' => $ayar['region'] ?? null], 'blank'));
+
+            if ($eksik !== []) {
+                throw new RuntimeException("Dosya depolamaya yazılamadı ({$diskAdi}): Vercel'de tanımlı değil: " . implode(', ', $eksik) . '.');
+            }
+        }
+
         try {
             $akis = fopen($dosya->getRealPath(), 'r');
             // getDriver(): Flysystem'in kendisi; Laravel sarmalayicisinin

@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 1 Ekim 2026 · Laravel 12 · 1473 test / 6473 doğrulama yeşil._
+_Son güncelleme: 1 Ekim 2026 · Laravel 12 · 1474 test / 6475 doğrulama yeşil._
 
 ---
 
