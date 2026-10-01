@@ -16,6 +16,23 @@ class ShellScriptTest extends TestCase
 {
     public function test_the_shell_script_behaves(): void
     {
+        $this->nodeTesti('tests/js/kabuk.test.mjs');
+    }
+
+    /** Service worker (Faz 4): hangi istek onbellege girer, hangisi hic girmez. */
+    public function test_the_service_worker_routes_requests(): void
+    {
+        $this->nodeTesti('tests/js/sw.test.mjs');
+    }
+
+    /** Odak modu (Faz 4): pil dostu ekran kilidi ve ayrilis sayimi. */
+    public function test_the_focus_mode_script_behaves(): void
+    {
+        $this->nodeTesti('tests/js/odak.test.mjs');
+    }
+
+    private function nodeTesti(string $dosya): void
+    {
         $node = (new ExecutableFinder)->find('node');
 
         if ($node === null) {
@@ -24,7 +41,7 @@ class ShellScriptTest extends TestCase
 
         // Dosya dogrudan calistirilir: "node --test" alt surec actigi icin
         // PHP'nin borulariyla burada ~14 sn bekliyordu; boylesi 0,2 sn.
-        $surec = new Process([$node, base_path('tests/js/kabuk.test.mjs')], base_path());
+        $surec = new Process([$node, base_path($dosya)], base_path());
         $surec->run();
 
         $this->assertTrue($surec->isSuccessful(), $surec->getOutput() . $surec->getErrorOutput());

@@ -2983,6 +2983,135 @@ a.list-row::after {
 }
 
 /* ============================================================
+   Odak modu (Faz 4)
+   Simsiyah ve temadan bagimsiz: OLED ekranda piksellerin cogu kapali.
+   Saat soluk (buyuk yazi, 3:1 ustu) ve dakikada bir degisir.
+   ============================================================ */
+.focus-card-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 16px;
+}
+
+.focus-card-title {
+    margin-bottom: 4px;
+    font-size: 1.0625rem;
+    font-weight: 600;
+}
+
+.focus-help {
+    margin-top: 12px;
+    border-top: 0.5px solid var(--separator);
+}
+
+.focus-help > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 48px;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    list-style: none;
+    cursor: pointer;
+}
+
+.focus-help > summary::-webkit-details-marker {
+    display: none;
+}
+
+.focus-help > summary::after {
+    content: "";
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    background: var(--label-2);
+    -webkit-mask: var(--i-chevron-down) center / contain no-repeat;
+    mask: var(--i-chevron-down) center / contain no-repeat;
+    transition: transform 0.2s var(--ease);
+}
+
+.focus-help[open] > summary::after {
+    transform: rotate(180deg);
+}
+
+.focus-help-body {
+    padding-bottom: 4px;
+    font-size: 0.875rem;
+    color: var(--label-2);
+}
+
+.focus-help-body strong {
+    color: var(--label);
+}
+
+.focus-help-body li + li {
+    margin-top: 4px;
+}
+
+.focus-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: calc(24px + var(--safe-top)) 24px calc(96px + var(--safe-bottom));
+    background: #000000;
+    color: #8e8e93;
+    text-align: center;
+}
+
+.focus-screen-clock {
+    font-family: var(--font-rounded);
+    font-size: clamp(4.5rem, 22vw, 8rem);
+    font-weight: 200;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: #636366;
+    font-variant-numeric: tabular-nums;
+}
+
+.focus-screen-sub,
+.focus-screen-battery {
+    margin: 0;
+    font-size: 0.9375rem;
+}
+
+.focus-screen-battery {
+    color: #ff9f0a;
+}
+
+.focus-screen-exit {
+    position: absolute;
+    bottom: calc(28px + var(--safe-bottom));
+    left: 50%;
+    min-height: 48px;
+    padding: 0 24px;
+    border: 0;
+    border-radius: var(--r-full);
+    background: rgba(118, 118, 128, 0.24);
+    color: #aeaeb2;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transform: translateX(-50%);
+}
+
+.focus-screen-exit:focus-visible {
+    outline-color: #aeaeb2;
+}
+
+body.is-focusing {
+    overflow: hidden;
+}
+
+/* ============================================================
    Hareket
    ============================================================ */
 @keyframes fade-in {

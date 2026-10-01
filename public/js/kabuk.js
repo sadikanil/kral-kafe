@@ -444,6 +444,13 @@
             }, { rootMargin: '-' + cubuk.offsetHeight + 'px 0px 0px 0px' }).observe(baslik);
         }
 
+        // Ana ekran uygulamasi (Faz 4): sw.js yalniz surumlu dosyalari tutar.
+        if ('serviceWorker' in pencere.navigator && pencere.isSecureContext) {
+            pencere.addEventListener('load', function () {
+                pencere.navigator.serviceWorker.register('/sw.js').catch(function () {});
+            });
+        }
+
         ozetiBagla(belge, Array.prototype.slice.call(belge.querySelectorAll('[data-hata-alani]')));
         alanlariIsaretle(Array.prototype.slice.call(belge.querySelectorAll('.is-invalid')));
 
