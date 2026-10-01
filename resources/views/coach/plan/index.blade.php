@@ -6,8 +6,13 @@
 @section('content')
 
     <p class="text-muted mb-3">
-        Öğrenciyi seç, takvimde güne ders ve konu ekle. Öğrenci maddeleri Planım'da
-        işaretler; velisi aynı takvimi görür.
+        @if(auth()->user()->assignsOnlyHomework())
+            Öğrenciyi seç, takvimde güne ödev ver. Öğrenci ödevi Planım'da senin adınla görür
+            ve işaretler; velisi aynı takvimi görür.
+        @else
+            Öğrenciyi seç, takvimde güne ders ve konu ekle. Öğrenci maddeleri Planım'da
+            işaretler; velisi aynı takvimi görür.
+        @endif
     </p>
 
     @if($ogrenciler->isEmpty())

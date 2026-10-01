@@ -98,6 +98,29 @@
         </div>
     </details>
 
+    @if($oneriler->isNotEmpty())
+        <div class="card mb-3">
+            <div class="card-header"><h4>Denemeden gelen öneriler</h4></div>
+            <div class="card-body">
+                <p class="text-muted text-sm">Son denemede başarı oranı düşük konular. Plana eklenen konu bugüne düşer; takvimde taşıyabilirsin.</p>
+                <ul class="log-list mb-0">
+                    @foreach($oneriler as $konu)
+                        <li>
+                            <span class="log-label">
+                                @if($konu->subject)<span class="text-muted">{{ $konu->subject->name }} ·</span>@endif
+                                {{ $konu->topic }}
+                            </span>
+                            <form method="POST" action="{{ route('coach.topics.plan', $konu) }}">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-secondary">{{ $yalnizOdev ? 'Ödev ver' : 'Plana ekle' }}</button>
+                            </form>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    @endif
+
     @include('_plan-takvimi', [
         'mode' => 'coach',
         'navUrl' => fn ($h) => route('coach.plan.show', [$student, 'hafta' => $h]),

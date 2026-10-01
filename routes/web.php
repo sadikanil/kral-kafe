@@ -275,6 +275,17 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     Route::post('/abonelikler/{subscription}/odeme', [SubscriptionController::class, 'storePayment'])->name('subscriptions.payments.store');
     Route::delete('/odemeler/{payment}', [SubscriptionController::class, 'destroyPayment'])->name('subscriptions.payments.destroy');
 
+    // Kurum geneli deneme sonuc PDF'i (1 Ekim 2026): tek PDF, sayfa sayfa
+    // okuma, ogrenciye esleme, kontrol ve yayin. PDF yalnizca yoneticide.
+    Route::get('/deneme-sonuclari', [\App\Http\Controllers\Admin\ExamImportController::class, 'index'])->name('exam-imports.index');
+    Route::post('/deneme-sonuclari', [\App\Http\Controllers\Admin\ExamImportController::class, 'store'])->name('exam-imports.store');
+    Route::get('/deneme-sonuclari/{import}', [\App\Http\Controllers\Admin\ExamImportController::class, 'show'])->name('exam-imports.show');
+    Route::post('/deneme-sonuclari/{import}/isle', [\App\Http\Controllers\Admin\ExamImportController::class, 'process'])->name('exam-imports.process');
+    Route::post('/deneme-sonuclari/{import}/yayinla', [\App\Http\Controllers\Admin\ExamImportController::class, 'publish'])->name('exam-imports.publish');
+    Route::get('/deneme-sonuclari/{import}/pdf', [\App\Http\Controllers\Admin\ExamImportController::class, 'pdf'])->name('exam-imports.pdf');
+    Route::delete('/deneme-sonuclari/{import}', [\App\Http\Controllers\Admin\ExamImportController::class, 'destroy'])->name('exam-imports.destroy');
+    Route::patch('/deneme-sonuclari/satir/{row}', [\App\Http\Controllers\Admin\ExamImportController::class, 'updateRow'])->name('exam-imports.rows.update');
+
     // Deneme sonuc raporlari: ogrenci basina PDF yukleme + yapay zeka analizi
     Route::get('/kullanicilar/{user}/deneme-raporlari', [AdminExamReportController::class, 'index'])->name('exam-reports.index');
     Route::post('/kullanicilar/{user}/deneme-raporlari', [AdminExamReportController::class, 'store'])->name('exam-reports.store');

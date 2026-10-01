@@ -215,6 +215,46 @@ class NotificationBuilder
     }
 
     /**
+     * Deneme sonucu yayinlandi (1 Ekim 2026): ogrenciye, velilerine ve
+     * koclarina. Yalnizca sayi ve konu adi (README SS6.1-6); koca giden
+     * metin konulari plana eklemeyi hatirlatir. Ayni sonuc ikinci kez
+     * yayinlanirsa yeni bildirim uretmez.
+     *
+     * @param  list<string>  $eksikler  "Kimya · Atom ve Periyodik Sistem"
+     */
+    public function examResult(\App\Models\ExamResult $sonuc, array $eksikler): int
+    {
+        $ogrenci = $sonuc->student()->with(['parents', 'coaches'])->first();
+        $deneme = $sonuc->event;
+        $net = number_format($sonuc->totalNet(), 2, ',', '.');
+        $konular = $eksikler === [] ? null : implode(', ', array_slice($eksikler, 0, 5))
+            . (count($eksikler) > 5 ? ' ve ' . (count($eksikler) - 5) . ' konu daha' : '');
+
+        $alicilar = [
+            [$ogrenci, "Deneme sonucun yüklendi: {$deneme->title}",
+                "Toplam net {$net}." . ($konular ? " Eksik konular: {$konular}." : '')],
+        ];
+        foreach ($ogrenci->parents as $veli) {
+            $alicilar[] = [$veli, "{$ogrenci->name}: {$deneme->title} sonucu",
+                "Toplam net {$net}." . ($eksikler ? ' ' . count($eksikler) . ' eksik konu belirlendi.' : '')];
+        }
+        foreach ($ogrenci->coaches as $koc) {
+            $alicilar[] = [$koc, "{$ogrenci->name}: {$deneme->title} sonucu",
+                "Toplam net {$net}." . ($konular ? " Eksik konular: {$konular}. Konular sayfasından plana ekleyebilirsin." : '')];
+        }
+
+        $yeni = 0;
+        foreach ($alicilar as [$alici, $baslik, $govde]) {
+            $yeni += (int) $this->kaydet(
+                NotificationType::ExamResult, $alici, $ogrenci, $sonuc->id,
+                "exam_result:{$alici->id}:{$sonuc->id}", $baslik, $govde,
+            );
+        }
+
+        return $yeni;
+    }
+
+    /**
      * Bildirimi yazar; ayni anahtar zaten varsa hicbir sey yapmaz.
      *
      * @return bool Yeni kayit olustu mu

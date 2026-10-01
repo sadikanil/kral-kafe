@@ -16,6 +16,7 @@
             <div class="text-muted">
                 {{ $sonuc->event->exam_date->timezone(config('kafe.timezone'))->format('d.m.Y') }}
                 · Toplam net {{ number_format($sonuc->totalNet(), 2, ',', '.') }}
+                @if($sonuc->score !== null) · Puan {{ number_format((float) $sonuc->score, 3, ',', '.') }}@endif
             </div>
 
             <div class="mt-2">
@@ -43,6 +44,39 @@
                         <div class="text-muted">{{ $etiket }}: {{ $metin }}</div>
                     @endforeach
                 </div>
+            @endif
+
+            {{-- Kurum PDF'inden gelen konu tablosu (1 Ekim 2026). Eksik konu
+                 kuralla (ExamTopics::isWeak); sifat yok, yalnizca sayi. --}}
+            @if(! empty($sonuc->topics))
+                @php $eksikler = $sonuc->weakTopics(); @endphp
+                @if($eksikler !== [])
+                    <div class="mt-2">
+                        <strong>Eksik konular</strong>
+                        <ul class="mb-0">
+                            @foreach($eksikler as $konu)
+                                <li>
+                                    @if($konu['subject'])<span class="text-muted">{{ $konu['subject'] }} ·</span>@endif
+                                    {{ $konu['topic'] }}
+                                    <span class="text-muted">— {{ $konu['questions'] }} soruda {{ $konu['correct'] }} doğru</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+                <details class="mt-2">
+                    <summary>Konu konu sonuçlar</summary>
+                    <ul class="mb-0">
+                        @foreach($sonuc->topics as $konu)
+                            <li>
+                                @if($konu['subject'])<span class="text-muted">{{ $konu['subject'] }} ·</span>@endif
+                                {{ $konu['topic'] }}:
+                                {{ $konu['correct'] }}D {{ $konu['wrong'] }}Y {{ $konu['blank'] }}B
+                                · %{{ \App\Support\ExamTopics::success($konu) }}
+                            </li>
+                        @endforeach
+                    </ul>
+                </details>
             @endif
 
             @if($sonuc->note)

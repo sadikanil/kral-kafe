@@ -150,6 +150,7 @@ class CoachRolesAndLessonsTest extends TestCase
         // Ogrenci planinda "Odev" ve kocun adi + bransi.
         $this->actingAs($this->ogrenci)->get(route('user.plan', ['hafta' => '2026-09-28']))
             ->assertOk()
+            ->assertSee('Koçların: İbrahim Acar · Matematik')
             ->assertSee('40 türev sorusu')
             ->assertSee('Ödev')
             ->assertSee('İbrahim Acar · Matematik');

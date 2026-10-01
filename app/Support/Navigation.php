@@ -94,6 +94,7 @@ final class Navigation
                 self::planlar(),
                 ['route' => 'admin.lessons.index', 'label' => 'Özel Dersler', 'icon' => 'graduation-cap', 'match' => 'admin.lessons.*'],
                 ['route' => 'admin.exams.index', 'label' => 'Deneme Takvimi', 'icon' => 'clipboard-list', 'match' => 'admin.exams.*'],
+                ['route' => 'admin.exam-imports.index', 'label' => 'Deneme Sonuçları', 'icon' => 'file-text', 'match' => 'admin.exam-imports.*'],
             ]],
             ['title' => 'Kafe', 'items' => [
                 ['route' => 'admin.tables.index', 'label' => 'Masalar', 'icon' => 'armchair', 'match' => 'admin.tables.*'],

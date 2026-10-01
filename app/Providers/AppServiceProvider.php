@@ -11,7 +11,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Kurum deneme PDF'i okuyucu (1 Ekim 2026): saglayici yapilandirmadan.
+        // Acik secim yoksa Claude anahtari varsa Claude, yoksa OpenAI.
+        $this->app->bind(\App\Contracts\ExamPdfReader::class, function () {
+            $saglayici = config('services.exam_ai.provider')
+                ?: (filled(config('services.anthropic.api_key')) ? 'anthropic' : 'openai');
+
+            return $saglayici === 'openai'
+                ? new \App\Services\ExamImport\OpenAIExamPdfReader
+                : new \App\Services\ExamImport\AnthropicExamPdfReader;
+        });
     }
 
     /**

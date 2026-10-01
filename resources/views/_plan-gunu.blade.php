@@ -34,7 +34,7 @@
     {{-- id: "✓ Bitti"den sonra takvim bu maddeye doner (capa); ust bar
          yapiskan, madde onun altinda kalmasin diye scroll-margin. --}}
     <div id="madde-{{ $madde->id }}" style="scroll-margin-top: 72px;"
-         class="cal-entry cal-item {{ $madde->status === 'done' ? 'done' : '' }} {{ $madde->exam_event_id ? 'cal-exam' : '' }} {{ $degistirir ? 'has-actions' : '' }} {{ $madde->isHomework() ? 'cal-homework' : '' }}">
+         class="cal-entry cal-item {{ $madde->status === 'done' ? 'done' : '' }} {{ $madde->exam_event_id ? 'cal-exam' : '' }} {{ $degistirir ? 'has-actions' : '' }}">
         {{-- Bitmislik yalnizca soluk renk ve ustu cizili degil: ekran
              okuyucu da "Tamamlandi" duysun. --}}
         @if($madde->status === 'done')<span role="img" aria-label="Tamamlandı">✓</span>@endif

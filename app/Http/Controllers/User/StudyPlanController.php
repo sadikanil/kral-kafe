@@ -34,6 +34,9 @@ class StudyPlanController extends Controller
             'hafta' => $hafta,
             'days' => WeekPlan::for($ogrenci, $hafta),
             'examClub' => $ogrenci->entitlements()->examClub,
+            // Koclari ve branslari (1 Ekim 2026): odevi ve ozel dersi kimin
+            // verdigi takvimde yaziyor; burada da tek satir.
+            'coaches' => $ogrenci->coaches()->orderBy('name')->get(),
             'flexible' => ExamEvent::flexibleOpen()->get(),
             // Planina koydugu serbest denemeler (deneme id => gun): form
             // "Ekle" yerine gunu ve "Tasi"yi gostersin.

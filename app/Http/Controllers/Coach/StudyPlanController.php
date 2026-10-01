@@ -79,6 +79,16 @@ class StudyPlanController extends Controller
             // Odak modu (Faz 4): son 14 gunde uygulamadan ayrilis. Koc gorur,
             // veli gormez; sure calismadan dusulmez.
             'odak' => $this->odakOzeti($student),
+            // Deneme onerileri (1 Ekim 2026): kurum PDF'inden kuralla cikan
+            // acik eksik konular. Koc tek dokunusla plana ekler (yonetici
+            // disinda odev olarak); karari insan verir (README SS6.1-6).
+            'oneriler' => \App\Models\WeakTopic::open()->forStudent($student)
+                ->where('source', 'exam')
+                // Plana zaten eklenmis konu tekrar onerilmez.
+                ->whereNotExists(fn ($q) => $q->from('study_plan_items')
+                    ->whereColumn('study_plan_items.student_id', 'weak_topics.student_id')
+                    ->whereColumn('study_plan_items.title', 'weak_topics.topic'))
+                ->with('subject')->latest()->limit(8)->get(),
         ]);
     }
 

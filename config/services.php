@@ -39,4 +39,19 @@ return [
         'api_key' => env('OPENAI_API_KEY'),
     ],
 
+    'anthropic' => [
+        'api_key' => env('ANTHROPIC_API_KEY'),
+    ],
+
+    /*
+    | Kurum geneli deneme PDF'i okuma (1 Ekim 2026, README SS14).
+    | provider bossa: ANTHROPIC_API_KEY varsa Claude, yoksa OpenAI.
+    */
+    'exam_ai' => [
+        'provider' => env('EXAM_AI_PROVIDER'),
+        'anthropic_model' => env('EXAM_AI_ANTHROPIC_MODEL', 'claude-opus-5-5'),
+        'openai_model' => env('EXAM_AI_OPENAI_MODEL', 'gpt-4o'),
+        'effort' => env('EXAM_AI_EFFORT', 'low'),
+    ],
+
 ];

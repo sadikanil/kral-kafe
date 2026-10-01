@@ -73,22 +73,29 @@
                             @if($ders['status'] === 'moved')<span class="badge badge-warning">Taşındı</span>@endif
                         </span>
                         @if($ders['status'] !== 'cancelled')
-                            <span class="d-flex gap-1" style="flex-wrap: wrap;">
+                            {{-- Tasima formu katli: telefonda her derste uc kutu
+                                 acik dururken liste dort haftada ekrani dolduruyordu. --}}
+                            <span class="d-flex gap-1 align-items-center" style="flex-wrap: wrap;">
                                 <form method="POST" action="{{ route('coach.lessons.cancel', $ders['slot']) }}"
                                       onsubmit="return confirm('Bu ders iptal edilsin mi?')">
                                     @csrf <input type="hidden" name="date" value="{{ $ders['original_date'] }}">
                                     <button type="submit" class="btn btn-sm btn-secondary">İptal et</button>
                                 </form>
-                                <form method="POST" action="{{ route('coach.lessons.move', $ders['slot']) }}" class="d-flex gap-1">
-                                    @csrf <input type="hidden" name="date" value="{{ $ders['original_date'] }}">
-                                    <input type="date" name="new_date" class="form-control" style="padding: 4px; width: 140px;" value="{{ $ders['date'] }}" required
-                                        aria-label="{{ $gunAdi }} dersinin yeni günü">
-                                    <input type="time" name="new_starts_at" class="form-control" style="padding: 4px; width: 90px;" value="{{ $ders['starts_at'] }}" required
-                                        aria-label="{{ $gunAdi }} dersinin yeni başlangıcı">
-                                    <input type="time" name="new_ends_at" class="form-control" style="padding: 4px; width: 90px;" value="{{ $ders['ends_at'] }}" required
-                                        aria-label="{{ $gunAdi }} dersinin yeni bitişi">
-                                    <button type="submit" class="btn btn-sm btn-secondary">Taşı</button>
-                                </form>
+                                <details>
+                                    <summary class="btn btn-sm btn-secondary">Taşı</summary>
+                                    <form method="POST" action="{{ route('coach.lessons.move', $ders['slot']) }}" class="mt-1" style="max-width: 320px;">
+                                        @csrf <input type="hidden" name="date" value="{{ $ders['original_date'] }}">
+                                        <input type="date" name="new_date" class="form-control" value="{{ $ders['date'] }}" required
+                                            aria-label="{{ $gunAdi }} dersinin yeni günü">
+                                        <div class="d-flex gap-1 mt-1">
+                                            <input type="time" name="new_starts_at" class="form-control" value="{{ $ders['starts_at'] }}" required
+                                                aria-label="{{ $gunAdi }} dersinin yeni başlangıcı">
+                                            <input type="time" name="new_ends_at" class="form-control" value="{{ $ders['ends_at'] }}" required
+                                                aria-label="{{ $gunAdi }} dersinin yeni bitişi">
+                                        </div>
+                                        <button type="submit" class="btn btn-sm btn-primary mt-1">Kaydet</button>
+                                    </form>
+                                </details>
                             </span>
                         @endif
                     </div>

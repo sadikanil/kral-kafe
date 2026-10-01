@@ -24,7 +24,29 @@ class ExamResult extends Model
         'rank_country', 'total_country',
         'note',
         'entered_by',
+        'score',
+        'topics',
+        'exam_import_id',
     ];
+
+    /**
+     * Kurum PDF'inden gelen sonuc (1 Ekim 2026): puan ve konu tablosu.
+     * topics: [{subject, topic, questions, correct, wrong, blank, success}]
+     */
+    protected $casts = [
+        'score' => 'decimal:3',
+        'topics' => 'array',
+    ];
+
+    /** Eksik konular: basari %50'nin altinda, en cok kayip once. */
+    public function weakTopics(): array
+    {
+        return collect($this->topics ?? [])
+            ->filter(fn (array $k) => \App\Support\ExamTopics::isWeak($k))
+            ->sortByDesc(fn (array $k) => ((int) $k['questions']) - ((int) $k['correct']))
+            ->values()
+            ->all();
+    }
 
     public function event(): BelongsTo
     {

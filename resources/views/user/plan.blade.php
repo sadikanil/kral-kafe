@@ -9,6 +9,10 @@
     istedigi gune koyar (Deneme Kulubu).
 --}}
 @section('content')
+    @if($coaches->isNotEmpty())
+        <p class="text-muted text-sm mb-2">Koçların: {{ $coaches->map->coachLabel()->implode(', ') }}</p>
+    @endif
+
     @include('_plan-takvimi', [
         'mode' => 'student',
         'navUrl' => fn ($h) => route('user.plan', ['hafta' => $h]),

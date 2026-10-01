@@ -22,6 +22,9 @@ enum NotificationType: string
     /** Bir urun kritik stok sayisina indi; yoneticiye (Dalga 29). */
     case LowStock = 'low_stock';
 
+    /** Kurum denemesinin sonucu yayinlandi; ogrenciye, velisine, kocuna (1 Ekim 2026). */
+    case ExamResult = 'exam_result';
+
     public function label(): string
     {
         return match ($this) {
@@ -29,6 +32,7 @@ enum NotificationType: string
             self::ExamTomorrow => 'Yarın deneme var',
             self::StockCount => 'Stok sayımı',
             self::LowStock => 'Kritik stok',
+            self::ExamResult => 'Deneme sonucu',
         };
     }
 }

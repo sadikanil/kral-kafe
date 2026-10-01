@@ -2,7 +2,7 @@
     Coklu ogrenci secimi (1 Ekim 2026): arama kutusu + onay kutulari.
     Beklenen: $students, $onek (id onegi, iki form ayni sayfada).
 --}}
-<fieldset class="form-group">
+<fieldset class="form-group lesson-picker">
     <legend class="form-label">Öğrenciler</legend>
     <input type="search" class="form-control mb-2 js-ogrenci-ara" placeholder="Ada göre ara" aria-label="Öğrenci ara"
            data-liste="{{ $onek }}-liste">

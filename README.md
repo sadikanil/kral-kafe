@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 23 Eylül 2026 · Laravel 12 · 763 test / 1881 doğrulama yeşil._
+_Son güncelleme: 1 Ekim 2026 · Laravel 12 · 1455 test / 6410 doğrulama yeşil._
 
 ---
 
@@ -20,7 +20,7 @@ _Son güncelleme: 23 Eylül 2026 · Laravel 12 · 763 test / 1881 doğrulama ye�
 
 **Paketler** — veli ayrı etiket taşımaz, çocuğunun paketini görür. Deneme adı, sonuçları ve raporları = **deneme kulübü**. Personel (admin, koç) pakete bağlı değil.
 
-| Paket | Masa | Deneme takvimi | Koçluk | Deneme kulübü | Özel ders (Cahit Hoca) |
+| Paket | Masa | Deneme takvimi | Koçluk | Deneme kulübü | Özel ders paketi (Cahit Hoca) |
 |---|:--:|:--:|:--:|:--:|:--:|
 | Tier 1 · Standart | ✅ | yalnızca liste | — | — | — |
 | Tier 2 · Orta | ✅ | yalnızca liste | ✅ | ek olarak alınabilir | — |
@@ -47,6 +47,18 @@ _Son güncelleme: 23 Eylül 2026 · Laravel 12 · 763 test / 1881 doğrulama ye�
 - [ ] **Frankfurt'a taşıma** — ⏸ askıda (23 Eyl: şu an yeterince hızlı). Plan §12.7.
 - [x] **27 · Bildirim zili** — herkesin üst barında 🔔 + okunmamış sayısı + son bildirimler; "Tümü" okundu sayar. Stok sayımı 7 günü geçince admin'e (sayım yoksa 7 günde bir tekrar).
 
+
+### Dalga 31 · Koçlar, özel ders, kurum deneme PDF'i (1 Eki) · ✅ bitti
+
+Kararlar §5'te (18–24). Ayrıntı: koçlar §6.2, PDF akışı ve Claude/OpenAI önerisi §14.
+
+- [x] **Odak modu sayaçta** — çalışırken isteğe bağlı simsiyah ekran; uygulamadan ayrılma sayılır, süreden düşülmez. Koç plan sayfasında son 14 günü görür, veli görmez.
+- [x] **21:00 kapanış kuralı kalktı** — kapanış esnek. Unutulan oturum **gün sonunda (00:00)** ya da 12 saat dolunca kapanır; oturum 09:00'dan gece yarısına kadar başlatılabilir. `KAFE_KAPANIS` artık okunmuyor.
+- [x] **Veli + koç** — veli (ya da öğretmen) ayrıca koç olabilir: kullanıcı formunda "Koçluk yetkisi de var" + **Branş**. Veli panelinde yalnızca kendi çocuğu, koç sayfalarında yalnızca atanan öğrenciler; atanan öğrencinin ödemeleri açılmaz. Menü iki grubu da gösterir.
+- [x] **Ödev etiketi** — Cahit Hoca (yönetici) dışındaki koçlar plana yalnızca **Ödev** ekler, yalnızca kendi ekledikleri ödevi taşır/siler; haftalık sabit programı yönetici yazar. Öğrenci ödevi "İbrahim Acar · Matematik" diye görür; Planım'da koçları listelenir.
+- [x] **Özel ders** — paketten bağımsız; ders saatine öğretmen + ders adı. Yönetim → **Özel Dersler**: aynı saat birden çok öğrenciye, özel ders paketi birden çok öğrenciye (pakette "ders sayısı"). Dersi veren koç öğrencinin koçu olarak atanır. Koç → **Özel Derslerim**: kendi dersleri, tek dersi iptal/taşı, haftalık saati değiştir; paket, ücret, ödeme yok.
+- [x] **Kurum deneme PDF'i** — Yönetim → **Deneme Sonuçları**: takvimdeki denemeyi seç, kurumun PDF'ini bir kez yükle; yapay zekâ sayfa sayfa okur, adlar eşlenir, yönetici kontrol edip yayınlar. Öğrenci kendi netini, sıralarını, puanını ve eksik konularını görür; öğrenciye, veliye, koça bildirim; koç plan sayfasında "Denemeden gelen öneriler".
+- [x] **Koçlar** — Cahit Atılğan (yönetici, Fizik) ve İbrahim Acar (veli + koç, Matematik) ada göre tanımlanır (migration `2026_10_01_130000`); kayıtlı değilse kullanıcı formundan eklenir.
 
 ### Dalga 30 · Takvimli plan (23 Eyl) · ✅ bitti
 
@@ -89,6 +101,7 @@ Ekranlar telefon genişliğinde (390 px) görüntülenip denetlendi.
 11. [Kurulum ve testler](#11-kurulum-ve-testler)
 12. [Dağıtım: Vercel + Supabase](#12-dağıtım-vercel--supabase)
 13. [Git geçmişi](#13-git-geçmişi)
+14. [Kurum deneme PDF'i ve yapay zekâ önerisi](#14-kurum-deneme-pdfi-ve-yapay-zekâ-önerisi) — Claude / OpenAI
 
 ---
 
@@ -325,6 +338,13 @@ ve §5'e geçti.)*
 | 15 | İlk bildirim kanalı e-posta; WhatsApp sonra | 20 Eyl 2026 |
 | 16 | YKS tarihi takvime "resmî sınav" olarak girilir | 20 Eyl 2026 |
 | 17 | `mock_exams` tablosu açılmaz; `exam_events` onun yerine geçti | 20 Eyl 2026 |
+| 18 | Sabit **kapanış saati yok** (esnek); unutulan oturum gün sonunda (00:00) ya da 12 saatte kapanır | 1 Eki 2026 |
+| 19 | Veli ya da öğretmen **ayrıca koç** olabilir; rol tek kalır, koç yetkisi ek bayrak (`is_coach`) + branş | 1 Eki 2026 |
+| 20 | Yönetici dışındaki koçlar plana **yalnızca ödev** ekler; planın kendisi ve sabit program yöneticide | 1 Eki 2026 |
+| 21 | Koçlar özel dersini takip eder ve değiştirir; **paket, ücret ve ödemeye karışmaz** (görmez de) | 1 Eki 2026 |
+| 22 | Özel ders **paketten bağımsız** tanımlanabilir; özel ders paketini ve toplu atamayı yalnızca yönetici yapar | 1 Eki 2026 |
+| 23 | Deneme sonucu **kurum PDF'inden toplu** gelir; yapay zekâ okur, yönetici kontrol edip yayınlar; PDF öğrenciye açılmaz | 1 Eki 2026 |
+| 24 | Eksik konu **kuralla** (≥2 soru, başarı <%50) belirlenir; yapay zekâ yorum/öneri metni üretmez, plana ekleme kararı koçta | 1 Eki 2026 |
 
 Teknik kararların tamamı ve gerekçeleri §9'da.
 
@@ -363,7 +383,11 @@ Teknik kararların tamamı ve gerekçeleri §9'da.
 | Masa yönetimi | ✅ | — | — | — | — | ✅ |
 | Ürün/stok/sayım | ✅ | — | — | — | — | ✅ |
 | Paket ve ödeme | ✅ | — | — | kendi (salt) | kendi çocuğu (salt) | — |
-| Haftalık plan belirleme | ✅ | ✅ | — | — | — | — |
+| Haftalık plan belirleme | ✅ | yalnızca ödev | — | — | — | — |
+| Haftalık sabit program (okul, dershane) | ✅ | — (görür) | — | — | — | — |
+| Özel ders saati ekleme/silme, özel ders paketi | ✅ | — | — | — | — | — |
+| Kendi özel dersini iptal/taşı, haftalık saatini değiştir | ✅ | ✅ (yalnızca kendi dersi) | — | — | — | — |
+| Kurum deneme PDF'i yükleme ve yayın | ✅ | — | — | — | — | — |
 | Deneme sonucu girişi | ✅ | ✅ | — | — | — | — |
 | Deneme notu yazma | ✅ | ✅ | — | — | — | — |
 | Öğrenci sorularını cevaplama | ✅ | — | ✅ | — | — | — |
@@ -373,9 +397,17 @@ yapılır. Rol sayısı altı; dağınık kontroller kısa sürede güvenlik aç
 `AdminMiddleware` korunur ama tek başına yetmez.
 
 Bugünkü karşılığı: `User::accessibleStudentIds()` tek kaynak — yönetici `null`
-(sınırsız), veli bağlı öğrenciler, öğrenci kendisi, koç/öğretmen/görevli **boş**.
-Koç ataması gelince tek satırla genişler; global scope **yok** (görünmez şekilde
-yönetici toplamlarına sızardı).
+(sınırsız), veli bağlı öğrenciler, öğrenci kendisi, koç atanan öğrenciler,
+öğretmen/görevli **boş**. Global scope **yok** (görünmez şekilde yönetici
+toplamlarına sızardı).
+
+**Koç yetkili veli (1 Ekim 2026).** Rol sütunu tek kalır (§10.2); veli ya da
+öğretmen `is_coach` ile ayrıca koç olur (`User::roles()` → `[Veli, Koç]`).
+İki kapı ayrı: veli paneli `childStudentIds()` (yalnızca kendi çocuğu,
+`UserPolicy::viewAsParent`), koç sayfaları `coachableStudentIds()` (yalnızca
+atananlar, `User::canCoach`). Atanan öğrencinin veli sayfası ve ödemeleri
+koçlu veliye 403. Yönetici dışındaki koç `assignsOnlyHomework()`: plana
+yalnızca ödev, yalnızca kendi maddesini değiştirir (`StudyPlanItem::canBeChangedBy`).
 
 ---
 
@@ -1836,6 +1868,10 @@ Ardından `http://127.0.0.1:8000`. Hepsini birden (sunucu + kuyruk + log + vite)
 | Değişken | Ne işe yarar |
 |---|---|
 | `OPENAI_API_KEY` | Stok fotoğrafı ve deneme PDF'i analizi. Boş bırakılırsa sayfalar çalışır, yalnızca yapay zekâ analizi devre dışı kalır. |
+| `ANTHROPIC_API_KEY` | Kurum deneme PDF'ini Claude ile okuma (önerilen, §14). Boşsa `OPENAI_API_KEY` kullanılır. |
+| `EXAM_AI_PROVIDER` | `anthropic` ya da `openai`; boşsa anahtara göre seçilir. |
+| `EXAM_AI_ANTHROPIC_MODEL` / `EXAM_AI_OPENAI_MODEL` | Varsayılan `claude-opus-5-5` / `gpt-4o`. |
+| `EXAM_AI_EFFORT` | Claude düşünme derinliği; aktarım işi olduğu için varsayılan `low`. Okuma hatası görülürse `medium`. |
 | `UPLOAD_DISK` | Yüklenen dosyaların gideceği disk. Yerelde `public`, serverless ortamda `s3`. |
 | `MAIL_MAILER` | Şifre sıfırlama e-postası. Varsayılan `log`; gerçek gönderim için SMTP gerekir. |
 
@@ -1884,7 +1920,8 @@ Vercel projesinde Settings → Environment Variables altına gir:
 | `APP_LOCALE` | `tr` |
 | `SESSION_LIFETIME` | `900` (kafe gününden uzun olmalı) |
 | `KAFE_TIMEZONE` | `Europe/Istanbul` |
-| `KAFE_ACILIS` / `KAFE_KAPANIS` | `09:00` / `21:00` |
+| `KAFE_ACILIS` | `09:00`. (`KAFE_KAPANIS` 1 Ekim 2026'dan beri okunmuyor; silinebilir — oturum gün sonunda kapanır.) |
+| `ANTHROPIC_API_KEY` | Kurum deneme PDF'i okuma (§14). Yoksa `OPENAI_API_KEY` ile çalışır |
 | `KAFE_DENEME_HATIRLATMA_GUN` | Kaç gün kala deneme hatırlatıcısı uyarı rengine döner. Varsayılan `7`; tanımlamak zorunlu değil |
 | `KAFE_ODEME_VADESI_GUN` | Abonelik başlangıcından kaç gün sonra ödeme "gecikmiş" sayılır. Varsayılan `7`; tanımlamak zorunlu değil |
 | `KAFE_KONUM_ESIGI_METRE` | Kafeden kaç metre uzaklık onay kuyruğunda "uzak" işaretlenir. Varsayılan `250`; tanımlamak zorunlu değil |
@@ -2373,6 +2410,109 @@ git for-each-ref refs/remotes                    # hangi ref eski geçmişi tutu
 - Uzaktaki geçmişte büyük dosya yok, çakışma işareti yok
 - Hiçbir commit'te `.env` ya da API anahtarı bulunmuyor (tüm geçmiş tarandı)
 - Yerel depo `brashlab` refleri nedeniyle hâlâ ~21 MiB; uzaktaki temiz
+
+---
+
+## 14. Kurum deneme PDF'i ve yapay zekâ önerisi
+
+_1 Ekim 2026. Akış yapıldı ve testli; gerçek API ile ilk çalıştırma anahtar eklenince yapılacak (aşağıda "Canlıya almadan önce")._
+
+### 14.1 Sorun
+
+Deneme sonuçları kuruma **tek PDF** olarak geliyor (örnek: Hız ve Renk DK TYT 2,
+12 sayfa): önce okul ve sınıf net listeleri, sonra öğrenci başına bir sayfalık
+karne — ders ders soru/doğru/yanlış/boş, konu konu S-D-Y-B%, şube/kurum/ilçe/il/genel
+sıra ve katılımcı sayıları, puan. Eski akış (Dalga 6d) öğrenci başına ayrı PDF
+bekliyordu; yönetici aynı belgeyi dokuz kez yüklemek zorundaydı.
+
+Belgenin üç zorluğu:
+
+- **Öğrenci numarası yok** (`Ö.No` hep 0). Eşleme yalnızca **ada** dayanıyor; bazı
+  satırlarda soyadı yok, yalnızca ad yazıyor.
+- **Metin katmanı bozuk.** `pdftotext` sütunları yapıştırıyor ("57,0022,95") ve
+  karnede iki sütunu iç içe veriyor. Kural tabanlı ayrıştırıcı kırılgan olur; yayın
+  kuruluşu değişince (Özdebir, 345, Limit…) baştan yazılır. Vercel'de `pdftotext` da yok.
+- **Vercel 60 sn sınırı.** Tüm belgeyi tek istekte okutmak (9 karne × ~50 konu
+  satırı) çıktı süresi yüzünden sınırı aşar.
+
+### 14.2 Kurulan akış
+
+```
+Yönetici: Deneme Sonuçları → takvimdeki deneme + PDF
+   │  (ExamImport: uploaded)
+   ▼
+1 istek  — dizin: sınav adı, katılımcılar, öğrenci listesi + karne sayfaları
+   │       ad eşleme: birebir → "Eşleşti", kısmi → "Kontrol et", yok → seç/atla
+   ▼  (reading)
+N istek  — her karne ayrı: dersler, sıralar, puan, konu tablosu
+   │       liste ↔ karne doğru/yanlış farkı → "PDF'e bakın" uyarısı
+   ▼  (review)
+Yönetici kontrol eder → Yayınla
+   ├─ ExamResult: netler (D/Y/B), 4 düzey sıra + katılımcı, puan, konu tablosu
+   ├─ WeakTopic (source=exam): ≥2 soru ve başarı <%50 — kural, yapay zekâ değil
+   ├─ Bildirim: öğrenci, veliler, koçlar (bir kez)
+   └─ Koç plan sayfası: "Denemeden gelen öneriler" → tek dokunuşla plana / ödeve
+```
+
+- Her adım ayrı istek; sayfa açıkken betik sırayla çağırır. Hata kaldığı yerde
+  durur, "Devam et" okunmuş karneyi yeniden okumaz (iki kez ödeme yok).
+- Sağlayıcı arayüzün arkasında (`App\Contracts\ExamPdfReader`): Claude
+  (`AnthropicExamPdfReader`, resmi PHP SDK) ve OpenAI (`OpenAIExamPdfReader`).
+  İkisi aynı istemi ve aynı JSON şemasını kullanır (`ExamPdfSchema`); ders kodları
+  denemenin türünden (TYT/AYT) gelir, "Felsefe (Seçmeli)" gibi karşılığı olmayan
+  ders `other` olup yazılmaz.
+- **Gizlilik (§6.1-4):** PDF tüm kurumun adlarını ve puanlarını taşır; yalnızca
+  yönetici indirir. Öğrenci ve veli yalnızca kendi satırını görür. Deneme kulübü
+  olmayan öğrenci sonucu panelinde görmez; kontrol ekranı bunu satırda yazar.
+- **Yorum yok (§6.1-6):** yapay zekâ yalnızca tabloyu aktarır. Eksik konu kural,
+  plana ekleme kararı koçun. Kişisel "çalışma önerisi" metni üretilmiyor (14.5).
+
+### 14.3 Claude mı OpenAI mı — öneri: **Claude**
+
+| | Claude (önerilen) | OpenAI (yedek; anahtar zaten var) |
+|---|---|---|
+| PDF girişi | Belge bloğu (base64); sayfa görüntüsü + metin birlikte okunur — bozuk metin katmanına bağlı değil | Chat Completions `file` parçası |
+| Yapılandırılmış çıktı | JSON şema (`output_config.format`), geçersiz JSON dönmez | JSON şema (`strict`) |
+| Aynı PDF'e 10 istek | PDF bloğu **açıkça önbelleğe** yazılır (`cache_control`); 2.–10. istek PDF'i ~%10 fiyatla okur | Otomatik önbellek; indirim oranı modele göre, garanti yok |
+| Takılma durumu | Sunucu tarafı yedek model (`fallbacks: default`) aynı istekte devralır | Yok; hata döner |
+| Düşünme ayarı | `effort: low` (aktarım işi) → hızlı, her karne tek istekte 60 sn altında | — |
+| Kod | Resmî PHP SDK (`anthropic-ai/sdk`) | Mevcut `Http` istemcisi |
+
+**Neden Claude:** aynı belgeyi 10 kez gönderen bu akışta açık önbellek maliyeti
+belirgin düşürüyor; görsel tablo okuma bozuk metin katmanından etkilenmiyor;
+yedek model ret durumunda yöneticiyi elle girişe düşürmüyor.
+
+**Tahmini maliyet (Claude Opus 5.5, $4 / $20 / önbellek okuma $0,20 / 1M token):**
+12 sayfalık PDF ≈ 30–45 bin token (tahmin — ilk çalıştırmada `usage` ile
+ölçülmeli). Dizin isteği PDF'i önbelleğe yazar (~$0,2), dokuz karne önbellekten
+okur ve her biri ~3 bin token çıktı üretir (~$0,07). **PDF başına ≈ 1 $.**
+`EXAM_AI_ANTHROPIC_MODEL=claude-sonnet-5-5` maliyeti yaklaşık yarıya indirir;
+gerçek PDF'le doğruluk karşılaştırılmadan değiştirilmemeli.
+
+**Veri ve KVKK:** öğrenci adları ve sonuçları yurt dışındaki bir API'ye gidiyor.
+İki sağlayıcı da API verisiyle varsayılan olarak model eğitmiyor; saklama süresi
+sağlayıcı sözleşmesine bağlı. Kayıt sözleşmesine / aydınlatma metnine "sınav
+sonuçlarının yapay zekâ hizmet sağlayıcısında işlenmesi" maddesi eklenmeli.
+Eşleme ada dayandığı için adlar maskelenemiyor.
+
+### 14.4 Canlıya almadan önce
+
+1. `php artisan migrate --force --env=supabase` (4 migration: odak modu,
+   koç/ödev/özel ders, PDF tabloları, koç branşları).
+2. Vercel'e `ANTHROPIC_API_KEY` ekle (yoksa OpenAI anahtarıyla çalışır).
+3. Bu PDF'le bir kez çalıştır; kontrol ekranında netleri PDF'le karşılaştır,
+   "liste ile karne farklı" uyarısı olan satırlara bak. Hata görülürse
+   `EXAM_AI_EFFORT=medium`.
+4. İlk AYT PDF'iyle aynı kontrol (ders kodları AYT'den gelir).
+
+### 14.5 Sonraki adımlar (yapılmadı, karar bekliyor)
+
+| Öneri | Not |
+|---|---|
+| Konu adını müfredat konusuna (`subject_topics`) eşleme | Plan maddesi konuya bağlanır, konu bazlı ilerleme çıkar. Eşlemeyi aynı istekte yapay zekâya `enum` olarak vermek mümkün |
+| Yapay zekâdan kişisel çalışma önerisi metni | §6.1-6 gereği yapılmadı. İstenirse **koçun onayına düşen taslak** olarak: koç düzenler, öyle yayınlanır |
+| Batch API (%50 ucuz) | Sonuç dakikalar–saatler içinde; cron ya da yoklama gerektirir. PDF başına ~1 $'da değmez |
+| Eski "öğrenci başına PDF" akışı (Dalga 6d) | Kurum PDF'i yaygınlaşınca kaldırılabilir; şimdilik duruyor |
 
 ---
 
