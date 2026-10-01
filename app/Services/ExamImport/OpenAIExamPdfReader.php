@@ -40,7 +40,8 @@ class OpenAIExamPdfReader implements ExamPdfReader
         }
 
         try {
-            $yanit = Http::withToken($anahtar)->timeout(50)->post('https://api.openai.com/v1/chat/completions', [
+            // expect=false: buyuk govdede "Expect: 100-continue" 417'ye yol aciyor.
+            $yanit = Http::withToken($anahtar)->withOptions(['expect' => false])->timeout(50)->post('https://api.openai.com/v1/chat/completions', [
                 'model' => config('services.exam_ai.openai_model'),
                 'messages' => [
                     ['role' => 'system', 'content' => ExamPdfSchema::system()],

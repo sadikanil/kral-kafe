@@ -86,7 +86,9 @@ class GeminiExamPdfReader implements ExamPdfReader
         $adres = "https://{$sunucu}/v1/projects/{$proje}/locations/{$bolge}/publishers/google/models/{$model}:generateContent";
 
         try {
-            $yanit = Http::withToken($this->erisimJetonu())->timeout(50)->post($adres, [
+            // expect=false: govde 1 MB'i asinca cURL "Expect: 100-continue"
+            // ekliyor ve Google onu 417 ile reddediyor (1 Ekim 2026, canlida).
+            $yanit = Http::withToken($this->erisimJetonu())->withOptions(['expect' => false])->timeout(50)->post($adres, [
                 'systemInstruction' => ['parts' => [['text' => ExamPdfSchema::system()]]],
                 // PDF ilk parcada: on bir istekte ayni onek, ortuk onbellek.
                 'contents' => [['role' => 'user', 'parts' => [
@@ -114,7 +116,8 @@ class GeminiExamPdfReader implements ExamPdfReader
                 404 => "Gemini modeli bulunamadı ({$model}). EXAM_AI_GEMINI_MODEL'i Vertex AI Model Garden'daki adla değiştirin.",
                 403 => 'Vertex AI erişimi reddedildi: projede Vertex AI API açık mı, hizmet hesabına "Vertex AI User" rolü verildi mi?',
                 429 => 'Gemini kotası doldu ya da deneme kredisi bitti; biraz sonra "Devam et" deyin.',
-                default => 'Yapay zekâ servisi hata döndü (' . $yanit->status() . ').',
+                default => 'Yapay zekâ servisi hata döndü (' . $yanit->status() . ')'
+                    . (filled($yanit->json('error.message')) ? ': ' . mb_strimwidth((string) $yanit->json('error.message'), 0, 200, '…') : '.'),
             });
         }
 
