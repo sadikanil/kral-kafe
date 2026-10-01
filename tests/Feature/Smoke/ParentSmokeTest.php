@@ -367,15 +367,21 @@ class ParentSmokeTest extends TestCase
             ->assertSee('Net gelişimi')
             ->assertSee('TYT · 2 deneme')
             ->assertSeeInOrder(['Kral TYT Denemesi 3', 'Kral TYT Denemesi 2'])
-            ->assertSee('Toplam net 47,00')
+            ->assertSee('<strong>47,00</strong> net', false)
             ->assertSee('26.09.2026')
-            ->assertSee('120 kişide 5.')
-            ->assertSee('Matematikte hız çalışılmalı.')
             // Gelis-cikis tablosu: kisa ve onaysiz oturum yok
             ->assertSee('Pencere Önü')
             ->assertDontSee('Yanlış Okutma')
             ->assertDontSee('Onay Bekleyen Masa')
             ->assertSee('Son 14 gün');
+
+        // Deneme detayi (1 Ekim 2026): siralar ve yonetici notu orada.
+        $sonuc = \App\Models\ExamResult::where('student_id', $cagla->id)->get()->sortByDesc(fn ($r) => $r->event->exam_date)->first();
+        $yanit->assertSee(route('parent.exam-result', [$cagla, $sonuc]), false);
+        $this->actingAs($veli)->get(route('parent.exam-result', [$cagla, $sonuc]))
+            ->assertOk()
+            ->assertSee('120 kişide 5.')
+            ->assertSee('Matematikte hız çalışılmalı.');
 
         // Salt okunur: ogrenci ya da koc formlari cizilmemeli.
         $yanit->assertDontSee('✓ Bitti')

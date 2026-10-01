@@ -79,7 +79,13 @@ final class Navigation
         return [
             self::planlar(),
             ['route' => 'coach.lessons.index', 'label' => 'Özel Derslerim', 'icon' => 'graduation-cap', 'match' => 'coach.lessons.*'],
+            self::denemeAnalizi(),
         ];
+    }
+
+    private static function denemeAnalizi(): array
+    {
+        return ['route' => 'coach.exams.index', 'label' => 'Deneme Analizi', 'icon' => 'target', 'match' => 'coach.exams.*'];
     }
 
     private static function admin(): array
@@ -95,6 +101,7 @@ final class Navigation
                 ['route' => 'admin.lessons.index', 'label' => 'Özel Dersler', 'icon' => 'graduation-cap', 'match' => 'admin.lessons.*'],
                 ['route' => 'admin.exams.index', 'label' => 'Deneme Takvimi', 'icon' => 'clipboard-list', 'match' => 'admin.exams.*'],
                 ['route' => 'admin.exam-imports.index', 'label' => 'Deneme Sonuçları', 'icon' => 'file-text', 'match' => 'admin.exam-imports.*'],
+                self::denemeAnalizi(),
             ]],
             ['title' => 'Kafe', 'items' => [
                 ['route' => 'admin.tables.index', 'label' => 'Masalar', 'icon' => 'armchair', 'match' => 'admin.tables.*'],

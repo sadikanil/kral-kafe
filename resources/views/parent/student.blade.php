@@ -53,7 +53,7 @@
 
     @include('_koc-notlari')
 
-    @include('_deneme-sonuclari')
+    @include('_deneme-sonuclari', ['sonucAdresi' => fn ($r) => route('parent.exam-result', [$summary['student'], $r])])
 
     @php
         use App\Support\Duration;

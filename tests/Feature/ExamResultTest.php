@@ -196,8 +196,13 @@ class ExamResultTest extends TestCase
 
         $this->actingAs($ogrenci)->get(route('user.exam-results'))
             ->assertOk()
-            ->assertSee('TYT Deneme 4')
-            ->assertSee('Fen netleri düştü.');
+            ->assertSee('TYT Deneme 4');
+
+        // Yonetici notu ve siralar detay sayfasinda.
+        $this->actingAs($ogrenci)->get(route('user.exam-results.show', ExamResult::sole()))
+            ->assertOk()
+            ->assertSee('Fen netleri düştü.')
+            ->assertSee('42 kişide 3.');
     }
 
     /**
@@ -221,9 +226,18 @@ class ExamResultTest extends TestCase
                 'subjects' => [$ders->id => ['correct' => 20, 'wrong' => 8, 'blank' => 12]],
             ]);
 
+        $sonuc = ExamResult::sole();
         $this->actingAs($veli)->get(route('parent.student', $ogrenci))
             ->assertOk()
-            ->assertSee('Matematik iyi, Türkçe zayıf.');
+            ->assertSee(route('parent.exam-result', [$ogrenci, $sonuc]), false);
+
+        $this->actingAs($veli)->get(route('parent.exam-result', [$ogrenci, $sonuc]))
+            ->assertOk()
+            ->assertSee('Matematik iyi, Türkçe zayıf.')
+            ->assertSee('180.000 kişide 1.240.');
+
+        // Baska velinin cocugu degil: kapali.
+        $this->actingAs(User::factory()->parent()->create())->get(route('parent.exam-result', [$ogrenci, $sonuc]))->assertForbidden();
     }
 
     public function test_a_parent_cannot_see_another_students_result(): void

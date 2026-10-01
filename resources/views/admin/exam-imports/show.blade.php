@@ -58,6 +58,9 @@
             </div>
 
             <div class="d-flex gap-2 mt-2" style="flex-wrap: wrap;">
+                @if($import->status === \App\Models\ExamImport::PUBLISHED)
+                    <a href="{{ route('coach.exams.show', $import->event) }}" class="btn btn-sm btn-primary">Deneme analizini aç</a>
+                @endif
                 <a href="{{ route('admin.exam-imports.pdf', $import) }}" class="btn btn-sm btn-secondary" target="_blank">PDF'i aç</a>
                 <form method="POST" action="{{ route('admin.exam-imports.destroy', $import) }}"
                       onsubmit="return confirm('Aktarım ve PDF silinsin mi? Yayınlanmış sonuçlar öğrencide kalır.')">

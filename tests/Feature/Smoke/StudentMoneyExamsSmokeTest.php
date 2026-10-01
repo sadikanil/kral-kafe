@@ -664,14 +664,18 @@ class StudentMoneyExamsSmokeTest extends TestCase
             ->assertSee('Deneme Sonuçlarım')
             ->assertSee('Türkiye Geneli TYT 3')
             ->assertSee('27.09.2026')
-            ->assertSee('Toplam net 41,50')
-            ->assertSee($turkce->name . ':')
-            ->assertSee('32D 4Y 4B')
-            ->assertSee('net 31,00')
+            ->assertSee('<strong>41,50</strong> net', false)
+            ->assertSee('Kurum 3./42')
+            ->assertDontSee('Henüz sonuç girilmedi');
+
+        // Detay: ders tablosu (D/Y/B/net), siralar, yonetici notu.
+        $this->actingAs($ogrenci)->get(route('user.exam-results.show', $sonuc))
+            ->assertOk()
+            ->assertSeeInOrder([$turkce->name, '32', '4', '4', '31,00'])
+            ->assertSee('41,50')
             ->assertSee('42 kişide 3.')
             ->assertSee('180.000 kişide 1.240.')
-            ->assertSee('şıkları iki kez oku', false)
-            ->assertDontSee('Henüz sonuç girilmedi');
+            ->assertSee('şıkları iki kez oku', false);
 
         // Duzenleme: siralama sonradan geldi, bir ders duzeltildi; yeni kayit acilmaz
         $this->sonucGir($yonetici, $deneme, $ogrenci, [
@@ -692,7 +696,10 @@ class StudentMoneyExamsSmokeTest extends TestCase
 
         $this->actingAs($ogrenci)->get(route('user.exam-results'))
             ->assertOk()
-            ->assertSee('Toplam net 42,50')
+            ->assertSee('<strong>42,50</strong> net', false);
+
+        $this->actingAs($ogrenci)->get(route('user.exam-results.show', $sonuc))
+            ->assertOk()
             ->assertSee('42 kişide 2.')
             ->assertSee('9.000 kişide 150.')
             ->assertSee('Güncellendi: il sıralaması geldi.')

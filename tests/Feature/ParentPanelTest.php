@@ -312,7 +312,7 @@ class ParentPanelTest extends TestCase
         $this->actingAs($yonetici)
             ->get(route('admin.users.edit', $veli))
             ->assertOk()
-            ->assertSee('Bağlı Öğrenciler')
+            ->assertSee('Velisi olduğu öğrenciler')
             ->assertSee($cocuk1->name);
 
         $this->actingAs($yonetici)
@@ -409,7 +409,7 @@ class ParentPanelTest extends TestCase
         $this->actingAs(User::factory()->admin()->create())
             ->get(route('admin.users.index', ['role' => 'parent']))
             ->assertOk()
-            ->assertSee('2 öğrenci');
+            ->assertSee('2 çocuk');
     }
 
     /**

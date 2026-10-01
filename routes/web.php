@@ -109,6 +109,8 @@ Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')-
         // Deneme sonuclari (Dalga 12): siralamalar ve yonetici notu
         Route::get('/deneme-sonuclari', [\App\Http\Controllers\User\ExamResultController::class, 'index'])
             ->name('exam-results');
+        Route::get('/deneme-sonuclari/{result}', [\App\Http\Controllers\ExamResultViewController::class, 'student'])
+            ->name('exam-results.show');
 
         Route::get('/deneme-raporlari', [UserExamReportController::class, 'index'])->name('exam-reports.index');
         Route::get('/deneme-raporlari/{report}', [UserExamReportController::class, 'show'])->name('exam-reports.show');
@@ -125,6 +127,7 @@ Route::middleware(['auth', 'role:parent'])->prefix('veli')->name('parent.')->gro
     Route::get('/denemeler', [ExamCalendarController::class, 'parent'])->name('exams');
     Route::get('/ogrenci/{student}/rapor', [ParentDashboardController::class, 'report'])->name('report');
     Route::get('/ogrenci/{student}/odemeler', [\App\Http\Controllers\StatementController::class, 'parent'])->name('payments');
+    Route::get('/ogrenci/{student}/deneme/{result}', [\App\Http\Controllers\ExamResultViewController::class, 'parent'])->name('exam-result');
 });
 
 // Koc paneli - calisma plani (Dalga 14).
@@ -133,6 +136,10 @@ Route::middleware(['auth', 'role:parent'])->prefix('veli')->name('parent.')->gro
 // kendisine ogrenci atanmasi gerekmez, accessibleStudentIds() ona null doner.
 Route::middleware(['auth', 'role:coach,admin'])->prefix('koc')->name('coach.')->group(function () {
     Route::get('/plan', [\App\Http\Controllers\Coach\StudyPlanController::class, 'index'])->name('plan.index');
+    // Deneme analizi ve sonuc detayi (1 Ekim 2026)
+    Route::get('/denemeler', [\App\Http\Controllers\ExamResultViewController::class, 'index'])->name('exams.index');
+    Route::get('/denemeler/{examEvent}', [\App\Http\Controllers\ExamResultViewController::class, 'show'])->name('exams.show');
+    Route::get('/denemeler/sonuc/{result}', [\App\Http\Controllers\ExamResultViewController::class, 'coach'])->name('exams.result');
     Route::get('/plan/{student}', [\App\Http\Controllers\Coach\StudyPlanController::class, 'show'])->name('plan.show');
     Route::post('/plan/{student}', [\App\Http\Controllers\Coach\StudyPlanController::class, 'store'])->name('plan.store');
     Route::delete('/plan/maddeler/{item}', [\App\Http\Controllers\Coach\StudyPlanController::class, 'destroy'])->name('plan.destroy');

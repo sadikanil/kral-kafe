@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 1 Ekim 2026 · Laravel 12 · 1474 test / 6475 doğrulama yeşil._
+_Son güncelleme: 1 Ekim 2026 · Laravel 12 · 1483 test / 6546 doğrulama yeşil._
 
 ---
 
@@ -54,6 +54,8 @@ Kararlar §5'te (18–24). Ayrıntı: koçlar §6.2, PDF akışı ve Claude/Open
 
 - [x] **Odak modu sayaçta** — çalışırken isteğe bağlı simsiyah ekran; uygulamadan ayrılma sayılır, süreden düşülmez. Koç plan sayfasında son 14 günü görür, veli görmez.
 - [x] **21:00 kapanış kuralı kalktı** — kapanış esnek. Unutulan oturum **gün sonunda (00:00)** ya da 12 saat dolunca kapanır; oturum 09:00'dan gece yarısına kadar başlatılabilir. `KAFE_KAPANIS` artık okunmuyor.
+- [x] **Koçluk bağı veli bağından ayrı** — koç yetkili kullanıcının formunda "Koçluk / özel ders verdiği öğrenciler" ayrı liste (`coach_assignments`); "Velisi olduğu öğrenciler" yalnızca kendi çocukları. Canlı hata: özel ders öğrencileri veli olarak bağlanmış, koç sayfalarında görünmüyor ve ödemeleri veliye açık kalıyordu. Kullanıcı listesinde koç yetkili veli **Koç** görünür (velilik alt satırda); Koç filtresi onları da kapsar.
+- [x] **Deneme sonucu detayı** — öğrenci, veli, koç ve yönetici aynı sayfa (`exams/result`): toplam net (önceki aynı tür denemeye göre fark), puan, kurum sırası, ders tablosu (D/Y/B/net/fark), sıralamalar, eksik konular, derse göre konu konu başarı çubukları. Panel listeleri kısa özet + detay bağlantısı. Koç ve yönetici: **Deneme Analizi** (`/koc/denemeler`) — denemede bakabildiği öğrenciler yan yana ve en çok eksik çıkan konular; koç yalnızca atandığı öğrencileri görür.
 - [x] **Vercel Web Analytics** — npm paketi yerine Vercel'in betik etiketi (`layouts/_analitik`; betikler paketleyicisiz). Yalnızca canlıda yüklenir, çerez yok. Gönderilen adreste sorgu dizesi (aramadaki ad), şifre sıfırlama jetonu ve masa QR kodu maskelenir. Vercel panelinde **Analytics → Enable** gerekir.
 - [x] **Gece 00:00 kuralı + etiketli onay** — oturumu duraklatıp kafeden çıkan öğrenciler için: açık (duraklatılmış dahil) oturum gece 00:00'da `day_end` sebebiyle kapanır, açık mola çalışma sayılmaz. Gece cron'u (`/zamanlanmis/gece`, yerel 00:05–00:59) kimse giriş yapmasa da kapatır. Canlı Ekran onay kuyruğunda en üstte **"Gece 00:00'da kapandı"** ve varsa **"Duraklatıp gitmiş (mola başı HH:MM)"** etiketiyle durur; süre aşımıyla birlikte **toplu onaya girmez**, tek tek onaylanır/reddedilir.
 - [x] **Veli + koç** — veli (ya da öğretmen) ayrıca koç olabilir: kullanıcı formunda "Koçluk yetkisi de var" + **Branş**. Veli panelinde yalnızca kendi çocuğu, koç sayfalarında yalnızca atanan öğrenciler; atanan öğrencinin ödemeleri açılmaz. Menü iki grubu da gösterir.

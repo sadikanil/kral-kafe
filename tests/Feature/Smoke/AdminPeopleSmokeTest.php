@@ -467,7 +467,7 @@ class AdminPeopleSmokeTest extends TestCase
             ->assertSee(route('admin.exam-reports.index', $cagri), false);
 
         $this->actingAs($this->yonetici)->get(route('admin.users.index', ['role' => 'parent']))
-            ->assertOk()->assertSee('Ayşe Öztürk')->assertSee('1 öğrenci')->assertDontSee('Çağrı Işıkoğlu');
+            ->assertOk()->assertSee('Ayşe Öztürk')->assertSee('1 çocuk')->assertDontSee('Çağrı Işıkoğlu');
 
         $this->actingAs($this->yonetici)->get(route('admin.users.index', ['status' => 'suspended']))
             ->assertOk()->assertSee('Kemal Koç')->assertDontSee('Ayşe Öztürk');
@@ -700,10 +700,10 @@ class AdminPeopleSmokeTest extends TestCase
         $this->bagla($ogrenci, $veli);
 
         $this->actingAs($this->yonetici)->get(route('admin.users.edit', $veli))
-            ->assertOk()->assertSee('Bağlı Öğrenciler')->assertSee('Bora Öztürk')->assertDontSee('Paketi değiştir');
+            ->assertOk()->assertSee('Velisi olduğu öğrenciler')->assertSee('Bora Öztürk')->assertDontSee('Paketi değiştir');
 
         $this->actingAs($this->yonetici)->get(route('admin.users.edit', $this->koc()))
-            ->assertOk()->assertDontSee('Bağlı Öğrenciler')->assertDontSee('Koçlar');
+            ->assertOk()->assertDontSee('Velisi olduğu öğrenciler')->assertDontSee('Koçlar');
 
         $this->actingAs($this->yonetici)->get(route('admin.users.edit', $this->yonetici))
             ->assertOk()->assertDontSee('Şifreyi sıfırla');

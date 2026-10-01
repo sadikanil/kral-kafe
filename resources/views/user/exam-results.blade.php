@@ -4,7 +4,7 @@
 @section('page-title', 'Deneme Sonuçlarım')
 
 @section('content')
-    @include('_deneme-sonuclari')
+    @include('_deneme-sonuclari', ['sonucAdresi' => fn ($r) => route('user.exam-results.show', $r)])
 
     @if($examResults->isEmpty())
         <div class="empty-state">

@@ -261,15 +261,29 @@ class ExamImportTest extends TestCase
         $this->hepsiniOku($aktarim);
         $this->onaylaVeYayinla($aktarim);
 
+        $sonuc = \App\Models\ExamResult::where('student_id', $this->elif->id)->sole();
         $this->actingAs($this->elif)->get(route('user.exam-results'))
             ->assertOk()
             ->assertSee('Hız ve Renk TYT 2')
             ->assertSee('Puan 409,027')
+            ->assertSee(route('user.exam-results.show', $sonuc), false)
+            ->assertDontSee('Mert')
+            ->assertDontSee('DIŞARIDAN');
+
+        // Detay: dersler, siralar, eksik konular, konu konu sonuclar.
+        $this->actingAs($this->elif)->get(route('user.exam-results.show', $sonuc))
+            ->assertOk()
             ->assertSee('Eksik konular')
             ->assertSee('Kimyanın Temel Kanunları')
             ->assertSee('302 kişide 18.')
-            ->assertDontSee('Mert')
-            ->assertDontSee('DIŞARIDAN');
+            ->assertSee('Konu konu sonuçlar')
+            ->assertDontSee('Mert');
+
+        // Baska ogrencinin sonucu acilmaz.
+        $mertinki = \App\Models\ExamResult::where('student_id', $this->mert->id)->first();
+        if ($mertinki) {
+            $this->actingAs($this->elif)->get(route('user.exam-results.show', $mertinki))->assertNotFound();
+        }
 
         // Kurum PDF'i ve aktarim sayfasi yalnizca yoneticide.
         $this->actingAs($this->elif)->get(route('admin.exam-imports.pdf', $aktarim))->assertForbidden();

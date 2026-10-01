@@ -3229,3 +3229,28 @@ body.is-focusing {
         border: 1px solid #d2d2d7 !important;
     }
 }
+
+/* ============================================================
+   Deneme sonucu detayi (1 Ekim 2026): derse gore acilir konu
+   gruplari, konu basina basari cubugu; eksik konu kirmizi.
+   ============================================================ */
+.topic-group > summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.topic-group > summary::-webkit-details-marker {
+    display: none;
+}
+
+.topic-row + .topic-row {
+    margin-top: 14px;
+}
+
+.progress-bar-weak {
+    background: var(--danger);
+}
