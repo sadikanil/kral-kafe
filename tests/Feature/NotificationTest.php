@@ -241,7 +241,7 @@ class NotificationTest extends TestCase
                 \Illuminate\Http\Request::create($cron['path'], 'GET')
             );
 
-            $this->assertSame('cron.daily', $rota->getName());
+            $this->assertContains($rota->getName(), ['cron.daily', 'cron.nightly']);
         }
     }
 

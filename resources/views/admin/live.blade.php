@@ -114,13 +114,19 @@
     <h2 class="mt-4" id="onay">Onay bekleyen oturumlar ({{ $pending->count() }})</h2>
     <p class="text-muted">Onaylanana kadar bu süreler öğrencinin toplamına ve velinin paneline girmez.</p>
 
-    <form method="POST" action="{{ route('admin.sessions.approve-many') }}" class="mb-2">
-        @csrf
-        @foreach($pending as $bekleyen)
-            <input type="hidden" name="ids[]" value="{{ $bekleyen->id }}">
-        @endforeach
-        <button type="submit" class="btn btn-primary">Hepsini onayla ({{ $pending->count() }})</button>
-    </form>
+    @if($bulkIds->count() < $pending->count())
+        <p class="text-muted">Sistemin kapattığı oturumlar (gece 00:00, süre aşımı) toplu onaya girmez; her birini tek tek onaylayın ya da reddedin.</p>
+    @endif
+
+    @if($bulkIds->isNotEmpty())
+        <form method="POST" action="{{ route('admin.sessions.approve-many') }}" class="mb-2">
+            @csrf
+            @foreach($bulkIds as $id)
+                <input type="hidden" name="ids[]" value="{{ $id }}">
+            @endforeach
+            <button type="submit" class="btn btn-primary">{{ $bulkIds->count() === $pending->count() ? 'Hepsini onayla' : 'Diğerlerini onayla' }} ({{ $bulkIds->count() }})</button>
+        </form>
+    @endif
 
     @foreach($pending as $bekleyen)
         @php $dakika = $bekleyen->duration_minutes ?? $bekleyen->minutesSoFar(); @endphp
@@ -144,6 +150,15 @@
                         ogrenciyi supheli gosterirdi.
                     --}}
                     @php $mesafe = $bekleyen->distanceFromCafe(); @endphp
+
+                    {{-- Sistemin kapattigi oturum: ogrenci cikisi bildirmedi.
+                         Duraklatip gittiyse ne zamandan beri oldugu da yazar. --}}
+                    @if($bekleyen->end_reason?->needsExplicitReview())
+                        <span class="badge badge-danger">{{ $bekleyen->end_reason->label() }}</span>
+                        @if($duraklama = $bekleyen->pauseLeftOpen())
+                            <span class="badge badge-warning">Duraklatıp gitmiş (mola başı {{ $duraklama->started_at->timezone(config('kafe.timezone'))->format('H:i') }})</span>
+                        @endif
+                    @endif
 
                     @if($bekleyen->latitude === null)
                         <span class="badge badge-warning">Konum yok</span>

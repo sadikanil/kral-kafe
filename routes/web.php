@@ -345,3 +345,6 @@ require __DIR__ . '/auth.php';
 |
 */
 Route::get('/zamanlanmis/gunluk', [CronController::class, 'daily'])->name('cron.daily');
+// Gece yarisindan hemen sonra: acik kalan (duraklatilip birakilan dahil)
+// oturumlari kapatir ki sabah onay kuyrugunda hazir olsunlar.
+Route::get('/zamanlanmis/gece', [CronController::class, 'nightly'])->name('cron.nightly');

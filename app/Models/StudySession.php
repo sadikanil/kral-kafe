@@ -103,6 +103,16 @@ class StudySession extends Model
     }
 
     /**
+     * "Hepsini onayla"ya girebilenler. end_reason bos (eski kayit) da girer;
+     * NOT IN tek basina NULL'u disarida birakirdi.
+     */
+    public function scopeBulkApprovable(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $q) => $q->whereNull('end_reason')
+            ->orWhereNotIn('end_reason', array_map(fn (SessionEndReason $r) => $r->value, SessionEndReason::explicitReview())));
+    }
+
+    /**
      * Bitmis ama toplamlara girmemis oturumlar: bekleyen + reddedilen.
      *
      * Ogrencinin kendi panelinde gordugu liste. Gormezse "iki saat calistim
@@ -178,6 +188,23 @@ class StudySession extends Model
     public function openPause(): ?SessionPause
     {
         return $this->pauses->firstWhere('ended_at', null);
+    }
+
+    /**
+     * Sistem kapattiginda oturum duraklatilmis miydi? Oyleyse o duraklama.
+     *
+     * closeOnce acik duraklamayi oturumla AYNI anda kapatir; yani bitisi
+     * oturumun bitisine esit duraklama, kapanista acik olandir. Yalnizca
+     * sistemin kapattigi oturumlarda anlamli: ogrenci kendi bitirdiyse
+     * "duraklatip gitti" denemez.
+     */
+    public function pauseLeftOpen(): ?SessionPause
+    {
+        if ($this->ended_at === null || ! $this->end_reason?->needsExplicitReview()) {
+            return null;
+        }
+
+        return $this->pauses->first(fn (SessionPause $p) => $p->ended_at?->equalTo($this->ended_at));
     }
 
     /**
@@ -285,8 +312,11 @@ class StudySession extends Model
             return 0;
         }
 
+        // Sistemin kapattiklari (gece 00:00, sure asimi) toplu onaya girmez:
+        // yonetici onlari tek tek gorup onaylamali.
         return static::whereIn('id', $ids)
             ->awaitingApproval()
+            ->bulkApprovable()
             ->update([
                 'approval_status' => ApprovalStatus::Approved->value,
                 'reviewed_by' => $reviewer->id,

@@ -494,7 +494,7 @@ class StudentStudySmokeTest extends TestCase
         $this->actingAs($ogrenci)->get(route('session.timer'))->assertRedirect(route('user.dashboard'));
 
         $oturum->refresh();
-        $this->assertSame(SessionEndReason::AutoClosed, $oturum->end_reason);
+        $this->assertSame(SessionEndReason::DayEnd, $oturum->end_reason);
         $this->assertTrue($oturum->ended_at->equalTo($this->yerel('2026-09-30 00:00')));
         $this->assertSame(11 * 60, $oturum->duration_minutes);
     }
@@ -521,7 +521,7 @@ class StudentStudySmokeTest extends TestCase
 
         $this->actingAs($ogrenci)->post(route('table.session.start', $diger->qr_code));
         $dunku = StudySession::whereNotNull('ended_at')->sole();
-        $this->assertSame(SessionEndReason::AutoClosed, $dunku->end_reason);
+        $this->assertSame(SessionEndReason::DayEnd, $dunku->end_reason);
         $this->assertSame(160, $dunku->duration_minutes);
         $this->assertSame(1, StudySession::open()->where('study_table_id', $diger->id)->count());
     }

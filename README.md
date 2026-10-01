@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 1 Ekim 2026 · Laravel 12 · 1455 test / 6410 doğrulama yeşil._
+_Son güncelleme: 1 Ekim 2026 · Laravel 12 · 1460 test / 6435 doğrulama yeşil._
 
 ---
 
@@ -54,6 +54,7 @@ Kararlar §5'te (18–24). Ayrıntı: koçlar §6.2, PDF akışı ve Claude/Open
 
 - [x] **Odak modu sayaçta** — çalışırken isteğe bağlı simsiyah ekran; uygulamadan ayrılma sayılır, süreden düşülmez. Koç plan sayfasında son 14 günü görür, veli görmez.
 - [x] **21:00 kapanış kuralı kalktı** — kapanış esnek. Unutulan oturum **gün sonunda (00:00)** ya da 12 saat dolunca kapanır; oturum 09:00'dan gece yarısına kadar başlatılabilir. `KAFE_KAPANIS` artık okunmuyor.
+- [x] **Gece 00:00 kuralı + etiketli onay** — oturumu duraklatıp kafeden çıkan öğrenciler için: açık (duraklatılmış dahil) oturum gece 00:00'da `day_end` sebebiyle kapanır, açık mola çalışma sayılmaz. Gece cron'u (`/zamanlanmis/gece`, yerel 00:05–00:59) kimse giriş yapmasa da kapatır. Canlı Ekran onay kuyruğunda en üstte **"Gece 00:00'da kapandı"** ve varsa **"Duraklatıp gitmiş (mola başı HH:MM)"** etiketiyle durur; süre aşımıyla birlikte **toplu onaya girmez**, tek tek onaylanır/reddedilir.
 - [x] **Veli + koç** — veli (ya da öğretmen) ayrıca koç olabilir: kullanıcı formunda "Koçluk yetkisi de var" + **Branş**. Veli panelinde yalnızca kendi çocuğu, koç sayfalarında yalnızca atanan öğrenciler; atanan öğrencinin ödemeleri açılmaz. Menü iki grubu da gösterir.
 - [x] **Ödev etiketi** — Cahit Hoca (yönetici) dışındaki koçlar plana yalnızca **Ödev** ekler, yalnızca kendi ekledikleri ödevi taşır/siler; haftalık sabit programı yönetici yazar. Öğrenci ödevi "İbrahim Acar · Matematik" diye görür; Planım'da koçları listelenir.
 - [x] **Özel ders** — paketten bağımsız; ders saatine öğretmen + ders adı. Yönetim → **Özel Dersler**: aynı saat birden çok öğrenciye, özel ders paketi birden çok öğrenciye (pakette "ders sayısı"). Dersi veren koç öğrencinin koçu olarak atanır. Koç → **Özel Derslerim**: kendi dersleri, tek dersi iptal/taşı, haftalık saati değiştir; paket, ücret, ödeme yok.
@@ -345,6 +346,7 @@ ve §5'e geçti.)*
 | 22 | Özel ders **paketten bağımsız** tanımlanabilir; özel ders paketini ve toplu atamayı yalnızca yönetici yapar | 1 Eki 2026 |
 | 23 | Deneme sonucu **kurum PDF'inden toplu** gelir; yapay zekâ okur, yönetici kontrol edip yayınlar; PDF öğrenciye açılmaz | 1 Eki 2026 |
 | 24 | Eksik konu **kuralla** (≥2 soru, başarı <%50) belirlenir; yapay zekâ yorum/öneri metni üretmez, plana ekleme kararı koçta | 1 Eki 2026 |
+| 25 | Sistemin kapattığı oturum (gece 00:00, süre aşımı) onay kuyruğunda **etiketli** ve **toplu onay dışında**; yönetici tek tek karar verir | 1 Eki 2026 |
 
 Teknik kararların tamamı ve gerekçeleri §9'da.
 
@@ -492,7 +494,7 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
   Dalga 4'ün "tembel üretim" çözümü burada çalışmaz — oradaki iş oturumu
   *kapatmaktı* ve sonucu veriden hesaplanabiliyordu; bildirim gönderilmiş ya da
   gönderilmemiştir, sonradan türetilemez.
-- **Vercel'de:** Vercel Cron → kimlik doğrulamalı `/zamanlanmis/gunluk` ucu. **`/api/` altına rota yazılmaz:** Vercel PHP'yi `/api/index.php`'den çalıştırıyor, Laravel `/api` önekini kesiyor ve rota eşleşmiyor (23 Eyl'e kadar cron bu yüzden hiç çalışmadı).
+- **Vercel'de:** Vercel Cron → kimlik doğrulamalı `/zamanlanmis/gunluk` ucu (UTC 20:00, yerel 23:00) ve gece ucu `/zamanlanmis/gece` (UTC 21:05, yerel 00:05; açık kalan oturumları kapatır). İkisi ayrı: devamsızlık "bugün"e bakar, gece yarısından sonra çalışsaydı yeni günü boş sayardı. **`/api/` altına rota yazılmaz:** Vercel PHP'yi `/api/index.php`'den çalıştırıyor, Laravel `/api` önekini kesiyor ve rota eşleşmiyor (23 Eyl'e kadar cron bu yüzden hiç çalışmadı).
   Hobby katmanında cron sapması ±59 dk; "bir gün önce" penceresi buna dayanıklı
   kurulmalı (saat değil **gün** karşılaştırması, `LocalDay` ile).
 - **Gönderilen her bildirim kaydedilir** (`notifications` tablosu: tür, alıcı,

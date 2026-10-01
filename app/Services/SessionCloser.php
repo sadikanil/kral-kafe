@@ -52,14 +52,15 @@ class SessionCloser
 
     /**
      * Azami sure gun sonundan ONCE dolduysa bu bir anomalidir: ogrenci 12
-     * saatten uzun sure "masada" gorunmus demektir.
+     * saatten uzun sure "masada" gorunmus demektir. Degilse gun sonu (00:00):
+     * ikisi de onay kuyrugunda etiketli ve toplu onay disinda.
      */
     public function reasonFor(StudySession $session): SessionEndReason
     {
         return $this->limitAfter($session->started_at)
             ->lessThan($this->dayEndAfter($session->started_at))
                 ? SessionEndReason::OverLimit
-                : SessionEndReason::AutoClosed;
+                : SessionEndReason::DayEnd;
     }
 
     public function isStale(StudySession $session, ?Carbon $now = null): bool

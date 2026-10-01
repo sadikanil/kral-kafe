@@ -48,15 +48,20 @@ class LiveController extends Controller
 
         // Onay kuyrugu (Dalga 9): bitmis ama karara baglanmamis oturumlar.
         // Otomatik kapananlar da buraya duser - asil dogrulanmasi gereken
-        // onlar, cunku ogrenci cikisi bildirmemis demektir.
+        // onlar, cunku ogrenci cikisi bildirmemis demektir. Sistemin
+        // kapattiklari (gece 00:00, sure asimi) en ustte ve etiketli; toplu
+        // onaya girmezler.
         $onayBekleyenler = StudySession::awaitingApproval()
-            ->with(['student', 'table'])
+            ->with(['student', 'table', 'pauses'])
             ->orderBy('ended_at')
-            ->get();
+            ->get()
+            ->sortBy(fn (StudySession $s) => $s->end_reason?->needsExplicitReview() ? 0 : 1)
+            ->values();
 
         return view('admin.live', [
             'sessions' => $acikOturumlar,
             'pending' => $onayBekleyenler,
+            'bulkIds' => $onayBekleyenler->reject(fn (StudySession $s) => $s->end_reason?->needsExplicitReview())->pluck('id'),
             'anomalies' => $anomaliler,
             'tableCount' => $doluluk['total'],
             'freeTables' => $doluluk['free'],

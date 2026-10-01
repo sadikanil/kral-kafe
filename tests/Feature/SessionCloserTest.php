@@ -85,7 +85,7 @@ class SessionCloserTest extends TestCase
             $oturum->ended_at->utc()->toIso8601String()
         );
         $this->assertSame(300, $oturum->duration_minutes);
-        $this->assertSame(SessionEndReason::AutoClosed, $oturum->end_reason);
+        $this->assertSame(SessionEndReason::DayEnd, $oturum->end_reason);
     }
 
     /** 12 saat siniri gun sonundan once gelirse anomali; yonetici bakmali. */
@@ -176,7 +176,7 @@ class SessionCloserTest extends TestCase
             $oturum->ended_at->utc()->toIso8601String()
         );
         $this->assertSame(150, $oturum->duration_minutes);
-        $this->assertSame(SessionEndReason::AutoClosed, $oturum->end_reason);
+        $this->assertSame(SessionEndReason::DayEnd, $oturum->end_reason);
     }
 
     /**
@@ -205,7 +205,7 @@ class SessionCloserTest extends TestCase
         // ogrenci masa degistirmedi, dun cikis yapmayi unuttu. Tembel kapatma
         // olmasaydi start() onu masa degisimi sanip yanlis etiketlerdi.
         $eski = StudySession::whereNotNull('ended_at')->sole();
-        $this->assertSame(SessionEndReason::AutoClosed, $eski->end_reason);
+        $this->assertSame(SessionEndReason::DayEnd, $eski->end_reason);
     }
 
     /** Tembel kapatma: cron hic calismasa da bakan kisi dogru veriyi gormeli. */
