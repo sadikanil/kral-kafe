@@ -59,6 +59,9 @@ Route::middleware(['auth', 'subscription'])->group(function () {
     Route::get('/calisma', [SessionController::class, 'timer'])->name('session.timer');
     Route::post('/oturum/duraklat', [SessionController::class, 'pause'])->name('session.pause');
     Route::post('/oturum/devam', [SessionController::class, 'resume'])->name('session.resume');
+    // Odak modu (Faz 4): odak modunda uygulamadan ayrilma sayisi ve suresi.
+    Route::post('/oturum/odak', \App\Http\Controllers\Study\FocusAwayController::class)
+        ->middleware('throttle:30,1')->name('session.focus.away');
     // Calisma kaydi (Dalga 28): "Tarih · 200 soru". Eski ders secimi kalkti;
     // oturumun dersi son kayittan gelir.
     Route::post('/oturum/kayit', [\App\Http\Controllers\Study\StudyLogController::class, 'store'])->name('session.logs.store');

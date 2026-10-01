@@ -33,6 +33,8 @@ class StudySession extends Model
         'latitude',
         'longitude',
         'accuracy',
+        'focus_away_count',
+        'focus_away_seconds',
     ];
 
     protected $casts = [
