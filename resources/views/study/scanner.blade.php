@@ -82,23 +82,26 @@
             }
 
             // masaAdresi:bas
-            // Okunan deger YALNIZCA ayni kokenli /masa/{kod} adresiyse ona
-            // gidilir; digerleri null. Eskiden okunan her adrese gidiliyordu:
-            // masadaki QR'in ustune yapistirilan bir etiket ogrenciyi sahte
-            // bir giris sayfasina gonderebilirdi.
+            // Okunan deger bir /masa/{kod} adresiyse yalnizca KODU alinir ve
+            // HER ZAMAN bu sitenin kendi adresine gidilir; digerleri null.
+            // Eskiden okunan her adrese gidiliyordu: masadaki QR'in ustune
+            // yapistirilan bir etiket ogrenciyi sahte bir giris sayfasina
+            // gonderebilirdi. Alan adi bakilmaz: kafe.vercel.app'ten basilmis
+            // etiket kralkafe.com'a tasininca da calisir (1 Ekim 2026).
             function masaAdresi(ham, koken) {
                 let adres;
                 try {
-                    adres = new URL(ham, koken);
+                    adres = new URL(ham);
                 } catch (e) {
                     return null;
                 }
 
-                if (adres.origin !== koken || !/^\/masa\/[^\/]+\/?$/.test(adres.pathname)) {
+                const eslesme = /^\/masa\/([^\/]+)\/?$/.exec(adres.pathname);
+                if (!/^https?:$/.test(adres.protocol) || !eslesme) {
                     return null;
                 }
 
-                return adres.href;
+                return koken + '/masa/' + eslesme[1];
             }
             // masaAdresi:son
 

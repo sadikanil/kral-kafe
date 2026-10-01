@@ -63,18 +63,22 @@ class ScannerPageTest extends TestCase
     {
         return [
             'masa adresi' => ['https://kafe.test/masa/MASA-AB12CD34', 'https://kafe.test/masa/MASA-AB12CD34'],
-            'baska site' => ['https://kafe-giris.example/masa/MASA-AB12CD34', null],
+            // Baska alan adindan basilmis etiket: kod alinir, KENDI siteye gidilir.
+            'eski alan adi' => ['https://kral-kafe.vercel.app/masa/MASA-AB12CD34', 'https://kafe.test/masa/MASA-AB12CD34'],
+            'sahte site ayni yol' => ['https://kafe-giris.example/masa/MASA-AB12CD34', 'https://kafe.test/masa/MASA-AB12CD34'],
+            'sahte site baska yol' => ['https://kafe-giris.example/giris', null],
             'ayni site, baska sayfa' => ['https://kafe.test/login', null],
             'masa altinda baska yol' => ['https://kafe.test/masa/MASA-AB12CD34/basla', null],
             'javascript adresi' => ['javascript:alert(1)', null],
             'duz metin' => ['MASA-AB12CD34', null],
-            'http ile ayni ana bilgisayar' => ['http://kafe.test/masa/MASA-AB12CD34', null],
+            'http ile ayni ana bilgisayar' => ['http://kafe.test/masa/MASA-AB12CD34', 'https://kafe.test/masa/MASA-AB12CD34'],
+            'ftp adresi' => ['ftp://kafe.test/masa/MASA-AB12CD34', null],
         ];
     }
 
-    /** Yalnizca AYNI kokenli /masa/{kod} adresine gidilir. */
+    /** Okunan adresten yalnizca masa kodu alinir; gidilen hep bu site. */
     #[DataProvider('qrDegerleri')]
-    public function test_only_a_same_origin_table_address_is_followed(string $okunan, ?string $beklenen): void
+    public function test_only_the_table_code_is_taken_and_the_page_stays_on_this_site(string $okunan, ?string $beklenen): void
     {
         $node = (new \Symfony\Component\Process\ExecutableFinder)->find('node');
         if ($node === null) {
