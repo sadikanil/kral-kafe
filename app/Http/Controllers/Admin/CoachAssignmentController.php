@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -28,19 +27,13 @@ class CoachAssignmentController extends Controller
         }
 
         $request->validate([
-            // Koc olarak yalnizca koc ya da yonetici atanabilir. Rol kontrolu
-            // SORGUDA: 'exists:users,id' tek basina bir ogrenciyi de
-            // gecirirdi ve o ogrenci digerinin verisini gorur hale gelirdi.
-            'coach_id' => [
-                'required',
-                'integer',
-                Rule::exists('users', 'id')->whereIn('role', [
-                    Role::Coach->value,
-                    Role::Admin->value,
-                ]),
-            ],
+            // Koc olarak yalnizca koc, yonetici ya da koc yetkili veli/ogretmen
+            // atanabilir (User::scopeCoachCandidates). 'exists:users,id' tek basina
+            // bir ogrenciyi de gecirirdi ve o ogrenci digerinin verisini
+            // gorur hale gelirdi.
+            'coach_id' => ['required', 'integer', Rule::in(User::coachCandidates()->pluck('id')->all())],
         ], [
-            'coach_id.exists' => 'Seçilen kişi koç ya da yönetici değil.',
+            'coach_id.in' => 'Seçilen kişi koç ya da yönetici değil.',
         ]);
 
         // syncWithoutDetaching: formu iki kez gonderen tarayici ikinci satir

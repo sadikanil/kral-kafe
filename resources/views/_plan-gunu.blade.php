@@ -16,7 +16,8 @@
     @continue($ders['status'] === 'cancelled')
     <div class="cal-entry cal-lesson">
         <span class="cal-time">{{ $ders['starts_at'] }}–{{ $ders['ends_at'] }}</span>
-        👨‍🏫 Özel ders
+        👨‍🏫 Özel ders{{ $ders['slot']->branch ? ' · ' . $ders['slot']->branch : '' }}
+        @if($ders['slot']->teacher)<br><small>{{ $ders['slot']->teacher->name }}</small>@endif
     </div>
 @endforeach
 
@@ -28,10 +29,12 @@
 @endforeach
 
 @foreach($gun['items'] as $madde)
+    {{-- Koc yalnizca kendi ekledigi odevi tasir/siler; yonetici hepsini. --}}
+    @php($degistirir = $mode === 'coach' && $madde->canBeChangedBy(auth()->user()))
     {{-- id: "✓ Bitti"den sonra takvim bu maddeye doner (capa); ust bar
          yapiskan, madde onun altinda kalmasin diye scroll-margin. --}}
     <div id="madde-{{ $madde->id }}" style="scroll-margin-top: 72px;"
-         class="cal-entry cal-item {{ $madde->status === 'done' ? 'done' : '' }} {{ $madde->exam_event_id ? 'cal-exam' : '' }} {{ $mode === 'coach' ? 'has-actions' : '' }}">
+         class="cal-entry cal-item {{ $madde->status === 'done' ? 'done' : '' }} {{ $madde->exam_event_id ? 'cal-exam' : '' }} {{ $degistirir ? 'has-actions' : '' }} {{ $madde->isHomework() ? 'cal-homework' : '' }}">
         {{-- Bitmislik yalnizca soluk renk ve ustu cizili degil: ekran
              okuyucu da "Tamamlandi" duysun. --}}
         @if($madde->status === 'done')<span role="img" aria-label="Tamamlandı">✓</span>@endif
@@ -43,8 +46,15 @@
         @if($madde->exam_event_id)
             📝 {{ $madde->title }}
         @else
+            @if($madde->isHomework())
+                <span class="badge badge-warning">Ödev</span>
+            @endif
             @if($madde->subject)<strong>{{ $madde->subject->name }}</strong><br>@endif
             {{ $madde->title }}
+            {{-- Odevi kimin verdigi: "İbrahim Acar · Matematik". --}}
+            @if($madde->isHomework() && $madde->creator)
+                <br><small class="text-muted">{{ $madde->creator->coachLabel() }}</small>
+            @endif
         @endif
 
         {{-- Dokunma hedefi tam genislik ve en az 44 px: yogun takvim
@@ -68,7 +78,7 @@
                 <button type="submit" class="btn btn-sm btn-secondary">Çıkar</button>
             </form>
         @endif
-        @if($mode === 'coach')
+        @if($degistirir)
             <details class="cal-actions">
                 {{-- Yalniz simge ekran okuyucuda "yatay uc nokta" diye okunuyordu. --}}
                 <summary aria-label="Madde işlemleri: {{ $madde->title }}">⋯</summary>

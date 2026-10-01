@@ -160,6 +160,14 @@ Route::middleware(['auth', 'role:coach,admin'])->prefix('koc')->name('coach.')->
     Route::post('/konular/kayit/{topic}/ac', [\App\Http\Controllers\Coach\WeakTopicController::class, 'reopen'])->name('topics.reopen');
     Route::post('/konular/kayit/{topic}/plana', [\App\Http\Controllers\Coach\WeakTopicController::class, 'plan'])->name('topics.plan');
     Route::delete('/konular/kayit/{topic}', [\App\Http\Controllers\Coach\WeakTopicController::class, 'destroy'])->name('topics.destroy');
+
+    // Ozel derslerim (1 Ekim 2026): koc kendi verdigi dersleri gorur, tek
+    // dersi iptal eder/tasir, haftalik saati degistirir. Ekleme, silme,
+    // paket, ucret ve odeme YOK - onlar yonetimde (Cahit Hoca).
+    Route::get('/ozel-dersler', [\App\Http\Controllers\Coach\PrivateLessonController::class, 'index'])->name('lessons.index');
+    Route::post('/ozel-dersler/{slot}/iptal', [\App\Http\Controllers\Coach\PrivateLessonController::class, 'cancel'])->name('lessons.cancel');
+    Route::post('/ozel-dersler/{slot}/tasi', [\App\Http\Controllers\Coach\PrivateLessonController::class, 'move'])->name('lessons.move');
+    Route::patch('/ozel-dersler/{slot}', [\App\Http\Controllers\Coach\PrivateLessonController::class, 'reschedule'])->name('lessons.reschedule');
 });
 
 // Admin Routes
@@ -204,7 +212,11 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     Route::delete('/kullanicilar/{student}/koc/{coach}', [\App\Http\Controllers\Admin\CoachAssignmentController::class, 'detach'])
         ->name('coaches.detach');
 
-    // Ozel ders (Dalga 25): Tier 3, yalnizca yonetici duzenler
+    // Ozel ders (Dalga 25): yalnizca yonetici ekler/siler. 1 Ekim 2026:
+    // paketten bagimsiz, ogretmenli; toplu ders ve toplu ozel ders paketi.
+    Route::get('/ozel-dersler', [\App\Http\Controllers\Admin\PrivateLessonController::class, 'index'])->name('lessons.index');
+    Route::post('/ozel-dersler/toplu', [\App\Http\Controllers\Admin\PrivateLessonController::class, 'storeMany'])->name('lessons.store-many');
+    Route::post('/ozel-dersler/paket', [\App\Http\Controllers\Admin\PrivateLessonController::class, 'assignPackage'])->name('lessons.package');
     Route::post('/kullanicilar/{student}/ozel-ders', [\App\Http\Controllers\Admin\PrivateLessonController::class, 'store'])->name('lessons.store');
     Route::post('/ozel-ders/{slot}/iptal', [\App\Http\Controllers\Admin\PrivateLessonController::class, 'cancel'])->name('lessons.cancel');
     Route::post('/ozel-ders/{slot}/tasi', [\App\Http\Controllers\Admin\PrivateLessonController::class, 'move'])->name('lessons.move');

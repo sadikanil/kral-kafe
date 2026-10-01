@@ -21,11 +21,35 @@ final class PrivateLessonCalendar
      */
     public static function between(User $student, string $from, string $to): array
     {
+        return self::fromSlots(
+            PrivateLessonSlot::with(['exceptions', 'teacher'])->where('student_id', $student->id)->get(),
+            $from, $to,
+        );
+    }
+
+    /**
+     * Bir ogretmenin (koc/yonetici) verdigi dersler, tum ogrencileriyle
+     * (1 Ekim 2026). Koc "Ozel Derslerim"de yalnizca kendi derslerini gorur.
+     *
+     * @return array<int,array{date:string,starts_at:string,ends_at:string,status:string,slot:PrivateLessonSlot,original_date:string}>
+     */
+    public static function forTeacher(User $teacher, string $from, string $to): array
+    {
+        return self::fromSlots(
+            PrivateLessonSlot::with(['exceptions', 'student', 'teacher'])->where('teacher_id', $teacher->id)->get(),
+            $from, $to,
+        );
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int,PrivateLessonSlot>  $saatler
+     * @return array<int,array{date:string,starts_at:string,ends_at:string,status:string,slot:PrivateLessonSlot,original_date:string}>
+     */
+    private static function fromSlots($saatler, string $from, string $to): array
+    {
         $bas = Carbon::parse($from)->startOfDay();
         $bit = Carbon::parse($to)->startOfDay();
         $dersler = [];
-
-        $saatler = PrivateLessonSlot::with('exceptions')->where('student_id', $student->id)->get();
 
         foreach ($saatler as $saat) {
             $istisnalar = $saat->exceptions->keyBy(fn ($e) => $e->date->toDateString());

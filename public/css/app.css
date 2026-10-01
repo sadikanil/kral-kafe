@@ -2586,6 +2586,20 @@ a.list-row::after {
     box-shadow: inset 3px 0 0 var(--label-2);
 }
 
+/* Ozel ders sayfasi (1 Ekim 2026): uzun ogrenci listesi kendi icinde kayar. */
+.lesson-student-list {
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 4px 8px;
+    border-radius: var(--r-sm);
+    box-shadow: inset 0 0 0 0.5px var(--separator-strong);
+}
+
+/* Odev (1 Ekim 2026): kocun verdigi madde; turuncu cizgi plan maddesinden ayirir. */
+.cal-item.cal-homework {
+    box-shadow: inset 3px 0 0 var(--warning);
+}
+
 .cal-exam {
     background: var(--warning-tint);
     box-shadow: inset 3px 0 0 var(--warning);

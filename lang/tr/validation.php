@@ -190,6 +190,13 @@ return [
     */
 
     'attributes' => [
+        'lesson_count' => 'özel ders sayısı',
+        'weekday' => 'gün',
+        'is_coach' => 'koçluk yetkisi',
+        'coach_subject' => 'branş',
+        'teacher_id' => 'öğretmen',
+        'branch' => 'ders',
+        'tag' => 'etiket',
         'name' => 'ad',
         'reason' => 'red sebebi',
         'role' => 'rol',

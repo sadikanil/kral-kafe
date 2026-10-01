@@ -136,10 +136,11 @@ class OfficialExamTest extends TestCase
      */
     public function test_the_official_exam_stays_out_of_the_practice_reminder(): void
     {
+        // Paket "bugun" baslar: once gun sabitlenir, sonra ogrenci yaratilir.
+        $this->bugun();
         $ogrenci = $this->ogrenci();
         $this->sinav('YKS 2027', '2027-06-19');
         $this->sinav('TYT Deneme 5', '2026-09-26', 'tyt');
-        $this->bugun();
 
         $this->actingAs($ogrenci)->get(route('user.dashboard'))
             ->assertOk()
@@ -167,9 +168,10 @@ class OfficialExamTest extends TestCase
     /** Resmi sinav takvimde DURUR - yalnizca hatirlaticidan cikti. */
     public function test_the_official_exam_still_appears_in_the_calendar(): void
     {
+        // Paket "bugun" baslar: once gun sabitlenir, sonra ogrenci yaratilir.
+        $this->bugun();
         $ogrenci = $this->ogrenci();
         $this->sinav('YKS 2027', '2027-06-19');
-        $this->bugun();
 
         $this->actingAs($ogrenci)
             ->get(route('user.exams', ['ay' => '2027-06']))

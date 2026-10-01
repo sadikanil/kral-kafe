@@ -126,15 +126,20 @@ class PrivateLessonTest extends TestCase
             ->assertSessionHasErrors('ends_at');
     }
 
-    public function test_no_slot_without_private_lessons_in_the_package(): void
+    /**
+     * Paketten bagimsiz (1 Ekim 2026): kocluk/ozel ders paketi olmayan
+     * ogrenci de ozel ders talep edebilir; saat eklenir ve takviminde gorunur.
+     */
+    public function test_a_slot_does_not_need_private_lessons_in_the_package(): void
     {
         $ogrenci = User::factory()->student()->withPackage(Package::factory()->tier2())->create();
 
         $this->actingAs(User::factory()->admin()->create())
             ->post(route('admin.lessons.store', $ogrenci), ['weekday' => 3, 'starts_at' => '17:00', 'ends_at' => '18:00'])
-            ->assertSessionHas('error');
+            ->assertSessionHas('success');
 
-        $this->assertSame(0, PrivateLessonSlot::count());
+        $this->assertSame(1, PrivateLessonSlot::count());
+        $this->assertNotEmpty(\App\Support\PrivateLessonCalendar::between($ogrenci, '2026-09-28', '2026-10-04'));
     }
 
     public function test_only_the_admin_edits_lessons(): void

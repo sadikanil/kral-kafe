@@ -103,9 +103,10 @@ class PlanItemCompleteTest extends TestCase
     public function test_the_coach_item_menu_has_an_accessible_name(): void
     {
         $ogrenci = $this->ogrenci();
-        $this->madde($ogrenci, ['title' => 'Limit soruları']);
         $koc = User::factory()->create(['role' => 'coach']);
         $koc->coachStudents()->attach($ogrenci->id);
+        // Koc yalnizca KENDI ekledigi maddeyi tasir/siler (1 Ekim 2026).
+        $this->madde($ogrenci, ['title' => 'Limit soruları', 'created_by' => $koc->id]);
 
         $this->actingAs($koc)->get(route('coach.plan.show', [$ogrenci, 'hafta' => '2026-09-28']))
             ->assertOk()

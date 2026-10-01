@@ -127,6 +127,8 @@ class WeakTopicController extends Controller
             'period' => PlanPeriod::Week->value,
             'week_start' => PlanPeriod::Week->startFor(LocalDay::today()),
             'created_by' => auth()->id(),
+            // Yonetici disindaki koc yalnizca odev ekler (1 Ekim 2026).
+            'tag' => auth()->user()->assignsOnlyHomework() ? StudyPlanItem::TAG_HOMEWORK : StudyPlanItem::TAG_PLAN,
         ]);
 
         return back()->with('success', 'Konu bu haftanın planına eklendi.');

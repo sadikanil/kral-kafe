@@ -48,6 +48,8 @@
                     @error('role')<span class="invalid-feedback">{{ $message }}</span>@enderror
                 </div>
 
+                @include('admin.users._kocluk', ['user' => null])
+
                 <div id="ogrenciBolumu">
                     <hr>
                     @include('admin.users._sinif-alan', ['user' => null])

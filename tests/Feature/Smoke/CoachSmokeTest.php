@@ -66,6 +66,12 @@ class CoachSmokeTest extends TestCase
         return $koc;
     }
 
+    /** Yonetici (Cahit Hoca): sabit programi ve tum plani o yazar (1 Ekim 2026). */
+    private function yonetici(): User
+    {
+        return User::factory()->create(['role' => Role::Admin->value, 'name' => 'Cahit Atılğan', 'coach_subject' => 'Fizik']);
+    }
+
     private function ders(string $kod): Subject
     {
         return Subject::where('code', $kod)->sole();
@@ -217,6 +223,8 @@ class CoachSmokeTest extends TestCase
             'title' => 'Tork ve Denge soru bankası',
             'starts_at' => '09:00',
             'duration_minutes' => 45,
+            // Koc yalnizca kendi maddesini tasir/siler (1 Ekim 2026).
+            'created_by' => $koc->id,
         ]);
         StudentCommitment::create([
             'student_id' => $ogrenci->id, 'kind' => 'okul', 'title' => 'Kadıköy Anadolu Lisesi',
@@ -244,11 +252,12 @@ class CoachSmokeTest extends TestCase
             // Tasima ve silme formlari.
             ->assertSee(route('coach.plan.move', StudyPlanItem::first()), false)
             ->assertSee(route('coach.plan.destroy', StudyPlanItem::first()), false)
-            // Sekmeler ve sabit program formu.
+            // Sekmeler. Sabit program formu yalnizca yoneticide (1 Ekim 2026).
             ->assertSee(route('coach.notes.index', $ogrenci), false)
             ->assertSee(route('coach.topics.index', $ogrenci), false)
             ->assertSee(route('coach.report', $ogrenci), false)
-            ->assertSee(route('coach.commitments.store', $ogrenci), false);
+            ->assertDontSee(route('coach.commitments.store', $ogrenci), false)
+            ->assertSee('Sabit programı yönetici girer.');
     }
 
     public function test_an_empty_calendar_renders_for_a_student_without_grade_or_data(): void
@@ -401,7 +410,8 @@ class CoachSmokeTest extends TestCase
                 'duration_minutes' => 60,
             ])
             ->assertRedirect($this->planSayfasi($ogrenci))
-            ->assertSessionHas('success', 'Plana eklendi.')
+            // Yonetici disindaki koc yalnizca odev ekler (1 Ekim 2026).
+            ->assertSessionHas('success', 'Ödev eklendi.')
             ->assertSessionHasNoErrors();
 
         $madde = StudyPlanItem::sole();
@@ -415,6 +425,7 @@ class CoachSmokeTest extends TestCase
         $this->assertSame(60, (int) $madde->duration_minutes);
         $this->assertSame($koc->id, $madde->created_by);
         $this->assertSame('open', $madde->status);
+        $this->assertTrue($madde->isHomework());
 
         $this->actingAs($koc)->get($this->planSayfasi($ogrenci))
             ->assertSee('TYT Matematik')
@@ -422,9 +433,12 @@ class CoachSmokeTest extends TestCase
             ->assertSee('16:30 · 60 dk');
 
         // Ogrenci ayni maddeyi kendi planinda gorur.
+        // Ogrenci ayni maddeyi kendi planinda "Odev" ve kocun adiyla gorur.
         $this->actingAs($ogrenci)->get(route('user.plan'))
             ->assertOk()
-            ->assertSee('Bölme ve Bölünebilme');
+            ->assertSee('Bölme ve Bölünebilme')
+            ->assertSee('Ödev')
+            ->assertSee('Koç Şükrü Güneş');
     }
 
     public function test_a_free_turkish_note_becomes_the_title_without_a_subject(): void
@@ -563,7 +577,7 @@ class CoachSmokeTest extends TestCase
     {
         $ogrenci = $this->ogrenci();
         $koc = $this->koc($ogrenci);
-        $madde = $this->madde($ogrenci, '2026-09-30', ['title' => 'Türev tekrarı']);
+        $madde = $this->madde($ogrenci, '2026-09-30', ['title' => 'Türev tekrarı', 'created_by' => $koc->id]);
 
         // Ayni hafta icinde.
         $this->actingAs($koc)->from($this->planSayfasi($ogrenci))
@@ -592,7 +606,7 @@ class CoachSmokeTest extends TestCase
     {
         $ogrenci = $this->ogrenci();
         $koc = $this->koc($ogrenci);
-        $madde = $this->madde($ogrenci, '2026-09-30');
+        $madde = $this->madde($ogrenci, '2026-09-30', ['created_by' => $koc->id]);
 
         foreach (['', 'yarın', '2026-02-30', '02.10.2026'] as $cop) {
             $this->actingAs($koc)->from($this->planSayfasi($ogrenci))
@@ -607,7 +621,7 @@ class CoachSmokeTest extends TestCase
     {
         $ogrenci = $this->ogrenci();
         $koc = $this->koc($ogrenci);
-        $madde = $this->madde($ogrenci, '2026-09-30');
+        $madde = $this->madde($ogrenci, '2026-09-30', ['created_by' => $koc->id]);
 
         $this->actingAs($koc)->from($this->planSayfasi($ogrenci))
             ->delete(route('coach.plan.destroy', $madde))
@@ -637,10 +651,11 @@ class CoachSmokeTest extends TestCase
     // Haftalik sabit program (coach.commitments.*)
     // =========================================================================
 
-    public function test_a_coach_adds_a_weekly_program_one_row_per_day(): void
+    public function test_the_admin_adds_a_weekly_program_one_row_per_day(): void
     {
         $ogrenci = $this->ogrenci();
-        $koc = $this->koc($ogrenci);
+        // Sabit programi yonetici yazar (1 Ekim 2026).
+        $koc = $this->yonetici();
 
         $this->actingAs($koc)->from($this->planSayfasi($ogrenci))
             ->post(route('coach.commitments.store', $ogrenci), [
@@ -676,7 +691,8 @@ class CoachSmokeTest extends TestCase
     public function test_the_program_title_is_optional(): void
     {
         $ogrenci = $this->ogrenci();
-        $koc = $this->koc($ogrenci);
+        // Sabit programi yonetici yazar (1 Ekim 2026).
+        $koc = $this->yonetici();
 
         $this->actingAs($koc)->from($this->planSayfasi($ogrenci))
             ->post(route('coach.commitments.store', $ogrenci), [
@@ -690,7 +706,8 @@ class CoachSmokeTest extends TestCase
     public function test_the_program_form_refuses_bad_input(): void
     {
         $ogrenci = $this->ogrenci();
-        $koc = $this->koc($ogrenci);
+        // Sabit programi yonetici yazar (1 Ekim 2026).
+        $koc = $this->yonetici();
         $gecerli = ['kind' => 'okul', 'weekdays' => [1], 'commitment_starts_at' => '08:00', 'commitment_ends_at' => '15:00'];
 
         $vakalar = [
@@ -725,7 +742,8 @@ class CoachSmokeTest extends TestCase
     public function test_a_program_form_error_does_not_leak_into_the_plan_form(): void
     {
         $ogrenci = $this->ogrenci();
-        $koc = $this->koc($ogrenci);
+        // Sabit programi yonetici yazar (1 Ekim 2026).
+        $koc = $this->yonetici();
 
         $sayfa = $this->actingAs($koc)->from($this->planSayfasi($ogrenci))
             ->followingRedirects()
@@ -746,10 +764,11 @@ class CoachSmokeTest extends TestCase
         $this->assertMatchesRegularExpression('/<input[^>]*name="commitment_ends_at"[^>]*is-invalid[^>]*value="08:00"/', $html);
     }
 
-    public function test_a_coach_removes_a_single_day_of_the_program(): void
+    public function test_the_admin_removes_a_single_day_of_the_program(): void
     {
         $ogrenci = $this->ogrenci();
-        $koc = $this->koc($ogrenci);
+        // Sabit programi yonetici yazar (1 Ekim 2026).
+        $koc = $this->yonetici();
         $pzt = StudentCommitment::create(['student_id' => $ogrenci->id, 'kind' => 'okul', 'weekday' => 1, 'starts_at' => '08:00', 'ends_at' => '15:00']);
         $cum = StudentCommitment::create(['student_id' => $ogrenci->id, 'kind' => 'okul', 'weekday' => 5, 'starts_at' => '08:00', 'ends_at' => '12:30']);
 

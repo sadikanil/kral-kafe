@@ -62,6 +62,8 @@
                     @enderror
                 </div>
 
+                @include('admin.users._kocluk')
+
                 @if($user->isStudent())
                     @include('admin.users._sinif-alan')
                 @endif

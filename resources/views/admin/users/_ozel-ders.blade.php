@@ -1,14 +1,20 @@
 {{--
     Ozel ders (Dalga 25). Haftalik saat + onumuzdeki 4 hafta; tek dersi
     iptal et ya da tasi. Yalnizca yonetici gorur/duzenler.
-    Beklenen: $user, $lessonSlots, $upcomingLessons
+    1 Ekim 2026: paketten bagimsiz; dersi veren (koc) ve ders adi. Toplu
+    ekleme ve ozel ders paketi Ozel Dersler sayfasinda.
+    Beklenen: $user, $lessonSlots, $upcomingLessons, $lessonTeachers
 --}}
 <div class="card mt-3" style="max-width: 640px;">
     <div class="card-header"><h4>👨‍🏫 Özel ders</h4></div>
     <div class="card-body">
         @forelse($lessonSlots as $saat)
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <span>Her {{ $saat->label() }}</span>
+                <span>
+                    Her {{ $saat->label() }}
+                    @if($saat->ends_on)<span class="text-muted">· {{ $saat->ends_on->locale('tr')->translatedFormat('j F') }} bitti</span>@endif
+                    @if($saat->branch || $saat->teacher)<br><small class="text-muted">{{ collect([$saat->branch, $saat->teacher?->name])->filter()->implode(' · ') }}</small>@endif
+                </span>
                 <form method="POST" action="{{ route('admin.lessons.destroy', $saat) }}" onsubmit="return confirm('Bu haftalık saat kaldırılsın mı?')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-sm btn-secondary">Kaldır</button>
@@ -22,6 +28,19 @@
             @csrf
             {{-- Gorunur etiketler: iki bos saat kutusundan hangisinin baslangic
                  oldugu yalnizca sirasindan anlasiliyordu. --}}
+            <div style="flex: 1 1 180px;">
+                <label for="ders-ogretmen" class="form-label">Dersi veren</label>
+                <select id="ders-ogretmen" name="teacher_id" class="form-control">
+                    <option value="">Seçilmedi</option>
+                    @foreach($lessonTeachers as $ogretmen)
+                        <option value="{{ $ogretmen->id }}">{{ $ogretmen->coachLabel() }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div style="flex: 1 1 130px;">
+                <label for="ders-brans" class="form-label">Ders</label>
+                <input type="text" id="ders-brans" name="branch" maxlength="60" class="form-control" placeholder="Boşsa branşı">
+            </div>
             <div style="flex: 1 1 130px;">
                 <label for="ders-gun" class="form-label">Gün</label>
                 <select id="ders-gun" name="weekday" class="form-control">

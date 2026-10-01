@@ -16,4 +16,13 @@ class UserPolicy
     {
         return $viewer->canViewStudent($student);
     }
+
+    /**
+     * Veli paneli: yalnizca kendi cocugu. Koc yetkili veli (1 Ekim 2026)
+     * atandigi ogrencinin veli sayfasini (odemeler dahil) acamaz.
+     */
+    public function viewAsParent(User $viewer, User $student): bool
+    {
+        return $viewer->isParentOf($student);
+    }
 }

@@ -109,7 +109,7 @@
                                     <span class="text-danger">Pasif</span>
                                 @endif
                             @else
-                                <span>{{ $kullanici->role()?->label() }}</span>
+                                <span>{{ $kullanici->rolesLabel() }}</span>
                             @endif
                         </div>
                     </div>

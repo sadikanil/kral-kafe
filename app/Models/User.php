@@ -33,6 +33,13 @@ class User extends Authenticatable
         'phone',
         'grade',
         'field',
+        'is_coach',
+        'coach_subject',
+    ];
+
+    /** DB varsayilani modele yansimaz: yeni yaratilan modelde de okunabilsin. */
+    protected $attributes = [
+        'is_coach' => false,
     ];
 
     /**
@@ -57,6 +64,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'subscription_start' => 'date',
             'subscription_end' => 'date',
+            'is_coach' => 'boolean',
         ];
     }
 
@@ -82,9 +90,58 @@ class User extends Authenticatable
         return Role::tryFrom((string) $this->role);
     }
 
+    /**
+     * Kullanicinin tasidigi roller: ana rol + varsa koc yetkisi (1 Ekim 2026).
+     *
+     * Rol sutunu TEK kalir (README SS10.2). Ana rolu veli ya da ogretmen
+     * olan biri is_coach ile ayrica koc olabilir: hem cocugunun velisi hem
+     * ozel ders verdigi ogrencilerin kocu. Ana sayfa, abonelik ve rozet ana
+     * rolden gelir; koc sayfalarinin kapisi (role:coach) ikisini de tanir.
+     *
+     * @return list<Role>
+     */
+    public function roles(): array
+    {
+        $ana = $this->role();
+        $roller = $ana === null ? [] : [$ana];
+
+        if ($this->is_coach && in_array($ana, self::KOC_OLABILEN, strict: true)) {
+            $roller[] = Role::Coach;
+        }
+
+        return $roller;
+    }
+
+    /** Koc yetkisi ek bayrakla verilebilen ana roller. */
+    public const KOC_OLABILEN = [Role::Parent, Role::Teacher];
+
     public function hasRole(Role ...$roles): bool
     {
-        return in_array($this->role(), $roles, strict: true);
+        return array_intersect(
+            array_map(fn (Role $r) => $r->value, $this->roles()),
+            array_map(fn (Role $r) => $r->value, $roles),
+        ) !== [];
+    }
+
+    /**
+     * Koc gibi davranabilir mi: koc rolu, koc yetkili veli/ogretmen ya da
+     * yonetici (karar 11: yonetici ayni zamanda koctur).
+     */
+    public function isCoach(): bool
+    {
+        return $this->hasRole(Role::Admin, Role::Coach);
+    }
+
+    /** "İbrahim Acar · Matematik" - brans yoksa yalnizca ad. */
+    public function coachLabel(): string
+    {
+        return $this->coach_subject ? "{$this->name} · {$this->coach_subject}" : (string) $this->name;
+    }
+
+    /** Ust barda ve listelerde rol adi: "Veli · Koç". */
+    public function rolesLabel(): string
+    {
+        return implode(' · ', array_map(fn (Role $r) => $r->label(), $this->roles())) ?: (string) $this->role;
     }
 
     /**
@@ -206,17 +263,46 @@ class User extends Authenticatable
      * eklendi ve YALNIZCA kendine atanmis ogrencileri gorur; atamasi olmayan
      * bir koc bos dizi alir. Ogretmen/gorevli icin hala panel yok.
      *
+     * Koc yetkili veli (1 Ekim 2026): kendi cocuklari + atanan ogrencileri.
+     * Ama iki kapi AYRI kalir: veli paneli yalnizca cocuklarini
+     * (childStudentIds), koc sayfalari yalnizca atananlari
+     * (coachableStudentIds) gosterir. Atanan ogrencinin odemeleri veli
+     * panelinden acilmaz; kocun ucrete karismamasi karari.
+     *
      * @return list<int>|null
      */
     public function accessibleStudentIds(): ?array
     {
-        return match ($this->role()) {
-            Role::Admin => null,
-            Role::Parent => $this->students()->pluck('users.id')->all(),
-            Role::Coach => $this->coachStudents()->pluck('users.id')->all(),
-            Role::Student => [$this->id],
-            default => [],
-        };
+        if ($this->hasRole(Role::Admin)) {
+            return null;
+        }
+
+        if ($this->hasRole(Role::Student)) {
+            return [$this->id];
+        }
+
+        return array_values(array_unique(array_merge($this->childStudentIds(), $this->coachableStudentIds() ?? [])));
+    }
+
+    /** Velinin cocuklari; veli degilse bos. Veli paneli YALNIZCA bunu gosterir. */
+    public function childStudentIds(): array
+    {
+        return $this->hasRole(Role::Parent) ? $this->students()->pluck('users.id')->all() : [];
+    }
+
+    /**
+     * Koc olarak bakabildigi ogrenciler. null: yonetici (hepsi). Koc
+     * yetkisi yoksa bos.
+     *
+     * @return list<int>|null
+     */
+    public function coachableStudentIds(): ?array
+    {
+        if ($this->hasRole(Role::Admin)) {
+            return null;
+        }
+
+        return $this->hasRole(Role::Coach) ? $this->coachStudents()->pluck('users.id')->all() : [];
     }
 
     public function canViewStudent(User $student): bool
@@ -224,6 +310,12 @@ class User extends Authenticatable
         $ids = $this->accessibleStudentIds();
 
         return $ids === null || in_array($student->id, $ids, strict: true);
+    }
+
+    /** Veli paneli kapisi: yalnizca kendi cocugu (koc olarak atanan DEGIL). */
+    public function isParentOf(User $student): bool
+    {
+        return in_array($student->id, $this->childStudentIds(), strict: true);
     }
 
     /**
@@ -240,11 +332,22 @@ class User extends Authenticatable
      */
     public function canCoach(User $student): bool
     {
-        if (! $this->hasRole(Role::Admin, Role::Coach)) {
+        if (! $this->isCoach()) {
             return false;
         }
 
-        return $this->canViewStudent($student);
+        $ids = $this->coachableStudentIds();
+
+        return $ids === null || in_array($student->id, $ids, strict: true);
+    }
+
+    /**
+     * Yalnizca odev mi ekleyebilir? Yonetici (Cahit Hoca) disindaki koclar
+     * plana yalnizca "odev" etiketli madde ekler (1 Ekim 2026).
+     */
+    public function assignsOnlyHomework(): bool
+    {
+        return ! $this->hasRole(Role::Admin);
     }
 
     /**
@@ -258,6 +361,31 @@ class User extends Authenticatable
         $query->where('role', Role::Student->value);
 
         return $ids === null ? $query : $query->whereIn('id', $ids);
+    }
+
+    /** Koc sayfalarindaki ogrenci listesi: yalnizca koc olarak bakilanlar. */
+    public function scopeCoachableBy(Builder $query, User $coach): Builder
+    {
+        $ids = $coach->coachableStudentIds();
+
+        $query->where('role', Role::Student->value);
+
+        return $ids === null ? $query : $query->whereIn('id', $ids);
+    }
+
+    /** Veli panelindeki liste: yalnizca kendi cocuklari. */
+    public function scopeChildrenOf(Builder $query, User $parent): Builder
+    {
+        return $query->where('role', Role::Student->value)->whereIn('id', $parent->childStudentIds());
+    }
+
+    /** Koc atamasina aday olanlar: koc, yonetici ve koc yetkili veli/ogretmen. */
+    public function scopeCoachCandidates(Builder $query): Builder
+    {
+        return $query->where(fn ($q) => $q
+            ->whereIn('role', [Role::Coach->value, Role::Admin->value])
+            ->orWhere(fn ($q) => $q->where('is_coach', true)
+                ->whereIn('role', array_map(fn (Role $r) => $r->value, self::KOC_OLABILEN))));
     }
 
     /**

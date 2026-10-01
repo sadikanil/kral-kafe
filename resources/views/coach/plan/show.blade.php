@@ -15,6 +15,9 @@
 @section('content')
     @include('coach._sekmeler')
 
+    {{-- Yonetici disindaki koclar yalnizca odev ekler (1 Ekim 2026). --}}
+    @php($yalnizOdev = auth()->user()->assignsOnlyHomework())
+
     @if($student->gradeEnum())
         <p class="text-muted mb-2">
             {{ $student->gradeEnum()->label() }}@if($student->fieldEnum()) · {{ $student->fieldEnum()->label() }}@endif
@@ -27,10 +30,22 @@
          KENDI alanlarinin hatasinda: $errors->any() alttaki sabit program
          formunun hatasinda da aciyordu. --}}
     <details class="card mb-3 plan-add" id="planaEkle" {{ $errors->hasAny(['plan_date', 'subject_id', 'subject_topic_id', 'title', 'starts_at', 'duration_minutes']) ? 'open' : '' }}>
-        <summary class="card-header"><h4>➕ Plana ekle</h4></summary>
+        <summary class="card-header"><h4>➕ {{ $yalnizOdev ? 'Ödev ver' : 'Plana ekle' }}</h4></summary>
         <div class="card-body">
+            @if($yalnizOdev)
+                <p class="text-muted text-sm">Eklediğin her madde öğrencinin planına <strong>Ödev</strong> etiketiyle ve senin adınla düşer. Planın geri kalanını yönetici kurar.</p>
+            @endif
             <form method="POST" action="{{ route('coach.plan.store', $student) }}" class="plan-form">
                 @csrf
+                @unless($yalnizOdev)
+                    <div class="form-group plan-wide">
+                        <label for="tag" class="form-label">Etiket</label>
+                        <select id="tag" name="tag" class="form-control">
+                            <option value="plan" @selected(old('tag', 'plan') === 'plan')>Plan</option>
+                            <option value="homework" @selected(old('tag') === 'homework')>Ödev</option>
+                        </select>
+                    </div>
+                @endunless
                 <div class="form-group plan-wide">
                     <label for="plan_date" class="form-label">Gün</label>
                     <input type="date" id="plan_date" name="plan_date" class="form-control @error('plan_date') is-invalid @enderror"
@@ -100,16 +115,21 @@
                         <li>
                             <span class="text-muted">{{ \Illuminate\Support\Carbon::create(2026, 9, 27)->addDays($program->weekday)->locale('tr')->translatedFormat('D') }}</span>
                             <span class="log-label">{{ $program->kind->icon() }} {{ $program->label() }} · {{ $program->starts_at }}–{{ $program->ends_at }}</span>
-                            <form method="POST" action="{{ route('coach.commitments.destroy', $program) }}"
-                                  onsubmit="return confirm('Bu satır silinsin mi?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-secondary" aria-label="Sil">✕</button>
-                            </form>
+                            @unless($yalnizOdev)
+                                <form method="POST" action="{{ route('coach.commitments.destroy', $program) }}"
+                                      onsubmit="return confirm('Bu satır silinsin mi?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-secondary" aria-label="Sil">✕</button>
+                                </form>
+                            @endunless
                         </li>
                     @endforeach
                 </ul>
             @endif
 
+            @if($yalnizOdev)
+                <p class="text-muted text-sm mb-0">Sabit programı yönetici girer.</p>
+            @else
             <form method="POST" action="{{ route('coach.commitments.store', $student) }}">
                 @csrf
                 <div class="d-flex gap-2" style="flex-wrap: wrap;">
@@ -152,6 +172,7 @@
                 @error('weekdays')<p class="text-danger">{{ $message }}</p>@enderror
                 <button type="submit" class="btn btn-secondary">Programa ekle</button>
             </form>
+            @endif
         </div>
     </div>
 

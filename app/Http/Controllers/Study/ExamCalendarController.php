@@ -36,7 +36,7 @@ class ExamCalendarController extends Controller
         // Ozel ders (Dalga 25): ogrencinin kendi takviminde, izgaranin
         // gorunen tum gunleri icin.
         $kullanici = $request->user();
-        $dersler = $kullanici->isStudent() && $kullanici->entitlements()->privateLessons
+        $dersler = $kullanici->isStudent()
             ? collect(\App\Support\PrivateLessonCalendar::between(
                 $kullanici, $haftalar[0][0]['date'], end($haftalar)[6]['date']
             ))->groupBy('date')->all()

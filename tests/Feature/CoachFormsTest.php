@@ -41,7 +41,9 @@ class CoachFormsTest extends TestCase
     {
         $ogrenci = User::factory()->student()->withPackage(Package::factory()->tier3()->create())
             ->create(['name' => 'Ayşe Yılmaz', 'grade' => '12', 'field' => 'say']);
-        $koc = User::factory()->create(['role' => Role::Coach->value]);
+        // Yonetici: sabit program formu ve madde menusu (tasi/sil) yalnizca
+        // onda tam cizilir (1 Ekim 2026); diger koc bunlarin alt kumesini gorur.
+        $koc = User::factory()->create(['role' => Role::Admin->value]);
         $koc->coachStudents()->attach($ogrenci->id);
 
         return [$koc, $ogrenci];

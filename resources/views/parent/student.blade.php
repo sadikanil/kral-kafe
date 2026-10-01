@@ -25,6 +25,9 @@
                     <div class="mb-1">
                         {{ \Illuminate\Support\Carbon::parse($ders['date'])->locale('tr')->translatedFormat('d M D') }}
                         {{ $ders['starts_at'] }}–{{ $ders['ends_at'] }}
+                        @if($ders['slot']->branch || $ders['slot']->teacher)
+                            <span class="text-muted">· {{ collect([$ders['slot']->branch, $ders['slot']->teacher?->name])->filter()->implode(' · ') }}</span>
+                        @endif
                         @if($ders['status'] === 'cancelled')<span class="badge badge-danger">İptal</span>@endif
                         @if($ders['status'] === 'moved')<span class="badge badge-warning">Taşındı</span>@endif
                     </div>

@@ -30,11 +30,11 @@ class StudyPlanController extends Controller
     {
         $bakan = auth()->user();
 
-        // Sinir accessibleStudentIds()'den geliyor: koc kendi atananlarini,
-        // yonetici hepsini gorur. Ayri bir filtre yazmak, gunun birinde
-        // buradaki listenin veli panelinden farkli davranmasi demekti.
+        // Sinir coachableStudentIds()'den geliyor: koc kendi atananlarini,
+        // yonetici hepsini gorur. Koc yetkili velinin kendi cocugu burada
+        // YOK (atanmadikca); o veli panelinde.
         $ogrenciler = User::query()
-            ->visibleTo($bakan)
+            ->coachableBy($bakan)
             ->orderBy('name')
             ->get();
 
@@ -118,6 +118,7 @@ class StudyPlanController extends Controller
             'title' => ['nullable', 'string', 'max:150'],
             'starts_at' => ['nullable', 'date_format:H:i'],
             'duration_minutes' => ['nullable', 'integer', 'min:5', 'max:720'],
+            'tag' => ['nullable', Rule::in([StudyPlanItem::TAG_PLAN, StudyPlanItem::TAG_HOMEWORK])],
         ], [
             'subject_id.required_without' => 'Bir ders seçin ya da not yazın.',
             'subject_topic_id.exists' => 'Konu seçilen derse ait değil.',
@@ -137,15 +138,21 @@ class StudyPlanController extends Controller
             'starts_at' => $v['starts_at'] ?? null,
             'duration_minutes' => $v['duration_minutes'] ?? null,
             'created_by' => auth()->id(),
+            // Yonetici disindaki koclar YALNIZCA odev ekler (1 Ekim 2026);
+            // formdan "plan" gelse de odev yazilir.
+            'tag' => auth()->user()->assignsOnlyHomework()
+                ? StudyPlanItem::TAG_HOMEWORK
+                : ($v['tag'] ?? StudyPlanItem::TAG_PLAN),
         ]);
 
-        return back()->with('success', 'Plana eklendi.');
+        return back()->with('success', auth()->user()->assignsOnlyHomework() ? 'Ödev eklendi.' : 'Plana eklendi.');
     }
 
     /** Maddeyi baska bir gune tasir; hafta da onunla degisir. */
     public function move(Request $request, StudyPlanItem $item): RedirectResponse
     {
         $this->kapiyiAc($item->student);
+        abort_unless($item->canBeChangedBy(auth()->user()), 403);
 
         $v = $request->validate(['plan_date' => ['required', 'date_format:Y-m-d']], [], self::ALAN_ADLARI);
 
@@ -161,6 +168,7 @@ class StudyPlanController extends Controller
     public function destroy(StudyPlanItem $item): RedirectResponse
     {
         $this->kapiyiAc($item->student);
+        abort_unless($item->canBeChangedBy(auth()->user()), 403);
 
         $item->delete();
 

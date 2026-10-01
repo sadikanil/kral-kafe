@@ -29,7 +29,12 @@ class StudyPlanItem extends Model
         'starts_at',
         'duration_minutes',
         'exam_event_id',
+        'tag',
     ];
+
+    /** Etiket (1 Ekim 2026): yonetici plan da odev de ekler; diger koclar yalnizca odev. */
+    public const TAG_PLAN = 'plan';
+    public const TAG_HOMEWORK = 'homework';
 
     protected $casts = [
         'period' => PlanPeriod::class,
@@ -42,7 +47,33 @@ class StudyPlanItem extends Model
     protected $attributes = [
         'status' => 'open',
         'period' => PlanPeriod::Week->value,
+        'tag' => self::TAG_PLAN,
     ];
+
+    public function isHomework(): bool
+    {
+        return $this->tag === self::TAG_HOMEWORK;
+    }
+
+    /** Maddeyi ekleyen (koc / yonetici / ogrenci). */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Bu kisi maddeyi tasiyip silebilir mi? Yonetici her maddeyi; diger
+     * koclar YALNIZCA kendi ekledikleri odevi (1 Ekim 2026). Yoneticinin
+     * kurdugu plani matematik ogretmeni degistiremez.
+     */
+    public function canBeChangedBy(User $u): bool
+    {
+        if (! $u->canCoach($this->student)) {
+            return false;
+        }
+
+        return ! $u->assignsOnlyHomework() || (int) $this->created_by === $u->id;
+    }
 
     public function student(): BelongsTo
     {

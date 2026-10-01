@@ -50,6 +50,14 @@
         <input type="checkbox" name="includes_private_lessons" value="1" {{ old('includes_private_lessons', $package?->includes_private_lessons) ? 'checked' : '' }}>
         Özel ders
     </label>
+    {{-- Ozel ders paketi (1 Ekim 2026): ornegin "Matematik özel ders · 8 ders",
+         ek paket olarak. Ucreti ve odemesini yalnizca yonetici gorur. --}}
+    <div class="form-group mt-1" style="max-width: 220px;">
+        <label for="lesson_count" class="form-label">Özel ders sayısı (dönem başına)</label>
+        <input type="number" id="lesson_count" name="lesson_count" min="1" max="60" class="form-control @error('lesson_count') is-invalid @enderror"
+               value="{{ old('lesson_count', $package?->lesson_count) }}" placeholder="Örn. 8">
+        @error('lesson_count')<span class="invalid-feedback">{{ $message }}</span>@enderror
+    </div>
     <label class="form-label d-flex align-items-center gap-2">
         <input type="checkbox" name="is_addon" value="1" {{ old('is_addon', $package?->is_addon) ? 'checked' : '' }}>
         Ek paket (ana paketin üstüne eklenir)

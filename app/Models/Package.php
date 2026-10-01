@@ -25,6 +25,7 @@ class Package extends Model
         'includes_private_lessons',
         'is_addon',
         'weekly_mock_exams',
+        'lesson_count',
         'description',
         'is_active',
     ];
@@ -38,6 +39,7 @@ class Package extends Model
         'is_addon' => 'boolean',
         'tier' => 'integer',
         'weekly_mock_exams' => 'integer',
+        'lesson_count' => 'integer',
         'is_active' => 'boolean',
     ];
 

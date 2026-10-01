@@ -51,6 +51,12 @@ class CalendarPlanTest extends TestCase
         return $koc;
     }
 
+    /** Sabit program ve tum plan yoneticide (1 Ekim 2026). */
+    private function yonetici(): User
+    {
+        return User::factory()->admin()->create();
+    }
+
     private function ders(string $kod = 'ayt_fizik'): Subject
     {
         return Subject::where('code', $kod)->sole();
@@ -181,9 +187,11 @@ class CalendarPlanTest extends TestCase
     public function test_the_coach_moves_an_item_to_another_week(): void
     {
         $ogrenci = $this->ogrenci();
-        $madde = $this->madde($ogrenci, '2026-10-01');
+        $koc = $this->koc($ogrenci);
+        // Koc yalnizca kendi ekledigi maddeyi tasir (1 Ekim 2026).
+        $madde = $this->madde($ogrenci, '2026-10-01', ['created_by' => $koc->id]);
 
-        $this->actingAs($this->koc($ogrenci))
+        $this->actingAs($koc)
             ->patch(route('coach.plan.move', $madde), ['plan_date' => '2026-10-06'])
             ->assertRedirect();
 
@@ -217,11 +225,26 @@ class CalendarPlanTest extends TestCase
 
     // --- Sabit program -------------------------------------------------------
 
-    public function test_the_coach_adds_school_on_weekdays(): void
+    /** Sabit program planin iskeleti: yalnizca yonetici yazar (1 Ekim 2026). */
+    public function test_a_coach_cannot_write_the_weekly_program(): void
+    {
+        $ogrenci = $this->ogrenci();
+        $okul = StudentCommitment::create(['student_id' => $ogrenci->id, 'kind' => 'okul', 'weekday' => 1, 'starts_at' => '08:00', 'ends_at' => '15:00']);
+        $koc = $this->koc($ogrenci);
+
+        $this->actingAs($koc)->post(route('coach.commitments.store', $ogrenci), [
+            'kind' => 'okul', 'weekdays' => [2], 'commitment_starts_at' => '08:00', 'commitment_ends_at' => '15:00',
+        ])->assertForbidden();
+        $this->actingAs($koc)->delete(route('coach.commitments.destroy', $okul))->assertForbidden();
+
+        $this->assertSame(1, StudentCommitment::count());
+    }
+
+    public function test_the_admin_adds_school_on_weekdays(): void
     {
         $ogrenci = $this->ogrenci();
 
-        $this->actingAs($this->koc($ogrenci))->post(route('coach.commitments.store', $ogrenci), [
+        $this->actingAs($this->yonetici())->post(route('coach.commitments.store', $ogrenci), [
             'kind' => 'okul', 'weekdays' => [1, 2, 3, 4, 5], 'commitment_starts_at' => '08:00', 'commitment_ends_at' => '15:00',
         ])->assertRedirect();
 
@@ -233,19 +256,19 @@ class CalendarPlanTest extends TestCase
     {
         $ogrenci = $this->ogrenci();
 
-        $this->actingAs($this->koc($ogrenci))->from(route('coach.plan.show', $ogrenci))
+        $this->actingAs($this->yonetici())->from(route('coach.plan.show', $ogrenci))
             ->post(route('coach.commitments.store', $ogrenci), [
                 'kind' => 'okul', 'weekdays' => [1], 'commitment_starts_at' => '15:00', 'commitment_ends_at' => '08:00',
             ])
             ->assertSessionHasErrors('commitment_ends_at');
     }
 
-    public function test_the_coach_removes_a_commitment(): void
+    public function test_the_admin_removes_a_commitment(): void
     {
         $ogrenci = $this->ogrenci();
         $okul = StudentCommitment::create(['student_id' => $ogrenci->id, 'kind' => 'okul', 'weekday' => 1, 'starts_at' => '08:00', 'ends_at' => '15:00']);
 
-        $this->actingAs($this->koc($ogrenci))->delete(route('coach.commitments.destroy', $okul))->assertRedirect();
+        $this->actingAs($this->yonetici())->delete(route('coach.commitments.destroy', $okul))->assertRedirect();
 
         $this->assertModelMissing($okul);
     }

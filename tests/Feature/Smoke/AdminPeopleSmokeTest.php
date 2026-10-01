@@ -1600,14 +1600,16 @@ class AdminPeopleSmokeTest extends TestCase
         $this->assertSame(1, $ogrenci->privateLessonSlots()->count());
     }
 
-    public function test_a_lesson_needs_the_entitlement_valid_times_and_a_student(): void
+    /** Paketten bagimsiz (1 Ekim 2026); saatler gecerli olmali, ogrenciye. */
+    public function test_a_lesson_needs_valid_times_and_a_student_but_not_the_package(): void
     {
         $orta = $this->ogrenci(Package::factory()->tier2());
 
         $this->actingAs($this->yonetici)->from(route('admin.users.edit', $orta))
             ->post(route('admin.lessons.store', $orta), ['weekday' => '3', 'starts_at' => '17:00', 'ends_at' => '18:00'])
-            ->assertSessionHas('error', 'Öğrencinin paketi özel ders içermiyor.');
-        $this->assertSame(0, PrivateLessonSlot::count());
+            ->assertSessionHas('success', 'Özel ders saati eklendi.');
+        $this->assertSame(1, PrivateLessonSlot::count());
+        PrivateLessonSlot::query()->delete();
 
         $kral = $this->kralOgrenci();
         $this->actingAs($this->yonetici)->from(route('admin.users.edit', $kral))

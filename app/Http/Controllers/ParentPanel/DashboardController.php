@@ -21,9 +21,10 @@ use Illuminate\View\View;
  * Veli hicbir sey degistiremez: oturum bitiremez, hedef koyamaz, tuketim
  * eklemez. Bu yuzden burada tek bir POST rotasi yok; eklenmemeli de.
  *
- * Sinir iki katmanda: liste User::visibleTo(veli) ile, tekil sayfa
- * UserPolicy::viewStudy ile. Ikisi de User::accessibleStudentIds()'e delege
- * eder (bkz. oradaki aciklama - global scope bilerek yok).
+ * Sinir iki katmanda: liste User::childrenOf(veli) ile, tekil sayfa
+ * UserPolicy::viewAsParent ile. Ikisi de User::childStudentIds()'e delege
+ * eder: koc yetkili bir veli (1 Ekim 2026) burada YALNIZCA kendi cocugunu
+ * gorur; koc olarak atandigi ogrenciler koc sayfalarinda.
  *
  * Gorunen alanlar FEATURE 4'un MVP listesi: gelis/cikis saatleri,
  * gunluk/haftalik/aylik sure, devamlilik, hedef ilerlemesi. Tuketim ve para
@@ -41,7 +42,7 @@ class DashboardController extends Controller
     {
         $veli = Auth::user();
 
-        $ogrenciler = User::visibleTo($veli)
+        $ogrenciler = User::childrenOf($veli)
             ->orderBy('name')
             ->get()
             ->map(fn (User $ogrenci) => $this->ozet($ogrenci));
@@ -57,7 +58,7 @@ class DashboardController extends Controller
 
     public function show(User $student): View
     {
-        Gate::authorize('viewStudy', $student);
+        Gate::authorize('viewAsParent', $student);
 
         // Bagli kullanici ogrenci degilse (yonetici, baska bir veli) burada
         // gosterilecek veri yok; policy gecse bile 404.
@@ -68,12 +69,11 @@ class DashboardController extends Controller
             'days' => $this->sonGunler($student, 14),
             'sessions' => $this->sonOturumlar($student, 30),
             'studyLogs' => \App\Models\StudyLog::recentFor($student),
-            // Ozel ders (Dalga 25): onumuzdeki iki hafta, yalnizca Tier 3.
-            'lessons' => $student->entitlements()->privateLessons
-                ? \App\Support\PrivateLessonCalendar::between(
-                    $student, \App\Support\LocalDay::today(),
-                    \Illuminate\Support\Carbon::parse(\App\Support\LocalDay::today())->addWeeks(2)->toDateString())
-                : [],
+            // Ozel ders (Dalga 25): onumuzdeki iki hafta; paketten bagimsiz
+            // (1 Ekim 2026).
+            'lessons' => \App\Support\PrivateLessonCalendar::between(
+                $student, \App\Support\LocalDay::today(),
+                \Illuminate\Support\Carbon::parse(\App\Support\LocalDay::today())->addWeeks(2)->toDateString()),
             // Calisma plani (Dalga 30c): haftalik takvim, salt okunur.
             // ($days "son 14 gun" icin kullanimda.)
             'hafta' => $hafta = \App\Support\WeekParameter::resolveCurrent(request()->query('hafta')),
@@ -105,7 +105,7 @@ class DashboardController extends Controller
      */
     public function report(\Illuminate\Http\Request $request, User $student, \App\Services\WeeklyReportBuilder $uretici): View
     {
-        Gate::authorize('viewStudy', $student);
+        Gate::authorize('viewAsParent', $student);
         abort_unless($student->isStudent(), 404);
 
         $hafta = \App\Support\WeekParameter::resolve($request->query('hafta'));

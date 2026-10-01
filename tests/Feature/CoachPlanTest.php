@@ -266,13 +266,27 @@ class CoachPlanTest extends TestCase
         $koc = $this->koc();
         $ogrenci = $this->ogrenci();
         $koc->coachStudents()->attach($ogrenci->id);
-        $madde = $this->madde($ogrenci, 'Silinecek');
+        // Koc yalnizca KENDI ekledigini siler (1 Ekim 2026).
+        $madde = tap($this->madde($ogrenci, 'Silinecek'))->update(['created_by' => $koc->id]);
 
         $this->actingAs($koc)
             ->delete(route('coach.plan.destroy', $madde))
             ->assertRedirect();
 
         $this->assertDatabaseCount('study_plan_items', 0);
+    }
+
+    /** Yoneticinin kurdugu plani diger koc silemez (1 Ekim 2026). */
+    public function test_a_coach_cannot_delete_the_admins_item(): void
+    {
+        $koc = $this->koc();
+        $ogrenci = $this->ogrenci();
+        $koc->coachStudents()->attach($ogrenci->id);
+        $madde = $this->madde($ogrenci, 'Yöneticinin');
+
+        $this->actingAs($koc)->delete(route('coach.plan.destroy', $madde))->assertForbidden();
+
+        $this->assertModelExists($madde);
     }
 
     public function test_a_coach_cannot_delete_an_unassigned_students_item(): void

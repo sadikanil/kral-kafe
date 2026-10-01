@@ -85,6 +85,8 @@ class PackageController extends Controller
             'monthly_price' => ['required', 'numeric', 'min:0', 'max:999999'],
             'description' => ['nullable', 'string', 'max:255'],
             'weekly_mock_exams' => ['nullable', 'integer', 'min:0', 'max:20'],
+            // Ozel ders paketi (1 Ekim 2026): donem basina ders sayisi.
+            'lesson_count' => ['nullable', 'integer', 'min:1', 'max:60'],
             'items' => ['nullable', 'array'],
             'items.*.included' => ['nullable', 'boolean'],
             'items.*.quantity' => ['nullable', 'integer', 'min:1', 'max:1000'],
@@ -113,6 +115,9 @@ class PackageController extends Controller
             'includes_exam_club' => $request->boolean('includes_exam_club'),
             'includes_private_lessons' => $request->boolean('includes_private_lessons'),
             'is_addon' => $request->boolean('is_addon'),
+            // Ders sayisi yalnizca ozel ders iceren pakette anlamli.
+            'lesson_count' => $request->boolean('includes_private_lessons') && filled($veri['lesson_count'] ?? null)
+                ? (int) $veri['lesson_count'] : null,
             'is_active' => $request->has('is_active') ? $request->boolean('is_active') : true,
         ], $kalemler];
     }

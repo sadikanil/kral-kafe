@@ -40,7 +40,7 @@ final class WeekPlan
         $maddeler = StudyPlanItem::where('student_id', $student->id)
             ->where('plan_date', '>=', $bas->toDateString())
             ->where('plan_date', '<', $sonrakiBas)
-            ->with(['subject', 'topic', 'examEvent'])
+            ->with(['subject', 'topic', 'examEvent', 'creator', 'student'])
             ->get()
             ->groupBy(fn (StudyPlanItem $m) => $m->plan_date->toDateString());
 
@@ -56,9 +56,8 @@ final class WeekPlan
             ->get()
             ->groupBy(fn (ExamEvent $e) => $e->dateKey());
 
-        $dersler = $student->entitlements()->privateLessons
-            ? collect(PrivateLessonCalendar::between($student, $bas->toDateString(), $son))->groupBy('date')
-            : collect();
+        // Paketten bagimsiz (1 Ekim 2026): ozel ders talep edilmis olabilir.
+        $dersler = collect(PrivateLessonCalendar::between($student, $bas->toDateString(), $son))->groupBy('date');
 
         $gunler = [];
         for ($i = 0; $i < 7; $i++) {

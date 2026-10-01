@@ -21,18 +21,18 @@ final class Navigation
     /** @return array<int,array{title:string,items:array<int,array<string,string>>}> */
     public static function groups(User $u): array
     {
-        $gruplar = match ($u->role()) {
-            Role::Admin => self::admin(),
-            Role::Coach => [
-                ['title' => 'Koçluk', 'items' => [self::planlar()]],
-            ],
-            Role::Parent => [
-                ['title' => 'Veli', 'items' => [
+        // Roller birlesir (1 Ekim 2026): koc yetkili veli hem "Veli" hem
+        // "Koçluk" grubunu gorur. Yonetici ve ogrenci tek gruplu kalir.
+        $gruplar = match (true) {
+            $u->hasRole(Role::Admin) => self::admin(),
+            $u->hasRole(Role::Student) => self::student($u->entitlements()),
+            $u->hasRole(Role::Parent, Role::Coach) => array_values(array_filter([
+                $u->hasRole(Role::Parent) ? ['title' => 'Veli', 'items' => [
                     ['route' => 'parent.dashboard', 'label' => 'Çocuklarım', 'icon' => 'house', 'match' => 'parent.dashboard|parent.student|parent.report|parent.payments'],
                     ['route' => 'parent.exams', 'label' => 'Deneme Takvimi', 'icon' => 'clipboard-list'],
-                ]],
-            ],
-            Role::Student => self::student($u->entitlements()),
+                ]] : null,
+                $u->hasRole(Role::Coach) ? ['title' => 'Koçluk', 'items' => self::kocluk()] : null,
+            ])),
             default => [
                 ['title' => 'Menü', 'items' => [
                     ['route' => 'user.dashboard', 'label' => 'Panel', 'icon' => 'house'],
@@ -53,9 +53,9 @@ final class Navigation
      */
     public static function quick(User $u): array
     {
-        $tercih = match ($u->role()) {
-            Role::Admin => ['admin.dashboard', 'admin.live', 'admin.users.index', 'coach.plan.index'],
-            Role::Student => ['user.dashboard', 'table.scanner', 'user.plan', 'user.tab'],
+        $tercih = match (true) {
+            $u->hasRole(Role::Admin) => ['admin.dashboard', 'admin.live', 'admin.users.index', 'coach.plan.index'],
+            $u->hasRole(Role::Student) => ['user.dashboard', 'table.scanner', 'user.plan', 'user.tab'],
             default => [],
         };
 
@@ -70,7 +70,16 @@ final class Navigation
 
     private static function planlar(): array
     {
-        return ['route' => 'coach.plan.index', 'label' => 'Çalışma Planları', 'icon' => 'compass', 'match' => 'coach.*'];
+        return ['route' => 'coach.plan.index', 'label' => 'Çalışma Planları', 'icon' => 'compass', 'match' => 'coach.plan.*|coach.notes.*|coach.report*|coach.topics.*'];
+    }
+
+    /** Koc menusu: planlar + kendi verdigi ozel dersler (ucret/paket yok). */
+    private static function kocluk(): array
+    {
+        return [
+            self::planlar(),
+            ['route' => 'coach.lessons.index', 'label' => 'Özel Derslerim', 'icon' => 'graduation-cap', 'match' => 'coach.lessons.*'],
+        ];
     }
 
     private static function admin(): array
@@ -83,6 +92,7 @@ final class Navigation
             ['title' => 'Öğrenciler', 'items' => [
                 ['route' => 'admin.users.index', 'label' => 'Kullanıcılar', 'icon' => 'users', 'match' => 'admin.users.*|admin.subscriptions.index|admin.exam-reports.*|admin.exam-results.*'],
                 self::planlar(),
+                ['route' => 'admin.lessons.index', 'label' => 'Özel Dersler', 'icon' => 'graduation-cap', 'match' => 'admin.lessons.*'],
                 ['route' => 'admin.exams.index', 'label' => 'Deneme Takvimi', 'icon' => 'clipboard-list', 'match' => 'admin.exams.*'],
             ]],
             ['title' => 'Kafe', 'items' => [

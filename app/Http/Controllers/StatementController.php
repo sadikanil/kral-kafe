@@ -23,7 +23,9 @@ class StatementController extends Controller
 
     public function parent(Request $request, User $student): View
     {
-        Gate::authorize('viewStudy', $student);
+        // Yalnizca kendi cocugu: koc yetkili veli, atandigi ogrencinin
+        // odemelerini goremez (koclar ucrete karismaz, 1 Ekim 2026).
+        Gate::authorize('viewAsParent', $student);
         abort_unless($student->isStudent(), 404);
 
         return $this->render($request, $student, 'parent.payments', ['student' => $student]);

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 /** Dalga 25: haftalik ozel ders saati (yerel saat, ISO hafta gunu). */
 class PrivateLessonSlot extends Model
 {
-    protected $fillable = ['student_id', 'weekday', 'starts_at', 'ends_at', 'starts_on', 'ends_on', 'created_by'];
+    protected $fillable = ['student_id', 'teacher_id', 'branch', 'weekday', 'starts_at', 'ends_at', 'starts_on', 'ends_on', 'created_by'];
 
     protected $casts = [
         'weekday' => 'integer',
@@ -22,6 +22,18 @@ class PrivateLessonSlot extends Model
     public function student(): BelongsTo
     {
         return $this->belongsTo(User::class, 'student_id');
+    }
+
+    /** Dersi veren koc ya da yonetici (1 Ekim 2026); eski satirlarda bos. */
+    public function teacher(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'teacher_id');
+    }
+
+    /** Bugun ve sonrasinda suren saatler (bitmis olanlar gecmiste kalir). */
+    public function scopeCurrent(\Illuminate\Database\Eloquent\Builder $q): \Illuminate\Database\Eloquent\Builder
+    {
+        return $q->where(fn ($q) => $q->whereNull('ends_on')->orWhereDate('ends_on', '>=', \App\Support\LocalDay::today()));
     }
 
     public function exceptions(): HasMany

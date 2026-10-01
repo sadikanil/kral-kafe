@@ -74,7 +74,7 @@ class UserController extends Controller
         return view('admin.users.create', [
             'packages' => Package::active()->where('is_addon', false)->orderBy('tier')->orderBy('name')->get(),
             'addons' => Package::active()->where('is_addon', true)->orderBy('name')->get(),
-            'coaches' => User::whereIn('role', [Role::Coach->value, Role::Admin->value])->orderBy('name')->get(),
+            'coaches' => User::coachCandidates()->orderBy('name')->get(),
             'parents' => User::where('role', Role::Parent->value)->orderBy('name')->get(),
         ]);
     }
@@ -96,6 +96,7 @@ class UserController extends Controller
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', Rule::enum(Role::class)],
             ...$this->gradeRules(),
+            ...$this->coachRules(),
         ], $this->identityMessages());
 
         $ogrenciMi = $validated['role'] === Role::Student->value;
@@ -113,6 +114,7 @@ class UserController extends Controller
                 'subscription_status' => 'active',
                 'subscription_start' => now(),
                 ...$this->gradeAndField($validated),
+                ...$this->coachFields($validated),
             ]);
 
             if ($ogrenciVerisi !== null) {
@@ -122,6 +124,31 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')
             ->with('success', 'Kullanıcı başarıyla oluşturuldu.');
+    }
+
+    /** Koc yetkisi ve brans (1 Ekim 2026). */
+    private function coachRules(): array
+    {
+        return [
+            'is_coach' => ['nullable', 'boolean'],
+            'coach_subject' => ['nullable', 'string', 'max:60'],
+        ];
+    }
+
+    /**
+     * Koc yetkisi yalnizca veli/ogretmende anlamli; brans koc gibi
+     * davranan herkeste (koc, yonetici, koc yetkili veli/ogretmen).
+     *
+     * @return array{is_coach:bool,coach_subject:?string}
+     */
+    private function coachFields(array $v): array
+    {
+        $rol = Role::from($v['role']);
+        $yetki = in_array($rol, User::KOC_OLABILEN, strict: true) && (bool) ($v['is_coach'] ?? false);
+        $koc = $yetki || in_array($rol, [Role::Coach, Role::Admin], strict: true);
+        $brans = trim((string) ($v['coach_subject'] ?? ''));
+
+        return ['is_coach' => $yetki, 'coach_subject' => $koc && $brans !== '' ? $brans : null];
     }
 
     /** Dalga 30b: sinif ve alan (yalnizca ogrenci). */
@@ -168,8 +195,7 @@ class UserController extends Controller
             'addon_ids' => ['nullable', 'array'],
             'addon_ids.*' => ['integer',
                 Rule::exists('packages', 'id')->where('is_active', 1)->where('is_addon', 1)],
-            'coach_id' => ['nullable', 'integer',
-                Rule::exists('users', 'id')->whereIn('role', [Role::Coach->value, Role::Admin->value])],
+            'coach_id' => ['nullable', 'integer', Rule::in(User::coachCandidates()->pluck('id')->all())],
             'parent_ids' => ['nullable', 'array'],
             'parent_ids.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Parent->value)],
             'new_parent_name' => ['nullable', 'string', 'max:255'],
@@ -178,7 +204,7 @@ class UserController extends Controller
         ], [
             'package_id.required' => 'Öğrenci için paket seçin.',
             'package_id.exists' => 'Ana paket olarak satıştaki bir paket seçin (ek paket olamaz).',
-            'coach_id.exists' => 'Seçilen kişi koç ya da yönetici değil.',
+            'coach_id.in' => 'Seçilen kişi koç ya da yönetici değil.',
             'parent_ids.*.exists' => 'Seçilen kişi veli değil.',
             'new_parent_phone.required_with' => 'Yeni velinin telefonu gerekli.',
             'new_parent_phone.regex' => 'Geçerli bir cep telefonu girin (05XX XXX XX XX).',
@@ -251,13 +277,15 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        // Ozel ders (Dalga 25): yalnizca paketi kapsayan ogrencide.
-        $ozelDers = $user->isStudent() && $user->entitlements()->privateLessons;
+        // Ozel ders (Dalga 25): her ogrencide - paketten bagimsiz (1 Ekim
+        // 2026), kocluk paketi olmayan da ozel ders talep edebilir.
+        $ozelDers = $user->isStudent();
         $bugun = LocalDay::today();
 
         return view('admin.users.edit', [
             'user' => $user,
-            'lessonSlots' => $ozelDers ? $user->privateLessonSlots : null,
+            'lessonSlots' => $ozelDers ? $user->privateLessonSlots()->with('teacher')->get() : null,
+            'lessonTeachers' => $ozelDers ? User::coachCandidates()->orderBy('name')->get() : collect(),
             'upcomingLessons' => $ozelDers
                 ? \App\Support\PrivateLessonCalendar::between($user, $bugun, Carbon::parse($bugun)->addWeeks(4)->toDateString())
                 : [],
@@ -273,9 +301,7 @@ class UserController extends Controller
                 ? $user->coaches()->orderBy('name')->get()
                 : collect(),
             'assignableCoaches' => $user->hasRole(Role::Student)
-                ? User::whereIn('role', [Role::Coach->value, Role::Admin->value])
-                    ->orderBy('name')
-                    ->get()
+                ? User::coachCandidates()->orderBy('name')->get()
                 : collect(),
             // Veli-ogrenci bagi (Dalga 6). Liste yalnizca KAYITLI role gore
             // gelir: veliye ogrenci listesi, ogrenciye veli listesi. Rol bu
@@ -314,6 +340,7 @@ class UserController extends Controller
             'parent_ids' => ['sometimes', 'nullable', 'array'],
             'parent_ids.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Parent->value)],
             ...$this->gradeRules(),
+            ...$this->coachRules(),
         ], $this->identityMessages());
 
         // Kendi rolunu dusuren yonetici bir sonraki istekte 403 alir; baska
@@ -365,6 +392,7 @@ class UserController extends Controller
             'subscription_status' => $validated['subscription_status'],
             'phone' => $validated['phone'] ?? null,
             ...$this->gradeAndField($validated),
+            ...$this->coachFields($validated),
         ]);
 
         if (!empty($validated['password'])) {

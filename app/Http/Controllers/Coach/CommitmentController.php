@@ -76,5 +76,8 @@ class CommitmentController extends Controller
     {
         abort_if($student === null || ! $student->isStudent(), 404);
         abort_unless(auth()->user()->canCoach($student), 403);
+        // Haftalik sabit program planin iskeleti: yalnizca yonetici yazar.
+        // Diger koclar plana yalnizca odev ekler (1 Ekim 2026).
+        abort_if(auth()->user()->assignsOnlyHomework(), 403);
     }
 }
