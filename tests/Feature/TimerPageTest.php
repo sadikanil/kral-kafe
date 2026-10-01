@@ -19,7 +19,7 @@ use Tests\TestCase;
  * Hatirlatici gercek bir pencere degildi: odak icine gitmiyor, arka sayfa
  * dokunulabilir kaliyordu; VoiceOver kullanicisi yalnizca titresim
  * aliyordu. Telefon uykudan donunce gecmis her hatirlatici birer saniye
- * arayla titriyordu ve sayfa sunucuya hic bakmadigi icin 21:00'de kapanmis
+ * arayla titriyordu ve sayfa sunucuya hic bakmadigi icin gun sonunda kapanmis
  * oturum "Calisiyorsun" diye akmaya devam ediyordu.
  */
 class TimerPageTest extends TestCase

@@ -22,13 +22,16 @@ return [
     | Calisma saatleri
     |--------------------------------------------------------------------------
     |
-    | Unutulan calisma oturumlari kapanis saatinde otomatik kapanir.
-    | Yerel saat (yukaridaki timezone) olarak yazilir.
+    | Oturum acilistan sonra baslatilabilir. Yerel saat (yukaridaki
+    | timezone) olarak yazilir.
+    |
+    | Kapanis saati (eski KAFE_KAPANIS, 21:00) 1 Ekim 2026'da KALDIRILDI:
+    | kafe kapanisi esnek. Unutulan oturum gun sonunda (yerel 00:00) ya da
+    | azami_saat dolunca kapanir; hangisi once gelirse.
     |
     */
 
     'acilis' => env('KAFE_ACILIS', '09:00'),
-    'kapanis' => env('KAFE_KAPANIS', '21:00'),
 
     /*
     |--------------------------------------------------------------------------

@@ -27,8 +27,8 @@ use Tests\TestCase;
  * masa (A/B ayri kayit), duraklat/mola/ogle/devam, calisma kaydi, bitir,
  * panel, plan (tamamla, serbest deneme koy/cikar), haftalik rapor.
  *
- * Saat: 29 Eylul 2026 Sali 14:00 (kafe saati). Kafe 21:00'de kapaniyor ve
- * acik oturumlar sonrasinda kendiliginden kapaniyor; sabit gunduz saati sart.
+ * Saat: 29 Eylul 2026 Sali 14:00 (kafe saati). Acik oturumlar gun sonunda
+ * (00:00) kendiliginden kapaniyor; sabit gunduz saati sart.
  * Hafta: 28 Eylul (Pzt) - 4 Ekim (Paz). Biten son hafta: 21-27 Eylul.
  */
 class StudentStudySmokeTest extends TestCase
@@ -480,31 +480,33 @@ class StudentStudySmokeTest extends TestCase
         $this->actingAs($this->ogrenci())->get(route('session.timer'))->assertRedirect(route('user.dashboard'));
     }
 
-    public function test_after_closing_time_the_forgotten_session_is_closed_and_the_timer_goes_to_the_panel(): void
+    /** Eski 21:00 kurali yok: aksam suren oturum acik kalir, gun sonunda kapanir. */
+    public function test_after_the_day_ends_the_forgotten_session_is_closed_and_the_timer_goes_to_the_panel(): void
     {
         $ogrenci = $this->ogrenci();
         $oturum = $this->acikOturum($ogrenci, null, '2026-09-29 13:00');
 
         $this->saat('2026-09-29 22:15');
+        $this->actingAs($ogrenci)->get(route('session.timer'))->assertOk();
+        $this->assertNull($oturum->refresh()->ended_at);
 
+        $this->saat('2026-09-30 00:15');
         $this->actingAs($ogrenci)->get(route('session.timer'))->assertRedirect(route('user.dashboard'));
 
         $oturum->refresh();
         $this->assertSame(SessionEndReason::AutoClosed, $oturum->end_reason);
-        $this->assertTrue($oturum->ended_at->equalTo($this->yerel('2026-09-29 21:00')));
-        $this->assertSame(8 * 60, $oturum->duration_minutes);
+        $this->assertTrue($oturum->ended_at->equalTo($this->yerel('2026-09-30 00:00')));
+        $this->assertSame(11 * 60, $oturum->duration_minutes);
     }
 
     /**
-     * Kapanistan (21:00) sonra baslatilan oturum gece boyu acik kalmamali.
+     * Aksam gec baslatilan oturum gece boyu acik kalmamali (QA hata 7).
      *
-     * Bugun: 21:20'de baslayan oturumun kapanisi ertesi gunun 21:00'i, 12
-     * saat siniri 09:20. Ogrenci 09:05'te gelince panelde dunku "11:45"
-     * sayaci goruyor; ayni masayi okutursa dunku oturuma devam ediyor ve
-     * 09:20'de "sure asimi" ile atiliyor; baska masayi okutursa 705
-     * dakikalik oturum "masa degistirdi" diye (anomali DEGIL) kaydoluyor.
+     * Kapanis saati kalkti (1 Ekim 2026); 21:20'de calisma baslar ama gun
+     * sonunda (00:00) kapanir. Ogrenci 09:05'te gelince dunku sayaci
+     * gormemeli, baska masada "masa degistirdi" kaydi olusmamali.
      */
-    public function test_a_session_started_after_closing_does_not_run_overnight(): void
+    public function test_a_session_started_late_does_not_run_overnight(): void
     {
         $ogrenci = $this->ogrenci();
         $masa = $this->masa('Masa 1');
@@ -518,7 +520,10 @@ class StudentStudySmokeTest extends TestCase
         $this->assertSame(0, StudySession::open()->where('started_at', '<', $this->yerel('2026-09-30 00:00'))->count());
 
         $this->actingAs($ogrenci)->post(route('table.session.start', $diger->qr_code));
-        $this->assertFalse(StudySession::where('duration_minutes', '>', 60)->exists());
+        $dunku = StudySession::whereNotNull('ended_at')->sole();
+        $this->assertSame(SessionEndReason::AutoClosed, $dunku->end_reason);
+        $this->assertSame(160, $dunku->duration_minutes);
+        $this->assertSame(1, StudySession::open()->where('study_table_id', $diger->id)->count());
     }
 
     /** Gun siniri: dunun 23:50 kaydi bugunun listesinde gorunmemeli. */

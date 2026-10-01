@@ -47,7 +47,7 @@
                     return secilen;
                 }
 
-                // Sayfa uzun sure gizli kaldiysa sunucudan tazelenir: 21:00'de
+                // Sayfa uzun sure gizli kaldiysa sunucudan tazelenir: gun sonunda
                 // kapanmis ya da yoneticinin bitirdigi oturum "Calisiyorsun"
                 // diye akmaya devam ediyordu. Ogrenci bir sey yaziyorsa
                 // yazdigi kaybolmasin diye yenilenmez.

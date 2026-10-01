@@ -22,7 +22,7 @@ class AdminPanelTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        // Acik oturum kafe kapanisindan (21:00) sonra kendiliginden kapanir.
+        // Acik oturum gun sonunda (00:00) kendiliginden kapanir.
         $this->travelTo(Carbon::parse('2026-09-29 14:00', config('kafe.timezone')));
     }
 

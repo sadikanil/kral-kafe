@@ -31,7 +31,7 @@ class SessionSubjectTest extends TestCase
 
     /**
      * Sabit gunduz saati: testler "bir saat once acilmis" oturum kuruyor;
-     * gercek saat kapanistan (21:00) sonraysa oturum kendiliginden kapanir.
+     * gercek saat gun sonundan (00:00) sonraysa oturum kendiliginden kapanir.
      */
     protected function setUp(): void
     {

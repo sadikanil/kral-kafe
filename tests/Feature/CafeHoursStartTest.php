@@ -13,7 +13,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
- * Kafe kapaliyken calisma baslamaz (QA hata 7).
+ * Kafe kapaliyken calisma baslamaz (QA hata 7). Kapanis saati kurali 1 Ekim
+ * 2026'da kalkti; gece yarisindan acilisa kadar baslatma hala kapali.
  *
  * 21:20'de baslayan oturumun kapanisi ertesi gunun 21:00'ine kayiyordu; 12
  * saat siniri onu ertesi sabah 09:20'de kapatiyordu. Ogrenci sabah gelince
@@ -41,9 +42,11 @@ class CafeHoursStartTest extends TestCase
             'gece yarisindan sonra' => ['2026-09-29 00:30', false],
             'acilistan hemen once' => ['2026-09-29 08:59', false],
             'tam acilis' => ['2026-09-29 09:00', true],
-            'kapanistan hemen once' => ['2026-09-29 20:59', true],
-            'tam kapanis' => ['2026-09-29 21:00', false],
-            'kapanistan sonra' => ['2026-09-29 21:20', false],
+            'eski kapanistan hemen once' => ['2026-09-29 20:59', true],
+            // Kapanis saati kurali kalkti (1 Ekim 2026): aksam esnek.
+            'eski kapanis' => ['2026-09-29 21:00', true],
+            'eski kapanistan sonra' => ['2026-09-29 21:20', true],
+            'gece yarisindan hemen once' => ['2026-09-29 23:59', true],
         ];
     }
 
@@ -53,18 +56,31 @@ class CafeHoursStartTest extends TestCase
         $this->assertSame($acik, app(SessionCloser::class)->isOpenAt(Carbon::parse($yerel, config('kafe.timezone'))));
     }
 
-    public function test_starting_after_closing_is_refused_with_the_opening_hours(): void
+    public function test_starting_before_opening_is_refused_with_the_opening_time(): void
     {
         $masa = StudyTable::create(['name' => 'Masa 1']);
-        $this->saat('2026-09-29 21:20');
+        $this->saat('2026-09-29 07:20');
 
         $this->actingAs($this->ogrenci())
             ->from(route('table.scan', $masa->qr_code))
             ->post(route('table.session.start', $masa->qr_code))
             ->assertRedirect(route('table.scan', $masa->qr_code))
-            ->assertSessionHas('error', 'Kafe şu anda kapalı (09:00–21:00). Çalışma açılış saatinde başlatılabilir.');
+            ->assertSessionHas('error', 'Kafe şu anda kapalı. Çalışma saat 09:00 itibarıyla başlatılabilir.');
 
         $this->assertSame(0, StudySession::count());
+    }
+
+    /** Eski 21:00 siniri yok: aksam gec saatte de calisma baslar. */
+    public function test_starting_late_in_the_evening_works(): void
+    {
+        $masa = StudyTable::create(['name' => 'Masa 1']);
+        $this->saat('2026-09-29 21:20');
+
+        $this->actingAs($this->ogrenci())
+            ->post(route('table.session.start', $masa->qr_code))
+            ->assertRedirect(route('session.timer'));
+
+        $this->assertSame(1, StudySession::open()->count());
     }
 
     public function test_starting_during_opening_hours_still_works(): void

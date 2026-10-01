@@ -2,16 +2,16 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class CafeConfigTest extends TestCase
 {
-    public function test_the_cafe_has_a_timezone_opening_and_closing_time(): void
+    /** Kapanis saati 1 Ekim 2026'da kalkti (esnek); yalnizca acilis var. */
+    public function test_the_cafe_has_a_timezone_and_an_opening_time_but_no_fixed_closing(): void
     {
         $this->assertSame('Europe/Istanbul', config('kafe.timezone'));
         $this->assertMatchesRegularExpression('/^\d{2}:\d{2}$/', config('kafe.acilis'));
-        $this->assertMatchesRegularExpression('/^\d{2}:\d{2}$/', config('kafe.kapanis'));
+        $this->assertNull(config('kafe.kapanis'));
     }
 
     public function test_the_application_timezone_stays_utc(): void
@@ -24,9 +24,8 @@ class CafeConfigTest extends TestCase
 
     public function test_the_login_session_outlives_a_full_day_at_the_cafe(): void
     {
-        $acilis = Carbon::createFromFormat('H:i', config('kafe.acilis'));
-        $kapanis = Carbon::createFromFormat('H:i', config('kafe.kapanis'));
-        $kafeGunuDakika = $acilis->diffInMinutes($kapanis);
+        // Kapanis esnek (gun sonu); bir oturum en fazla azami_saat surer.
+        $kafeGunuDakika = (int) config('kafe.azami_saat') * 60;
 
         $this->assertGreaterThanOrEqual(
             $kafeGunuDakika,

@@ -71,6 +71,12 @@
         @endif
     </div>
 
+    {{-- Odak modu (Faz 4): istege bagli, yalnizca calisirken. Molada kart
+         yok; mola zaten telefona bakma izni. --}}
+    @if($calisiyor)
+        @include('study._odak')
+    @endif
+
     {{-- Calisma kaydi (Dalga 28). Oturumun dersi son kayittan gelir. --}}
     <div class="card mb-3">
         <div class="card-header"><h4>✅ Ne bitirdin?</h4></div>

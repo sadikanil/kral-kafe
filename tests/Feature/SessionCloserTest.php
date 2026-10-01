@@ -17,7 +17,9 @@ use Tests\TestCase;
  * Dalga 4 - Otomatik kapanis (MVP #3).
  *
  * Tasarimin tek kritik ozelligi: bitis ani ISIN NE ZAMAN CALISTIGINA degil,
- * oturumun kendi verisine bagli. min(kapanis ani, baslangic + azami saat).
+ * oturumun kendi verisine bagli: min(gun sonu, baslangic + azami saat).
+ * Kapanis saati (21:00) kurali 1 Ekim 2026'da kalkti; yerine gun sonu
+ * (yerel 00:00) geldi.
  *
  * Bu sayede is iki kez calisirsa ayni sonucu verir, cron 3 saat gec calisirsa
  * ayni sonucu verir, cron HIC calismazsa ilk bakan kisi dogru sonucu gorur.
@@ -56,7 +58,20 @@ class SessionCloserTest extends TestCase
         return app(SessionCloser::class);
     }
 
-    public function test_a_forgotten_session_closes_at_the_cafe_closing_time(): void
+    /** Eski 21:00 kurali yok: aksam gec saatte calisan ogrenci atilmaz. */
+    public function test_a_session_is_not_closed_at_the_old_closing_time(): void
+    {
+        $oturum = $this->oturum($this->ogrenci(), $this->yerel('2026-09-21 14:00'));
+
+        Carbon::setTestNow($this->yerel('2026-09-21 22:30'));
+        $this->assertSame(0, $this->kapatici()->closeStale());
+        Carbon::setTestNow();
+
+        $this->assertNull($oturum->refresh()->ended_at);
+    }
+
+    /** Unutulan oturum gun sonunda (yerel 00:00) kapanir. */
+    public function test_a_forgotten_session_closes_at_the_end_of_the_day(): void
     {
         $oturum = $this->oturum($this->ogrenci(), $this->yerel('2026-09-21 19:00'));
 
@@ -66,14 +81,14 @@ class SessionCloserTest extends TestCase
 
         $oturum->refresh();
         $this->assertSame(
-            $this->yerel('2026-09-21 21:00')->utc()->toIso8601String(),
+            $this->yerel('2026-09-22 00:00')->utc()->toIso8601String(),
             $oturum->ended_at->utc()->toIso8601String()
         );
-        $this->assertSame(120, $oturum->duration_minutes);
+        $this->assertSame(300, $oturum->duration_minutes);
         $this->assertSame(SessionEndReason::AutoClosed, $oturum->end_reason);
     }
 
-    /** 12 saat siniri kapanistan once gelirse anomali; yonetici bakmali. */
+    /** 12 saat siniri gun sonundan once gelirse anomali; yonetici bakmali. */
     public function test_a_session_that_exceeds_the_limit_is_an_anomaly(): void
     {
         $oturum = $this->oturum($this->ogrenci(), $this->yerel('2026-09-21 08:00'));
@@ -93,7 +108,7 @@ class SessionCloserTest extends TestCase
     }
 
     /**
-     * Tasarimin kalbi. Is 22:00'de de calissa, ertesi gun 09:00'da da calissa,
+     * Tasarimin kalbi. Is gece 00:30'da da calissa, ertesi gun 09:00'da da calissa,
      * uc gun sonra da calissa bitis ani AYNI olmali.
      */
     public function test_the_end_time_does_not_depend_on_when_the_job_runs(): void
@@ -103,7 +118,7 @@ class SessionCloserTest extends TestCase
         // refreshDatabase() DONGU ICINDE cagrilmaz: testin ortasinda semayi
         // yeniden kurmak sonraki testleri de kirar. Her tur kendi ogrencisini
         // yaratir - kismi tekil indeks ogrenci basina calistigi icin yeterli.
-        foreach (['2026-09-21 21:30', '2026-09-22 09:00', '2026-09-24 15:00'] as $calismaAni) {
+        foreach (['2026-09-22 00:30', '2026-09-22 09:00', '2026-09-24 15:00'] as $calismaAni) {
             $oturum = $this->oturum($this->ogrenci(), $this->yerel('2026-09-21 19:00'));
 
             Carbon::setTestNow($this->yerel($calismaAni));
@@ -146,8 +161,8 @@ class SessionCloserTest extends TestCase
         $this->assertNull($oturum->refresh()->ended_at);
     }
 
-    /** Kafe kapaliyken okutma: bir sonraki kapanis 26 saat sonra, 12 saat siniri kazanir. */
-    public function test_a_session_started_after_closing_falls_to_the_limit(): void
+    /** Gec baslayan oturum gece boyu acik kalmaz: gun sonunda kapanir. */
+    public function test_a_late_session_does_not_run_overnight(): void
     {
         $oturum = $this->oturum($this->ogrenci(), $this->yerel('2026-09-21 21:30'));
 
@@ -157,10 +172,11 @@ class SessionCloserTest extends TestCase
 
         $oturum->refresh();
         $this->assertSame(
-            $this->yerel('2026-09-22 09:30')->utc()->toIso8601String(),
+            $this->yerel('2026-09-22 00:00')->utc()->toIso8601String(),
             $oturum->ended_at->utc()->toIso8601String()
         );
-        $this->assertSame(SessionEndReason::OverLimit, $oturum->end_reason);
+        $this->assertSame(150, $oturum->duration_minutes);
+        $this->assertSame(SessionEndReason::AutoClosed, $oturum->end_reason);
     }
 
     /**
@@ -169,6 +185,9 @@ class SessionCloserTest extends TestCase
      */
     public function test_a_student_can_start_again_after_a_forgotten_session_is_closed(): void
     {
+        // Paket "bugun" baslar; ogrenci oturum gununde yaratilmali, yoksa
+        // test gercek takvime bagli kalir ve abonelik kapisinda takilir.
+        Carbon::setTestNow($this->yerel('2026-09-21 19:00'));
         $ogrenci = $this->ogrenci();
         $this->oturum($ogrenci, $this->yerel('2026-09-21 19:00'));
 
@@ -236,10 +255,11 @@ class SessionCloserTest extends TestCase
         Carbon::setTestNow();
     }
 
-    /** Normal kapanis anomali degildir; her gun uyari gostermek uyariyi olduruyor. */
-    public function test_a_normal_auto_close_is_not_shown_as_an_anomaly(): void
+    /** Aksam gec saatte suren oturum icerde gorunur, anomali sayilmaz. */
+    public function test_a_late_evening_session_is_not_shown_as_an_anomaly(): void
     {
-        $this->oturum($this->ogrenci(), $this->yerel('2026-09-21 19:00'));
+        $ogrenci = $this->ogrenci();
+        $this->oturum($ogrenci, $this->yerel('2026-09-21 19:00'));
 
         $yonetici = User::factory()->create(['role' => Role::Admin->value]);
 
@@ -247,6 +267,7 @@ class SessionCloserTest extends TestCase
         $this->actingAs($yonetici)
             ->get(route('admin.live'))
             ->assertOk()
+            ->assertSee($ogrenci->name)
             ->assertDontSee('Süre aşımı');
         Carbon::setTestNow();
     }

@@ -76,6 +76,9 @@ class StudyPlanController extends Controller
                 ->orderBy('weekday')->orderBy('starts_at')->get(),
             // Calisma kayitlari (Dalga 28): ogrencinin ne bitirdigi.
             'studyLogs' => \App\Models\StudyLog::recentFor($student),
+            // Odak modu (Faz 4): son 14 gunde uygulamadan ayrilis. Koc gorur,
+            // veli gormez; sure calismadan dusulmez.
+            'odak' => $this->odakOzeti($student),
         ]);
     }
 
@@ -194,6 +197,23 @@ class StudyPlanController extends Controller
                 (int) $satir->student_id => [(int) $satir->biten, (int) $satir->toplam],
             ])
             ->all();
+    }
+
+    /**
+     * Son 14 kafe gununde odak modundan ayrilis: [kez, saniye]. Tek sorgu.
+     *
+     * @return array{0:int,1:int}
+     */
+    private function odakOzeti(User $student): array
+    {
+        [$bas] = LocalDay::bounds(\Illuminate\Support\Carbon::parse(LocalDay::today())->subDays(13)->toDateString());
+
+        $satir = \App\Models\StudySession::where('student_id', $student->id)
+            ->where('started_at', '>=', $bas)
+            ->selectRaw('coalesce(sum(focus_away_count), 0) as kez, coalesce(sum(focus_away_seconds), 0) as saniye')
+            ->first();
+
+        return [(int) $satir->kez, (int) $satir->saniye];
     }
 
     /**

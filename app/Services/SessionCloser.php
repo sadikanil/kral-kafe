@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
  * Unutulan calisma oturumlarini kapatir.
  *
  * TASARIMIN TEK KRITIK OZELLIGI: bitis ani, isin ne zaman calistigina degil,
- * oturumun kendi verisine bagli -> min(kapanis ani, baslangic + azami saat).
+ * oturumun kendi verisine bagli -> min(gun sonu, baslangic + azami saat).
  *
  * Bunun uc sonucu var:
  *   1. Idempotan. Iki kez calistirmak ikinci kez hicbir sey degistirmez.
@@ -23,10 +23,16 @@ use Illuminate\Support\Carbon;
  * ended_at = now() olsaydi ucu de bozulurdu: ogrencinin suresi, isin ne zaman
  * calistigina gore uzardi.
  *
+ * Kapanis saati kurali (21:00) 1 Ekim 2026'da KALDIRILDI: kafe kapanisi
+ * esnek, 21:00'de masadaki ogrenciyi atmak yanlisti. Yerine GUN SONU (yerel
+ * 00:00) geldi: aksam istenildigi kadar uzayabilir ama hicbir oturum ertesi
+ * gune tasmaz (QA hata 7: gece boyu acik kalan oturum sabah dunku sayaci
+ * gosteriyor, yeni masada yuzlerce dakikalik "masa degistirdi" kaydi
+ * birakiyordu).
+ *
  * Neden tek bir toplu UPDATE degil: her satirin bitis ani kendi started_at'ine
- * bagli ve "yerel saatle bir sonraki 21:00" ifadesi SQLite ile Postgres'te
- * bambaska yazilir. PHP tarafinda satir satir hesaplamak iki surucude de ayni
- * sonucu verir; acik oturum sayisi kafe kapasitesiyle sinirli.
+ * bagli ve closeOnce() yarisa karsi satir satir korumali yaziyor. Acik oturum
+ * sayisi kafe kapasitesiyle sinirli.
  */
 class SessionCloser
 {
@@ -34,26 +40,24 @@ class SessionCloser
      * Bu oturumun kapanmasi GEREKEN an. UTC dondurur.
      *
      * UTC olmasi SART: Eloquent bir Carbon yazarken onu UTC ye CEVIRMEZ,
-     * kendi saat diliminin duvar saatini bicimleyip saklar. Istanbul saatiyle
-     * 21:00 tasiyan bir Carbon veritabanina "21:00" diye yazilir ve geri
-     * okundugunda UTC 21:00 (yerel 00:00) olur - uc saatlik sessiz kayma.
+     * kendi saat diliminin duvar saatini bicimleyip saklar (README SS10.1).
      */
     public function dueEnd(StudySession $session): Carbon
     {
-        $kapanis = $this->closingAfter($session->started_at);
+        $gunSonu = $this->dayEndAfter($session->started_at);
         $azami = $this->limitAfter($session->started_at);
 
-        return ($kapanis->lessThanOrEqualTo($azami) ? $kapanis : $azami)->copy()->utc();
+        return ($gunSonu->lessThanOrEqualTo($azami) ? $gunSonu : $azami)->copy()->utc();
     }
 
     /**
-     * Azami sure kapanistan ONCE dolduysa bu bir anomalidir: ogrenci 12 saatten
-     * uzun sure "masada" gorunmus demektir.
+     * Azami sure gun sonundan ONCE dolduysa bu bir anomalidir: ogrenci 12
+     * saatten uzun sure "masada" gorunmus demektir.
      */
     public function reasonFor(StudySession $session): SessionEndReason
     {
         return $this->limitAfter($session->started_at)
-            ->lessThan($this->closingAfter($session->started_at))
+            ->lessThan($this->dayEndAfter($session->started_at))
                 ? SessionEndReason::OverLimit
                 : SessionEndReason::AutoClosed;
     }
@@ -72,15 +76,14 @@ class SessionCloser
         $sayac = 0;
 
         // Yalnizca bayat OLABILECEK adaylar okunur (QA perf P5): bu her
-        // istekte calisiyor ve eskiden butun acik oturumlari (32 masaya kadar)
-        // cekip PHP'de eliyordu. Suzgec isStale() ile birebir ayni:
-        //   kapanis gecti  <=> baslangic, simdiye kadarki son kapanistan ONCE
-        //   azami doldu    <=> baslangic <= simdi - azami saat
+        // istekte calisiyor. Suzgec isStale() ile birebir ayni:
+        //   gun bitti   <=> baslangic, bugunun yerel 00:00'indan ONCE
+        //   azami doldu <=> baslangic <= simdi - azami saat
         // Sinirlar PHP'de hesaplanir; SQL'de saat dilimi aritmetigi yok, iki
         // surucude ayni sorgu. Normal bir istekte sonuc bos doner.
         $adaylar = StudySession::open()
             ->where(function ($q) use ($now) {
-                $q->where('started_at', '<', $this->lastClosingUpTo($now)->utc())
+                $q->where('started_at', '<', $this->dayStartOf($now)->utc())
                     ->orWhere('started_at', '<=', $now->copy()->subHours((int) config('kafe.azami_saat'))->utc());
             })
             ->get();
@@ -101,67 +104,27 @@ class SessionCloser
     }
 
     /**
-     * Kafe bu anda acik mi? Yerel saatle [acilis, kapanis).
-     *
-     * Oturum yalnizca acikken baslar (QA hata 7): kapanistan sonra baslayan
-     * oturumun kapanisi ertesi gunun 21:00'ine kayiyor, 12 saat siniri onu
-     * ertesi SABAH kapatiyordu. Ogrenci sabah dunku oturuma devam ediyor ve
-     * mesai ortasinda atiliyordu. Tam 21:00 da kapali sayilir.
+     * Bu anda oturum baslatilabilir mi? Yerel saatle acilistan (09:00) gun
+     * sonuna (00:00) kadar. Sabit kapanis saati yok: aksam esnek.
      */
     public function isOpenAt(Carbon $moment): bool
     {
         $yerel = $moment->copy()->setTimezone(config('kafe.timezone'));
+        [$saat, $dakika] = array_map('intval', explode(':', config('kafe.acilis')));
 
-        return $yerel->greaterThanOrEqualTo($this->localTime($yerel, config('kafe.acilis')))
-            && $yerel->lessThan($this->localTime($yerel, config('kafe.kapanis')));
+        return $yerel->greaterThanOrEqualTo($yerel->copy()->setTime($saat, $dakika, 0));
     }
 
-    /**
-     * Verilen andan SONRAKI ilk kafe kapanisi.
-     *
-     * Hesap yerel saatte yapilir: sutunlar UTC ama kapanis "Istanbul'da 21:00"
-     * demek. Tam 21:00'de baslayan oturum ertesi gunun kapanisina gider -
-     * kafe o anda kapaniyor, sifir dakikalik oturum uretmek anlamsiz olurdu.
-     * Uygulama artik kapaliyken oturum acmiyor (isOpenAt); bu dal eski ve
-     * elle girilmis satirlar icin duruyor.
-     */
-    private function closingAfter(Carbon $moment): Carbon
+    /** Verilen andan SONRAKI ilk yerel gece yarisi (gun sonu). */
+    private function dayEndAfter(Carbon $moment): Carbon
     {
-        $yerel = $moment->copy()->setTimezone(config('kafe.timezone'));
-
-        $kapanis = $this->localTime($yerel, config('kafe.kapanis'));
-
-        if ($kapanis->lessThanOrEqualTo($yerel)) {
-            $kapanis->addDay();
-        }
-
-        return $kapanis;
+        return $this->dayStartOf($moment)->addDay();
     }
 
-    /**
-     * Verilen ana kadar (o an DAHIL) gerceklesmis son kafe kapanisi.
-     *
-     * closingAfter()'in tersi: closingAfter(baslangic) <= simdi ancak ve
-     * ancak baslangic < lastClosingUpTo(simdi).
-     */
-    private function lastClosingUpTo(Carbon $moment): Carbon
+    /** Verilen anin yerel gununun 00:00'i. dayEndAfter(b) <= simdi <=> b < dayStartOf(simdi). */
+    private function dayStartOf(Carbon $moment): Carbon
     {
-        $yerel = $moment->copy()->setTimezone(config('kafe.timezone'));
-        $kapanis = $this->localTime($yerel, config('kafe.kapanis'));
-
-        if ($kapanis->greaterThan($yerel)) {
-            $kapanis->subDay();
-        }
-
-        return $kapanis;
-    }
-
-    /** Yerel gunun "SS:DD" saatindeki ani (config'teki acilis/kapanis). */
-    private function localTime(Carbon $yerelGun, string $saatDakika): Carbon
-    {
-        [$saat, $dakika] = array_map('intval', explode(':', $saatDakika));
-
-        return $yerelGun->copy()->setTime($saat, $dakika, 0);
+        return $moment->copy()->setTimezone(config('kafe.timezone'))->startOfDay();
     }
 
     private function limitAfter(Carbon $moment): Carbon

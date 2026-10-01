@@ -92,14 +92,13 @@ class TableSessionController extends Controller
             return back()->with('error', 'Paketin masa kullanımını kapsamıyor. Yöneticiye danış.');
         }
 
-        // Kafe kapaliyken oturum acilmaz (QA hata 7): 21:00'den sonra acilan
-        // oturum gece boyu acik kalip ertesi sabah 11-12 saatlik kayda
-        // donusuyordu. Kural SessionCloser'da, kapanis hesabinin yaninda.
+        // Gece yarisindan acilisa kadar oturum acilmaz (QA hata 7). Sabit
+        // kapanis saati yok (1 Ekim 2026): aksam esnek, oturum gun sonunda
+        // kapanir. Kural SessionCloser'da.
         if (! $this->closer->isOpenAt(now())) {
             return back()->with('error', sprintf(
-                'Kafe şu anda kapalı (%s–%s). Çalışma açılış saatinde başlatılabilir.',
+                'Kafe şu anda kapalı. Çalışma saat %s itibarıyla başlatılabilir.',
                 config('kafe.acilis'),
-                config('kafe.kapanis'),
             ));
         }
 

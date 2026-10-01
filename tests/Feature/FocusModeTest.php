@@ -109,4 +109,51 @@ class FocusModeTest extends TestCase
 
         $this->assertSame([0, 0], [$baskasi->fresh()->focus_away_count, $baskasi->fresh()->focus_away_seconds]);
     }
+
+    /** Sayacta istege bagli: calisirken kart var, molada yok. */
+    public function test_the_timer_offers_focus_mode_only_while_working(): void
+    {
+        $oturum = $this->oturum();
+
+        $this->actingAs($this->ogrenci)->get(route('session.timer'))
+            ->assertOk()
+            ->assertSee('Odak modu')
+            ->assertSee('js-odak-ac', false)
+            ->assertSee(route('session.focus.away'), false)
+            ->assertSee('js/odak.js', false);
+
+        SessionPause::create(['study_session_id' => $oturum->id, 'kind' => PauseKind::Break->value, 'started_at' => now()->subMinute()]);
+
+        $this->actingAs($this->ogrenci)->get(route('session.timer'))
+            ->assertOk()
+            ->assertDontSee('js-odak-ac', false);
+    }
+
+    /** Sayacta bu oturumun ayrilislari yazar. */
+    public function test_the_timer_shows_this_sessions_absences(): void
+    {
+        $this->oturum()->forceFill(['focus_away_count' => 2, 'focus_away_seconds' => 300])->save();
+
+        $this->actingAs($this->ogrenci)->get(route('session.timer'))
+            ->assertSee('2 kez · 5 dk');
+    }
+
+    /** Koc gorur (son 14 gun), veli gormez. */
+    public function test_the_coach_sees_the_summary_and_the_parent_does_not(): void
+    {
+        $this->oturum()->forceFill(['focus_away_count' => 3, 'focus_away_seconds' => 600])->save();
+        $koc = User::factory()->create(['role' => 'coach']);
+        $koc->coachStudents()->attach($this->ogrenci->id);
+        $veli = User::factory()->parent()->create();
+        $veli->students()->attach($this->ogrenci->id);
+
+        $this->actingAs($koc)->get(route('coach.plan.show', $this->ogrenci))
+            ->assertOk()
+            ->assertSee('Odak modu · son 14 gün')
+            ->assertSee('3 kez', false);
+
+        $this->actingAs($veli)->get(route('parent.student', $this->ogrenci))
+            ->assertOk()
+            ->assertDontSee('Odak modu');
+    }
 }

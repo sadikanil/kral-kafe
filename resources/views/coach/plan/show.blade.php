@@ -155,6 +155,21 @@
         </div>
     </div>
 
+    {{-- Odak modu (Faz 4): yalnizca koc gorur; veli ekraninda yok. --}}
+    <div class="card mb-3">
+        <div class="card-body">
+            <h2 class="focus-card-title">Odak modu · son 14 gün</h2>
+            <p class="text-sm mb-0">
+                @if($odak[0] > 0)
+                    Odaktayken uygulamadan <strong>{{ $odak[0] }} kez</strong> ayrıldı, toplam <strong>{{ max(1, (int) round($odak[1] / 60)) }} dk</strong>.
+                @else
+                    Odak modunda hiç ayrılmadı ya da odak modunu kullanmadı.
+                @endif
+                <span class="text-muted">Süre çalışmadan düşülmez.</span>
+            </p>
+        </div>
+    </div>
+
     @include('_calisma-kayitlari')
 @endsection
 
