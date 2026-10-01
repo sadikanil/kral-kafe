@@ -15,7 +15,7 @@ namespace App\Contracts;
  */
 interface ExamPdfReader
 {
-    /** 'anthropic' | 'openai' - kayitta hangi saglayicinin okudugu. */
+    /** 'anthropic' | 'gemini' | 'openai' - kayitta hangi saglayicinin okudugu. */
     public function provider(): string;
 
     /**

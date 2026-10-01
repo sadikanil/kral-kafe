@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 1 Ekim 2026 · Laravel 12 · 1461 test / 6440 doğrulama yeşil._
+_Son güncelleme: 1 Ekim 2026 · Laravel 12 · 1469 test / 6460 doğrulama yeşil._
 
 ---
 
@@ -1872,7 +1872,8 @@ Ardından `http://127.0.0.1:8000`. Hepsini birden (sunucu + kuyruk + log + vite)
 |---|---|
 | `OPENAI_API_KEY` | Stok fotoğrafı ve deneme PDF'i analizi. Boş bırakılırsa sayfalar çalışır, yalnızca yapay zekâ analizi devre dışı kalır. |
 | `ANTHROPIC_API_KEY` | Kurum deneme PDF'ini Claude ile okuma (önerilen, §14). Boşsa `OPENAI_API_KEY` kullanılır. |
-| `EXAM_AI_PROVIDER` | `anthropic` ya da `openai`; boşsa anahtara göre seçilir. |
+| `EXAM_AI_PROVIDER` | `anthropic`, `gemini` ya da `openai`; boşsa anahtara göre seçilir. |
+| `GOOGLE_VERTEX_PROJECT` / `GOOGLE_VERTEX_LOCATION` / `GOOGLE_VERTEX_CREDENTIALS` / `EXAM_AI_GEMINI_MODEL` | Gemini (Vertex AI) ile PDF okuma, §14.6. |
 | `EXAM_AI_ANTHROPIC_MODEL` / `EXAM_AI_OPENAI_MODEL` | Varsayılan `claude-opus-5-5` / `gpt-4o`. |
 | `EXAM_AI_EFFORT` | Claude düşünme derinliği; aktarım işi olduğu için varsayılan `low`. Okuma hatası görülürse `medium`. |
 | `UPLOAD_DISK` | Yüklenen dosyaların gideceği disk. Yerelde `public`, serverless ortamda `s3`. |
@@ -2460,8 +2461,8 @@ Yönetici kontrol eder → Yayınla
 - Her adım ayrı istek; sayfa açıkken betik sırayla çağırır. Hata kaldığı yerde
   durur, "Devam et" okunmuş karneyi yeniden okumaz (iki kez ödeme yok).
 - Sağlayıcı arayüzün arkasında (`App\Contracts\ExamPdfReader`): Claude
-  (`AnthropicExamPdfReader`, resmi PHP SDK) ve OpenAI (`OpenAIExamPdfReader`).
-  İkisi aynı istemi ve aynı JSON şemasını kullanır (`ExamPdfSchema`); ders kodları
+  (`AnthropicExamPdfReader`, resmi PHP SDK), Gemini (`GeminiExamPdfReader`,
+  Vertex AI, 14.6) ve OpenAI (`OpenAIExamPdfReader`). Üçü aynı istemi ve aynı JSON şemasını kullanır (`ExamPdfSchema`); ders kodları
   denemenin türünden (TYT/AYT) gelir, "Felsefe (Seçmeli)" gibi karşılığı olmayan
   ders `other` olup yazılmaz.
 - **Gizlilik (§6.1-4):** PDF tüm kurumun adlarını ve puanlarını taşır; yalnızca
@@ -2500,9 +2501,10 @@ Eşleme ada dayandığı için adlar maskelenemiyor.
 
 ### 14.4 Canlıya almadan önce
 
-1. `php artisan migrate --force --env=supabase` (4 migration: odak modu,
-   koç/ödev/özel ders, PDF tabloları, koç branşları).
-2. Vercel'e `ANTHROPIC_API_KEY` ekle (yoksa OpenAI anahtarıyla çalışır).
+1. ~~`php artisan migrate --force --env=supabase`~~ — 1 Ekim 2026'da Supabase'e
+   uygulandı (batch 30).
+2. Vercel'e sağlayıcı anahtarı: `ANTHROPIC_API_KEY` ya da Gemini (14.6); hiçbiri
+   yoksa OpenAI anahtarıyla çalışır.
 3. Bu PDF'le bir kez çalıştır; kontrol ekranında netleri PDF'le karşılaştır,
    "liste ile karne farklı" uyarısı olan satırlara bak. Hata görülürse
    `EXAM_AI_EFFORT=medium`.
@@ -2522,3 +2524,43 @@ Eşleme ada dayandığı için adlar maskelenemiyor.
 ## Lisans
 
 GNU General Public License v2.0 — bkz. [LICENSE](LICENSE).
+
+### 14.6 Gemini (Vertex AI) — Google Cloud deneme kredisiyle
+
+_1 Ekim 2026. Sahibin 90 günlük 300 $ Google Cloud kredisi için eklendi._
+
+- **Neden Vertex AI, AI Studio anahtarı değil:** deneme kredisi Mart 2026'dan beri
+  AI Studio'daki Gemini API'yi **kapsamıyor**, yalnızca Vertex AI'yi. Vertex AI
+  müşteri verisiyle model eğitmez; bölge seçilebilir (`europe-west4` = Hollanda,
+  KVKK açısından ABD'den iyi).
+- **Kimlik:** hizmet hesabı JSON anahtarı → imzalı JWT → 1 saatlik erişim jetonu
+  (yalnızca bellekte). Paket yok, `Http` istemcisi.
+- **Şema:** `ExamPdfSchema` aynı; Gemini'nin `responseSchema`'sı OpenAPI alt kümesi
+  olduğu için çevrilir (`anyOf[T,null]` → `nullable`).
+- **Önbellek:** açık önbellek yok; PDF ilk parçada gönderilir, Gemini'nin örtük
+  önbelleği aynı öneki indirimli sayar (garanti değil).
+- **Maliyet:** Flash sınıfı bir modelle PDF başına birkaç sent; kurum ayda birkaç
+  deneme yüklüyor → 90 günde kredinin çok küçük bir kısmı harcanır.
+
+**Kurulum (Google Cloud Console, deneme hesabının projesi):**
+
+1. **APIs & Services → Enable APIs** → "Vertex AI API" aç.
+2. **IAM & Admin → Service Accounts → Create**: ad `kral-kafe-okuyucu`, rol
+   **Vertex AI User**. Hesap → **Keys → Add key → JSON** (dosya iner; kimseyle
+   paylaşma, depoya koyma).
+3. **Vertex AI → Model Garden**'da kullanılacak Gemini modelinin adını al
+   (Flash sınıfı yeterli; adlar sık değiştiği için kodda varsayılan yok).
+4. Vercel → Environment Variables:
+
+| Değişken | Değer |
+|---|---|
+| `EXAM_AI_PROVIDER` | `gemini` |
+| `GOOGLE_VERTEX_PROJECT` | proje kimliği (ör. `kral-kafe-123456`) |
+| `GOOGLE_VERTEX_LOCATION` | `global` (ya da modelin bulunduğu AB bölgesi, ör. `europe-west4`) |
+| `GOOGLE_VERTEX_CREDENTIALS` | JSON dosyasının **base64** hâli (`base64 -w0 anahtar.json`) ya da içeriğin kendisi |
+| `EXAM_AI_GEMINI_MODEL` | Model Garden'daki ad |
+
+Hata metinleri yöneticiye ne yapılacağını söyler: 404 → model adı, 403 → API
+kapalı ya da rol eksik, 429 → kota / kredi bitti. **Kredi bitince** (90 gün ya
+da 300 $) hesap ücretliye yükseltilmezse istekler durur; `EXAM_AI_PROVIDER`
+boşaltılınca Claude/OpenAI'ye dönülür.

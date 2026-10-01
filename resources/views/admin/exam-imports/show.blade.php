@@ -24,7 +24,7 @@
         <div class="card-body">
             <p class="mb-1">
                 <span class="badge badge-{{ $import->statusBadge() }} js-durum">{{ $import->statusLabel() }}</span>
-                @if($import->provider)<span class="text-muted text-sm"> · {{ $import->provider === 'anthropic' ? 'Claude' : 'OpenAI' }} ile okundu</span>@endif
+                @if($import->provider)<span class="text-muted text-sm"> · {{ ['anthropic' => 'Claude', 'gemini' => 'Gemini', 'openai' => 'OpenAI'][$import->provider] ?? $import->provider }} ile okundu</span>@endif
             </p>
             @if(! empty($meta['exam_name']))
                 <p class="text-muted text-sm mb-1">PDF'teki ad: {{ $meta['exam_name'] }}</p>

@@ -44,13 +44,26 @@ return [
     ],
 
     /*
+    | Google Gemini, Vertex AI uzerinden (deneme kredisi yalnizca Vertex'i
+    | kapsar). credentials: hizmet hesabi JSON anahtari, duz ya da base64.
+    */
+    'google_vertex' => [
+        'project' => env('GOOGLE_VERTEX_PROJECT'),
+        'location' => env('GOOGLE_VERTEX_LOCATION', 'global'),
+        'credentials' => env('GOOGLE_VERTEX_CREDENTIALS'),
+    ],
+
+    /*
     | Kurum geneli deneme PDF'i okuma (1 Ekim 2026, README SS14).
-    | provider bossa: ANTHROPIC_API_KEY varsa Claude, yoksa OpenAI.
+    | provider: anthropic | gemini | openai. Bossa: ANTHROPIC_API_KEY varsa
+    | Claude, Vertex tanimliysa Gemini, yoksa OpenAI.
     */
     'exam_ai' => [
         'provider' => env('EXAM_AI_PROVIDER'),
         'anthropic_model' => env('EXAM_AI_ANTHROPIC_MODEL', 'claude-opus-5-5'),
         'openai_model' => env('EXAM_AI_OPENAI_MODEL', 'gpt-4o'),
+        // Varsayilan yok: model adlari sik degisiyor; Model Garden'daki ad.
+        'gemini_model' => env('EXAM_AI_GEMINI_MODEL'),
         'effort' => env('EXAM_AI_EFFORT', 'low'),
     ],
 
