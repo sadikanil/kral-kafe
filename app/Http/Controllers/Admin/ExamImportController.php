@@ -10,6 +10,7 @@ use App\Models\ExamImport;
 use App\Models\ExamImportRow;
 use App\Models\User;
 use App\Services\ExamImport\ExamImportProcessor;
+use App\Support\Uploads;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -49,7 +50,11 @@ class ExamImportController extends Controller
             'pdf' => ['required', 'file', 'mimes:pdf', 'max:10240'],
         ], [], ['exam_event_id' => 'deneme', 'pdf' => 'PDF']);
 
-        $yol = $request->file('pdf')->storeAs('deneme-aktarimlari', Str::uuid() . '.pdf', config('filesystems.uploads'));
+        try {
+            $yol = Uploads::store($request->file('pdf'), 'deneme-aktarimlari', Str::uuid() . '.pdf');
+        } catch (\RuntimeException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
 
         $aktarim = ExamImport::create([
             'exam_event_id' => $veri['exam_event_id'],

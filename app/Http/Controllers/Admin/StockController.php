@@ -143,7 +143,11 @@ class StockController extends Controller
         $uploadedPhotos = [];
 
         foreach ($request->file('photos') as $photo) {
-            $path = $photo->store('stock_photos/' . $location->id, config('filesystems.uploads'));
+            try {
+                $path = \App\Support\Uploads::store($photo, 'stock_photos/' . $location->id);
+            } catch (\RuntimeException $e) {
+                return back()->with('error', $e->getMessage());
+            }
 
             $stockPhoto = StockPhoto::create([
                 'location_id' => $location->id,

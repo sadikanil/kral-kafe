@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 1 Ekim 2026 · Laravel 12 · 1472 test / 6469 doğrulama yeşil._
+_Son güncelleme: 1 Ekim 2026 · Laravel 12 · 1473 test / 6473 doğrulama yeşil._
 
 ---
 
@@ -2005,6 +2005,8 @@ Analiz `OPENAI_API_KEY` ister (stok analiziyle aynı anahtar); anahtar yoksa
 dosya yine kaydedilir, durum "Analiz başarısız" olur ve panelden yeniden
 denenebilir. PDF'ler `UPLOAD_DISK` üzerinde `deneme-raporlari/<öğrenci>/<uuid>.pdf`
 yolunda durur.
+
+**Yükleme hatası görünür (1 Ekim 2026):** dosyalar `App\Support\Uploads` ile yazılır. Disk yazamazsa (S3 anahtarı, kova adı, uç nokta, salt-okunur disk) 500 yerine yöneticiye sebep yazılır: `Dosya depolamaya yazılamadı (s3): NoSuchBucket — …`. Laravel'in `store()`'u `throw => false` yüzünden `false` dönüp sessizce kayda yazılıyordu.
 
 ### 12.2.1 Derleme ayarları: hepsi boş kalmalı
 

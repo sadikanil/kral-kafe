@@ -76,6 +76,21 @@ class ExamImportTest extends TestCase
         }
     }
 
+    /** Depolama yazamazsa 500 degil, sebebiyle hata; kayit acilmaz. */
+    public function test_a_storage_failure_is_shown_with_its_reason(): void
+    {
+        config(['filesystems.disks.bozuk' => ['driver' => 'local', 'root' => '/proc/kral-kafe-yok', 'throw' => false],
+            'filesystems.uploads' => 'bozuk']);
+
+        $this->actingAs($this->yonetici)->from(route('admin.exam-imports.index'))->post(route('admin.exam-imports.store'), [
+            'exam_event_id' => $this->deneme->id,
+            'pdf' => UploadedFile::fake()->createWithContent('kurum.pdf', "%PDF-1.7\n% sahte\n"),
+        ])->assertRedirect(route('admin.exam-imports.index'))
+            ->assertSessionHas('error', fn ($m) => str_starts_with($m, 'Dosya depolamaya yazılamadı (bozuk):'));
+
+        $this->assertSame(0, ExamImport::count());
+    }
+
     // --- Ad esleme -------------------------------------------------------------
 
     public function test_names_are_normalized_letter_by_letter(): void

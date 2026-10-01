@@ -48,12 +48,11 @@ class ExamReportController extends Controller
             'pdf' => ['required', 'file', 'mimes:pdf', 'max:10240'],
         ]);
 
-        $disk = config('filesystems.uploads');
-        $yol = $request->file('pdf')->storeAs(
-            'deneme-raporlari/' . $user->id,
-            Str::uuid() . '.pdf',
-            $disk
-        );
+        try {
+            $yol = \App\Support\Uploads::store($request->file('pdf'), 'deneme-raporlari/' . $user->id, Str::uuid() . '.pdf');
+        } catch (\RuntimeException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
 
         $rapor = ExamReport::create([
             'student_id' => $user->id,
