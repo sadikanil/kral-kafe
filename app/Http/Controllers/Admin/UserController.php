@@ -31,8 +31,13 @@ class UserController extends Controller
         $query = User::query();
 
         // Filter by role
+        // Koc filtresi koc yetkili veli/ogretmeni de kapsar (1 Ekim 2026):
+        // listede onlar "Koc" diye gorunuyor; filtrede kaybolmamali.
         if ($request->has('role') && $request->role !== 'all') {
-            $query->where('role', $request->role);
+            $request->role === Role::Coach->value
+                ? $query->where(fn ($q) => $q->where('role', Role::Coach->value)
+                    ->orWhere(fn ($q) => $q->where('is_coach', true)->whereIn('role', array_map(fn (Role $r) => $r->value, User::KOC_OLABILEN))))
+                : $query->where('role', $request->role);
         }
 
         // Filter by subscription status
@@ -59,7 +64,7 @@ class UserController extends Controller
         }
 
         // Veli satirinda bagli ogrenci sayisi gorunur (Dalga 6).
-        $users = $query->withCount('students')->orderBy('name')->paginate(20);
+        $users = $query->withCount(['students', 'coachStudents'])->orderBy('name')->paginate(20);
 
         return view('admin.users.index', [
             'users' => $users,
@@ -313,6 +318,11 @@ class UserController extends Controller
                 ? User::where('role', Role::Parent->value)->orderBy('name')->get()
                 : collect(),
             'linkedStudentIds' => $user->students()->pluck('users.id')->all(),
+            // Kocluk bagi (coach_assignments) veli bagindan ayri liste.
+            'coachableStudents' => $user->isCoach()
+                ? User::where('role', Role::Student->value)->orderBy('name')->get()
+                : collect(),
+            'coachedStudentIds' => $user->coachStudents()->pluck('users.id')->all(),
             'linkedParentIds' => $user->parents()->pluck('users.id')->all(),
         ]);
     }
@@ -339,6 +349,8 @@ class UserController extends Controller
             'student_ids.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Student->value)],
             'parent_ids' => ['sometimes', 'nullable', 'array'],
             'parent_ids.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Parent->value)],
+            'coach_student_ids' => ['sometimes', 'nullable', 'array'],
+            'coach_student_ids.*' => ['integer', Rule::exists('users', 'id')->where('role', Role::Student->value)],
             ...$this->gradeRules(),
             ...$this->coachRules(),
         ], $this->identityMessages());
@@ -410,6 +422,12 @@ class UserController extends Controller
 
         if ($request->has('parent_ids')) {
             $this->syncLinks($user->parents(), $validated['parent_ids'] ?? []);
+        }
+
+        // Kocluk bagi: koc yetkisi kaldirildiysa bag da kalkar (gizli koc
+        // atamasi panelde gorunmeyen bir erisim olurdu).
+        if ($request->has('coach_student_ids')) {
+            $this->syncLinks($user->coachStudents(), $user->fresh()->isCoach() ? ($validated['coach_student_ids'] ?? []) : []);
         }
 
         return redirect()->route('admin.users.index')

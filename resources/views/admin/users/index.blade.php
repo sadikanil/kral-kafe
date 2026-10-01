@@ -67,7 +67,7 @@
                                             <a href="{{ route('admin.users.edit', $user) }}" class="text-inherit">{{ $user->name }}</a>
                                             {{-- Telefonda gizlenen sutunlarin ozeti --}}
                                             <div class="show-sm text-muted" style="font-size: 0.75rem;">
-                                                {{ $user->contactLabel() }} · {{ $user->role()?->label() ?? $user->role }}
+                                                {{ $user->contactLabel() }} · {{ $user->displayRole()?->label() ?? $user->role }}
                                                 @if($user->subscription_status !== 'active') · {{ $user->subscription_status === 'suspended' ? 'Askıda' : 'Pasif' }} @endif
                                             </div>
                                         </div>
@@ -75,11 +75,15 @@
                                 </td>
                                 <td class="hide-sm">{{ $user->contactLabel() }}</td>
                                 <td class="hide-sm">
-                                    <span class="badge badge-{{ $user->role()?->badgeClass() ?? 'info' }}">
-                                        {{ $user->role()?->label() ?? $user->role }}
+                                    <span class="badge badge-{{ $user->displayRole()?->badgeClass() ?? 'info' }}">
+                                        {{ $user->displayRole()?->label() ?? $user->role }}
                                     </span>
+                                    {{-- Koc yetkili veli: etiket "Koc", velilik alt satirda. --}}
+                                    @if($user->displayRole() === \App\Enums\Role::Coach && $user->coach_students_count)
+                                        <small class="text-muted d-block">{{ $user->coach_students_count }} öğrenci{{ $user->coach_subject ? ' · ' . $user->coach_subject : '' }}</small>
+                                    @endif
                                     @if($user->role() === \App\Enums\Role::Parent)
-                                        <small class="text-muted d-block">{{ $user->students_count }} öğrenci</small>
+                                        <small class="text-muted d-block">{{ $user->is_coach ? 'Veli · ' : '' }}{{ $user->students_count }} çocuk</small>
                                     @endif
                                 </td>
                                 <td class="hide-sm">

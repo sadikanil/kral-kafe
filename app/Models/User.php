@@ -132,6 +132,17 @@ class User extends Authenticatable
         return $this->hasRole(Role::Admin, Role::Coach);
     }
 
+    /**
+     * Listelerde gosterilen rol: koc yetkili veli/ogretmen "Koc" gorunur
+     * (1 Ekim 2026, sahibin karari - velilik ikincil bilgi).
+     */
+    public function displayRole(): ?Role
+    {
+        $rol = $this->role();
+
+        return $this->is_coach && in_array($rol, self::KOC_OLABILEN, true) ? Role::Coach : $rol;
+    }
+
     /** "İbrahim Acar · Matematik" - brans yoksa yalnizca ad. */
     public function coachLabel(): string
     {

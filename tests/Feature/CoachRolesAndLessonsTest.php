@@ -124,6 +124,64 @@ class CoachRolesAndLessonsTest extends TestCase
         $this->assertTrue($this->ogrenci->coaches()->whereKey($veli->id)->exists());
     }
 
+    /**
+     * Canli hata (1 Ekim 2026): ozel ders verdigi ogrenciler veli bagiyla
+     * kurulmus, koc sayfalarinda gorunmuyordu. Kocluk listesi ayri.
+     */
+    public function test_the_admin_moves_lesson_students_from_parent_link_to_coaching(): void
+    {
+        $sevcan = User::factory()->student()->withPackage(Package::factory()->tier1())->create(['name' => 'Sevcan Karaoğlan']);
+        User::factory()->parent()->create()->students()->attach($sevcan->id);
+        $this->ibrahim->students()->attach($sevcan->id);
+
+        $this->actingAs($this->cahit)->get(route('admin.users.edit', $this->ibrahim))
+            ->assertOk()
+            ->assertSee('Velisi olduğu öğrenciler')
+            ->assertSee('Koçluk / özel ders verdiği öğrenciler')
+            ->assertSee('name="coach_student_ids[]" value="' . $this->ogrenci->id . '"', false);
+
+        $this->actingAs($this->cahit)->put(route('admin.users.update', $this->ibrahim), [
+            'name' => 'İbrahim Acar', 'phone' => '0555 999 88 77', 'role' => 'parent', 'subscription_status' => 'active',
+            'is_coach' => '1', 'coach_subject' => 'Matematik',
+            'student_ids' => [$this->oglu->id],
+            'coach_student_ids' => [$this->ogrenci->id, $sevcan->id],
+        ])->assertSessionHasNoErrors();
+
+        $this->ibrahim->refresh();
+        $this->assertEqualsCanonicalizing([$this->oglu->id], $this->ibrahim->childStudentIds());
+        $this->assertEqualsCanonicalizing([$this->ogrenci->id, $sevcan->id], $this->ibrahim->coachableStudentIds());
+
+        $this->actingAs($this->ibrahim)->get(route('coach.plan.index'))
+            ->assertOk()->assertSee('Sevcan Karaoğlan')->assertSee('Zeynep Kaya');
+        $this->actingAs($this->ibrahim)->get(route('parent.dashboard'))
+            ->assertOk()->assertDontSee('Sevcan Karaoğlan');
+    }
+
+    public function test_removing_coach_rights_drops_the_coaching_links(): void
+    {
+        $this->actingAs($this->cahit)->put(route('admin.users.update', $this->ibrahim), [
+            'name' => 'İbrahim Acar', 'phone' => '0555 999 88 77', 'role' => 'parent', 'subscription_status' => 'active',
+            'is_coach' => '0', 'student_ids' => [$this->oglu->id], 'coach_student_ids' => [$this->ogrenci->id],
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame([], $this->ibrahim->fresh()->coachStudents()->pluck('users.id')->all());
+    }
+
+    public function test_the_user_list_shows_coach_instead_of_parent(): void
+    {
+        $sade = User::factory()->parent()->create(['name' => 'Sade Veli']);
+
+        $this->actingAs($this->cahit)->get(route('admin.users.index', ['role' => 'coach']))
+            ->assertOk()
+            ->assertSee('İbrahim Acar')
+            ->assertSee('Veli · 1 çocuk')
+            ->assertSee('1 öğrenci · Matematik')
+            ->assertDontSee('Sade Veli');
+
+        $this->assertSame(Role::Coach, $this->ibrahim->displayRole());
+        $this->assertSame(Role::Parent, $sade->displayRole());
+    }
+
     public function test_a_student_never_keeps_coach_rights_from_the_form(): void
     {
         $this->actingAs($this->cahit)->put(route('admin.users.update', $this->ogrenci), [

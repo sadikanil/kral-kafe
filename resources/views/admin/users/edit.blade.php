@@ -85,7 +85,7 @@
 
                 @if($user->hasRole(\App\Enums\Role::Parent))
                     <div class="form-group">
-                        <label class="form-label">Bağlı Öğrenciler</label>
+                        <label class="form-label">Velisi olduğu öğrenciler</label>
                         {{-- Gizli alan: hicbir kutu isaretli degilse de anahtar gitsin,
                              kontrolcu "hepsini kaldir" ile "bolum yoktu"yu ayirt edebilsin. --}}
                         <input type="hidden" name="student_ids" value="">
@@ -111,7 +111,38 @@
                         @error('student_ids.*')
                             <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
-                        <small class="text-muted">Veli, yalnızca burada işaretli öğrencilerin çalışma bilgilerini görür.</small>
+                        <small class="text-muted">Yalnızca kendi çocukları. Veli bu öğrencilerin çalışma, ödeme ve paket bilgilerini görür.@if($user->isCoach()) Özel ders verdiği ya da koçluk yaptığı öğrencileri aşağıdaki listeden seçin.@endif</small>
+                    </div>
+                @endif
+
+                {{--
+                    Kocluk yaptigi ogrenciler (1 Ekim 2026). Veli bagindan AYRI:
+                    veli cocugunun odemesini de gorur, koc gormez. Ikisi tek
+                    listede durunca "ozel ders verdigi ogrenci" veli bagiyla
+                    kuruluyordu ve koc sayfalarinda hic gorunmuyordu.
+                --}}
+                @if($user->isCoach() && ! $user->hasRole(\App\Enums\Role::Admin))
+                    <div class="form-group">
+                        <label class="form-label">Koçluk / özel ders verdiği öğrenciler</label>
+                        <input type="hidden" name="coach_student_ids" value="">
+                        @if($coachableStudents->isEmpty())
+                            <p class="text-muted mb-0">Sistemde kayıtlı öğrenci yok.</p>
+                        @else
+                            <div class="rounded p-2" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--separator);">
+                                @foreach($coachableStudents as $ogrenci)
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="coach_student_{{ $ogrenci->id }}"
+                                            name="coach_student_ids[]" value="{{ $ogrenci->id }}"
+                                            @checked(in_array($ogrenci->id, old('coach_student_ids', $coachedStudentIds) ?: []))>
+                                        <label class="form-check-label" for="coach_student_{{ $ogrenci->id }}">{{ $ogrenci->name }}</label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                        @error('coach_student_ids.*')
+                            <span class="invalid-feedback d-block">{{ $message }}</span>
+                        @enderror
+                        <small class="text-muted">Koç bu öğrencileri Çalışma Planları ve Özel Derslerim sayfalarında görür; plana yalnızca ödev ekler, ödeme ve paket bilgisi görmez.</small>
                     </div>
                 @endif
 
