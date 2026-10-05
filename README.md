@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 1 Ekim 2026 · Laravel 12 · 1483 test / 6546 doğrulama yeşil._
+_Son güncelleme: 5 Ekim 2026 · Laravel 12 · 1494 test / 6588 doğrulama yeşil._
 
 ---
 
@@ -61,7 +61,7 @@ Kararlar §5'te (18–24). Ayrıntı: koçlar §6.2, PDF akışı ve Claude/Open
 - [x] **Veli + koç** — veli (ya da öğretmen) ayrıca koç olabilir: kullanıcı formunda "Koçluk yetkisi de var" + **Branş**. Veli panelinde yalnızca kendi çocuğu, koç sayfalarında yalnızca atanan öğrenciler; atanan öğrencinin ödemeleri açılmaz. Menü iki grubu da gösterir.
 - [x] **Ödev etiketi** — Cahit Hoca (yönetici) dışındaki koçlar plana yalnızca **Ödev** ekler, yalnızca kendi ekledikleri ödevi taşır/siler; haftalık sabit programı yönetici yazar. Öğrenci ödevi "İbrahim Acar · Matematik" diye görür; Planım'da koçları listelenir.
 - [x] **Özel ders** — paketten bağımsız; ders saatine öğretmen + ders adı. Yönetim → **Özel Dersler**: aynı saat birden çok öğrenciye, özel ders paketi birden çok öğrenciye (pakette "ders sayısı"). Dersi veren koç öğrencinin koçu olarak atanır. Koç → **Özel Derslerim**: kendi dersleri, tek dersi iptal/taşı, haftalık saati değiştir; paket, ücret, ödeme yok.
-- [x] **Kurum deneme PDF'i** — Yönetim → **Deneme Sonuçları**: takvimdeki denemeyi seç, kurumun PDF'ini bir kez yükle; yapay zekâ sayfa sayfa okur, adlar eşlenir, yönetici kontrol edip yayınlar. Öğrenci kendi netini, sıralarını, puanını ve eksik konularını görür; öğrenciye, veliye, koça bildirim; koç plan sayfasında "Denemeden gelen öneriler".
+- [x] **Kurum deneme PDF'i** — Yönetim → **Deneme Sonuçları**: denemeyi seç (serbest denemeler ayrı grupta önce; listede yoksa "+ Yeni serbest deneme oluştur" ile ad, tür ve çözüldüğü gün aynı formda), kurumun PDF'ini bir kez yükle; yapay zekâ sayfa sayfa okur, adlar eşlenir, yönetici kontrol edip yayınlar. Öğrenci kendi netini, sıralarını, puanını ve eksik konularını görür; öğrenciye, veliye, koça bildirim; koç plan sayfasında "Denemeden gelen öneriler".
 - [x] **Koçlar** — Cahit Atılğan (yönetici, Fizik) ve İbrahim Acar (veli + koç, Matematik) ada göre tanımlanır (migration `2026_10_01_130000`); kayıtlı değilse kullanıcı formundan eklenir.
 
 ### Dalga 30 · Takvimli plan (23 Eyl) · ✅ bitti
@@ -2446,7 +2446,7 @@ Belgenin üç zorluğu:
 ### 14.2 Kurulan akış
 
 ```
-Yönetici: Deneme Sonuçları → takvimdeki deneme + PDF
+Yönetici: Deneme Sonuçları → deneme (serbest / takvimdeki / yeni serbest) + PDF
    │  (ExamImport: uploaded)
    ▼
 1 istek  — dizin: sınav adı, katılımcılar, öğrenci listesi + karne sayfaları
@@ -2462,6 +2462,14 @@ Yönetici kontrol eder → Yayınla
    └─ Koç plan sayfası: "Denemeden gelen öneriler" → tek dokunuşla plana / ödeve
 ```
 
+- **Serbest deneme (5 Ekim 2026):** serbest denemeler akış içinde, kendiliğinden
+  çözülüyor. Hem bu formda hem öğrencinin "Deneme Raporları" sayfasındaki tek tek
+  sonuç girişinde (`admin.exam-results.start`) önce serbest denemeler (penceresi
+  kapanmış olanlar dahil) ayrı grupta, sonra takvimdekiler listelenir; yoksa
+  "+ Yeni serbest deneme oluştur" seçilip ad, tür (TYT/AYT/TYT+AYT) ve çözüldüğü gün
+  girilir (`App\Support\SpontaneousExam`). Yeni deneme tek günlük pencereyle
+  kaydedilir: öğrencinin açık serbest denemeler kutusunda sonradan durmaz. Gün
+  bugünden sonra olamaz; PDF depoya yazılamazsa deneme de açılmaz.
 - Her adım ayrı istek; sayfa açıkken betik sırayla çağırır. Hata kaldığı yerde
   durur, "Devam et" okunmuş karneyi yeniden okumaz (iki kez ödeme yok).
 - Sağlayıcı arayüzün arkasında (`App\Contracts\ExamPdfReader`): Claude

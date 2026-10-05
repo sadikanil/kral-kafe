@@ -798,9 +798,10 @@ class AdminExamsSmokeTest extends TestCase
             ->assertOk()
             ->assertSee('Deneme Raporları: Çağrı Işıkoğlu')
             ->assertSee(route('admin.users.edit', $ogrenci))
-            // Sonuc girisi baglantisi
+            // Sonuc girisi: deneme secimi (5 Ekim 2026)
             ->assertSee('Deneme sonucu gir')
-            ->assertSee(route('admin.exam-results.edit', [$deneme, $ogrenci]))
+            ->assertSee('action="' . route('admin.exam-results.start', $ogrenci) . '"', false)
+            ->assertSee('<option value="' . $deneme->id . '"', false)
             // Yukleme formu
             ->assertSee('PDF yükle')
             ->assertSee('action="' . route('admin.exam-reports.store', $ogrenci) . '"', false)
@@ -827,7 +828,9 @@ class AdminExamsSmokeTest extends TestCase
         $this->actingAs($this->yonetici())->get(route('admin.exam-reports.index', $this->ogrenci()))
             ->assertOk()
             ->assertSee('Bu öğrenci için henüz rapor yüklenmedi.')
-            ->assertDontSee('Deneme sonucu gir');
+            // Takvim bos: sonuc girisi yeni serbest denemeyle baslar (5 Ekim 2026).
+            ->assertSee('Deneme sonucu gir')
+            ->assertSee('<option value="yeni" selected', false);
     }
 
     public function test_admin_uploads_a_pdf_with_a_turkish_title_and_it_is_analyzed(): void

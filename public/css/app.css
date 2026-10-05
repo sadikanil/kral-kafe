@@ -3254,3 +3254,23 @@ body.is-focusing {
 .progress-bar-weak {
     background: var(--danger);
 }
+
+/* ============================================================
+   Sonuc girerken yeni serbest deneme (5 Ekim 2026): deneme
+   seciminin altinda acilan ad / tur / gun alanlari.
+   ============================================================ */
+.spontaneous-exam {
+    margin: 0 0 16px;
+    padding: 12px 14px 14px;
+    border: 1px solid var(--separator);
+    border-radius: 10px;
+    background: var(--surface-2);
+    min-width: 0;
+}
+
+.spontaneous-exam > legend {
+    padding: 0 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--label-2);
+}

@@ -18,31 +18,17 @@
     <div class="card mb-3" style="max-width: 640px;">
         <div class="card-header"><h4>PDF yükle</h4></div>
         <div class="card-body">
-            @if($events->isEmpty())
-                <p class="text-muted mb-0">Önce <a href="{{ route('admin.exams.create') }}">Deneme Takvimi</a>'ne denemeyi ekle; sonuç ona bağlanır.</p>
-            @else
-                <form action="{{ route('admin.exam-imports.store') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="form-group">
-                        <label for="exam_event_id" class="form-label">Deneme *</label>
-                        <select id="exam_event_id" name="exam_event_id" class="form-control @error('exam_event_id') is-invalid @enderror" required>
-                            <option value="">Seçin…</option>
-                            @foreach($events as $deneme)
-                                <option value="{{ $deneme->id }}" @selected((int) old('exam_event_id') === $deneme->id)>
-                                    {{ $deneme->exam_date->format('d.m.Y') }} · {{ $deneme->title }} ({{ $deneme->exam_type->label() }})
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('exam_event_id')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                    </div>
-                    <div class="form-group">
-                        <label for="pdf" class="form-label">Sonuç PDF'i * <small class="text-muted">(en fazla 10 MB)</small></label>
-                        <input type="file" id="pdf" name="pdf" accept="application/pdf" required class="form-control @error('pdf') is-invalid @enderror">
-                        @error('pdf')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                    </div>
-                    <button type="submit" class="btn btn-primary">Yükle ve oku</button>
-                </form>
-            @endif
+            {{-- Serbest denemeler once ve yerinde olusturulabilir (5 Ekim 2026). --}}
+            <form action="{{ route('admin.exam-imports.store') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                @include('admin._deneme-secimi')
+                <div class="form-group">
+                    <label for="pdf" class="form-label">Sonuç PDF'i * <small class="text-muted">(en fazla 10 MB)</small></label>
+                    <input type="file" id="pdf" name="pdf" accept="application/pdf" required class="form-control @error('pdf') is-invalid @enderror">
+                    @error('pdf')<span class="invalid-feedback">{{ $message }}</span>@enderror
+                </div>
+                <button type="submit" class="btn btn-primary">Yükle ve oku</button>
+            </form>
         </div>
     </div>
 

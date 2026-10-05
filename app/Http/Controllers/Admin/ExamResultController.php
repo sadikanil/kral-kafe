@@ -7,6 +7,7 @@ use App\Models\ExamEvent;
 use App\Models\ExamResult;
 use App\Models\Subject;
 use App\Models\User;
+use App\Support\SpontaneousExam;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,26 @@ class ExamResultController extends Controller
 {
     /** Siralama seviyeleri: sutun soneki => formdaki ad. */
     private const SEVIYELER = ['institution' => 'kurum', 'district' => 'ilçe', 'city' => 'il', 'country' => 'Türkiye'];
+
+    /**
+     * Ogrencinin sayfasindan sonuc girisine (5 Ekim 2026): secilen denemenin
+     * formuna gider; "yeni serbest deneme" secildiyse once onu olusturur.
+     */
+    public function start(Request $request, User $user): RedirectResponse
+    {
+        abort_unless($user->isStudent(), 404);
+
+        $yeni = SpontaneousExam::wantsNew($request);
+        $veri = $request->validate([
+            'exam_event_id' => $yeni ? ['required'] : ['required', 'integer', Rule::exists('exam_events', 'id')],
+        ] + SpontaneousExam::rules($yeni), SpontaneousExam::messages(),
+            ['exam_event_id' => 'deneme'] + SpontaneousExam::attributes());
+
+        $deneme = $yeni ? SpontaneousExam::create($veri, auth()->id()) : ExamEvent::findOrFail($veri['exam_event_id']);
+
+        return redirect()->route('admin.exam-results.edit', [$deneme, $user])
+            ->with('success', $yeni ? "{$deneme->title} serbest deneme olarak eklendi; sonucu girin." : null);
+    }
 
     public function edit(ExamEvent $examEvent, User $student): View
     {

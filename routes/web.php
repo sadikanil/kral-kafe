@@ -295,6 +295,7 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
 
     // Deneme sonuc raporlari: ogrenci basina PDF yukleme + yapay zeka analizi
     Route::get('/kullanicilar/{user}/deneme-raporlari', [AdminExamReportController::class, 'index'])->name('exam-reports.index');
+    Route::post('/kullanicilar/{user}/deneme-sonucu', [ExamResultController::class, 'start'])->name('exam-results.start');
     Route::post('/kullanicilar/{user}/deneme-raporlari', [AdminExamReportController::class, 'store'])->name('exam-reports.store');
     Route::post('/deneme-raporlari/{report}/analiz', [AdminExamReportController::class, 'analyze'])->name('exam-reports.analyze');
     Route::delete('/deneme-raporlari/{report}', [AdminExamReportController::class, 'destroy'])->name('exam-reports.destroy');

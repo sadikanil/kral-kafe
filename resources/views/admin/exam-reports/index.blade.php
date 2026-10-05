@@ -14,25 +14,17 @@
         yonetici PDF'i yukleyip ozeti okuyor ve ayni ekranda sonucu girip
         notunu yaziyor. Ayri bir sayfa, iki isi birbirinden koparirdi.
     --}}
-    @if($events->isNotEmpty())
-        <div class="card mb-3" style="max-width: 640px;">
-            <div class="card-header"><h4>Deneme sonucu gir</h4></div>
-            <div class="card-body">
-                @foreach($events as $deneme)
-                    <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-                        <div>
-                            <strong>{{ $deneme->title }}</strong>
-                            <div class="text-muted">
-                                {{ $deneme->exam_date->timezone(config('kafe.timezone'))->format('d.m.Y') }}
-                            </div>
-                        </div>
-                        <a href="{{ route('admin.exam-results.edit', [$deneme, $student]) }}"
-                           class="btn btn-secondary">Sonuç gir</a>
-                    </div>
-                @endforeach
-            </div>
+    <div class="card mb-3" style="max-width: 640px;">
+        <div class="card-header"><h4>Deneme sonucu gir</h4></div>
+        <div class="card-body">
+            {{-- 5 Ekim 2026: serbest denemeler once; listede yoksa yerinde olusturulur. --}}
+            <form action="{{ route('admin.exam-results.start', $student) }}" method="POST">
+                @csrf
+                @include('admin._deneme-secimi', ['events' => $calendarEvents])
+                <button type="submit" class="btn btn-primary">Sonuç gir</button>
+            </form>
         </div>
-    @endif
+    </div>
 
     <div class="card mb-3" style="max-width: 640px;">
         <div class="card-header"><h4>PDF yükle</h4></div>
@@ -47,8 +39,8 @@
                     @error('title')<span class="invalid-feedback">{{ $message }}</span>@enderror
                 </div>
                 <div class="form-group">
-                    <label for="exam_event_id" class="form-label">Takvimdeki deneme</label>
-                    <select id="exam_event_id" name="exam_event_id" class="form-control @error('exam_event_id') is-invalid @enderror">
+                    <label for="report_exam_event_id" class="form-label">Takvimdeki deneme</label>
+                    <select id="report_exam_event_id" name="exam_event_id" class="form-control @error('exam_event_id') is-invalid @enderror">
                         <option value="">— bağlama —</option>
                         @foreach($events as $deneme)
                             <option value="{{ $deneme->id }}" {{ (string) old('exam_event_id') === (string) $deneme->id ? 'selected' : '' }}>

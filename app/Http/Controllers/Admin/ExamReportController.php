@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\ExamType;
 use App\Http\Controllers\Controller;
 use App\Models\ExamEvent;
 use App\Models\ExamReport;
 use App\Models\User;
 use App\Services\ExamReportAnalyzer;
+use App\Support\SpontaneousExam;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -35,6 +37,10 @@ class ExamReportController extends Controller
             'student' => $user,
             'reports' => ExamReport::where('student_id', $user->id)->with('examEvent')->orderByDesc('created_at')->get(),
             'events' => ExamEvent::orderByDesc('exam_date')->limit(30)->get(),
+            // Sonuc girisi (5 Ekim 2026): serbestler ayri grupta, once.
+            'calendarEvents' => ExamEvent::where('is_flexible', false)->where('exam_type', '!=', ExamType::Official->value)
+                ->orderByDesc('exam_date')->limit(30)->get(),
+            'flexible' => SpontaneousExam::recent(array_filter(ExamType::cases(), fn (ExamType $t) => $t->isPractice())),
         ]);
     }
 

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ExamType;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\ExamEvent;
@@ -10,6 +9,7 @@ use App\Models\ExamImport;
 use App\Models\ExamImportRow;
 use App\Models\User;
 use App\Services\ExamImport\ExamImportProcessor;
+use App\Support\SpontaneousExam;
 use App\Support\Uploads;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -38,17 +38,22 @@ class ExamImportController extends Controller
     {
         return view('admin.exam-imports.index', [
             'imports' => ExamImport::with('event')->withCount('rows')->latest()->get(),
-            'events' => ExamEvent::whereIn('exam_type', [ExamType::Tyt->value, ExamType::Ayt->value, ExamType::TytAyt->value])
-                ->orderByDesc('exam_date')->limit(40)->get(),
+            'events' => ExamEvent::whereIn('exam_type', array_column(SpontaneousExam::TYPES, 'value'))
+                ->where('is_flexible', false)->orderByDesc('exam_date')->limit(40)->get(),
+            'flexible' => SpontaneousExam::recent(),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $yeni = SpontaneousExam::wantsNew($request);
+
         $veri = $request->validate([
-            'exam_event_id' => ['required', 'integer', Rule::exists('exam_events', 'id')],
+            'exam_event_id' => $yeni ? ['required'] : ['required', 'integer',
+                Rule::exists('exam_events', 'id')->whereIn('exam_type', array_column(SpontaneousExam::TYPES, 'value'))],
             'pdf' => ['required', 'file', 'mimes:pdf', 'max:10240'],
-        ], [], ['exam_event_id' => 'deneme', 'pdf' => 'PDF']);
+        ] + SpontaneousExam::rules($yeni), SpontaneousExam::messages(),
+            ['exam_event_id' => 'deneme', 'pdf' => 'PDF'] + SpontaneousExam::attributes());
 
         try {
             $yol = Uploads::store($request->file('pdf'), 'deneme-aktarimlari', Str::uuid() . '.pdf');
@@ -56,8 +61,12 @@ class ExamImportController extends Controller
             return back()->withInput()->with('error', $e->getMessage());
         }
 
+        // Yeni serbest deneme yukleme basarili olduktan SONRA acilir: depo
+        // hatasinda takvimde sahipsiz deneme kalmasin.
+        $denemeId = $yeni ? SpontaneousExam::create($veri, auth()->id())->id : (int) $veri['exam_event_id'];
+
         $aktarim = ExamImport::create([
-            'exam_event_id' => $veri['exam_event_id'],
+            'exam_event_id' => $denemeId,
             'file_path' => $yol,
             'uploaded_by' => auth()->id(),
         ]);
