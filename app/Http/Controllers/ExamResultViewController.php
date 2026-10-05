@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\ExamEvent;
 use App\Models\ExamResult;
+use App\Models\StudyPlanItem;
 use App\Models\User;
+use App\Models\WeakTopic;
 use App\Support\ExamResultDetail;
 use App\Support\ExamTopics;
 use Illuminate\Support\Collection;
@@ -45,7 +47,29 @@ class ExamResultViewController extends Controller
         $result->loadMissing(['student', 'event']);
         abort_unless(auth()->user()->canCoach($result->student), 403);
 
-        return $this->detay($result, route('coach.exams.show', $result->event), $result->event->title, planUrl: route('coach.plan.show', $result->student));
+        return $this->detay($result, route('coach.exams.show', $result->event), $result->event->title,
+            planUrl: route('coach.plan.show', $result->student), topicActions: $this->konuEylemleri($result));
+    }
+
+    /**
+     * Eksik konu satirindaki "Odev ver" (5 Ekim 2026). Yayin her eksik konu
+     * icin acik bir WeakTopic yaziyor; dugme onu plana ekler (coach.topics.plan).
+     * Plana zaten eklenmis konu "Planda" olur; kapatilmis konunun dugmesi yok.
+     *
+     * @return array<string, array{topic: ?WeakTopic, planned: bool}> "ders|konu" => durum
+     */
+    private function konuEylemleri(ExamResult $sonuc): array
+    {
+        $acik = WeakTopic::open()->forStudent($sonuc->student)->with('subject')->get()->groupBy('topic');
+        $planda = StudyPlanItem::where('student_id', $sonuc->student_id)->pluck('title')->flip();
+
+        return collect($sonuc->weakTopics())->mapWithKeys(function (array $k) use ($acik, $planda) {
+            $adaylar = $acik->get($k['topic'], collect());
+            // Ayni ad iki derste olabilir: once ders adi tutani.
+            $kayit = $adaylar->first(fn (WeakTopic $w) => $w->subject?->name === $k['subject']) ?? $adaylar->first();
+
+            return [($k['subject'] ?? '') . '|' . $k['topic'] => ['topic' => $kayit, 'planned' => $planda->has($k['topic'])]];
+        })->all();
     }
 
     /** Sonucu olan denemeler; her birinde bakilabilen ogrenci sayisi ve ortalama net. */
@@ -87,12 +111,13 @@ class ExamResultViewController extends Controller
         ]);
     }
 
-    private function detay(ExamResult $sonuc, string $geri, string $geriEtiket, ?string $planUrl = null): View
+    private function detay(ExamResult $sonuc, string $geri, string $geriEtiket, ?string $planUrl = null, array $topicActions = []): View
     {
         return view('exams.result', ExamResultDetail::for($sonuc) + [
             'backUrl' => $geri,
             'backLabel' => $geriEtiket,
             'planUrl' => $planUrl,
+            'topicActions' => $topicActions,
             'showStudent' => auth()->id() !== $sonuc->student_id,
         ]);
     }

@@ -116,17 +116,30 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h4>Eksik konular</h4>
                 @if($planUrl)
-                    <a href="{{ $planUrl }}" class="btn btn-sm btn-primary">Plana ödev ekle →</a>
+                    <a href="{{ $planUrl }}" class="btn btn-sm btn-secondary">Plan sayfası →</a>
                 @endif
             </div>
             <div class="card-body p-0">
                 @foreach($weak as $konu)
+                    {{-- Koc ve yonetici: tek dokunusla odev (5 Ekim 2026). Dugme
+                         varken sayilar alt satirda; telefonda konu adi kirilmasin. --}}
+                    @php($eylem = $topicActions[($konu['subject'] ?? '') . '|' . $konu['topic']] ?? null)
+                    @php($sayilar = $konu['questions'] . ' soruda ' . $konu['correct'] . ' doğru')
                     <div class="list-row">
                         <span class="list-row-main">
                             <span class="list-row-title">{{ $konu['topic'] }}</span>
-                            @if($konu['subject'])<span class="list-row-sub">{{ $konu['subject'] }}</span>@endif
+                            <span class="list-row-sub">{{ collect([$konu['subject'], $eylem ? $sayilar : null])->filter()->implode(' · ') }}</span>
                         </span>
-                        <span class="list-row-value">{{ $konu['questions'] }} soruda {{ $konu['correct'] }} doğru</span>
+                        @if(! $eylem)
+                            <span class="list-row-value">{{ $sayilar }}</span>
+                        @elseif($eylem['planned'])
+                            <span class="badge badge-success">Planda</span>
+                        @elseif($eylem['topic'])
+                            <form method="POST" action="{{ route('coach.topics.plan', $eylem['topic']) }}">
+                                @csrf
+                                <button type="submit" class="btn btn-sm btn-primary">{{ auth()->user()->assignsOnlyHomework() ? 'Ödev ver' : 'Plana ekle' }}</button>
+                            </form>
+                        @endif
                     </div>
                 @endforeach
             </div>

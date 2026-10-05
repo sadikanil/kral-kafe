@@ -79,6 +79,9 @@ class StudyPlanController extends Controller
             // Odak modu (Faz 4): son 14 gunde uygulamadan ayrilis. Koc gorur,
             // veli gormez; sure calismadan dusulmez.
             'odak' => $this->odakOzeti($student),
+            // Son deneme ozeti (5 Ekim 2026): odev verirken deneme verisi
+            // iki sayfa uzakta kalmasin.
+            'sonDeneme' => $this->sonDeneme($student),
             // Deneme onerileri (1 Ekim 2026): kurum PDF'inden kuralla cikan
             // acik eksik konular. Koc tek dokunusla plana ekler (yonetici
             // disinda odev olarak); karari insan verir (README SS6.1-6).
@@ -90,6 +93,27 @@ class StudyPlanController extends Controller
                     ->whereColumn('study_plan_items.title', 'weak_topics.topic'))
                 ->with('subject')->latest()->limit(8)->get(),
         ]);
+    }
+
+    /** @return array{result: \App\Models\ExamResult, change: ?float, weak: int}|null */
+    private function sonDeneme(User $student): ?array
+    {
+        $sonuc = \App\Models\ExamResult::where('student_id', $student->id)
+            ->with(['event', 'subjects'])->get()
+            ->sortByDesc(fn ($r) => [$r->event->exam_date->toDateString(), $r->id])
+            ->first();
+
+        if ($sonuc === null) {
+            return null;
+        }
+
+        $onceki = \App\Support\ExamResultDetail::previous($sonuc);
+
+        return [
+            'result' => $sonuc,
+            'change' => $onceki ? round($sonuc->totalNet() - $onceki->totalNet(), 2) : null,
+            'weak' => count($sonuc->weakTopics()),
+        ];
     }
 
     /**

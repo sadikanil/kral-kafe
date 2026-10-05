@@ -25,6 +25,30 @@
         </p>
     @endif
 
+    {{-- Son deneme (5 Ekim 2026): odev verirken sonuca tek dokunus. --}}
+    @if($sonDeneme)
+        @php($sd = $sonDeneme['result'])
+        <div class="card mb-3">
+            <div class="card-body p-0">
+                <a href="{{ route('coach.exams.result', $sd) }}" class="list-row">
+                    <span class="list-row-main">
+                        <span class="list-row-title">Son deneme: {{ $sd->event->title }}</span>
+                        <span class="list-row-sub">
+                            {{ $sd->event->exam_date->format('d.m.Y') }}
+                            @if(! empty($sd->topics)) · {{ $sonDeneme['weak'] }} eksik konu @endif
+                        </span>
+                    </span>
+                    <span class="list-row-value">
+                        <strong>{{ number_format($sd->totalNet(), 2, ',', '.') }}</strong> net
+                        @if($sonDeneme['change'] !== null)
+                            <span class="{{ $sonDeneme['change'] > 0 ? 'text-success' : ($sonDeneme['change'] < 0 ? 'text-danger' : 'text-muted') }}">({{ \App\Support\ExamResultDetail::signed($sonDeneme['change']) }})</span>
+                        @endif
+                    </span>
+                </a>
+            </div>
+        </div>
+    @endif
+
     {{-- Katli durur ki telefonda takvim ilk ekranda gorunsun. Gundeki "+"
          acar ve tarihi yazar; dogrulama hatasi varsa acik gelir. Yalnizca
          KENDI alanlarinin hatasinda: $errors->any() alttaki sabit program
@@ -100,7 +124,12 @@
 
     @if($oneriler->isNotEmpty())
         <div class="card mb-3">
-            <div class="card-header"><h4>Denemeden gelen öneriler</h4></div>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4>Denemeden gelen öneriler</h4>
+                @if($sonDeneme)
+                    <a href="{{ route('coach.exams.result', $sonDeneme['result']) }}" class="btn btn-sm btn-secondary">Deneme detayı →</a>
+                @endif
+            </div>
             <div class="card-body">
                 <p class="text-muted text-sm">Son denemede başarı oranı düşük konular. Plana eklenen konu bugüne düşer; takvimde taşıyabilirsin.</p>
                 <ul class="log-list mb-0">

@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Models\ExamEvent;
 use App\Models\ExamResult;
 use App\Models\Package;
+use App\Models\StudyPlanItem;
 use App\Models\Subject;
 use App\Models\User;
+use App\Models\WeakTopic;
 use App\Support\ExamResultDetail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -94,7 +96,8 @@ class ExamResultViewTest extends TestCase
             ->assertSee('120 kişide 7.')
             ->assertSee('Yazım Kuralları')
             ->assertSee('progress-bar-weak', false)
-            ->assertDontSee('Plana ödev ekle');
+            ->assertDontSee('Plan sayfası →')
+            ->assertDontSee('Ödev ver');
     }
 
     public function test_the_coach_sees_only_assigned_students_in_the_analysis(): void
@@ -110,11 +113,55 @@ class ExamResultViewTest extends TestCase
             ->assertSee('Türkçe · Yazım Kuralları');
 
         $this->actingAs($this->koc)->get(route('coach.exams.result', $this->ayseninYenisi()))
-            ->assertOk()->assertSee('Ayşe Tan')->assertSee('Plana ödev ekle')
+            ->assertOk()->assertSee('Ayşe Tan')->assertSee('Plan sayfası →')
             ->assertSee(route('coach.plan.show', $this->ayse), false);
 
         $burakinki = ExamResult::where('student_id', $this->burak->id)->sole();
         $this->actingAs($this->koc)->get(route('coach.exams.result', $burakinki))->assertForbidden();
+    }
+
+    /** Eksik konu satirinda tek dokunusla odev; eklenince "Planda" (5 Ekim 2026). */
+    public function test_the_coach_assigns_homework_from_a_weak_topic_row(): void
+    {
+        $konu = WeakTopic::create(['student_id' => $this->ayse->id, 'subject_id' => $this->turkce->id,
+            'topic' => 'Yazım Kuralları', 'source' => 'exam', 'created_by' => $this->yonetici->id]);
+        $sayfa = route('coach.exams.result', $this->ayseninYenisi());
+
+        $this->actingAs($this->koc)->get($sayfa)
+            ->assertSee(route('coach.topics.plan', $konu), false)
+            ->assertSee('Ödev ver')
+            ->assertDontSee('Planda');
+
+        $this->actingAs($this->koc)->from($sayfa)->post(route('coach.topics.plan', $konu))->assertRedirect($sayfa);
+
+        $madde = StudyPlanItem::where('student_id', $this->ayse->id)->sole();
+        $this->assertSame('Yazım Kuralları', $madde->title);
+        $this->assertSame(StudyPlanItem::TAG_HOMEWORK, $madde->tag);
+
+        $this->actingAs($this->koc)->get($sayfa)
+            ->assertSee('Planda')
+            ->assertDontSee(route('coach.topics.plan', $konu), false);
+    }
+
+    /** Kocun plan sayfasinda son deneme ozeti ve detaya baglanti (5 Ekim 2026). */
+    public function test_the_coach_plan_page_shows_the_latest_exam(): void
+    {
+        $this->actingAs($this->koc)->get(route('coach.plan.show', $this->ayse))
+            ->assertOk()
+            ->assertSee('Son deneme: TYT Deneme 2')
+            ->assertSee('29,00')
+            ->assertSee('(+11,00)')
+            ->assertSee('1 eksik konu')
+            ->assertSee(route('coach.exams.result', $this->ayseninYenisi()), false);
+    }
+
+    public function test_the_plan_page_without_exams_has_no_summary(): void
+    {
+        $this->koc->coachStudents()->attach($this->burak->id);
+        ExamResult::where('student_id', $this->burak->id)->delete();
+
+        $this->actingAs($this->koc)->get(route('coach.plan.show', $this->burak))
+            ->assertOk()->assertDontSee('Son deneme:');
     }
 
     public function test_the_admin_sees_every_student_side_by_side(): void
