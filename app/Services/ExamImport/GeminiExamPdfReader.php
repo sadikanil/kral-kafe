@@ -71,6 +71,26 @@ class GeminiExamPdfReader implements ExamPdfReader
         return $sonuc;
     }
 
+    /**
+     * Dusunme derinligi (5 Ekim 2026). Gemini 3 ve sonrasi varsayilanda uzun
+     * dusunuyor ve bir karne (~50 konu satiri) 50 saniyeyi asiyordu; is bir
+     * tablo aktarimi. EXAM_AI_EFFORT (Claude ile ortak, varsayilan low)
+     * thinkingLevel olur. 2.x modellerde alan farkli; hic gonderilmez.
+     *
+     * @return array<string,mixed>
+     */
+    public static function thinking(string $model): array
+    {
+        $seviye = (string) config('services.exam_ai.effort');
+
+        if (! preg_match('/^gemini-(\d+)/', $model, $m) || (int) $m[1] < 3
+            || ! in_array($seviye, ['minimal', 'low', 'medium', 'high'], true)) {
+            return [];
+        }
+
+        return ['thinkingConfig' => ['thinkingLevel' => $seviye]];
+    }
+
     /** @return array<string,mixed> */
     private function iste(string $pdf, string $istem, array $sema): array
     {
@@ -99,12 +119,16 @@ class GeminiExamPdfReader implements ExamPdfReader
                     'temperature' => 0,
                     'responseMimeType' => 'application/json',
                     'responseSchema' => self::schema($sema),
-                ],
+                ] + self::thinking($model),
             ]);
         } catch (ExamPdfReadException $e) {
             throw $e;
         } catch (\Throwable $e) {
             Log::error('Deneme PDF okuma (Gemini) basarisiz', ['error' => $e->getMessage()]);
+
+            if (ExamPdfReadException::isTimeout($e)) {
+                throw ExamPdfReadException::timeout($e);
+            }
 
             throw new ExamPdfReadException('Yapay zekâ servisine ulaşılamadı: ' . $e->getMessage(), previous: $e);
         }

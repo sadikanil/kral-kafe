@@ -90,7 +90,7 @@ class AnthropicExamPdfReader implements ExamPdfReader
 
             throw new ExamPdfReadException('Yapay zekâ servisi hata döndü (' . $e->status . ').', previous: $e);
         } catch (APITimeoutException $e) {
-            throw new ExamPdfReadException('Sayfa 50 saniyede okunamadı; "Devam et" ile yeniden deneyin.', previous: $e);
+            throw ExamPdfReadException::timeout($e);
         } catch (APIConnectionException $e) {
             Log::error('Deneme PDF okuma (Claude): baglanti', ['error' => $e->getMessage()]);
 

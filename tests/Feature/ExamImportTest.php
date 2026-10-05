@@ -173,9 +173,13 @@ class ExamImportTest extends TestCase
         $this->isle($aktarim);
         $this->isle($aktarim);
 
-        $this->okuyucu->hata = 'Sayfa 50 saniyede okunamadı.';
+        $this->okuyucu->hata = 'Yapay zekâ servisi hata döndü (500).';
         $durum = $this->isle($aktarim);
-        $this->assertSame(['failed', 'Sayfa 50 saniyede okunamadı.'], [$durum['status'], $durum['message']]);
+        $this->assertSame(['failed', 'Yapay zekâ servisi hata döndü (500).', false], [$durum['status'], $durum['message'], $durum['retryable']]);
+
+        // Zaman asimi: sayfa kendiliginden yeniden dener (5 Ekim 2026).
+        $this->okuyucu->hata = ExamPdfReadException::timeout()->getMessage();
+        $this->assertTrue($this->isle($aktarim)['retryable']);
 
         $this->okuyucu->hata = null;
         $this->isle($aktarim);

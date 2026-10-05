@@ -39,7 +39,7 @@ class ExamImportProcessor
     ) {
     }
 
-    /** @return array{status:string,done:int,total:int,message:?string} */
+    /** @return array{status:string,done:int,total:int,message:?string,retryable:bool} */
     public function step(ExamImport $aktarim): array
     {
         try {
@@ -62,7 +62,7 @@ class ExamImportProcessor
         return $this->durum($aktarim->fresh());
     }
 
-    /** @return array{status:string,done:int,total:int,message:?string} */
+    /** @return array{status:string,done:int,total:int,message:?string,retryable:bool} */
     public function durum(ExamImport $aktarim): array
     {
         $karneli = $aktarim->rows()->whereNotNull('card_page');
@@ -72,6 +72,8 @@ class ExamImportProcessor
             'done' => (clone $karneli)->where('card_read', true)->count(),
             'total' => $karneli->count(),
             'message' => $aktarim->error,
+            // Zaman asimi: sayfa ayni adimi kendiliginden yeniden dener.
+            'retryable' => $aktarim->status === ExamImport::FAILED && ExamPdfReadException::isRetryable($aktarim->error),
         ];
     }
 

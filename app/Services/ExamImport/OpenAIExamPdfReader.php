@@ -58,6 +58,10 @@ class OpenAIExamPdfReader implements ExamPdfReader
         } catch (\Throwable $e) {
             Log::error('Deneme PDF okuma (OpenAI) basarisiz', ['error' => $e->getMessage()]);
 
+            if (ExamPdfReadException::isTimeout($e)) {
+                throw ExamPdfReadException::timeout($e);
+            }
+
             throw new ExamPdfReadException('Yapay zekâ servisine ulaşılamadı: ' . $e->getMessage(), previous: $e);
         }
 

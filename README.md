@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 5 Ekim 2026 · Laravel 12 · 1503 test / 6647 doğrulama yeşil._
+_Son güncelleme: 5 Ekim 2026 · Laravel 12 · 1505 test / 6657 doğrulama yeşil._
 
 ---
 
@@ -1884,7 +1884,7 @@ Ardından `http://127.0.0.1:8000`. Hepsini birden (sunucu + kuyruk + log + vite)
 | `EXAM_AI_PROVIDER` | `anthropic`, `gemini` ya da `openai`; boşsa anahtara göre seçilir. |
 | `GOOGLE_VERTEX_PROJECT` / `GOOGLE_VERTEX_LOCATION` / `GOOGLE_VERTEX_CREDENTIALS` / `EXAM_AI_GEMINI_MODEL` | Gemini (Vertex AI) ile PDF okuma, §14.6. |
 | `EXAM_AI_ANTHROPIC_MODEL` / `EXAM_AI_OPENAI_MODEL` | Varsayılan `claude-opus-5-5` / `gpt-4o`. |
-| `EXAM_AI_EFFORT` | Claude düşünme derinliği; aktarım işi olduğu için varsayılan `low`. Okuma hatası görülürse `medium`. |
+| `EXAM_AI_EFFORT` | Düşünme derinliği; aktarım işi olduğu için varsayılan `low`. Claude'da `effort`, Gemini 3 ve sonrasında `thinkingLevel` (`minimal`/`low`/`medium`/`high`) olur. Okuma hatası görülürse `medium`; karneler 50 sn'yi aşıyorsa `minimal`. |
 | `UPLOAD_DISK` | Yüklenen dosyaların gideceği disk. Yerelde `public`, serverless ortamda `s3`. |
 | `MAIL_MAILER` | Şifre sıfırlama e-postası. Varsayılan `log`; gerçek gönderim için SMTP gerekir. |
 
@@ -2477,6 +2477,10 @@ Yönetici kontrol eder → Yayınla
   girilir (`App\Support\SpontaneousExam`). Yeni deneme tek günlük pencereyle
   kaydedilir: öğrencinin açık serbest denemeler kutusunda sonradan durmaz. Gün
   bugünden sonra olamaz; PDF depoya yazılamazsa deneme de açılmaz.
+- **Zaman aşımı (5 Ekim 2026):** Gemini 3 varsayılanda uzun düşünüyor ve bazı karneler
+  50 sn'yi aşıyordu (cURL 28). İstek artık `thinkingLevel` = `EXAM_AI_EFFORT` (varsayılan
+  `low`) gönderiyor; yine aşarsa hata "zaman aşımı" diye kaydedilir ve sayfa aynı karneyi
+  en fazla 2 kez kendiliğinden yeniden dener, sonra "Devam et" kalır.
 - Her adım ayrı istek; sayfa açıkken betik sırayla çağırır. Hata kaldığı yerde
   durur, "Devam et" okunmuş karneyi yeniden okumaz (iki kez ödeme yok).
 - Sağlayıcı arayüzün arkasında (`App\Contracts\ExamPdfReader`): Claude

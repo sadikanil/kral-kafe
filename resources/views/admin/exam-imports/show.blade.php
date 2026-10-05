@@ -140,12 +140,16 @@
 <script>
 (function () {
     // Okuma dongusu: her istek tek adim (Vercel 60 sn). Hata olursa durur,
-    // "Devam et" dugmesi kalir. Bitince sayfa yenilenir.
+    // "Devam et" dugmesi kalir. Bitince sayfa yenilenir. Zaman asimi
+    // (retryable) ayni karnede en fazla 2 kez kendiliginden yeniden denenir.
     const kutu = document.getElementById('okuma');
     if (!kutu || kutu.dataset.okunuyor !== '1') { return; }
     const ilerleme = kutu.querySelector('.js-ilerleme');
     const form = kutu.querySelector('.js-devam-formu');
     const jeton = document.querySelector('meta[name="csrf-token"]');
+
+    let tekrar = 0;
+    let sonOkunan = -1;
 
     function adim() {
         fetch(kutu.dataset.adres, {
@@ -155,7 +159,15 @@
         }).then(function (y) { return y.ok ? y.json() : Promise.reject(y.status); })
           .then(function (d) {
               if (ilerleme && d.total > 0) { ilerleme.textContent = 'Karneler: ' + d.done + ' / ' + d.total; }
-              if (d.status === 'uploaded' || d.status === 'reading') { adim(); } else { location.reload(); }
+              if (d.done !== sonOkunan) { sonOkunan = d.done; tekrar = 0; }
+              if (d.status === 'uploaded' || d.status === 'reading') { adim(); return; }
+              if (d.status === 'failed' && d.retryable && tekrar < 2) {
+                  tekrar++;
+                  if (ilerleme) { ilerleme.textContent = 'Karneler: ' + d.done + ' / ' + d.total + ' · zaman aşımı, yeniden deneniyor (' + tekrar + '/2)…'; }
+                  adim();
+                  return;
+              }
+              location.reload();
           })
           .catch(function () { location.reload(); });
     }

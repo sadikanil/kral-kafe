@@ -106,6 +106,45 @@ class GeminiExamPdfReaderTest extends TestCase
         });
     }
 
+    /** Gemini 3+: dusunme seviyesi EXAM_AI_EFFORT'tan; eski modelde alan yok (5 Ekim 2026). */
+    public function test_the_thinking_level_is_low_for_gemini_3_and_absent_for_older_models(): void
+    {
+        config(['services.exam_ai.effort' => 'low']);
+        $this->assertSame(['thinkingConfig' => ['thinkingLevel' => 'low']], GeminiExamPdfReader::thinking('gemini-3.8-flash'));
+        $this->assertSame([], GeminiExamPdfReader::thinking('gemini-2.5-flash'));
+        $this->assertSame([], GeminiExamPdfReader::thinking('gemini-test-flash'));
+
+        config(['services.exam_ai.effort' => 'max']);
+        $this->assertSame([], GeminiExamPdfReader::thinking('gemini-3.8-flash'));
+
+        config(['services.exam_ai.effort' => 'low', 'services.exam_ai.gemini_model' => 'gemini-3.8-flash']);
+        $this->sahte($this->cevap(['name' => 'A', 'class' => null, 'score' => null, 'ranks' => [], 'subjects' => [], 'topics' => []]));
+        (new GeminiExamPdfReader)->readCard('%PDF-1.7 sahte', 4, 'A', ['tyt_kimya' => 'TYT Kimya']);
+
+        Http::assertSent(fn (Request $r) => str_contains($r->url(), 'aiplatform')
+            && $r['generationConfig']['thinkingConfig'] === ['thinkingLevel' => 'low']);
+    }
+
+    /** 50 sn asimi okunur mesaj ve "yeniden denenebilir" isareti (5 Ekim 2026). */
+    public function test_a_timeout_is_marked_retryable(): void
+    {
+        Http::fake([
+            'oauth2.googleapis.com/*' => Http::response(['access_token' => 'erisim-jetonu', 'expires_in' => 3599]),
+            '*aiplatform.googleapis.com/*' => fn () => throw new \Illuminate\Http\Client\ConnectionException(
+                'cURL error 28: Operation timed out after 50001 milliseconds with 0 bytes received'),
+        ]);
+
+        try {
+            (new GeminiExamPdfReader)->readCard('%PDF-1.7 sahte', 4, 'A', ['tyt_kimya' => 'TYT Kimya']);
+            $this->fail('Zaman asimi hata vermeliydi.');
+        } catch (ExamPdfReadException $e) {
+            $this->assertSame('Sayfa 50 saniyede okunamadı (zaman aşımı); "Devam et" ile yeniden deneyin.', $e->getMessage());
+            $this->assertTrue(ExamPdfReadException::isRetryable($e->getMessage()));
+        }
+
+        $this->assertFalse(ExamPdfReadException::isRetryable('Yapay zekâ servisi hata döndü (500).'));
+    }
+
     public function test_the_token_is_reused_across_pages(): void
     {
         $this->sahte($this->cevap(['name' => 'A', 'class' => null, 'score' => null, 'ranks' => [], 'subjects' => [], 'topics' => []]));
