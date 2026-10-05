@@ -182,6 +182,21 @@ class CoachRolesAndLessonsTest extends TestCase
         $this->assertSame(Role::Parent, $sade->displayRole());
     }
 
+    /** Ogrenci formunda koc yetkili veli etiketli, koclar bransiyla (5 Ekim 2026). */
+    public function test_the_student_form_marks_coach_parents_and_shows_coach_subjects(): void
+    {
+        User::factory()->parent()->create(['name' => 'Sade Veli']);
+
+        $this->actingAs($this->cahit)->get(route('admin.users.edit', $this->ogrenci))
+            ->assertOk()
+            ->assertSeeInOrder(['Velileri', 'İbrahim Acar', 'Koç · Matematik'])->assertSee('Sade Veli')
+            ->assertSee('Özel ders ya da koçluk verdiği öğrenci için aşağıdaki', false)
+            // Koclar karti: atanan koc bransi ve asil roluyle
+            ->assertSee('Koç · Matematik · Veli')
+            // Atanabilir listede brans
+            ->assertSee('Cahit Atılğan · Fizik (Yönetici)');
+    }
+
     public function test_a_student_never_keeps_coach_rights_from_the_form(): void
     {
         $this->actingAs($this->cahit)->put(route('admin.users.update', $this->ogrenci), [

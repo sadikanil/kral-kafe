@@ -156,6 +156,7 @@
                                             {{ in_array($veli->id, old('parent_ids', $linkedParentIds) ?: []) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="parent_{{ $veli->id }}">
                                             {{ $veli->name }} <span class="text-muted">({{ $veli->contactLabel() }})</span>
+                                            @if($veli->is_coach)<span class="badge badge-info">Koç{{ $veli->coach_subject ? ' · ' . $veli->coach_subject : '' }}</span>@endif
                                         </label>
                                     </div>
                                 @endforeach
@@ -167,6 +168,11 @@
                         @error('parent_ids.*')
                             <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
+                        {{-- 5 Ekim 2026: koc yetkili veli burada yalnizca KENDI cocugunu
+                             isaretler; ozel ders/kocluk bagi asagidaki Koclar kartinda. --}}
+                        @if($linkableParents->contains('is_coach', true))
+                            <small class="text-muted">Koç etiketli veliler yalnızca kendi çocuklarıysa işaretlenir. Özel ders ya da koçluk verdiği öğrenci için aşağıdaki <strong>Koçlar</strong> kartını kullanın; veli bağı ödeme ve paket bilgisini de açar.</small>
+                        @endif
                     </div>
                 @endif
 
@@ -301,7 +307,7 @@
                         <option value="">Koç seç</option>
                         @foreach($assignableCoaches as $aday)
                             <option value="{{ $aday->id }}">
-                                {{ $aday->name }} ({{ $aday->role()?->label() }})
+                                {{ $aday->coachLabel() }} ({{ $aday->displayRole()?->label() }})
                             </option>
                         @endforeach
                     </select>
@@ -312,7 +318,11 @@
                     <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
                         <div>
                             <strong>{{ $atanan->name }}</strong>
-                            <div class="text-muted">{{ $atanan->role()?->label() }}</div>
+                            {{-- Brans ve asil rol (5 Ekim 2026): "Koç · Matematik · Veli". --}}
+                            <div class="text-muted">
+                                {{ collect([$atanan->displayRole()?->label(), $atanan->coach_subject,
+                                    $atanan->displayRole() !== $atanan->role() ? $atanan->role()?->label() : null])->filter()->implode(' · ') }}
+                            </div>
                         </div>
 
                         <form method="POST" action="{{ route('admin.coaches.detach', [$user, $atanan]) }}">
