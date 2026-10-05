@@ -5,9 +5,47 @@
 
 @section('page-actions')
     <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm">
-        ➕ Yeni Kullanıcı
+        Yeni kullanıcı
     </a>
 @endsection
+
+@push('scripts')
+<script>
+    // Satir menusu: biri acilinca digerleri kapanir; disariya dokununca kapanir.
+    (function () {
+        const menuler = document.querySelectorAll('.row-menu');
+        // Kutu sabit konumlu (tablo tasmasi kirpmasin): dugmenin altina,
+        // sigmazsa ustune; saga hizali.
+        function yerlestir(menu) {
+            const dugme = menu.querySelector('summary').getBoundingClientRect();
+            const kutu = menu.querySelector('.row-menu-list');
+            const yukseklik = kutu.offsetHeight;
+            const asagi = dugme.bottom + 4 + yukseklik <= window.innerHeight - 72;
+            kutu.style.top = (asagi ? dugme.bottom + 4 : Math.max(8, dugme.top - 4 - yukseklik)) + 'px';
+            kutu.style.left = Math.max(8, dugme.right - kutu.offsetWidth) + 'px';
+        }
+
+        function hepsiniKapat(haric) {
+            menuler.forEach(function (m) { if (m !== haric) { m.open = false; } });
+        }
+
+        menuler.forEach(function (menu) {
+            menu.addEventListener('toggle', function () {
+                if (menu.open) { hepsiniKapat(menu); yerlestir(menu); }
+            });
+        });
+        document.addEventListener('click', function (e) {
+            menuler.forEach(function (m) { if (m.open && !m.contains(e.target)) { m.open = false; } });
+        });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { hepsiniKapat(null); } });
+        // Kaydirinca kutu dugmeden kopmasin.
+        window.addEventListener('scroll', function () { hepsiniKapat(null); }, { passive: true });
+        document.querySelectorAll('.table-responsive').forEach(function (t) {
+            t.addEventListener('scroll', function () { hepsiniKapat(null); }, { passive: true });
+        });
+    })();
+</script>
+@endpush
 
 @section('content')
     <!-- Filtreler -->
@@ -57,14 +95,14 @@
                     </thead>
                     <tbody>
                         @forelse($users as $user)
-                            <tr>
+                            <tr class="row-link-row">
                                 <td class="wrap-sm">
                                     <div class="d-flex align-items-center gap-2">
                                         <div class="sidebar-user-avatar hide-sm" style="width: 32px; height: 32px; font-size: 0.75rem;">
                                             {{ mb_strtoupper(mb_substr($user->name, 0, 2)) }}
                                         </div>
                                         <div>
-                                            <a href="{{ route('admin.users.edit', $user) }}" class="text-inherit">{{ $user->name }}</a>
+                                            <a href="{{ route('admin.users.edit', $user) }}" class="text-inherit row-link">{{ $user->name }}</a>
                                             {{-- Telefonda gizlenen sutunlarin ozeti --}}
                                             <div class="show-sm text-muted" style="font-size: 0.75rem;">
                                                 {{ $user->contactLabel() }} · {{ $user->displayRole()?->label() ?? $user->role }}
@@ -100,36 +138,41 @@
                                     @endswitch
                                 </td>
                                 <td class="hide-sm">{{ $user->created_at->timezone(config('kafe.timezone'))->format('d.m.Y') }}</td>
+                                {{--
+                                    Satir islemleri (5 Ekim 2026): satirin tamami duzenlemeye
+                                    gider (ad baglantisi satiri kaplar); diger islemler yazili
+                                    adlarla "⋯" menusunde. Emojili dugmeler ne yaptigini
+                                    soylemiyordu ve Duzenle'nin yanindaki ⏸️ yanlis dokunusa acikti.
+                                --}}
                                 <td class="actions-cell">
-                                    <div class="row-actions">
-                                        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-secondary" title="Düzenle" aria-label="Düzenle">✏️</a>
-                                        @if($user->isStudent())
-                                            <a href="{{ route('admin.subscriptions.index', $user) }}" class="btn btn-sm btn-secondary" title="Paket ve ödeme" aria-label="Paket ve ödeme">💳</a>
-                                            <a href="{{ route('admin.exam-reports.index', $user) }}" class="btn btn-sm btn-secondary" title="Deneme raporları" aria-label="Deneme raporları">📄</a>
-                                        @endif
-                                        
-                                        @if($user->id !== auth()->id())
-                                            {{-- A5: ⏸️ Duzenle'nin hemen yaninda ve dokunmatikte title
-                                                 gorunmuyor; yanlis dokunus ogrenciyi aninda askiya aliyordu.
-                                                 Ad @js ile: kesme isaretli ad onay kutusunu bozmasin. --}}
-                                            @php $askiyaAl = $user->subscription_status == 'active'; @endphp
-                                            <form action="{{ route('admin.users.toggle-status', $user) }}" method="POST" class="d-inline-block"
-                                                onsubmit="return confirm(@js($user->name . ($askiyaAl ? ' askıya alınsın mı?' : ' aktifleştirilsin mi?')))">
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm btn-{{ $askiyaAl ? 'warning' : 'success' }}"
-                                                    title="{{ $askiyaAl ? 'Askıya al' : 'Aktifleştir' }}"
-                                                    aria-label="{{ ($askiyaAl ? 'Askıya al: ' : 'Aktifleştir: ') . $user->name }}">
-                                                    {{ $askiyaAl ? '⏸️' : '▶️' }}
-                                                </button>
-                                            </form>
-                                            
-                                            <form action="{{ route('admin.users.destroy', $user) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Bu kullanıcıyı silmek istediğinize emin misiniz?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger" title="Sil" aria-label="Sil">🗑️</button>
-                                            </form>
-                                        @endif
-                                    </div>
+                                    <details class="row-menu">
+                                        <summary class="btn btn-sm btn-secondary" aria-label="İşlemler: {{ $user->name }}">⋯</summary>
+                                        <div class="row-menu-list">
+                                            <a href="{{ route('admin.users.edit', $user) }}">Düzenle</a>
+                                            @if($user->isStudent())
+                                                <a href="{{ route('admin.subscriptions.index', $user) }}">Paket ve ödeme</a>
+                                                <a href="{{ route('admin.exam-reports.index', $user) }}">Deneme raporları ve sonuç</a>
+                                            @endif
+                                            @if($user->id !== auth()->id())
+                                                {{-- A5: onay soran ve adi soyleyen askiya alma. Ad @js ile:
+                                                     kesme isaretli ad onay kutusunu bozmasin. --}}
+                                                @php $askiyaAl = $user->subscription_status == 'active'; @endphp
+                                                <form action="{{ route('admin.users.toggle-status', $user) }}" method="POST"
+                                                    onsubmit="return confirm(@js($user->name . ($askiyaAl ? ' askıya alınsın mı?' : ' aktifleştirilsin mi?')))">
+                                                    @csrf
+                                                    <button type="submit" aria-label="{{ ($askiyaAl ? 'Askıya al: ' : 'Aktifleştir: ') . $user->name }}">
+                                                        {{ $askiyaAl ? 'Askıya al' : 'Aktifleştir' }}
+                                                    </button>
+                                                </form>
+                                                <form action="{{ route('admin.users.destroy', $user) }}" method="POST"
+                                                    onsubmit="return confirm(@js($user->name . ' silinsin mi? Bu geri alınamaz.'))">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-danger" aria-label="Sil: {{ $user->name }}">Sil</button>
+                                                </form>
+                                            @endif
+                                        </div>
+                                    </details>
                                 </td>
                             </tr>
                         @empty
@@ -151,3 +194,41 @@
         @endif
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    // Satir menusu: biri acilinca digerleri kapanir; disariya dokununca kapanir.
+    (function () {
+        const menuler = document.querySelectorAll('.row-menu');
+        // Kutu sabit konumlu (tablo tasmasi kirpmasin): dugmenin altina,
+        // sigmazsa ustune; saga hizali.
+        function yerlestir(menu) {
+            const dugme = menu.querySelector('summary').getBoundingClientRect();
+            const kutu = menu.querySelector('.row-menu-list');
+            const yukseklik = kutu.offsetHeight;
+            const asagi = dugme.bottom + 4 + yukseklik <= window.innerHeight - 72;
+            kutu.style.top = (asagi ? dugme.bottom + 4 : Math.max(8, dugme.top - 4 - yukseklik)) + 'px';
+            kutu.style.left = Math.max(8, dugme.right - kutu.offsetWidth) + 'px';
+        }
+
+        function hepsiniKapat(haric) {
+            menuler.forEach(function (m) { if (m !== haric) { m.open = false; } });
+        }
+
+        menuler.forEach(function (menu) {
+            menu.addEventListener('toggle', function () {
+                if (menu.open) { hepsiniKapat(menu); yerlestir(menu); }
+            });
+        });
+        document.addEventListener('click', function (e) {
+            menuler.forEach(function (m) { if (m.open && !m.contains(e.target)) { m.open = false; } });
+        });
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { hepsiniKapat(null); } });
+        // Kaydirinca kutu dugmeden kopmasin.
+        window.addEventListener('scroll', function () { hepsiniKapat(null); }, { passive: true });
+        document.querySelectorAll('.table-responsive').forEach(function (t) {
+            t.addEventListener('scroll', function () { hepsiniKapat(null); }, { passive: true });
+        });
+    })();
+</script>
+@endpush

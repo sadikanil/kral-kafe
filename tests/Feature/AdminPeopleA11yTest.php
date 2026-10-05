@@ -48,6 +48,22 @@ class AdminPeopleA11yTest extends TestCase
             ->assertSee('aria-label="Aktifleştir: Berk Askı"', false);
     }
 
+    /** Satir islemleri yazili adlarla "⋯" menusunde; satir duzenlemeye gider (5 Ekim 2026). */
+    public function test_row_actions_are_named_in_a_menu(): void
+    {
+        $ogrenci = User::factory()->student()->create(['name' => 'Ece Tan']);
+
+        $this->actingAs($this->yonetici)->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee('aria-label="İşlemler: Ece Tan"', false)
+            ->assertSee('class="text-inherit row-link"', false)
+            ->assertSeeInOrder(['Düzenle', 'Paket ve ödeme', 'Deneme raporları ve sonuç', 'Askıya al', 'Sil'])
+            ->assertSee('aria-label="Sil: Ece Tan"', false)
+            ->assertSee(route('admin.subscriptions.index', $ogrenci), false)
+            ->assertDontSee('✏️')
+            ->assertDontSee('🗑️');
+    }
+
     public function test_the_list_filters_have_names_and_a_search_key(): void
     {
         $this->actingAs($this->yonetici)->get(route('admin.users.index'))

@@ -3316,3 +3316,72 @@ body.is-focusing {
     font-weight: 400;
     font-size: 0.9rem;
 }
+
+/* ============================================================
+   Satir menusu ve tiklanir satir (5 Ekim 2026): kullanicilar
+   listesinde ad baglantisi satiri kaplar; islemler "⋯" menusunde.
+   ============================================================ */
+.row-link-row {
+    position: relative;
+}
+
+.row-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+
+.row-link-row:hover {
+    background: var(--hover);
+}
+
+.row-menu {
+    position: relative;
+    z-index: 1;
+}
+
+.row-menu > summary {
+    list-style: none;
+    min-width: 36px;
+}
+
+.row-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.row-menu-list {
+    /* Sabit konum: tablo kabinin tasmasi (overflow) kutuyu kirpmasin;
+       yeri acilista betikle dugmenin yanina yazilir. */
+    position: fixed;
+    z-index: 200;
+    min-width: 210px;
+    padding: 6px;
+    background: var(--elevated);
+    border: 0.5px solid var(--separator-strong);
+    border-radius: 12px;
+    box-shadow: var(--shadow-float);
+}
+
+.row-menu-list a,
+.row-menu-list button {
+    display: block;
+    width: 100%;
+    padding: 9px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--label);
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.row-menu-list a:hover,
+.row-menu-list button:hover {
+    background: var(--hover);
+}
+
+.row-menu-list button.text-danger {
+    color: var(--danger);
+}
