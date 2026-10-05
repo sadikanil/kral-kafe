@@ -46,6 +46,29 @@ class Notification extends Model
         return $this->belongsTo(User::class, 'student_id');
     }
 
+    /**
+     * Bildirimin acacagi sayfa (5 Ekim 2026), alicinin gozunden. Simdilik
+     * yalnizca deneme sonucu: ogrenci kendi detayina (deneme kulubu varsa),
+     * veli cocugunun, koc atandigi ogrencinin detayina. Erisemeyecegi
+     * sayfaya baglanti verilmez (null).
+     */
+    public function url(User $alici): ?string
+    {
+        if ($this->type !== NotificationType::ExamResult || $this->related_id === null || $this->student === null) {
+            return null;
+        }
+
+        $ogrenci = $this->student;
+
+        return match (true) {
+            $alici->id === $ogrenci->id => $alici->entitlements()->examClub
+                ? route('user.exam-results.show', $this->related_id) : null,
+            $alici->isParentOf($ogrenci) => route('parent.exam-result', [$ogrenci, $this->related_id]),
+            $alici->canCoach($ogrenci) => route('coach.exams.result', $this->related_id),
+            default => null,
+        };
+    }
+
     public function scopeFor(Builder $query, User $user): Builder
     {
         return $query->where('user_id', $user->id);

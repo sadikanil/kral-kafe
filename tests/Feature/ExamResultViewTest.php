@@ -9,6 +9,7 @@ use App\Models\StudyPlanItem;
 use App\Models\Subject;
 use App\Models\User;
 use App\Models\WeakTopic;
+use App\Services\NotificationBuilder;
 use App\Support\ExamResultDetail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -186,6 +187,34 @@ class ExamResultViewTest extends TestCase
 
         $this->actingAs($this->koc)->get(route('coach.plan.show', $this->burak))
             ->assertOk()->assertDontSee('Son deneme:');
+    }
+
+    /** Deneme sonucu bildirimi alicinin gozunden detaya gider (5 Ekim 2026). */
+    public function test_the_result_notification_opens_the_detail_for_each_recipient(): void
+    {
+        $veli = User::factory()->parent()->create();
+        $veli->students()->attach($this->ayse->id);
+        $sonuc = $this->ayseninYenisi();
+        app(NotificationBuilder::class)->examResult($sonuc, ['Türkçe · Yazım Kuralları']);
+
+        $this->actingAs($this->ayse)->get(route('notifications.index'))
+            ->assertSee('Sonucu aç →')->assertSee(route('user.exam-results.show', $sonuc), false);
+        $this->actingAs($veli)->get(route('notifications.index'))
+            ->assertSee(route('parent.exam-result', [$this->ayse, $sonuc]), false);
+        // Zil listesinde de baglanti
+        $this->actingAs($this->koc)->get(route('coach.plan.index'))
+            ->assertSee('class="notif-item notif-link', false)
+            ->assertSee(route('coach.exams.result', $sonuc), false);
+    }
+
+    public function test_a_student_without_the_exam_club_gets_no_link(): void
+    {
+        $kulupsuz = User::factory()->student()->withPackage(Package::factory()->tier1())->create();
+        $sonuc = $this->sonuc($kulupsuz, $this->yeni, 10, 0);
+        app(NotificationBuilder::class)->examResult($sonuc, []);
+
+        $this->actingAs($kulupsuz)->get(route('notifications.index'))
+            ->assertOk()->assertSee('Deneme sonucun yüklendi')->assertDontSee('Sonucu aç →');
     }
 
     public function test_the_admin_sees_every_student_side_by_side(): void

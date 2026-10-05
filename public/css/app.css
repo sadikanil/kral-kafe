@@ -3396,3 +3396,14 @@ body.is-focusing {
 .table-subtotal td:first-child {
     white-space: normal;
 }
+
+/* Hedefi olan bildirim (5 Ekim 2026): zil listesinde baglanti. */
+.notif-link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+}
+
+.notif-link:hover {
+    background: var(--hover);
+}

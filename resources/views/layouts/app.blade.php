@@ -21,8 +21,8 @@
 
     // Bildirim zili (Dalga 27). Her sayfada calistigi icin tek sorgu: son 6
     // bildirim, okunmamis sayisi alt sorgu olarak her satirda. Hic satir
-    // yoksa okunmamis da yoktur.
-    $sonBildirimler = \App\Models\Notification::for($kullanici)
+    // yoksa okunmamis da yoktur. Ogrenci baglantinin hedefi icin (url()).
+    $sonBildirimler = \App\Models\Notification::for($kullanici)->with('student')
         ->addSelect(['okunmamis_sayisi' => \App\Models\Notification::selectRaw('count(*)')
             ->where('user_id', $kullanici->id)->whereNull('read_at')])
         ->latest()->limit(6)->get();
@@ -152,13 +152,15 @@
                         </summary>
                         <div class="notif-panel">
                             @forelse($sonBildirimler as $bildirim)
-                                <div class="notif-item {{ $bildirim->read_at ? '' : 'is-unread' }}">
+                                {{-- Hedefi olan bildirim baglanti (5 Ekim 2026: deneme sonucu detayi). --}}
+                                @php($hedef = $bildirim->url($kullanici))
+                                <{{ $hedef ? 'a' : 'div' }} @if($hedef) href="{{ $hedef }}" @endif class="notif-item {{ $hedef ? 'notif-link' : '' }} {{ $bildirim->read_at ? '' : 'is-unread' }}">
                                     <strong>{{ $bildirim->title }}</strong>
                                     @if($bildirim->body)<div class="text-muted">{{ $bildirim->body }}</div>@endif
                                     <div class="notif-time">
                                         {{ $bildirim->created_at->timezone(config('kafe.timezone'))->format('d.m H:i') }}
                                     </div>
-                                </div>
+                                </{{ $hedef ? 'a' : 'div' }}>
                             @empty
                                 <div class="notif-item text-muted">Bildirim yok.</div>
                             @endforelse

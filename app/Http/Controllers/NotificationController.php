@@ -14,7 +14,7 @@ class NotificationController extends Controller
 {
     public function index(Request $request): View
     {
-        $liste = Notification::for($request->user())->latest()->limit(50)->get();
+        $liste = Notification::for($request->user())->with('student')->latest()->limit(50)->get();
 
         Notification::for($request->user())->whereNull('read_at')->update(['read_at' => now()]);
 

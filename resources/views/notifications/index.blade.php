@@ -13,8 +13,14 @@
             @if($bildirim->body)
                 <div class="text-muted">{{ $bildirim->body }}</div>
             @endif
-            <div class="text-muted" style="font-size: .8rem;">
-                {{ $bildirim->created_at->timezone(config('kafe.timezone'))->format('d.m.Y H:i') }}
+            <div class="d-flex justify-content-between align-items-center gap-2">
+                <span class="text-muted" style="font-size: .8rem;">
+                    {{ $bildirim->created_at->timezone(config('kafe.timezone'))->format('d.m.Y H:i') }}
+                </span>
+                {{-- 5 Ekim 2026: deneme sonucu bildirimi detaya gider. --}}
+                @if($hedef = $bildirim->url(auth()->user()))
+                    <a href="{{ $hedef }}" class="btn btn-sm btn-secondary">Sonucu aç →</a>
+                @endif
             </div>
         </div>
     @empty

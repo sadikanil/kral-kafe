@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 5 Ekim 2026 · Laravel 12 · 1494 test / 6588 doğrulama yeşil._
+_Son güncelleme: 5 Ekim 2026 · Laravel 12 · 1503 test / 6647 doğrulama yeşil._
 
 ---
 
@@ -63,6 +63,13 @@ Kararlar §5'te (18–24). Ayrıntı: koçlar §6.2, PDF akışı ve Claude/Open
 - [x] **Özel ders** — paketten bağımsız; ders saatine öğretmen + ders adı. Yönetim → **Özel Dersler**: aynı saat birden çok öğrenciye, özel ders paketi birden çok öğrenciye (pakette "ders sayısı"). Dersi veren koç öğrencinin koçu olarak atanır. Koç → **Özel Derslerim**: kendi dersleri, tek dersi iptal/taşı, haftalık saati değiştir; paket, ücret, ödeme yok.
 - [x] **Kurum deneme PDF'i** — Yönetim → **Deneme Sonuçları**: denemeyi seç (serbest denemeler ayrı grupta önce; listede yoksa "+ Yeni serbest deneme oluştur" ile ad, tür ve çözüldüğü gün aynı formda), kurumun PDF'ini bir kez yükle; yapay zekâ sayfa sayfa okur, adlar eşlenir, yönetici kontrol edip yayınlar. Öğrenci kendi netini, sıralarını, puanını ve eksik konularını görür; öğrenciye, veliye, koça bildirim; koç plan sayfasında "Denemeden gelen öneriler".
 - [x] **Koçlar** — Cahit Atılğan (yönetici, Fizik) ve İbrahim Acar (veli + koç, Matematik) ada göre tanımlanır (migration `2026_10_01_130000`); kayıtlı değilse kullanıcı formundan eklenir.
+- [x] **Akış iyileştirmeleri (5 Ekim 2026)**
+  - **Deneme detayı:** her rol aynı sayfayı görür; ders tablosunda karnedeki gibi bölüm ara toplamları (TYT: Temel Matematik, Fen, Sosyal; AYT: Fen, Edebiyat-Sosyal 1, Sosyal 2 — `ExamResultDetail::SECTIONS`). Koç ve yönetici her eksik konuyu tek dokunuşla plana/ödeve ekler; eklenen konu "Planda" olur.
+  - **Koç plan sayfası:** üstte son deneme (net, önceki aynı tür denemeye göre fark, eksik konu sayısı) ve detaya bağlantı; "Denemeden gelen öneriler" kartında "Deneme detayı →".
+  - **Bildirim:** deneme sonucu bildirimi zilde ve Bildirimler sayfasında alıcının gözünden detaya gider (öğrenci yalnızca deneme kulübü varsa; `Notification::url()`).
+  - **Yönetici paneli:** "Bekleyen işler" kartı (onay bekleyen oturumlar ve etiketlileri, okunma/kontrol bekleyen deneme PDF'leri, stok tutarsızlığı) yalnızca iş varken; renkli emojili hızlı erişim yerine düz "Kısayollar".
+  - **Kullanıcı formu:** Kimlik / Rol ve bağlar / Hedef ve üyelik / Şifre değiştir bölümleri (son ikisi katlı, hata varsa açık); 8'den uzun öğrenci/veli listelerinde arama. Öğrenci formunda koç yetkili veliler "Koç · branş" etiketli, Koçlar kartında branş ve asıl rol.
+  - **Kullanıcılar listesi:** satıra dokunmak düzenlemeye gider; işlemler yazılı adlarla "⋯" menüsünde (Düzenle, Paket ve ödeme, Deneme raporları ve sonuç, Askıya al / Aktifleştir, Sil).
 
 ### Dalga 30 · Takvimli plan (23 Eyl) · ✅ bitti
 
