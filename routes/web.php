@@ -356,3 +356,6 @@ Route::get('/zamanlanmis/gunluk', [CronController::class, 'daily'])->name('cron.
 // Gece yarisindan hemen sonra: acik kalan (duraklatilip birakilan dahil)
 // oturumlari kapatir ki sabah onay kuyrugunda hazir olsunlar.
 Route::get('/zamanlanmis/gece', [CronController::class, 'nightly'])->name('cron.nightly');
+// Deneme PDF okuma zinciri (5 Ekim 2026): her cagri kuyrugun basini bir
+// adim ilerletir, is kaldiysa kendini yeniden cagirir (ExamImportRunner).
+Route::get('/zamanlanmis/deneme-okuma', [CronController::class, 'examImports'])->name('cron.exam-imports');

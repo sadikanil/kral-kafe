@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 5 Ekim 2026 · Laravel 12 · 1510 test / 6702 doğrulama yeşil._
+_Son güncelleme: 5 Ekim 2026 · Laravel 12 · 1518 test / 6749 doğrulama yeşil._
 
 ---
 
@@ -2477,18 +2477,27 @@ Yönetici kontrol eder → Yayınla
   girilir (`App\Support\SpontaneousExam`). Yeni deneme tek günlük pencereyle
   kaydedilir: öğrencinin açık serbest denemeler kutusunda sonradan durmaz. Gün
   bugünden sonra olamaz; PDF depoya yazılamazsa deneme de açılmaz.
-- **Zaman aşımı (5 Ekim 2026):** Gemini 3 varsayılanda uzun düşünüyor ve bazı karneler
-  50 sn'yi aşıyordu (cURL 28). İstek artık `thinkingLevel` = `EXAM_AI_EFFORT` (varsayılan
-  `low`) gönderiyor; yine aşarsa aktarım durmaz, aynı adım sunucuda en fazla 2 kez daha
-  denenir (sayaç `meta.retries`), sonra "Devam et" kalır.
-- **Kuyruk (5 Ekim 2026):** aynı anda yalnızca bir okuma. Okunacak aktarımlar yükleme
-  sırasıyla kuyruktur (`ExamImport::scopeQueued`); hangi aktarımın sayfası açıksa kuyruğun
-  başını ilerletir — ikinci yüklenen deneme "Sırada · önünde 1" görünür, birincinin
-  sayfası kapalı olsa da önce o, sonra kendisi okunur. Aynı anda iki sekme ya da iki
-  yönetici okuma isterse kilit (`cache_locks`, veritabanı) ikinciyi bekletir; aynı karne
-  iki kez okunmaz, kota iki kat harcanmaz. Hata alan aktarım kuyruktan çıkar, sırayı
-  tıkamaz. Kuyruk tarayıcıyla ilerler: okunacak aktarımlardan birinin sayfası açık kalmalı.
-- Her adım ayrı istek; sayfa açıkken betik sırayla çağırır. Hata kaldığı yerde
+- **Arka plan zinciri (5 Ekim 2026):** okuma sayfa kapalıyken de sürer. Vercel'de kuyruk
+  sunucusu yok, Hobby'de cron günde bir; bu yüzden `GET /zamanlanmis/deneme-okuma`
+  (`Authorization: Bearer CRON_SECRET`) kendini çağıran bir zincir: her halka kuyruğun
+  başını bir adım ilerletir, iş kaldıysa sonraki halkayı tetikler ve cevabı beklemez
+  (Vercel istemci ayrılsa da fonksiyonu sonuna kadar çalıştırır). Yükleme ve "Devam et"
+  zinciri başlatır. Zincir koparsa (fonksiyon öldü, tetik kayboldu) son adımdan 90 sn sonra
+  okuma sayfasının yoklaması, yönetici paneli, Deneme Sonuçları listesi ya da günlük/gece
+  cron'u yeniden başlatır (`ExamImportRunner::nudge`). Tetikleme reddedilirse (ör. Vercel
+  koruma sayfası 401) 1 saat boyunca okuma eskisi gibi açık sayfadan ilerler.
+  `CRON_SECRET` yoksa zincir kapalı (yerel geliştirme).
+- **Kuyruk:** okunacak aktarımlar dosyanın yüklenme tarihine göre sıralanır
+  (`ExamImport::scopeQueued`); aynı anda yalnızca baştaki okunur, diğerleri
+  "Sırada · önünde N" görünür. Kilit (`cache_locks`, veritabanı) aynı anda gelen ikinci
+  isteği okutmaz: aynı karne iki kez okunmaz, kota iki kat harcanmaz.
+- **Geçici hatalar:** zaman aşımı, kota (429), 5xx ve bağlantı hatası aktarımı durdurmaz;
+  aynı adım 3 kez daha denenir (sayaç `meta.retries`; kotada 15 sn, 5xx'te 5 sn
+  beklenerek). Kalıcı hata (yanlış model, yetki…) ya da 3 başarısız tekrar aktarımı
+  durdurur, kuyruktan çıkarır; sıra tıkanmaz, "Devam et" geri sokar. Gemini 3 isteği
+  `thinkingLevel` = `EXAM_AI_EFFORT` (varsayılan `low`) gönderir; uzun düşünme bazı
+  karnelerde 50 sn'yi aşıyordu.
+- Her adım ayrı istek (Vercel 60 sn); sayfa yalnızca 4 sn'de bir durumu sorar. Hata kaldığı yerde
   durur, "Devam et" okunmuş karneyi yeniden okumaz (iki kez ödeme yok).
 - Sağlayıcı arayüzün arkasında (`App\Contracts\ExamPdfReader`): Claude
   (`AnthropicExamPdfReader`, resmi PHP SDK), Gemini (`GeminiExamPdfReader`,

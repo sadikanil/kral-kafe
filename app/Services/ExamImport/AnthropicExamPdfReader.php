@@ -82,19 +82,19 @@ class AnthropicExamPdfReader implements ExamPdfReader
                 betas: ['server-side-fallback-2026-07-01'],
             );
         } catch (RateLimitException $e) {
-            throw new ExamPdfReadException('Yapay zekâ servisi şu an yoğun; birkaç dakika sonra "Devam et"e basın.', previous: $e);
+            throw ExamPdfReadException::transient('Yapay zekâ servisi şu an yoğun; biraz sonra yeniden denenecek.', $e, 15);
         } catch (AuthenticationException $e) {
             throw new ExamPdfReadException('ANTHROPIC_API_KEY geçersiz.', previous: $e);
         } catch (APIStatusException $e) {
             Log::error('Deneme PDF okuma (Claude): API hatasi', ['status' => $e->status, 'error' => $e->getMessage()]);
 
-            throw new ExamPdfReadException('Yapay zekâ servisi hata döndü (' . $e->status . ').', previous: $e);
+            throw ExamPdfReadException::forStatus((int) $e->status, 'Yapay zekâ servisi hata döndü (' . $e->status . ').');
         } catch (APITimeoutException $e) {
             throw ExamPdfReadException::timeout($e);
         } catch (APIConnectionException $e) {
             Log::error('Deneme PDF okuma (Claude): baglanti', ['error' => $e->getMessage()]);
 
-            throw new ExamPdfReadException('Yapay zekâ servisine ulaşılamadı.', previous: $e);
+            throw ExamPdfReadException::transient('Yapay zekâ servisine ulaşılamadı.', $e, 5);
         }
 
         if ($mesaj->stopReason === 'refusal') {

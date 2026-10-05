@@ -130,16 +130,16 @@ class GeminiExamPdfReader implements ExamPdfReader
                 throw ExamPdfReadException::timeout($e);
             }
 
-            throw new ExamPdfReadException('Yapay zekâ servisine ulaşılamadı: ' . $e->getMessage(), previous: $e);
+            throw ExamPdfReadException::transient('Yapay zekâ servisine ulaşılamadı: ' . $e->getMessage(), $e, 5);
         }
 
         if (! $yanit->successful()) {
             Log::error('Deneme PDF okuma (Gemini): API hatasi', ['status' => $yanit->status(), 'body' => $yanit->body()]);
 
-            throw new ExamPdfReadException(match ($yanit->status()) {
+            throw ExamPdfReadException::forStatus($yanit->status(), match ($yanit->status()) {
                 404 => "Gemini modeli bulunamadı ({$model}). EXAM_AI_GEMINI_MODEL'i Vertex AI Model Garden'daki adla değiştirin.",
                 403 => 'Vertex AI erişimi reddedildi: projede Vertex AI API açık mı, hizmet hesabına "Vertex AI User" rolü verildi mi?',
-                429 => 'Gemini kotası doldu ya da deneme kredisi bitti; biraz sonra "Devam et" deyin.',
+                429 => 'Gemini kotası doldu ya da servis yoğun; biraz sonra yeniden denenecek.',
                 default => 'Yapay zekâ servisi hata döndü (' . $yanit->status() . ')'
                     . (filled($yanit->json('error.message')) ? ': ' . mb_strimwidth((string) $yanit->json('error.message'), 0, 200, '…') : '.'),
             });

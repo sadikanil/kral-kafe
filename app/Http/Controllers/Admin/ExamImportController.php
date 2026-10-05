@@ -9,6 +9,7 @@ use App\Models\ExamImport;
 use App\Models\ExamImportRow;
 use App\Models\User;
 use App\Services\ExamImport\ExamImportProcessor;
+use App\Services\ExamImport\ExamImportRunner;
 use App\Support\SpontaneousExam;
 use App\Support\Uploads;
 use Illuminate\Http\JsonResponse;
@@ -36,6 +37,9 @@ class ExamImportController extends Controller
 
     public function index(): View
     {
+        // Okuma zinciri koptuysa yeniden baslar (5 Ekim 2026).
+        ExamImportRunner::nudge();
+
         return view('admin.exam-imports.index', [
             'imports' => ExamImport::with('event')->withCount('rows')->latest()->get(),
             'events' => ExamEvent::whereIn('exam_type', array_column(SpontaneousExam::TYPES, 'value'))
@@ -72,12 +76,14 @@ class ExamImportController extends Controller
         ]);
 
         // Kuyruk (5 Ekim 2026): ayni anda tek okuma; onde deneme varsa sirada.
+        // Okuma arka planda baslar; sayfa kapansa da surer.
         $onde = $aktarim->queuePosition();
+        ExamImportRunner::kick();
 
         return redirect()->route('admin.exam-imports.show', $aktarim)
             ->with('success', $onde > 0
-                ? "PDF yüklendi. Önünde {$onde} deneme okunuyor; bitince bu deneme kendiliğinden okunur. Sayfa açık kalsın."
-                : 'PDF yüklendi. Okuma başlıyor; sayfa açık kalsın.');
+                ? "PDF yüklendi. Önünde {$onde} deneme okunuyor; bitince bu deneme kendiliğinden okunur." . (ExamImportRunner::enabled() ? ' Sayfayı kapatabilirsin.' : ' Sayfa açık kalsın.')
+                : 'PDF yüklendi. Okuma başlıyor;' . (ExamImportRunner::enabled() ? ' sayfayı kapatabilirsin, arka planda sürer.' : ' sayfa açık kalsın.'));
     }
 
     public function show(ExamImport $import): View
@@ -95,6 +101,18 @@ class ExamImportController extends Controller
     /** Tek adim (dizin ya da bir karne). Sayfadaki betik bitene kadar cagirir. */
     public function process(Request $request, ExamImport $import): JsonResponse|RedirectResponse
     {
+        // Arka plan zinciri acikken (5 Ekim 2026) sayfa okumaz, yalnizca
+        // durumu sorar; "Devam et" hatali aktarimi kuyruga sokup zinciri
+        // tetikler, yoklama kopmus zinciri yeniden baslatir.
+        if (ExamImportRunner::enabled()) {
+            $this->isleyici->resume($import) ? ExamImportRunner::kick() : ExamImportRunner::nudge();
+            $durum = ['waiting' => false, 'background' => true] + $this->isleyici->durum($import->fresh());
+
+            return $request->expectsJson()
+                ? response()->json($durum)
+                : back()->with('success', 'Okuma arka planda sürüyor; sayfayı kapatabilirsin.');
+        }
+
         $durum = $this->isleyici->step($import);
 
         return $request->expectsJson()

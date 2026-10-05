@@ -52,19 +52,21 @@ class ExamImport extends Model
     }
 
     /**
-     * Okuma kuyrugu (5 Ekim 2026): okunacak aktarimlar, yukleme sirasiyla.
-     * Ayni anda yalnizca bastaki okunur (ExamImportProcessor::step).
+     * Okuma kuyrugu (5 Ekim 2026): okunacak aktarimlar, dosyanin yuklenme
+     * tarihine gore (esitlikte kayit sirasi). Ayni anda yalnizca bastaki
+     * okunur (ExamImportProcessor::stepQueue).
      */
     public function scopeQueued(Builder $query): Builder
     {
-        return $query->whereIn('status', [self::UPLOADED, self::READING])->orderBy('id');
+        return $query->whereIn('status', [self::UPLOADED, self::READING])->orderBy('created_at')->orderBy('id');
     }
 
     /** Onunde bekleyen aktarim sayisi; 0 = sirada degil ya da basta. */
     public function queuePosition(): int
     {
         return $this->isProcessing()
-            ? static::queued()->where('id', '<', $this->id)->count()
+            ? static::queued()->where(fn (Builder $q) => $q->where('created_at', '<', $this->created_at)
+                ->orWhere(fn (Builder $q) => $q->where('created_at', $this->created_at)->where('id', '<', $this->id)))->count()
             : 0;
     }
 

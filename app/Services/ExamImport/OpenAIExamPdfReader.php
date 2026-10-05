@@ -62,13 +62,13 @@ class OpenAIExamPdfReader implements ExamPdfReader
                 throw ExamPdfReadException::timeout($e);
             }
 
-            throw new ExamPdfReadException('Yapay zekâ servisine ulaşılamadı: ' . $e->getMessage(), previous: $e);
+            throw ExamPdfReadException::transient('Yapay zekâ servisine ulaşılamadı: ' . $e->getMessage(), $e, 5);
         }
 
         if (! $yanit->successful()) {
             Log::error('Deneme PDF okuma (OpenAI): API hatasi', ['status' => $yanit->status(), 'body' => $yanit->body()]);
 
-            throw new ExamPdfReadException('Yapay zekâ servisi hata döndü (' . $yanit->status() . ').');
+            throw ExamPdfReadException::forStatus($yanit->status(), 'Yapay zekâ servisi hata döndü (' . $yanit->status() . ').');
         }
 
         $veri = json_decode((string) $yanit->json('choices.0.message.content'), true);

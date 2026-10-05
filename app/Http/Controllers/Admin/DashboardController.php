@@ -28,6 +28,8 @@ class DashboardController extends Controller
     public function index()
     {
         $stats = $this->billingService->getDashboardStats();
+        // Deneme okuma zinciri koptuysa yeniden baslar (5 Ekim 2026).
+        \App\Services\ExamImport\ExamImportRunner::nudge();
 
         // Additional stats
         $totalProducts = Product::where('is_active', true)->count();

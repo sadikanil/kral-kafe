@@ -28,12 +28,12 @@ use Illuminate\Support\Str;
  * karneler yeniden okunmaz (ucret iki kez odenmez).
  *
  * Kuyruk (5 Ekim 2026): ayni anda yalnizca BIR okuma. Okunacak aktarimlar
- * yukleme sirasiyla kuyruk (ExamImport::scopeQueued); step() hangi
- * aktarimin sayfasindan cagrilirsa cagrilsin kuyrugun BASINI bir adim
- * ilerletir. Boylece ikinci yuklenen deneme birincinin sayfasi kapali
- * olsa da bekler-sonra-okunur, iki sekme ayni karneyi iki kez okutmaz
- * (kilit: cache_locks, sunucusuz ortamda veritabani uzerinden).
- * Hata alan aktarim kuyruktan cikar, sirayi tikamaz; "Devam et" geri sokar.
+ * yukleme tarihine gore kuyruk (ExamImport::scopeQueued); stepQueue()
+ * kuyrugun BASINI bir adim ilerletir. Adimlari arka planda zincir surer
+ * (ExamImportRunner): sayfa kapali olsa da okuma devam eder. Iki istek
+ * ayni anda gelirse kilit (cache_locks, veritabani) ikinciyi okutmaz.
+ * Kalici hata alan aktarim kuyruktan cikar, sirayi tikamaz; "Devam et"
+ * geri sokar.
  *
  * Yayin (publish) yalnizca yonetici kontrolunden sonra: satir ogrenciye
  * eslenmis ve "kontrol et" beklemiyorsa sonuc, konu tablosu, eksik konular
@@ -51,46 +51,89 @@ class ExamImportProcessor
     /** Okuma kilidinin suresi: tek adim Vercel'de en fazla 60 sn. */
     private const KILIT_SN = 75;
 
-    /** @return array<string,mixed> durum() + waiting */
+    /** Son adimin zamani (zincir canli mi?): ExamImportRunner::nudge okur. */
+    public const HEARTBEAT = 'exam-import-heartbeat';
+
+    /** Gecici hatada (zaman asimi, kota, 5xx) ayni adim en fazla bu kadar kez tekrarlanir. */
+    public const TEKRAR = 3;
+
+    /**
+     * Tarayicidan tek adim (arka plan zinciri kapaliyken: CRON_SECRET yok,
+     * yerel gelistirme). Hatali aktarim kuyruga geri girer, sonra kuyrugun
+     * basi bir adim ilerler.
+     *
+     * @return array<string,mixed> durum() + waiting
+     */
     public function step(ExamImport $aktarim): array
+    {
+        $this->resume($aktarim);
+        $adim = $aktarim->fresh()->isProcessing() ? $this->stepQueue() : ['busy' => false];
+
+        return ['waiting' => $adim['busy']] + $this->durum($aktarim->fresh());
+    }
+
+    /** "Devam et": hatali aktarim kuyruga geri girer (yukleme sirasindaki yerine). */
+    public function resume(ExamImport $aktarim): bool
+    {
+        if ($aktarim->status !== ExamImport::FAILED) {
+            return false;
+        }
+
+        $aktarim->update([
+            'status' => $aktarim->rows()->exists() ? ExamImport::READING : ExamImport::UPLOADED,
+            'error' => null,
+            'meta' => array_merge($aktarim->meta ?? [], ['retries' => 0]),
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Kuyrugun basini bir adim ilerletir (5 Ekim 2026). Ayni anda yalnizca
+     * BIR okuma: kilit (cache_locks, veritabani) baska bir istek okurken
+     * ikinciyi okutmaz - ayni karne iki kez okunmaz, kota iki kat yanmaz.
+     *
+     * @return array{ran:bool,busy:bool,remaining:bool,pause:int}
+     */
+    public function stepQueue(): array
     {
         $kilit = Cache::lock('exam-import-reader', self::KILIT_SN);
 
-        // Baska bir sekme/yonetici su an bir adim okuyor: bekle, sonra tekrar.
         if (! $kilit->get()) {
-            return ['waiting' => true] + $this->durum($aktarim->fresh());
+            return ['ran' => false, 'busy' => true, 'remaining' => true, 'pause' => 0];
         }
 
         try {
-            // "Devam et": hatali aktarim kuyruga geri girer (kendi sirasina).
-            if ($aktarim->status === ExamImport::FAILED) {
-                $aktarim->update([
-                    'status' => $aktarim->rows()->exists() ? ExamImport::READING : ExamImport::UPLOADED,
-                    'error' => null,
-                ]);
+            $bas = ExamImport::queued()->first();
+
+            if ($bas === null) {
+                Cache::forget(self::HEARTBEAT);
+
+                return ['ran' => false, 'busy' => false, 'remaining' => false, 'pause' => 0];
             }
 
-            // Bu aktarim okunacaksa kuyrugun basi ilerler (kendisi ya da onundeki).
-            if ($aktarim->isProcessing() && ($bas = ExamImport::queued()->first()) !== null) {
-                $this->adim($bas);
-            }
+            Cache::put(self::HEARTBEAT, now()->getTimestamp(), 600);
+            $bekle = $this->adim($bas);
+            $kalan = ExamImport::queued()->exists();
+
+            // Is bittiyse nabiz silinir: sonradan yuklenen deneme hemen baslar.
+            $kalan ? Cache::put(self::HEARTBEAT, now()->getTimestamp(), 600) : Cache::forget(self::HEARTBEAT);
+
+            return ['ran' => true, 'busy' => false, 'remaining' => $kalan, 'pause' => $bekle];
         } finally {
             $kilit->release();
         }
-
-        return ['waiting' => false] + $this->durum($aktarim->fresh());
     }
 
-    /** Ayni adimda zaman asimi en fazla bu kadar kez kendiliginden tekrarlanir. */
-    public const TEKRAR = 2;
-
     /**
-     * Tek adim: dizin ya da siradaki karne. Zaman asimi aktarimi hataya
-     * dusurmez, adim bir sonraki cagrida tekrarlanir (sayac meta'da: hangi
-     * sayfa ilerletirse ilerletsin gecerli); TEKRAR kez asarsa ya da baska
-     * bir hatada aktarim durur ve kuyruktan cikar.
+     * Tek adim: dizin ya da siradaki karne. Gecici hata (zaman asimi, kota,
+     * 5xx, baglanti) aktarimi durdurmaz, adim sonra tekrarlanir (sayac
+     * meta'da); TEKRAR kez asarsa ya da kalici hatada aktarim durur ve
+     * kuyruktan cikar - sirayi tikamaz.
+     *
+     * @return int tekrar oncesi beklenecek saniye
      */
-    private function adim(ExamImport $aktarim): void
+    private function adim(ExamImport $aktarim): int
     {
         try {
             match ($aktarim->status) {
@@ -99,19 +142,26 @@ class ExamImportProcessor
                 default => null,
             };
 
-            // Basarili adim: onceki zaman asiminin izi silinir.
+            // Basarili adim: onceki gecici hatanin izi silinir.
             if ($aktarim->error !== null || ($aktarim->meta['retries'] ?? 0) > 0) {
                 $aktarim->update(['meta' => array_merge($aktarim->meta ?? [], ['retries' => 0]), 'error' => null]);
             }
+
+            return 0;
         } catch (ExamPdfReadException $e) {
             $tekrar = (int) ($aktarim->meta['retries'] ?? 0);
-            $tekrarlanir = ExamPdfReadException::isRetryable($e->getMessage()) && $tekrar < self::TEKRAR;
+            $gecici = $e->transient || ExamPdfReadException::isRetryable($e->getMessage());
+            $tekrarlanir = $gecici && $tekrar < self::TEKRAR;
 
             $aktarim->update([
                 'status' => $tekrarlanir ? $aktarim->status : ExamImport::FAILED,
-                'error' => $tekrarlanir ? $e->getMessage() . ' Yeniden deneniyor (' . ($tekrar + 1) . '/' . self::TEKRAR . ').' : $e->getMessage(),
+                'error' => $tekrarlanir
+                    ? $e->getMessage() . ' Yeniden deneniyor (' . ($tekrar + 1) . '/' . self::TEKRAR . ').'
+                    : $e->getMessage() . ($gecici ? ' ' . self::TEKRAR . ' denemede de olmadı; "Devam et" ile yeniden başlatın.' : ''),
                 'meta' => array_merge($aktarim->meta ?? [], ['retries' => $tekrarlanir ? $tekrar + 1 : 0]),
             ]);
+
+            return $tekrarlanir ? $e->pause : 0;
         }
     }
 

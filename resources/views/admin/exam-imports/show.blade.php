@@ -152,9 +152,10 @@
     const form = kutu.querySelector('.js-devam-formu');
     const jeton = document.querySelector('meta[name="csrf-token"]');
 
-    // Kuyruk (5 Ekim 2026): bu sayfa kuyrugun basini ilerletir; onde baska
-    // deneme varsa once o okunur. Baska sekme okurken (waiting) beklenir.
-    // Zaman asimi sunucuda tekrarlanir; mesaj okunurken gosterilir.
+    // Kuyruk (5 Ekim 2026): okuma arka planda (ExamImportRunner); sayfa
+    // yalnizca 4 sn'de bir durumu sorar (background) ve kopmus zinciri
+    // canlandirir. Zincir kapaliysa (yerel) sayfa adimlari kendisi atar.
+    // Gecici hatalar sunucuda tekrarlanir; mesaj okunurken gosterilir.
     function yaz(d) {
         if (!ilerleme) { return; }
         let metin = d.total > 0 ? 'Karneler: ' + d.done + ' / ' + d.total : 'Öğrenci listesi okunacak.';
@@ -165,6 +166,8 @@
             metin += ' · başka bir okuma sürüyor, bekleniyor…';
         } else if (d.message) {
             metin += ' · ' + d.message;
+        } else if (d.background) {
+            metin += ' · arka planda okunuyor; sayfayı kapatabilirsin.';
         } else {
             metin += ' · okunuyor…';
         }
@@ -180,7 +183,9 @@
           .then(function (d) {
               yaz(d);
               if (d.waiting) { setTimeout(adim, 4000); return; }
-              if (d.status === 'uploaded' || d.status === 'reading') { adim(); } else { location.reload(); }
+              if (d.status === 'uploaded' || d.status === 'reading') {
+                  if (d.background) { setTimeout(adim, 4000); } else { adim(); }
+              } else { location.reload(); }
           })
           .catch(function () { location.reload(); });
     }

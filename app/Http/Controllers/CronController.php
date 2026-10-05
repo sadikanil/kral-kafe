@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ExamImport\ExamImportRunner;
 use App\Services\NotificationBuilder;
 use App\Services\SessionCloser;
 use App\Support\LocalDay;
@@ -27,6 +28,8 @@ class CronController extends Controller
         $this->yetkili($request);
 
         $gun = LocalDay::today();
+        // Deneme okuma zinciri koptuysa yeniden baslar (5 Ekim 2026).
+        ExamImportRunner::nudge();
 
         return response()->json([
             'gun' => $gun,
@@ -50,7 +53,21 @@ class CronController extends Controller
     {
         $this->yetkili($request);
 
+        ExamImportRunner::nudge();
+
         return response()->json(['kapanan_oturum' => $kapatici->closeStale()]);
+    }
+
+    /**
+     * Deneme PDF okuma zincirinin bir halkasi (5 Ekim 2026): kuyrugun basi
+     * bir adim, is kaldiysa sonraki halka. Sayfa kapali olsa da okuma surer.
+     */
+    public function examImports(Request $request, ExamImportRunner $zincir): JsonResponse
+    {
+        $this->yetkili($request);
+        ExamImportRunner::reachable();
+
+        return response()->json($zincir->link());
     }
 
     private function yetkili(Request $request): void

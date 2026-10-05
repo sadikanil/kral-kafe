@@ -12,13 +12,16 @@ use App\Models\Package;
 use App\Models\StudyPlanItem;
 use App\Models\User;
 use App\Models\WeakTopic;
+use App\Services\ExamImport\ExamImportRunner;
 use App\Services\ExamImport\ExamPdfReadException;
 use App\Support\StudentNameMatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Sleep;
 use Tests\TestCase;
 
 /**
@@ -185,8 +188,8 @@ class ExamImportTest extends TestCase
         $this->assertSame([4, 5], $this->okuyucu->okunanSayfalar);
     }
 
-    /** Zaman asimi aktarimi durdurmaz; ayni adim 2 kez daha denenir (5 Ekim 2026). */
-    public function test_a_timeout_is_retried_twice_on_the_server_then_stops(): void
+    /** Gecici hata aktarimi durdurmaz; ayni adim 3 kez daha denenir (5 Ekim 2026). */
+    public function test_a_timeout_is_retried_on_the_server_then_stops(): void
     {
         $aktarim = $this->yukle();
         $this->isle($aktarim);
@@ -194,9 +197,12 @@ class ExamImportTest extends TestCase
 
         $durum = $this->isle($aktarim);
         $this->assertSame('reading', $durum['status']);
-        $this->assertStringEndsWith('Yeniden deneniyor (1/2).', $durum['message']);
-        $this->assertStringEndsWith('Yeniden deneniyor (2/2).', $this->isle($aktarim)['message']);
-        $this->assertSame('failed', $this->isle($aktarim)['status']);
+        $this->assertStringEndsWith('Yeniden deneniyor (1/3).', $durum['message']);
+        $this->assertStringEndsWith('Yeniden deneniyor (2/3).', $this->isle($aktarim)['message']);
+        $this->assertStringEndsWith('Yeniden deneniyor (3/3).', $this->isle($aktarim)['message']);
+        $durum = $this->isle($aktarim);
+        $this->assertSame('failed', $durum['status']);
+        $this->assertStringEndsWith('3 denemede de olmadı; "Devam et" ile yeniden başlatın.', $durum['message']);
 
         // "Devam et": sayac sifirdan; basarili adim hatayi siler.
         $this->okuyucu->hata = null;
@@ -285,6 +291,128 @@ class ExamImportTest extends TestCase
         $durum = $this->isle($ikinci);
         $this->assertSame([0, 'reading'], [$durum['queue'], $durum['status']]);
         $this->assertSame(ExamImport::FAILED, $birinci->fresh()->status);
+    }
+
+    // --- Arka plan zinciri (5 Ekim 2026) --------------------------------------
+
+    private function zincirAcik(): void
+    {
+        config(['kafe.cron_anahtari' => 'gizli']);
+        Http::fake();
+    }
+
+    private function halka(): array
+    {
+        return $this->withHeader('Authorization', 'Bearer gizli')->getJson(route('cron.exam-imports'))->assertOk()->json();
+    }
+
+    public function test_the_upload_starts_the_background_chain_and_it_reads_without_the_page(): void
+    {
+        $this->zincirAcik();
+        $aktarim = $this->yukle();
+
+        Http::assertSent(fn ($r) => $r->url() === route('cron.exam-imports') && $r->hasHeader('Authorization', 'Bearer gizli'));
+
+        // Sayfa kapali: halkalar tek basina okur, her halka sonrakini tetikler.
+        $this->assertSame(['ran' => true, 'busy' => false, 'remaining' => true, 'pause' => 0], $this->halka());
+        $this->halka();
+        $this->assertSame(['ran' => true, 'busy' => false, 'remaining' => false, 'pause' => 0], $this->halka());
+        $this->assertSame(ExamImport::REVIEW, $aktarim->fresh()->status);
+        $this->assertSame([4, 5], $this->okuyucu->okunanSayfalar);
+        Http::assertSentCount(3); // yukleme + iki halka (son halka is bitince tetiklemez)
+    }
+
+    public function test_the_chain_endpoint_needs_the_secret(): void
+    {
+        config(['kafe.cron_anahtari' => 'gizli']);
+        $this->getJson(route('cron.exam-imports'))->assertForbidden();
+        $this->withHeader('Authorization', 'Bearer yanlis')->getJson(route('cron.exam-imports'))->assertForbidden();
+    }
+
+    /** Arka planda sayfa okumaz, yalnizca durumu sorar; "Devam et" zinciri tetikler. */
+    public function test_the_page_only_polls_when_the_chain_is_on(): void
+    {
+        $this->zincirAcik();
+        $aktarim = $this->yukle();
+
+        $durum = $this->isle($aktarim);
+        $this->assertTrue($durum['background']);
+        $this->assertSame(0, $this->okuyucu->dizinCagrisi);
+
+        $aktarim->update(['status' => ExamImport::FAILED, 'error' => 'x']);
+        Http::fake();
+        $this->isle($aktarim);
+        $this->assertSame(ExamImport::UPLOADED, $aktarim->fresh()->status);
+        Http::assertSent(fn ($r) => $r->url() === route('cron.exam-imports'));
+    }
+
+    /** Kopmus zincir: nabiz 90 sn'den eskiyse yoklama yeniden baslatir. */
+    public function test_a_broken_chain_is_restarted_by_a_nudge(): void
+    {
+        $this->zincirAcik();
+        $this->yukle();
+        Http::fake();
+
+        ExamImportRunner::nudge(); // nabiz taze (yukleme tetikledi)
+        Http::assertNothingSent();
+
+        $this->travel(91)->seconds();
+        $this->actingAs($this->yonetici)->get(route('admin.dashboard'))->assertOk();
+        Http::assertSentCount(1);
+
+        // Is yoksa tetiklenmez.
+        ExamImport::query()->update(['status' => ExamImport::REVIEW]);
+        $this->travel(91)->seconds();
+        Http::fake();
+        ExamImportRunner::nudge();
+        Http::assertNothingSent();
+    }
+
+    /** Tetikleme reddedilirse (Vercel korumasi 401) okuma acik sayfaya doner. */
+    public function test_a_refused_chain_falls_back_to_the_open_page(): void
+    {
+        config(['kafe.cron_anahtari' => 'gizli']);
+        // Ilk tetikleme koruma sayfasina takilir, sonrakiler gecer.
+        Http::fake(['*' => Http::sequence()->push('Authentication Required', 401)->whenEmpty(Http::response())]);
+        $aktarim = $this->yukle();
+
+        $this->assertFalse(ExamImportRunner::enabled());
+        $durum = $this->isle($aktarim);
+        $this->assertArrayNotHasKey('background', $durum);
+        $this->assertSame(1, $this->okuyucu->dizinCagrisi);
+
+        // Koruma kalkti: uc bir kez calisinca zincir yeniden acilir.
+        $this->withHeader('Authorization', 'Bearer gizli')->getJson(route('cron.exam-imports'))->assertOk();
+        $this->assertTrue(ExamImportRunner::enabled());
+    }
+
+    /** Siralama dosyanin yuklenme tarihine gore. */
+    public function test_the_queue_follows_the_upload_time(): void
+    {
+        $sonra = $this->yukle();
+        $once = $this->ikinciAktarim();
+        $once->forceFill(['created_at' => $sonra->created_at->copy()->subMinute()])->save();
+
+        $this->assertSame([$once->id, $sonra->id], ExamImport::queued()->pluck('id')->all());
+        $this->assertSame([0, 1], [$once->fresh()->queuePosition(), $sonra->fresh()->queuePosition()]);
+    }
+
+    /** Kota hatasi: beklenip tekrarlanir, aktarim durmaz. */
+    public function test_a_quota_error_pauses_then_retries(): void
+    {
+        $this->zincirAcik();
+        Sleep::fake();
+        $aktarim = $this->yukle();
+        $this->halka();
+        $this->okuyucu->hataNesnesi = ExamPdfReadException::forStatus(429, 'Gemini kotası doldu ya da servis yoğun; biraz sonra yeniden denenecek.');
+
+        $this->assertSame(15, $this->halka()['pause']);
+        Sleep::assertSlept(fn ($sure) => $sure->totalSeconds === 15.0, 1);
+        $this->assertSame(ExamImport::READING, $aktarim->fresh()->status);
+
+        $this->okuyucu->hataNesnesi = null;
+        $this->halka();
+        $this->assertNull($aktarim->fresh()->error);
     }
 
     // --- Kontrol ve yayin ------------------------------------------------------
@@ -436,6 +564,7 @@ class FakeExamReader implements ExamPdfReader
     public array $okunanSayfalar = [];
     public array $kodlar = [];
     public ?string $hata = null;
+    public ?ExamPdfReadException $hataNesnesi = null;
     public int $listeTurkceDogru = 30;
 
     public function provider(): string
@@ -461,6 +590,9 @@ class FakeExamReader implements ExamPdfReader
 
     public function readCard(string $pdf, int $sayfa, string $ad, array $dersler): array
     {
+        if ($this->hataNesnesi !== null) {
+            throw $this->hataNesnesi;
+        }
         if ($this->hata !== null) {
             throw new ExamPdfReadException($this->hata);
         }

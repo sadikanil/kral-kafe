@@ -138,11 +138,26 @@ class GeminiExamPdfReaderTest extends TestCase
             (new GeminiExamPdfReader)->readCard('%PDF-1.7 sahte', 4, 'A', ['tyt_kimya' => 'TYT Kimya']);
             $this->fail('Zaman asimi hata vermeliydi.');
         } catch (ExamPdfReadException $e) {
-            $this->assertSame('Sayfa 50 saniyede okunamadı (zaman aşımı); "Devam et" ile yeniden deneyin.', $e->getMessage());
-            $this->assertTrue(ExamPdfReadException::isRetryable($e->getMessage()));
+            $this->assertSame('Sayfa 50 saniyede okunamadı (zaman aşımı).', $e->getMessage());
+            $this->assertTrue($e->transient);
+        }
+    }
+
+    /** Kota (429) ve 5xx gecici: aktarim durmaz, beklenip tekrarlanir; 404 kalici. */
+    public function test_quota_and_server_errors_are_transient(): void
+    {
+        $this->sahte(['error' => ['message' => 'x']], 429);
+
+        try {
+            (new GeminiExamPdfReader)->readCard('%PDF-1.7 sahte', 4, 'A', ['tyt_kimya' => 'TYT Kimya']);
+            $this->fail('Hata vermeliydi.');
+        } catch (ExamPdfReadException $e) {
+            $this->assertSame([true, 15], [$e->transient, $e->pause]);
         }
 
-        $this->assertFalse(ExamPdfReadException::isRetryable('Yapay zekâ servisi hata döndü (500).'));
+        $sunucu = ExamPdfReadException::forStatus(503, 'x');
+        $this->assertSame([true, 5], [$sunucu->transient, $sunucu->pause]);
+        $this->assertFalse(ExamPdfReadException::forStatus(404, 'x')->transient);
     }
 
     public function test_the_token_is_reused_across_pages(): void
