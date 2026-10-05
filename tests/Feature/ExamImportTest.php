@@ -17,6 +17,7 @@ use App\Support\StudentNameMatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -175,17 +176,115 @@ class ExamImportTest extends TestCase
 
         $this->okuyucu->hata = 'Yapay zekâ servisi hata döndü (500).';
         $durum = $this->isle($aktarim);
-        $this->assertSame(['failed', 'Yapay zekâ servisi hata döndü (500).', false], [$durum['status'], $durum['message'], $durum['retryable']]);
-
-        // Zaman asimi: sayfa kendiliginden yeniden dener (5 Ekim 2026).
-        $this->okuyucu->hata = ExamPdfReadException::timeout()->getMessage();
-        $this->assertTrue($this->isle($aktarim)['retryable']);
+        $this->assertSame(['failed', 'Yapay zekâ servisi hata döndü (500).'], [$durum['status'], $durum['message']]);
 
         $this->okuyucu->hata = null;
         $this->isle($aktarim);
 
         $this->assertSame(ExamImport::REVIEW, $aktarim->fresh()->status);
         $this->assertSame([4, 5], $this->okuyucu->okunanSayfalar);
+    }
+
+    /** Zaman asimi aktarimi durdurmaz; ayni adim 2 kez daha denenir (5 Ekim 2026). */
+    public function test_a_timeout_is_retried_twice_on_the_server_then_stops(): void
+    {
+        $aktarim = $this->yukle();
+        $this->isle($aktarim);
+        $this->okuyucu->hata = ExamPdfReadException::timeout()->getMessage();
+
+        $durum = $this->isle($aktarim);
+        $this->assertSame('reading', $durum['status']);
+        $this->assertStringEndsWith('Yeniden deneniyor (1/2).', $durum['message']);
+        $this->assertStringEndsWith('Yeniden deneniyor (2/2).', $this->isle($aktarim)['message']);
+        $this->assertSame('failed', $this->isle($aktarim)['status']);
+
+        // "Devam et": sayac sifirdan; basarili adim hatayi siler.
+        $this->okuyucu->hata = null;
+        $durum = $this->isle($aktarim);
+        $this->assertSame(['reading', 1, null], [$durum['status'], $durum['done'], $durum['message']]);
+        $this->assertSame(0, $aktarim->fresh()->meta['retries']);
+    }
+
+    // --- Kuyruk (5 Ekim 2026) -------------------------------------------------
+
+    private function ikinciAktarim(): ExamImport
+    {
+        $deneme = ExamEvent::create(['title' => 'Yayın Denizi TYT 1', 'exam_type' => 'tyt', 'exam_date' => '2026-09-28']);
+        Storage::disk('yukleme')->put('deneme-aktarimlari/ikinci.pdf', "%PDF-1.7\n");
+
+        return ExamImport::create(['exam_event_id' => $deneme->id, 'file_path' => 'deneme-aktarimlari/ikinci.pdf', 'uploaded_by' => $this->yonetici->id]);
+    }
+
+    public function test_a_second_upload_waits_in_the_queue_and_is_read_after_the_first(): void
+    {
+        $birinci = $this->yukle();
+        $ikinci = $this->ikinciAktarim();
+
+        // Ikincinin sayfasi acik, birincininki kapali: once birinci ilerler.
+        $durum = $this->isle($ikinci);
+        $this->assertSame(['uploaded', 1, 'Hız ve Renk TYT 2'], [$durum['status'], $durum['queue'], $durum['ahead']['title']]);
+        $this->assertSame(ExamImport::READING, $birinci->fresh()->status);
+        $this->assertSame(1, $this->okuyucu->dizinCagrisi);
+
+        $this->isle($ikinci);
+        $this->isle($ikinci);
+        $this->assertSame(ExamImport::REVIEW, $birinci->fresh()->status);
+        $this->assertSame([4, 5], $this->okuyucu->okunanSayfalar);
+
+        // Sira geldi: ikinci okunur.
+        $durum = $this->isle($ikinci);
+        $this->assertSame(['reading', 0, null], [$durum['status'], $durum['queue'], $durum['ahead']]);
+        $this->assertSame(2, $this->okuyucu->dizinCagrisi);
+
+        $this->actingAs($this->yonetici)->get(route('admin.exam-imports.index'))->assertOk()->assertDontSee('Sırada');
+    }
+
+    public function test_the_queue_is_shown_on_the_pages(): void
+    {
+        $this->yukle();
+
+        $this->actingAs($this->yonetici)->post(route('admin.exam-imports.store'), [
+            'exam_event_id' => $this->deneme->id,
+            'pdf' => UploadedFile::fake()->createWithContent('kurum.pdf', "%PDF-1.7\n"),
+        ])->assertSessionHas('success', 'PDF yüklendi. Önünde 1 deneme okunuyor; bitince bu deneme kendiliğinden okunur. Sayfa açık kalsın.');
+
+        $ikinci = ExamImport::latest('id')->first();
+        $this->actingAs($this->yonetici)->get(route('admin.exam-imports.show', $ikinci))
+            ->assertOk()->assertSee('Sırada')->assertSee('önünde 1 deneme');
+        $this->actingAs($this->yonetici)->get(route('admin.exam-imports.index'))
+            ->assertOk()->assertSee('Sırada · önünde 1');
+    }
+
+    /** Baska bir sekme okurken ikinci istek okumaz, bekler (ayni karne iki kez okunmaz). */
+    public function test_a_step_waits_while_another_read_holds_the_lock(): void
+    {
+        $aktarim = $this->yukle();
+        $kilit = Cache::lock('exam-import-reader', 75);
+        $kilit->get();
+
+        $durum = $this->isle($aktarim);
+        $this->assertTrue($durum['waiting']);
+        $this->assertSame(0, $this->okuyucu->dizinCagrisi);
+
+        $kilit->release();
+        $this->assertFalse($this->isle($aktarim)['waiting']);
+        $this->assertSame(1, $this->okuyucu->dizinCagrisi);
+    }
+
+    /** Hata alan aktarim sirayi tikamaz. */
+    public function test_a_failed_import_does_not_block_the_queue(): void
+    {
+        $birinci = $this->yukle();
+        $ikinci = $this->ikinciAktarim();
+        $this->isle($birinci);
+        $this->okuyucu->hata = 'Yapay zekâ servisi hata döndü (500).';
+        $this->isle($birinci);
+        $this->assertSame(ExamImport::FAILED, $birinci->fresh()->status);
+
+        $this->okuyucu->hata = null;
+        $durum = $this->isle($ikinci);
+        $this->assertSame([0, 'reading'], [$durum['queue'], $durum['status']]);
+        $this->assertSame(ExamImport::FAILED, $birinci->fresh()->status);
     }
 
     // --- Kontrol ve yayin ------------------------------------------------------

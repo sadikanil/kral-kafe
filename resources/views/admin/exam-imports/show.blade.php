@@ -18,12 +18,14 @@
         $meta = $import->meta ?? [];
         $katilim = $meta['participants'] ?? [];
         $okunuyor = $import->isProcessing();
+        // Kuyruk (5 Ekim 2026): onunde okunan deneme varsa "Sirada".
+        $sira = $import->queuePosition();
     @endphp
 
     <div class="card mb-3">
         <div class="card-body">
             <p class="mb-1">
-                <span class="badge badge-{{ $import->statusBadge() }} js-durum">{{ $import->statusLabel() }}</span>
+                <span class="badge badge-{{ $import->statusBadge() }} js-durum">{{ $sira > 0 ? 'Sırada' : $import->statusLabel() }}</span>
                 @if($import->provider)<span class="text-muted text-sm"> · {{ ['anthropic' => 'Claude', 'gemini' => 'Gemini', 'openai' => 'OpenAI'][$import->provider] ?? $import->provider }} ile okundu</span>@endif
             </p>
             @if(! empty($meta['exam_name']))
@@ -39,15 +41,18 @@
             <div id="okuma" data-adres="{{ route('admin.exam-imports.process', $import) }}" data-okunuyor="{{ $okunuyor ? 1 : 0 }}">
                 @if($okunuyor || $import->status === \App\Models\ExamImport::FAILED)
                     <p class="mb-2 js-ilerleme" aria-live="polite">
-                        @if($progress['total'] > 0)
+                        @if($sira > 0 && $progress['ahead'])
+                            Sırada (önünde {{ $sira }} deneme): şu an «{{ $progress['ahead']['title'] }}» okunuyor. Bitince bu deneme kendiliğinden okunur.
+                        @elseif($progress['total'] > 0)
                             Karneler: {{ $progress['done'] }} / {{ $progress['total'] }}
                         @else
                             Öğrenci listesi okunacak.
                         @endif
                     </p>
                 @endif
+                {{-- Okuma surerken kalan hata bir zaman asimi tekrari: uyari. --}}
                 @if($import->error)
-                    <div class="alert alert-danger js-hata">{{ $import->error }}</div>
+                    <div class="alert {{ $okunuyor ? 'alert-warning' : 'alert-danger' }} js-hata">{{ $import->error }}</div>
                 @endif
                 @if($okunuyor || $import->status === \App\Models\ExamImport::FAILED)
                     <form method="POST" action="{{ route('admin.exam-imports.process', $import) }}" class="js-devam-formu">
@@ -140,16 +145,31 @@
 <script>
 (function () {
     // Okuma dongusu: her istek tek adim (Vercel 60 sn). Hata olursa durur,
-    // "Devam et" dugmesi kalir. Bitince sayfa yenilenir. Zaman asimi
-    // (retryable) ayni karnede en fazla 2 kez kendiliginden yeniden denenir.
+    // "Devam et" dugmesi kalir. Bitince sayfa yenilenir.
     const kutu = document.getElementById('okuma');
     if (!kutu || kutu.dataset.okunuyor !== '1') { return; }
     const ilerleme = kutu.querySelector('.js-ilerleme');
     const form = kutu.querySelector('.js-devam-formu');
     const jeton = document.querySelector('meta[name="csrf-token"]');
 
-    let tekrar = 0;
-    let sonOkunan = -1;
+    // Kuyruk (5 Ekim 2026): bu sayfa kuyrugun basini ilerletir; onde baska
+    // deneme varsa once o okunur. Baska sekme okurken (waiting) beklenir.
+    // Zaman asimi sunucuda tekrarlanir; mesaj okunurken gosterilir.
+    function yaz(d) {
+        if (!ilerleme) { return; }
+        let metin = d.total > 0 ? 'Karneler: ' + d.done + ' / ' + d.total : 'Öğrenci listesi okunacak.';
+        if (d.queue > 0 && d.ahead) {
+            metin = 'Sırada (önünde ' + d.queue + ' deneme): şu an «' + d.ahead.title + '» okunuyor'
+                + (d.ahead.total > 0 ? ' · ' + d.ahead.done + ' / ' + d.ahead.total : '') + '. Bitince bu deneme kendiliğinden okunur.';
+        } else if (d.waiting) {
+            metin += ' · başka bir okuma sürüyor, bekleniyor…';
+        } else if (d.message) {
+            metin += ' · ' + d.message;
+        } else {
+            metin += ' · okunuyor…';
+        }
+        ilerleme.textContent = metin;
+    }
 
     function adim() {
         fetch(kutu.dataset.adres, {
@@ -158,16 +178,9 @@
             headers: { Accept: 'application/json', 'X-CSRF-TOKEN': jeton ? jeton.getAttribute('content') : '' },
         }).then(function (y) { return y.ok ? y.json() : Promise.reject(y.status); })
           .then(function (d) {
-              if (ilerleme && d.total > 0) { ilerleme.textContent = 'Karneler: ' + d.done + ' / ' + d.total; }
-              if (d.done !== sonOkunan) { sonOkunan = d.done; tekrar = 0; }
-              if (d.status === 'uploaded' || d.status === 'reading') { adim(); return; }
-              if (d.status === 'failed' && d.retryable && tekrar < 2) {
-                  tekrar++;
-                  if (ilerleme) { ilerleme.textContent = 'Karneler: ' + d.done + ' / ' + d.total + ' · zaman aşımı, yeniden deneniyor (' + tekrar + '/2)…'; }
-                  adim();
-                  return;
-              }
-              location.reload();
+              yaz(d);
+              if (d.waiting) { setTimeout(adim, 4000); return; }
+              if (d.status === 'uploaded' || d.status === 'reading') { adim(); } else { location.reload(); }
           })
           .catch(function () { location.reload(); });
     }

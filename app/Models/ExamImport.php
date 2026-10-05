@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -48,6 +49,23 @@ class ExamImport extends Model
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    /**
+     * Okuma kuyrugu (5 Ekim 2026): okunacak aktarimlar, yukleme sirasiyla.
+     * Ayni anda yalnizca bastaki okunur (ExamImportProcessor::step).
+     */
+    public function scopeQueued(Builder $query): Builder
+    {
+        return $query->whereIn('status', [self::UPLOADED, self::READING])->orderBy('id');
+    }
+
+    /** Onunde bekleyen aktarim sayisi; 0 = sirada degil ya da basta. */
+    public function queuePosition(): int
+    {
+        return $this->isProcessing()
+            ? static::queued()->where('id', '<', $this->id)->count()
+            : 0;
     }
 
     /** Islenecek adim var mi (dizin ya da okunmamis karne)? */

@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 5 Ekim 2026 · Laravel 12 · 1505 test / 6657 doğrulama yeşil._
+_Son güncelleme: 5 Ekim 2026 · Laravel 12 · 1510 test / 6702 doğrulama yeşil._
 
 ---
 
@@ -2479,8 +2479,15 @@ Yönetici kontrol eder → Yayınla
   bugünden sonra olamaz; PDF depoya yazılamazsa deneme de açılmaz.
 - **Zaman aşımı (5 Ekim 2026):** Gemini 3 varsayılanda uzun düşünüyor ve bazı karneler
   50 sn'yi aşıyordu (cURL 28). İstek artık `thinkingLevel` = `EXAM_AI_EFFORT` (varsayılan
-  `low`) gönderiyor; yine aşarsa hata "zaman aşımı" diye kaydedilir ve sayfa aynı karneyi
-  en fazla 2 kez kendiliğinden yeniden dener, sonra "Devam et" kalır.
+  `low`) gönderiyor; yine aşarsa aktarım durmaz, aynı adım sunucuda en fazla 2 kez daha
+  denenir (sayaç `meta.retries`), sonra "Devam et" kalır.
+- **Kuyruk (5 Ekim 2026):** aynı anda yalnızca bir okuma. Okunacak aktarımlar yükleme
+  sırasıyla kuyruktur (`ExamImport::scopeQueued`); hangi aktarımın sayfası açıksa kuyruğun
+  başını ilerletir — ikinci yüklenen deneme "Sırada · önünde 1" görünür, birincinin
+  sayfası kapalı olsa da önce o, sonra kendisi okunur. Aynı anda iki sekme ya da iki
+  yönetici okuma isterse kilit (`cache_locks`, veritabanı) ikinciyi bekletir; aynı karne
+  iki kez okunmaz, kota iki kat harcanmaz. Hata alan aktarım kuyruktan çıkar, sırayı
+  tıkamaz. Kuyruk tarayıcıyla ilerler: okunacak aktarımlardan birinin sayfası açık kalmalı.
 - Her adım ayrı istek; sayfa açıkken betik sırayla çağırır. Hata kaldığı yerde
   durur, "Devam et" okunmuş karneyi yeniden okumaz (iki kez ödeme yok).
 - Sağlayıcı arayüzün arkasında (`App\Contracts\ExamPdfReader`): Claude

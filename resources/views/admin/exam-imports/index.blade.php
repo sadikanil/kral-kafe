@@ -35,6 +35,7 @@
     <div class="card">
         <div class="card-header"><h4>Yüklenenler</h4></div>
         <div class="card-body p-0">
+            @php($kuyruk = $imports->filter->isProcessing()->sortBy('id')->pluck('id')->values())
             @forelse($imports as $aktarim)
                 <a href="{{ route('admin.exam-imports.show', $aktarim) }}" class="list-row">
                     <span class="list-row-main">
@@ -44,7 +45,9 @@
                             · {{ $aktarim->rows_count }} öğrenci
                         </span>
                     </span>
-                    <span class="badge badge-{{ $aktarim->statusBadge() }}">{{ $aktarim->statusLabel() }}</span>
+                    {{-- Kuyruk: okunacaklardan ilki disindakiler "Sirada". --}}
+                    @php($sira = $kuyruk->search($aktarim->id))
+                    <span class="badge badge-{{ $aktarim->statusBadge() }}">{{ $sira ? 'Sırada · önünde ' . $sira : $aktarim->statusLabel() }}</span>
                 </a>
             @empty
                 <p class="text-muted mb-0" style="padding: 16px;">Henüz PDF yüklenmedi.</p>

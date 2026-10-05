@@ -71,8 +71,13 @@ class ExamImportController extends Controller
             'uploaded_by' => auth()->id(),
         ]);
 
+        // Kuyruk (5 Ekim 2026): ayni anda tek okuma; onde deneme varsa sirada.
+        $onde = $aktarim->queuePosition();
+
         return redirect()->route('admin.exam-imports.show', $aktarim)
-            ->with('success', 'PDF yüklendi. Okuma başlıyor; sayfa açık kalsın.');
+            ->with('success', $onde > 0
+                ? "PDF yüklendi. Önünde {$onde} deneme okunuyor; bitince bu deneme kendiliğinden okunur. Sayfa açık kalsın."
+                : 'PDF yüklendi. Okuma başlıyor; sayfa açık kalsın.');
     }
 
     public function show(ExamImport $import): View
