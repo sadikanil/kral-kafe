@@ -10,6 +10,11 @@
                 @csrf
                 @method('PUT')
 
+                {{-- Bolumler (5 Ekim 2026): telefonda form uc ekran boyuydu. Kimlik
+                     ve baglar acik; hedef/uyelik ve sifre katli, hatasi varsa acik. --}}
+                <details class="form-section" open>
+                    <summary>Kimlik</summary>
+
                 <div class="form-group">
                     <label for="name" class="form-label">Ad Soyad *</label>
                     <input type="text" id="name" name="name" autocomplete="off" class="form-control @error('name') is-invalid @enderror"
@@ -36,6 +41,11 @@
                         <span class="invalid-feedback">{{ $message }}</span>
                     @enderror
                 </div>
+
+                </details>
+
+                <details class="form-section" open>
+                    <summary>Rol ve bağlar</summary>
 
                 <div class="form-group">
                     <label for="role" class="form-label">Rol *</label>
@@ -68,21 +78,6 @@
                     @include('admin.users._sinif-alan')
                 @endif
 
-                <div class="form-group">
-                    <label for="weekly_goal_hours" class="form-label">Haftalık Çalışma Hedefi (saat)</label>
-                    <input type="number" id="weekly_goal_hours" name="weekly_goal_hours" min="1" max="120"
-                        class="form-control @error('weekly_goal_hours') is-invalid @enderror"
-                        value="{{ old('weekly_goal_hours', $weeklyGoal ? intdiv($weeklyGoal->target_minutes, 60) : '') }}"
-                        placeholder="Örn. 20">
-                    @error('weekly_goal_hours')
-                        <span class="invalid-feedback">{{ $message }}</span>
-                    @enderror
-                    <small class="text-muted">
-                        Değiştirince eski hedef kapatılır, yenisi bugünden başlar — geçmiş
-                        haftaların sonucu olduğu gibi kalır. Boş bırakılırsa mevcut hedef korunur.
-                    </small>
-                </div>
-
                 @if($user->hasRole(\App\Enums\Role::Parent))
                     <div class="form-group">
                         <label class="form-label">Velisi olduğu öğrenciler</label>
@@ -92,7 +87,7 @@
                         @if($linkableStudents->isEmpty())
                             <p class="text-muted mb-0">Sistemde kayıtlı öğrenci yok.</p>
                         @else
-                            <div class="rounded p-2" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--separator);">
+                            <div class="rounded p-2 js-aranabilir" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--separator);">
                                 @foreach($linkableStudents as $ogrenci)
                                     <div class="form-check">
                                         <input type="checkbox" class="form-check-input" id="student_{{ $ogrenci->id }}"
@@ -128,7 +123,7 @@
                         @if($coachableStudents->isEmpty())
                             <p class="text-muted mb-0">Sistemde kayıtlı öğrenci yok.</p>
                         @else
-                            <div class="rounded p-2" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--separator);">
+                            <div class="rounded p-2 js-aranabilir" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--separator);">
                                 @foreach($coachableStudents as $ogrenci)
                                     <div class="form-check">
                                         <input type="checkbox" class="form-check-input" id="coach_student_{{ $ogrenci->id }}"
@@ -153,7 +148,7 @@
                         @if($linkableParents->isEmpty())
                             <p class="text-muted mb-0">Sistemde kayıtlı veli yok.</p>
                         @else
-                            <div class="rounded p-2" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--separator);">
+                            <div class="rounded p-2 js-aranabilir" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--separator);">
                                 @foreach($linkableParents as $veli)
                                     <div class="form-check">
                                         <input type="checkbox" class="form-check-input" id="parent_{{ $veli->id }}"
@@ -175,6 +170,28 @@
                     </div>
                 @endif
 
+                </details>
+
+                <details class="form-section" @if($errors->hasAny(['weekly_goal_hours', 'subscription_status'])) open @endif>
+                    <summary>
+                        Hedef ve üyelik
+                        <span class="text-muted">· {{ ['active' => 'Aktif', 'inactive' => 'Pasif', 'suspended' => 'Askıda'][$user->subscription_status] ?? $user->subscription_status }}@if($weeklyGoal) · haftada {{ intdiv($weeklyGoal->target_minutes, 60) }} saat @endif</span>
+                    </summary>
+                <div class="form-group">
+                    <label for="weekly_goal_hours" class="form-label">Haftalık Çalışma Hedefi (saat)</label>
+                    <input type="number" id="weekly_goal_hours" name="weekly_goal_hours" min="1" max="120"
+                        class="form-control @error('weekly_goal_hours') is-invalid @enderror"
+                        value="{{ old('weekly_goal_hours', $weeklyGoal ? intdiv($weeklyGoal->target_minutes, 60) : '') }}"
+                        placeholder="Örn. 20">
+                    @error('weekly_goal_hours')
+                        <span class="invalid-feedback">{{ $message }}</span>
+                    @enderror
+                    <small class="text-muted">
+                        Değiştirince eski hedef kapatılır, yenisi bugünden başlar — geçmiş
+                        haftaların sonucu olduğu gibi kalır. Boş bırakılırsa mevcut hedef korunur.
+                    </small>
+                </div>
+
                 <div class="form-group">
                     <label for="subscription_status" class="form-label">Abonelik Durumu *</label>
                     <select id="subscription_status" name="subscription_status"
@@ -188,8 +205,10 @@
                     @enderror
                 </div>
 
-                <hr>
+                </details>
 
+                <details class="form-section" @if($errors->hasAny(['password'])) open @endif>
+                    <summary>Şifre değiştir</summary>
                 <p class="text-muted mb-2">Şifreyi değiştirmek için doldurun (boş bırakırsanız değişmez)</p>
 
                 <div class="form-group">
@@ -205,6 +224,7 @@
                     <label for="password_confirmation" class="form-label">Şifre Tekrar</label>
                     <input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password" class="form-control">
                 </div>
+                </details>
 
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">Güncelle</button>
@@ -309,3 +329,30 @@
     @endif
 
 @endsection
+
+@push('scripts')
+<script>
+    // Uzun ogrenci/veli listelerinde arama (5 Ekim 2026). Betik yoksa liste
+    // oldugu gibi kalir; 8'den kisa listeye kutu eklenmez.
+    (function () {
+        document.querySelectorAll('.js-aranabilir').forEach(function (liste) {
+            const satirlar = liste.querySelectorAll('.form-check');
+            if (satirlar.length < 8) { return; }
+
+            const kutu = document.createElement('input');
+            kutu.type = 'search';
+            kutu.className = 'form-control mb-2';
+            kutu.placeholder = 'Ara…';
+            kutu.setAttribute('aria-label', 'Listede ara');
+            liste.before(kutu);
+
+            kutu.addEventListener('input', function () {
+                const aranan = kutu.value.trim().toLocaleLowerCase('tr');
+                satirlar.forEach(function (satir) {
+                    satir.hidden = aranan !== '' && !satir.textContent.toLocaleLowerCase('tr').includes(aranan);
+                });
+            });
+        });
+    })();
+</script>
+@endpush

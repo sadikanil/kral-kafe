@@ -3274,3 +3274,45 @@ body.is-focusing {
     font-weight: 600;
     color: var(--label-2);
 }
+
+/* ============================================================
+   Kullanici formu bolumleri (5 Ekim 2026): katlanir basliklar.
+   ============================================================ */
+.form-section {
+    border-top: 0.5px solid var(--separator);
+    padding: 4px 0;
+}
+
+.form-section:first-of-type {
+    border-top: 0;
+}
+
+.form-section > summary {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 12px 0;
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+}
+
+.form-section > summary::-webkit-details-marker {
+    display: none;
+}
+
+.form-section > summary::after {
+    content: "›";
+    margin-left: auto;
+    color: var(--label-3);
+    transition: transform var(--dur, 200ms) var(--ease);
+}
+
+.form-section[open] > summary::after {
+    transform: rotate(90deg);
+}
+
+.form-section > summary .text-muted {
+    font-weight: 400;
+    font-size: 0.9rem;
+}
