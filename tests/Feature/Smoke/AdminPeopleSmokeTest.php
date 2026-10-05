@@ -265,7 +265,29 @@ class AdminPeopleSmokeTest extends TestCase
             ->assertOk()
             ->assertSee('Bugün henüz tüketim kaydı yok.')
             ->assertSee('Bu ay henüz tüketim kaydı yok.')
-            ->assertDontSee('stok tutarsızlığı');
+            ->assertDontSee('stok tutarsızlığı')
+            ->assertDontSee('Bekleyen işler')
+            ->assertSee('Kısayollar');
+    }
+
+    /** Bekleyen isler (5 Ekim 2026): etiketli oturum ve deneme PDF'i. */
+    public function test_the_dashboard_lists_pending_work(): void
+    {
+        $ali = $this->ogrenci(Package::factory()->tier1());
+        $this->bitmisOturum($ali, ek: ['end_reason' => SessionEndReason::DayEnd->value]);
+        $this->bitmisOturum($this->ogrenci(Package::factory()->tier1()));
+        $deneme = \App\Models\ExamEvent::create(['title' => 'Hız ve Renk TYT 2', 'exam_type' => 'tyt', 'exam_date' => '2026-09-27']);
+        $bekleyen = \App\Models\ExamImport::create(['exam_event_id' => $deneme->id, 'file_path' => 'x.pdf', 'uploaded_by' => $this->yonetici->id, 'status' => \App\Models\ExamImport::REVIEW]);
+        \App\Models\ExamImport::create(['exam_event_id' => $deneme->id, 'file_path' => 'y.pdf', 'uploaded_by' => $this->yonetici->id, 'status' => \App\Models\ExamImport::PUBLISHED]);
+
+        $this->actingAs($this->yonetici)->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Bekleyen işler')
+            ->assertSee('2 oturum onay bekliyor')
+            ->assertSee('1 etiketli')->assertSee('Etiketliler toplu onaya girmez; tek tek bak')
+            ->assertSee("Deneme PDF'i: Hız ve Renk TYT 2", false)
+            ->assertSee(route('admin.exam-imports.show', $bekleyen), false)
+            ->assertViewHas('pendingImports', fn ($c) => $c->count() === 1);
     }
 
     public function test_the_dashboard_today_is_the_local_day_after_midnight(): void

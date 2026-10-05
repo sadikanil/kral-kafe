@@ -8,10 +8,44 @@
         UX turu (23 Eyl): ust satir "simdi" - yoneticinin gunluk sorulari.
         Her kart ilgili sayfaya goturur; dikkat isteyen sayi renklenir.
     --}}
-    @if($unresolvedDiscrepancies > 0)
-        <div class="alert alert-warning mb-3">
-            ⚠️ <strong>{{ $unresolvedDiscrepancies }}</strong> adet çözülmemiş stok tutarsızlığı var.
-            <a href="{{ route('admin.stock.counts') }}" class="btn btn-sm btn-warning ml-2">İncele</a>
+    {{--
+        Bekleyen isler (5 Ekim 2026): yalnizca sayisi sifirdan buyuk olanlar.
+        Etiketli oturum (gece 00:00 / sure asimi) toplu onaya girmez; deneme
+        PDF'i okunmayi ya da kontrolu bekler. Bos gunde kart hic cikmaz.
+    --}}
+    @if($pendingApprovals > 0 || $pendingImports->isNotEmpty() || $unresolvedDiscrepancies > 0)
+        <div class="card mb-3">
+            <div class="card-header"><h4>Bekleyen işler</h4></div>
+            <div class="card-body p-0">
+                @if($pendingApprovals > 0)
+                    <a href="{{ route('admin.live') }}#onay" class="list-row">
+                        <span class="list-row-main">
+                            <span class="list-row-title">{{ $pendingApprovals }} oturum onay bekliyor</span>
+                            @if($flaggedApprovals > 0)
+                                <span class="list-row-sub">Etiketliler toplu onaya girmez; tek tek bak</span>
+                            @endif
+                        </span>
+                        @if($flaggedApprovals > 0)<span class="badge badge-danger">{{ $flaggedApprovals }} etiketli</span>@endif
+                    </a>
+                @endif
+                @foreach($pendingImports as $aktarim)
+                    <a href="{{ route('admin.exam-imports.show', $aktarim) }}" class="list-row">
+                        <span class="list-row-main">
+                            <span class="list-row-title">Deneme PDF'i: {{ $aktarim->event->title }}</span>
+                            <span class="list-row-sub">{{ $aktarim->created_at->timezone(config('kafe.timezone'))->format('d.m.Y H:i') }}</span>
+                        </span>
+                        <span class="badge badge-{{ $aktarim->statusBadge() }}">{{ $aktarim->statusLabel() }}</span>
+                    </a>
+                @endforeach
+                @if($unresolvedDiscrepancies > 0)
+                    <a href="{{ route('admin.stock.counts') }}" class="list-row">
+                        <span class="list-row-main">
+                            <span class="list-row-title">{{ $unresolvedDiscrepancies }} stok tutarsızlığı çözülmedi</span>
+                        </span>
+                        <span class="badge badge-warning">İncele</span>
+                    </a>
+                @endif
+            </div>
         </div>
     @endif
 
@@ -132,29 +166,21 @@
         </div>
     </div>
 
-    <!-- Hızlı Erişim -->
-    <div class="card mt-4 animate-slide-up" style="animation-delay: 300ms">
-        <div class="card-header">
-            <h4>Hızlı Erişim</h4>
-        </div>
-        <div class="card-body">
-            <div class="d-flex gap-2" style="flex-wrap: wrap;">
-                <a href="{{ route('admin.stock.counts') }}" class="btn btn-primary">
-                    📷 Stok Sayımı Yap
+    {{-- Kisayollar (5 Ekim 2026): renkli, emojili dugmeler yerine duz liste. --}}
+    <div class="card mt-4">
+        <div class="card-header"><h4>Kısayollar</h4></div>
+        <div class="card-body p-0">
+            @foreach([
+                ['admin.stock.counts', 'Stok sayımı yap'],
+                ['admin.users.create', 'Yeni kullanıcı'],
+                ['admin.products.create', 'Yeni ürün'],
+                ['admin.stock.index', 'Stok'],
+                ['admin.reports.monthly', 'Aylık rapor'],
+            ] as [$rota, $ad])
+                <a href="{{ route($rota) }}" class="list-row">
+                    <span class="list-row-main"><span class="list-row-title">{{ $ad }}</span></span>
                 </a>
-                <a href="{{ route('admin.users.create') }}" class="btn btn-success">
-                    ➕ Yeni Kullanıcı
-                </a>
-                <a href="{{ route('admin.products.create') }}" class="btn btn-warning">
-                    📦 Yeni Ürün
-                </a>
-                <a href="{{ route('admin.stock.index') }}" class="btn btn-secondary">
-                    📦 Stok
-                </a>
-                <a href="{{ route('admin.reports.monthly') }}" class="btn btn-secondary">
-                    📈 Aylık Rapor
-                </a>
-            </div>
+            @endforeach
         </div>
     </div>
 

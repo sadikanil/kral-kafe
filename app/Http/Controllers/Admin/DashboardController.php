@@ -57,6 +57,13 @@ class DashboardController extends Controller
             // bekleyen var mi, biten urun var mi. Para ondan sonra.
             'occupancy' => StudyTable::occupancy(),
             'pendingApprovals' => StudySession::awaitingApproval()->count(),
+            // Bekleyen isler (5 Ekim 2026): toplu onaya girmeyen etiketli
+            // oturumlar ve kontrol/okuma bekleyen deneme PDF'leri.
+            'flaggedApprovals' => StudySession::awaitingApproval()
+                ->whereIn('end_reason', array_map(fn ($r) => $r->value, \App\Enums\SessionEndReason::explicitReview()))->count(),
+            'pendingImports' => \App\Models\ExamImport::with('event')
+                ->whereIn('status', [\App\Models\ExamImport::UPLOADED, \App\Models\ExamImport::READING, \App\Models\ExamImport::REVIEW, \App\Models\ExamImport::FAILED])
+                ->latest()->get(),
             // Stok sayfasinin "kritik" suzgeciyle AYNI kural (tukenenler dahil).
             'criticalStock' => Product::active()->withStockStatus('critical')->count(),
             'stats' => $stats,
