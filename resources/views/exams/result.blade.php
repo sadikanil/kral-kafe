@@ -76,8 +76,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($subjects as $ders)
-                                <tr>
+                            {{-- Bolum ara toplamlari karnedeki gibi (5 Ekim 2026). --}}
+                            @foreach($tableRows as $ders)
+                                <tr @class(['table-subtotal' => $ders['subtotal']])>
                                     <td>{{ $ders['name'] }}</td>
                                     <td>{{ $ders['correct'] }}</td>
                                     <td>{{ $ders['wrong'] }}</td>

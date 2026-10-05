@@ -87,6 +87,30 @@ class ExamResultViewTest extends TestCase
         $this->assertSame(['Yazım Kuralları', 'Paragraf'], array_column($detay['topicGroups']['Türkçe'], 'topic'));
     }
 
+    /** Bolum ara toplamlari: iki ve daha fazla dersi olan bolume (5 Ekim 2026). */
+    public function test_the_subject_table_adds_section_subtotals(): void
+    {
+        $ders = fn (string $kod) => Subject::where('code', $kod)->value('id');
+        $deneme = ExamEvent::create(['title' => 'TYT Deneme 3', 'exam_type' => 'tyt', 'exam_date' => '2026-09-28']);
+        $sonuc = ExamResult::create(['exam_event_id' => $deneme->id, 'student_id' => $this->burak->id, 'entered_by' => $this->yonetici->id]);
+        foreach ([['tyt_turkce', 30, 4], ['tyt_matematik', 20, 4], ['geometri', 4, 0], ['tyt_fizik', 4, 0], ['tyt_kimya', 3, 1]] as [$kod, $d, $y]) {
+            $sonuc->subjects()->create(['subject_id' => $ders($kod), 'correct' => $d, 'wrong' => $y, 'blank' => 0]);
+        }
+
+        $satirlar = ExamResultDetail::for($sonuc->fresh())['tableRows'];
+
+        $this->assertSame(['TYT Türkçe', 'TYT Matematik', 'Geometri', 'Temel Matematik', 'TYT Fizik', 'TYT Kimya', 'Fen Bilimleri'],
+            array_column($satirlar, 'name'));
+        $this->assertSame(23.0, $satirlar[3]['net']);   // 19 + 4
+        $this->assertSame(24, $satirlar[3]['correct']);
+        $this->assertSame(6.75, $satirlar[6]['net']);   // 4 + 2,75
+        $this->assertTrue($satirlar[6]['subtotal']);
+        $this->assertNull($satirlar[6]['change']);       // onceki deneme yok
+
+        $this->actingAs($this->burak)->get(route('user.exam-results.show', $sonuc))
+            ->assertOk()->assertSee('Temel Matematik')->assertSee('table-subtotal', false);
+    }
+
     public function test_the_student_sees_their_detail_page(): void
     {
         $this->actingAs($this->ayse)->get(route('user.exam-results.show', $this->ayseninYenisi()))

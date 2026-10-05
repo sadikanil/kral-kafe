@@ -3385,3 +3385,14 @@ body.is-focusing {
 .row-menu-list button.text-danger {
     color: var(--danger);
 }
+
+/* Deneme detayi: bolum ara toplami satiri (5 Ekim 2026). Ad kirilabilir:
+   telefonda uzun bolum adi tabloyu genisletip Net sutununu kesiyordu. */
+.table-subtotal td {
+    background: var(--surface-2);
+    font-weight: 600;
+}
+
+.table-subtotal td:first-child {
+    white-space: normal;
+}
