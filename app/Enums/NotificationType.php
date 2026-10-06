@@ -25,6 +25,9 @@ enum NotificationType: string
     /** Kurum denemesinin sonucu yayinlandi; ogrenciye, velisine, kocuna (1 Ekim 2026). */
     case ExamResult = 'exam_result';
 
+    /** Kurum PDF'inin okumasi bitti ya da durdu; yoneticiye (6 Ekim 2026). */
+    case ExamImport = 'exam_import';
+
     public function label(): string
     {
         return match ($this) {
@@ -33,6 +36,7 @@ enum NotificationType: string
             self::StockCount => 'Stok sayımı',
             self::LowStock => 'Kritik stok',
             self::ExamResult => 'Deneme sonucu',
+            self::ExamImport => 'Deneme okuma',
         };
     }
 }

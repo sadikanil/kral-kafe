@@ -255,6 +255,49 @@ class NotificationBuilder
     }
 
     /**
+     * Kurum PDF'inin okumasi bitti ya da durdu (6 Ekim 2026): her
+     * yoneticiye. Okuma arka planda, sayfa kapaliyken suruyor; yonetici
+     * sonucu ogrenmek icin sayfayi acik tutmak zorunda kalmasin. Kontrol
+     * bildirimi aktarim basina bir kez; durma her seferinde ("Devam et"
+     * sonrasi yeniden durursa yine haber verir).
+     */
+    public function examImport(\App\Models\ExamImport $aktarim): int
+    {
+        if (! in_array($aktarim->status, [\App\Models\ExamImport::REVIEW, \App\Models\ExamImport::FAILED], true)) {
+            return 0;
+        }
+
+        $baslik = $aktarim->event->title;
+
+        if ($aktarim->status === \App\Models\ExamImport::REVIEW) {
+            $satirlar = $aktarim->rows()->get(['match', 'data']);
+            $bakilacak = $satirlar->filter(fn ($s) => in_array($s->match, [\App\Models\ExamImportRow::SUGGESTED, \App\Models\ExamImportRow::NONE], true)
+                || ($s->data['mismatch'] ?? []) !== [])->count();
+
+            $tur = 'review';
+            $baslik = "Deneme okundu: {$baslik}";
+            $govde = "{$satirlar->count()} öğrenci okundu. "
+                . ($bakilacak > 0 ? "{$bakilacak} satır kontrol bekliyor; yayınlamadan önce bakın." : 'Kontrol edip yayınlayabilirsiniz.');
+            $an = '';
+        } else {
+            $tur = 'failed';
+            $baslik = "Deneme okunamadı: {$baslik}";
+            $govde = \Illuminate\Support\Str::limit((string) $aktarim->error, 240);
+            $an = ':' . now()->format('YmdHisv');
+        }
+
+        $yeni = 0;
+        foreach (User::where('role', Role::Admin->value)->get() as $yonetici) {
+            $yeni += (int) $this->kaydet(
+                NotificationType::ExamImport, $yonetici, null, $aktarim->id,
+                "exam_import:{$tur}:{$yonetici->id}:{$aktarim->id}{$an}", $baslik, $govde,
+            );
+        }
+
+        return $yeni;
+    }
+
+    /**
      * Bildirimi yazar; ayni anahtar zaten varsa hicbir sey yapmaz.
      *
      * @return bool Yeni kayit olustu mu

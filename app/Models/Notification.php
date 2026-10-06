@@ -47,14 +47,22 @@ class Notification extends Model
     }
 
     /**
-     * Bildirimin acacagi sayfa (5 Ekim 2026), alicinin gozunden. Simdilik
-     * yalnizca deneme sonucu: ogrenci kendi detayina (deneme kulubu varsa),
-     * veli cocugunun, koc atandigi ogrencinin detayina. Erisemeyecegi
-     * sayfaya baglanti verilmez (null).
+     * Bildirimin acacagi sayfa (5 Ekim 2026), alicinin gozunden. Deneme
+     * sonucu: ogrenci kendi detayina (deneme kulubu varsa), veli cocugunun,
+     * koc atandigi ogrencinin detayina. Deneme okuma (6 Ekim 2026): yonetici
+     * aktarim sayfasina. Erisemeyecegi sayfaya baglanti verilmez (null).
      */
     public function url(User $alici): ?string
     {
-        if ($this->type !== NotificationType::ExamResult || $this->related_id === null || $this->student === null) {
+        if ($this->related_id === null) {
+            return null;
+        }
+
+        if ($this->type === NotificationType::ExamImport) {
+            return $alici->isAdmin() ? route('admin.exam-imports.show', $this->related_id) : null;
+        }
+
+        if ($this->type !== NotificationType::ExamResult || $this->student === null) {
             return null;
         }
 

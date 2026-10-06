@@ -135,6 +135,24 @@ class ExamImportProcessor
      */
     private function adim(ExamImport $aktarim): int
     {
+        $once = $aktarim->status;
+        $bekle = $this->adimiCalistir($aktarim);
+
+        // Okuma bitti ya da durdu: yoneticiye haber (sayfa kapali olabilir).
+        // Bildirim yazilamazsa okuma bozulmasin.
+        if ($aktarim->status !== $once) {
+            try {
+                $this->bildirimler->examImport($aktarim);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
+        return $bekle;
+    }
+
+    private function adimiCalistir(ExamImport $aktarim): int
+    {
         try {
             match ($aktarim->status) {
                 ExamImport::UPLOADED => $this->dizin($aktarim),

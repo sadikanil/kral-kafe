@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 5 Ekim 2026 · Laravel 12 · 1518 test / 6749 doğrulama yeşil._
+_Son güncelleme: 5 Ekim 2026 · Laravel 12 · 1520 test / 6772 doğrulama yeşil._
 
 ---
 
@@ -2497,6 +2497,11 @@ Yönetici kontrol eder → Yayınla
   durdurur, kuyruktan çıkarır; sıra tıkanmaz, "Devam et" geri sokar. Gemini 3 isteği
   `thinkingLevel` = `EXAM_AI_EFFORT` (varsayılan `low`) gönderir; uzun düşünme bazı
   karnelerde 50 sn'yi aşıyordu.
+- **Yöneticiye haber (6 Ekim 2026):** okuma bitince ("Deneme okundu: … · N öğrenci
+  okundu, M satır kontrol bekliyor") ya da durunca ("Deneme okunamadı: …" + hata) her
+  yöneticiye zil bildirimi; dokununca aktarım sayfası açılır. Tekrarlanan geçici hata
+  bildirim üretmez, yalnızca gerçekten durma. Kontrol bildirimi aktarım başına bir kez,
+  durma bildirimi her durmada (`NotificationBuilder::examImport`).
 - Her adım ayrı istek (Vercel 60 sn); sayfa yalnızca 4 sn'de bir durumu sorar. Hata kaldığı yerde
   durur, "Devam et" okunmuş karneyi yeniden okumaz (iki kez ödeme yok).
 - Sağlayıcı arayüzün arkasında (`App\Contracts\ExamPdfReader`): Claude

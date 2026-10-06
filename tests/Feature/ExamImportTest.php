@@ -322,6 +322,57 @@ class ExamImportTest extends TestCase
         Http::assertSentCount(3); // yukleme + iki halka (son halka is bitince tetiklemez)
     }
 
+    /** Okuma arka planda bitince yoneticiye haber gider; zil aktarima baglar (6 Ekim 2026). */
+    public function test_the_admins_are_told_when_reading_finishes_or_stops(): void
+    {
+        $this->zincirAcik();
+        $ikinciYonetici = User::factory()->admin()->create();
+        $aktarim = $this->yukle();
+
+        $this->halka();
+        $this->halka();
+        $this->assertSame(0, Notification::count());
+        $this->halka();
+
+        $bildirim = Notification::where('user_id', $this->yonetici->id)->sole();
+        $this->assertSame('Deneme okundu: Hız ve Renk TYT 2', $bildirim->title);
+        // MERT CAN onerilen eslesme, DISARIDAN BIRI eslesmedi: iki satir kontrol bekliyor.
+        $this->assertSame('3 öğrenci okundu. 2 satır kontrol bekliyor; yayınlamadan önce bakın.', $bildirim->body);
+        $this->assertSame(route('admin.exam-imports.show', $aktarim), $bildirim->url($this->yonetici));
+        $this->assertSame(1, Notification::where('user_id', $ikinciYonetici->id)->count());
+        $this->assertNull($bildirim->url($this->elif));
+
+        $this->actingAs($this->yonetici)->get(route('admin.dashboard'))
+            ->assertSee('Deneme okundu: Hız ve Renk TYT 2')
+            ->assertSee(route('admin.exam-imports.show', $aktarim), false);
+
+        // Kalici hata: okuma durdu bildirimi; "Devam et" sonrasi yine durursa yine haber.
+        Notification::query()->delete();
+        $ikinci = $this->ikinciAktarim();
+        $this->okuyucu->hata = 'Gemini modeli bulunamadı (404).';
+        $this->halka();
+        $this->halka();
+        $this->assertSame(['Deneme okunamadı: Yayın Denizi TYT 1'], Notification::where('user_id', $this->yonetici->id)->pluck('title')->all());
+        $this->assertSame('Gemini modeli bulunamadı (404).', Notification::first()->body);
+
+        $this->travel(1)->minutes();
+        app(\App\Services\ExamImport\ExamImportProcessor::class)->resume($ikinci->fresh());
+        $this->halka();
+        $this->assertSame(2, Notification::where('user_id', $this->yonetici->id)->count());
+    }
+
+    /** Gecici hata tekrarlanirken bildirim yok; yalnizca gercekten durunca. */
+    public function test_a_retried_step_does_not_notify(): void
+    {
+        $aktarim = $this->yukle();
+        $this->isle($aktarim);
+        $this->okuyucu->hata = ExamPdfReadException::timeout()->getMessage();
+
+        $this->isle($aktarim);
+        $this->isle($aktarim);
+        $this->assertSame(0, Notification::count());
+    }
+
     public function test_the_chain_endpoint_needs_the_secret(): void
     {
         config(['kafe.cron_anahtari' => 'gizli']);
