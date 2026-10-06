@@ -36,3 +36,14 @@ test('ayni dosyanin eski surumleri silinmek uzere secilir', () => {
 
     assert.deepEqual(sw.eskiSurumler(onbellekte, KOK + '/css/app.css?v=yeni'), [KOK + '/css/app.css?v=eski']);
 });
+
+test('telefon bildirimi: baslik, metin ve yalnizca bu sitenin adresi', () => {
+    const icerik = sw.bildirimIcerigi({ title: 'Deneme sonucun yüklendi', body: 'Toplam net 69,50.', url: KOK + '/kullanici/denemeler/7', tag: 'bildirim-3' }, KOK);
+    assert.equal(icerik.baslik, 'Deneme sonucun yüklendi');
+    assert.equal(icerik.secenekler.body, 'Toplam net 69,50.');
+    assert.equal(icerik.secenekler.tag, 'bildirim-3');
+    assert.equal(icerik.secenekler.data.url, '/kullanici/denemeler/7');
+
+    assert.equal(sw.bildirimIcerigi({ url: 'https://kotu.example/giris' }, KOK).secenekler.data.url, '/bildirimler', 'baska site acilmaz');
+    assert.equal(sw.bildirimIcerigi(null, KOK).baslik, 'Kral Kafe');
+});

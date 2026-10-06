@@ -52,6 +52,8 @@
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/app.css') }}">
     {{-- Cift gonderim kilidi, menu, zil, hata ozeti, onay, balon (bkz. dosya basi). --}}
     <script src="{{ \App\Support\Asset::url('js/kabuk.js') }}" defer></script>
+    {{-- Telefon bildirimi (6 Ekim 2026): abonelik, zil onerisi, cikista birakma. --}}
+    <script src="{{ \App\Support\Asset::url('js/bildirim.js') }}" defer></script>
 
     @stack('styles')
     @include('layouts._analitik')
@@ -114,7 +116,7 @@
                             @endif
                         </div>
                     </div>
-                    <form action="{{ route('logout') }}" method="POST">
+                    <form action="{{ route('logout') }}" method="POST" data-cikis>
                         @csrf
                         <button type="submit" class="btn btn-icon btn-plain" aria-label="Çıkış yap" title="Çıkış yap"><x-icon name="log-out" /></button>
                     </form>
@@ -165,6 +167,7 @@
                                 <div class="notif-item text-muted">Bildirim yok.</div>
                             @endforelse
                             <a href="{{ route('notifications.index') }}" class="notif-all">Tümünü gör</a>
+                            <a href="{{ route('notifications.index') }}#telefon" class="notif-all" data-telefon-oneri hidden>Telefona da gelsin →</a>
                         </div>
                     </details>
                 </div>

@@ -9,7 +9,12 @@
  *    icerikle degistigi icin bayat kalamaz. Yeni surum gelince eskisi silinir.
  *  - Form gonderimi, baska site ve surumsuz dosya: tarayici ne yaparsa o.
  *
- * Mantik strateji() ve eskiSurumler()'de; tests/js/sw.test.mjs onlari
+ * Telefon bildirimi (6 Ekim 2026): sunucunun sifreli itmesi gelince
+ * bildirim gosterilir, dokununca ilgili sayfa acilir (acik sekme varsa
+ * o one gelir). Icerik bildirimIcerigi()'nde suzulur: baska siteye
+ * baglanti acilmaz.
+ *
+ * Mantik strateji(), eskiSurumler() ve bildirimIcerigi()'nde; tests/js/sw.test.mjs onlari
  * dogrudan cagirir. Tarayicida yalnizca olay dinleyicileri kurulur.
  */
 (function () {
@@ -46,8 +51,33 @@
         });
     }
 
+    /** Itmeden gelen JSON -> showNotification(baslik, secenekler). */
+    function bildirimIcerigi(veri, koken) {
+        veri = veri && typeof veri === 'object' ? veri : {};
+        var adres = '/bildirimler';
+
+        try {
+            var hedef = new URL(String(veri.url || adres), koken);
+            if (hedef.origin === koken) {
+                adres = hedef.pathname + hedef.search + hedef.hash;
+            }
+        } catch (e) { /* bozuk adres: bildirimler sayfasi */ }
+
+        return {
+            baslik: String(veri.title || 'Kral Kafe').slice(0, 120),
+            secenekler: {
+                body: String(veri.body || '').slice(0, 300),
+                tag: String(veri.tag || 'kral-kafe'),
+                icon: '/img/simge-192.png',
+                badge: '/img/simge-192.png',
+                lang: 'tr',
+                data: { url: adres }
+            }
+        };
+    }
+
     if (typeof module === 'object' && module && module.exports) {
-        module.exports = { strateji: strateji, eskiSurumler: eskiSurumler };
+        module.exports = { strateji: strateji, eskiSurumler: eskiSurumler, bildirimIcerigi: bildirimIcerigi };
         return;
     }
 
@@ -84,5 +114,27 @@
                 });
             }));
         }
+    });
+
+    self.addEventListener('push', function (olay) {
+        var veri = {};
+        try { veri = olay.data ? olay.data.json() : {}; } catch (e) { veri = {}; }
+        var icerik = bildirimIcerigi(veri, self.location.origin);
+
+        olay.waitUntil(self.registration.showNotification(icerik.baslik, icerik.secenekler));
+    });
+
+    self.addEventListener('notificationclick', function (olay) {
+        olay.notification.close();
+        var adres = new URL((olay.notification.data && olay.notification.data.url) || '/bildirimler', self.location.origin).href;
+
+        olay.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (pencereler) {
+            for (var i = 0; i < pencereler.length; i++) {
+                if (new URL(pencereler[i].url).origin === self.location.origin && 'focus' in pencereler[i]) {
+                    return pencereler[i].focus().then(function (p) { return p.navigate ? p.navigate(adres) : p; });
+                }
+            }
+            return self.clients.openWindow(adres);
+        }));
     });
 })();

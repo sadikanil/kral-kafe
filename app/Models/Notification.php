@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\NotificationType;
+use App\Services\Push\PushNotifier;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,6 +36,12 @@ class Notification extends Model
         'read_at' => 'datetime',
         'sent_at' => 'datetime',
     ];
+
+    /** Yeni bildirim telefona da gider (6 Ekim 2026); abonesi yoksa hicbir sey. */
+    protected static function booted(): void
+    {
+        static::created(fn (self $bildirim) => app(PushNotifier::class)->queue($bildirim));
+    }
 
     public function user(): BelongsTo
     {

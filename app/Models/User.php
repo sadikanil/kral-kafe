@@ -431,6 +431,12 @@ class User extends Authenticatable
         return $this->hasMany(PrivateLessonSlot::class, 'student_id')->orderBy('weekday')->orderBy('starts_at');
     }
 
+    /** Telefon bildirimi abonelikleri (6 Ekim 2026): cihaz basina bir. */
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
+    }
+
     /**
      * Ogrencinin paket gecmisi (Dalga 7).
      */

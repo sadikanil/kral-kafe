@@ -129,6 +129,14 @@ return [
     // degiskeni okuyup "Authorization: Bearer" basligina koyar.
     'cron_anahtari' => (string) env('CRON_SECRET', env('KAFE_CRON_ANAHTARI', '')),
 
+    // Telefon bildirimi (6 Ekim 2026): VAPID anahtari. Bos birakilirsa ilk
+    // kullanimda uretilip ayarlar tablosuna yazilir (WebPush::SETTING).
+    // Ozel anahtar PEM; tek satir girilecekse satir sonlari "\n" yazilir.
+    'web_push' => [
+        'public_key' => (string) env('WEB_PUSH_PUBLIC_KEY', ''),
+        'private_key' => (string) env('WEB_PUSH_PRIVATE_KEY', ''),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Kafe agi — RAFTA (19 Eylul 2026)

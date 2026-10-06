@@ -11,6 +11,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Telefon bildirimi (6 Ekim 2026): istek boyunca biriken bildirimler
+        // sonda tek havuzda gider; anahtar istek basina bir kez okunur.
+        $this->app->singleton(\App\Services\Push\WebPush::class);
+        $this->app->singleton(\App\Services\Push\PushNotifier::class);
+
         // Kurum deneme PDF'i okuyucu (1 Ekim 2026): saglayici yapilandirmadan.
         // Acik secim yoksa Claude anahtari varsa Claude, yoksa OpenAI.
         $this->app->bind(\App\Contracts\ExamPdfReader::class, function () {

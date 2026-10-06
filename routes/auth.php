@@ -37,4 +37,10 @@ Route::middleware('auth')->group(function () {
     // Bildirim zili (Dalga 27): her rol icin ortak
     Route::get('bildirimler', [\App\Http\Controllers\NotificationController::class, 'index'])
         ->name('notifications.index');
+
+    // Telefon bildirimi (6 Ekim 2026): bu cihazin aboneligi
+    Route::post('bildirimler/telefon', [\App\Http\Controllers\PushSubscriptionController::class, 'store'])
+        ->name('push.store');
+    Route::delete('bildirimler/telefon', [\App\Http\Controllers\PushSubscriptionController::class, 'destroy'])
+        ->name('push.destroy');
 });
