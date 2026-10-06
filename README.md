@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 5 Ekim 2026 · Laravel 12 · 1520 test / 6772 doğrulama yeşil._
+_Son güncelleme: 6 Ekim 2026 · Laravel 12 · 1530 test / 6819 doğrulama yeşil._
 
 ---
 
@@ -512,6 +512,18 @@ Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlan
   iki kez gitmesin (idempotans), ve "veliye gitti mi" sorusu cevaplanabilsin.
 - **Kanal:** e-posta. `MAIL_MAILER=log` olduğu sürece gerçekten gitmez; gerçek
   gönderim SMTP/Resend ister (§4.2). WhatsApp resmî API ücretli, sonraya.
+- **Telefon bildirimi (6 Ekim 2026):** her yeni zil kaydı abone cihazlara Web Push
+  olarak da gider (`Notification::booted` → `PushNotifier`, istek sonunda tek havuzda;
+  `WebPush` RFC 8291/8292'yi yalnız openssl ile uygular, paket yok, şifreleme RFC
+  örneğiyle test edilir). Kullanıcı Bildirimler sayfasındaki "Telefon bildirimleri"
+  kartından cihaz başına açar/kapatır; zilde açık değilse "Telefona da gelsin →".
+  Dokununca bildirimin sayfası açılır (deneme sonucu, aktarım), yoksa Bildirimler.
+  iPhone'da yalnızca ana ekrana eklenmiş uygulamada (iOS 16.4+), kart bunu anlatır.
+  Aynı telefon başka hesapla girerse abonelik yeni hesaba geçer; çıkışta cihaz
+  aboneliği bırakır. Sağlayıcı 404/410/403 derse satır silinir. VAPID anahtarı
+  `WEB_PUSH_PUBLIC_KEY`/`WEB_PUSH_PRIVATE_KEY` ya da yoksa ilk kullanımda üretilip
+  `settings` (`web_push_vapid`) satırına yazılır — kurulum gerekmez. Tablo
+  `push_subscriptions` (Supabase'e 6 Ekim'de uygulandı, batch 31).
 - **Devamsızlık bildiriminin eşiği** düşünülmeli: öğrencinin her gelmediği gün
   veliye mesaj gitmesi, kısa sürede görmezden gelinen bir gürültüye dönüşür.
 
@@ -1887,6 +1899,7 @@ Ardından `http://127.0.0.1:8000`. Hepsini birden (sunucu + kuyruk + log + vite)
 | `EXAM_AI_EFFORT` | Düşünme derinliği; aktarım işi olduğu için varsayılan `low`. Claude'da `effort`, Gemini 3 ve sonrasında `thinkingLevel` (`minimal`/`low`/`medium`/`high`) olur. Okuma hatası görülürse `medium`; karneler 50 sn'yi aşıyorsa `minimal`. |
 | `UPLOAD_DISK` | Yüklenen dosyaların gideceği disk. Yerelde `public`, serverless ortamda `s3`. |
 | `MAIL_MAILER` | Şifre sıfırlama e-postası. Varsayılan `log`; gerçek gönderim için SMTP gerekir. |
+| `WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY` | İsteğe bağlı. Telefon bildirimi VAPID anahtarı (base64url açık anahtar + PEM özel anahtar). Boşsa ilk kullanımda üretilip `settings` tablosuna yazılır. |
 
 ### 11.2 Testler
 
@@ -2501,7 +2514,8 @@ Yönetici kontrol eder → Yayınla
   okundu, M satır kontrol bekliyor") ya da durunca ("Deneme okunamadı: …" + hata) her
   yöneticiye zil bildirimi; dokununca aktarım sayfası açılır. Tekrarlanan geçici hata
   bildirim üretmez, yalnızca gerçekten durma. Kontrol bildirimi aktarım başına bir kez,
-  durma bildirimi her durmada (`NotificationBuilder::examImport`).
+  durma bildirimi her durmada (`NotificationBuilder::examImport`). Telefon bildirimi
+  açık yöneticinin telefonuna da gelir (§7-K).
 - Her adım ayrı istek (Vercel 60 sn); sayfa yalnızca 4 sn'de bir durumu sorar. Hata kaldığı yerde
   durur, "Devam et" okunmuş karneyi yeniden okumaz (iki kez ödeme yok).
 - Sağlayıcı arayüzün arkasında (`App\Contracts\ExamPdfReader`): Claude
