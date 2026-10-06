@@ -14,6 +14,7 @@ use App\Models\WeakTopic;
 use App\Services\NotificationBuilder;
 use App\Support\ExamTopics;
 use App\Support\StudentNameMatcher;
+use App\Support\TopicFollowUp;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -225,8 +226,8 @@ class ExamImportProcessor
                     continue;
                 }
 
-                [$sonuc, $eksikler] = $this->sonucuYaz($aktarim, $satir, $satir->student, $yonetici, $olay->exam_type);
-                $bildirilecek[] = [$sonuc, $eksikler];
+                [$sonuc, $eksikler, $duzelen] = $this->sonucuYaz($aktarim, $satir, $satir->student, $yonetici, $olay->exam_type);
+                $bildirilecek[] = [$sonuc, $eksikler, $duzelen];
                 $sayi++;
             }
 
@@ -234,8 +235,8 @@ class ExamImportProcessor
         });
 
         // Bildirim yazimi islemden sonra: biri basarisiz olursa sonuclar geri alinmasin.
-        foreach ($bildirilecek as [$sonuc, $eksikler]) {
-            $this->bildirimler->examResult($sonuc, $eksikler);
+        foreach ($bildirilecek as [$sonuc, $eksikler, $duzelen]) {
+            $this->bildirimler->examResult($sonuc, $eksikler, $duzelen);
         }
 
         return $sayi;
@@ -338,7 +339,7 @@ class ExamImportProcessor
 
     // --- Yayin -----------------------------------------------------------------
 
-    /** @return array{0:ExamResult,1:list<string>} */
+    /** @return array{0:ExamResult,1:list<string>,2:list<string>} eksikler ve artik eksik olmayanlar */
     private function sonucuYaz(ExamImport $aktarim, ExamImportRow $satir, User $ogrenci, User $yonetici, ExamType $tur): array
     {
         $veri = $satir->data ?? [];
@@ -388,7 +389,12 @@ class ExamImportProcessor
             $eksikler[] = trim(($konu['subject'] ?? '') . ' · ' . $ad, ' ·');
         }
 
-        return [$sonuc->load(['event', 'subjects']), $eksikler];
+        // Odev ise yaradi mi (6 Ekim 2026): bu denemede artik eksik olmayan
+        // acik konular listeden duser.
+        $sonuc->load(['event', 'subjects']);
+        $duzelen = TopicFollowUp::closeFixed($sonuc);
+
+        return [$sonuc, $eksikler, $duzelen];
     }
 
     // --- Yardimcilar ---------------------------------------------------------

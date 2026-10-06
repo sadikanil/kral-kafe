@@ -221,8 +221,9 @@ class NotificationBuilder
      * yayinlanirsa yeni bildirim uretmez.
      *
      * @param  list<string>  $eksikler  "Kimya · Atom ve Periyodik Sistem"
+     * @param  list<string>  $duzelen  bu denemede artik eksik olmayan (6 Ekim 2026)
      */
-    public function examResult(\App\Models\ExamResult $sonuc, array $eksikler): int
+    public function examResult(\App\Models\ExamResult $sonuc, array $eksikler, array $duzelen = []): int
     {
         $ogrenci = $sonuc->student()->with(['parents', 'coaches'])->first();
         $deneme = $sonuc->event;
@@ -230,17 +231,23 @@ class NotificationBuilder
         $konular = $eksikler === [] ? null : implode(', ', array_slice($eksikler, 0, 5))
             . (count($eksikler) > 5 ? ' ve ' . (count($eksikler) - 5) . ' konu daha' : '');
 
+        $kapanan = $duzelen === [] ? null : implode(', ', array_slice($duzelen, 0, 5))
+            . (count($duzelen) > 5 ? ' ve ' . (count($duzelen) - 5) . ' konu daha' : '');
+
         $alicilar = [
             [$ogrenci, "Deneme sonucun yüklendi: {$deneme->title}",
-                "Toplam net {$net}." . ($konular ? " Eksik konular: {$konular}." : '')],
+                "Toplam net {$net}." . ($konular ? " Eksik konular: {$konular}." : '')
+                . ($kapanan ? " Artık eksik değil: {$kapanan}." : '')],
         ];
         foreach ($ogrenci->parents as $veli) {
             $alicilar[] = [$veli, "{$ogrenci->name}: {$deneme->title} sonucu",
-                "Toplam net {$net}." . ($eksikler ? ' ' . count($eksikler) . ' eksik konu belirlendi.' : '')];
+                "Toplam net {$net}." . ($eksikler ? ' ' . count($eksikler) . ' eksik konu belirlendi.' : '')
+                . ($duzelen ? ' ' . count($duzelen) . ' konu artık eksik değil.' : '')];
         }
         foreach ($ogrenci->coaches as $koc) {
             $alicilar[] = [$koc, "{$ogrenci->name}: {$deneme->title} sonucu",
-                "Toplam net {$net}." . ($konular ? " Eksik konular: {$konular}. Konular sayfasından plana ekleyebilirsin." : '')];
+                "Toplam net {$net}." . ($konular ? " Eksik konular: {$konular}. Konular sayfasından plana ekleyebilirsin." : '')
+                . ($kapanan ? " Artık eksik değil (listeden düştü): {$kapanan}." : '')];
         }
 
         $yeni = 0;

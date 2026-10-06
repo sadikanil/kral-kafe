@@ -537,6 +537,38 @@ class ExamImportTest extends TestCase
         $this->assertStringContainsString('plana ekleyebilirsin', Notification::where('user_id', $koc->id)->sole()->body);
     }
 
+    /** Odev ise yaradi mi (6 Ekim 2026): bu denemede eksik olmayan acik konu listeden duser. */
+    public function test_a_topic_that_is_no_longer_weak_is_closed_on_publish(): void
+    {
+        $koc = User::factory()->create(['role' => 'coach']);
+        $koc->coachStudents()->attach($this->elif->id);
+        $turkce = \App\Models\Subject::where('code', 'tyt_turkce')->value('id');
+
+        // Onceki denemeden kalan acik eksikler (deneme gununden once acilmis).
+        $this->travelTo(Carbon::parse('2026-09-20 10:00', config('kafe.timezone')));
+        $paragraf = WeakTopic::create(['student_id' => $this->elif->id, 'subject_id' => $turkce, 'topic' => 'Paragraf Yorumu', 'source' => 'exam']);
+        $baska = WeakTopic::create(['student_id' => $this->elif->id, 'subject_id' => $turkce, 'topic' => 'Yazım Kuralları', 'source' => 'exam']);
+        // Denemeden SONRA acilmis konu: eski deneme onu kapatmaz.
+        $this->travelTo(Carbon::parse('2026-09-29 10:00', config('kafe.timezone')));
+        $sonra = WeakTopic::create(['student_id' => $this->elif->id, 'subject_id' => $turkce, 'topic' => 'Paragraf Yorumu', 'source' => 'coach']);
+        $this->travelTo(Carbon::parse('2026-09-30 10:00', config('kafe.timezone')));
+
+        $aktarim = $this->yukle();
+        $this->hepsiniOku($aktarim);
+        $this->onaylaVeYayinla($aktarim);
+
+        // Paragraf Yorumu bu denemede 16/20 (%80): kapandi. Yazim Kurallari
+        // denemede yok, sonradan acilan da dokunulmadi.
+        $this->assertSame('closed', $paragraf->fresh()->status);
+        $this->assertSame('open', $baska->fresh()->status);
+        $this->assertSame('open', $sonra->fresh()->status);
+
+        $this->assertStringContainsString('Artık eksik değil (listeden düştü): TYT Türkçe · Paragraf Yorumu.',
+            Notification::where('user_id', $koc->id)->sole()->body);
+        $this->assertStringContainsString('Artık eksik değil: TYT Türkçe · Paragraf Yorumu.',
+            Notification::where('user_id', $this->elif->id)->sole()->body);
+    }
+
     public function test_each_student_sees_only_their_own_result(): void
     {
         $aktarim = $this->yukle();

@@ -112,6 +112,36 @@
         </div>
     @endif
 
+    {{-- Odev ise yaradi mi (6 Ekim 2026): onceki denemenin eksikleri bu
+         denemede. Durum kuralla (TopicFollowUp); "artik eksik degil" olan
+         konu koc listesinden kendiliginden duser. Bolunmez bosluk: "%33 → %67"
+         telefonda ikiye kirilmasin. --}}
+    @if($followUp !== [])
+        <div class="card mb-3">
+            <div class="card-header"><h4>Önceki denemenin eksikleri</h4></div>
+            <div class="card-body p-0">
+                @foreach($followUp as $konu)
+                    <div class="list-row">
+                        <span class="list-row-main">
+                            <span class="list-row-title">{{ $konu['topic'] }}</span>
+                            <span class="list-row-sub">{{ collect([
+                                $konu['subject'],
+                                '%' . $konu['before'] . "\u{00A0}→\u{00A0}" . ($konu['after'] === null ? '—' : '%' . $konu['after']),
+                                match ($konu['homework']) { 'done' => "Ödev\u{00A0}tamamlandı", 'open' => "Ödev\u{00A0}bitmedi", default => null },
+                            ])->filter()->implode(' · ') }}</span>
+                        </span>
+                        @switch($konu['status'])
+                            @case('fixed')<span class="badge badge-success">Artık eksik değil</span>@break
+                            @case('weak')<span class="badge badge-danger">Hâlâ eksik</span>@break
+                            @case('few')<span class="list-row-value text-muted">1 soru</span>@break
+                            @default<span class="list-row-value text-muted">Bu denemede yok</span>
+                        @endswitch
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
     @if($weak !== [])
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">

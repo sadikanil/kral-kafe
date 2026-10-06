@@ -8,7 +8,7 @@ aylık fatura akışı çalışır.
 **Bu dosya projenin tek dokümanıdır.** Ürün kararları, yol haritası, teknik karar
 kaydı, tuzaklar, kurulum ve dağıtım — hepsi burada. Gelişim buradan takip edilir.
 
-_Son güncelleme: 6 Ekim 2026 · Laravel 12 · 1530 test / 6819 doğrulama yeşil._
+_Son güncelleme: 6 Ekim 2026 · Laravel 12 · 1534 test / 6838 doğrulama yeşil._
 
 ---
 
@@ -70,6 +70,10 @@ Kararlar §5'te (18–24). Ayrıntı: koçlar §6.2, PDF akışı ve Claude/Open
   - **Yönetici paneli:** "Bekleyen işler" kartı (onay bekleyen oturumlar ve etiketlileri, okunma/kontrol bekleyen deneme PDF'leri, stok tutarsızlığı) yalnızca iş varken; renkli emojili hızlı erişim yerine düz "Kısayollar".
   - **Kullanıcı formu:** Kimlik / Rol ve bağlar / Hedef ve üyelik / Şifre değiştir bölümleri (son ikisi katlı, hata varsa açık); 8'den uzun öğrenci/veli listelerinde arama. Öğrenci formunda koç yetkili veliler "Koç · branş" etiketli, Koçlar kartında branş ve asıl rol.
   - **Kullanıcılar listesi:** satıra dokunmak düzenlemeye gider; işlemler yazılı adlarla "⋯" menüsünde (Düzenle, Paket ve ödeme, Deneme raporları ve sonuç, Askıya al / Aktifleştir, Sil).
+- [x] **Bildirim ve ödev takibi (6 Ekim 2026)**
+  - **Deneme okuma bildirimi:** okuma bitince ya da durunca yöneticiye zil bildirimi, aktarım sayfasına bağlı (§14.2).
+  - **Telefon bildirimi:** Bildirimler sayfasından cihaz başına açılır; her zil kaydı telefona da gider (§7-K).
+  - **Ödev işe yaradı mı:** deneme detayında "Önceki denemenin eksikleri" kartı — bir önceki aynı tür denemede eksik çıkan her konu için başarı önce → şimdi (%33 → %67), arada verilen ödevin durumu (tamamlandı / bitmedi) ve kurala göre durum: *Artık eksik değil* (2+ soru, %50 ve üzeri), *Hâlâ eksik*, *1 soru* (karar için yetmez), *Bu denemede yok*. Yayında artık eksik olmayan açık konular eksik listesinden kendiliğinden düşer (denemeden sonra açılmış konuya dokunulmaz); öğrenciye ve koça giden bildirimde "Artık eksik değil: …" yazar. Koç gerekirse konuyu yeniden açar (`TopicFollowUp`).
 
 ### Dalga 30 · Takvimli plan (23 Eyl) · ✅ bitti
 

@@ -39,7 +39,7 @@ final class ExamResultDetail
      *   result: ExamResult, previous: ?ExamResult, netChange: ?float,
      *   subjects: list<array{name:string,section:?string,correct:int,wrong:int,blank:int,net:float,change:?float}>,
      *   tableRows: list<array>,
-     *   ranks: array<string,string>, weak: list<array>, topicGroups: array<string,list<array>>
+     *   ranks: array<string,string>, weak: list<array>, followUp: list<array>, topicGroups: array<string,list<array>>
      * }
      */
     public static function for(ExamResult $sonuc): array
@@ -73,6 +73,8 @@ final class ExamResultDetail
                 'Türkiye' => $sonuc->rankLabel('country'),
             ])->filter()->all(),
             'weak' => $sonuc->weakTopics(),
+            // Onceki denemenin eksikleri bu denemede (6 Ekim 2026).
+            'followUp' => TopicFollowUp::rows($sonuc, $onceki),
             'topicGroups' => self::topicGroups($sonuc->topics ?? []),
         ];
     }
