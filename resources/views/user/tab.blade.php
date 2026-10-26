@@ -1,40 +1,69 @@
 @extends('layouts.app')
 
+@php($para = fn ($n) => \App\Support\TabSummary::money((float) $n))
+
 @section('title', 'Adisyonum - Kral Kafe')
 @section('page-title', 'Adisyonum')
 
+{{--
+    Adisyonum (DEV-506, 26 Ekim 2026). Masa QR'i once bunu acar
+    (TableSessionController::show, $table dolu); menuden gelen ayni sayfayi
+    masasiz gorur. Ust kart: ayin toplami ve odeme durumu; altinda buyuk
+    "Urun ekle". Calisma oturumu masadan gelene ikinci adim. Gecmis bir ay
+    (?ay=) salt okunur: ekleme ve geri alma yok.
+--}}
 @section('content')
-    <div class="stats-grid mb-3">
-        <div class="stat-card">
-            <div class="stat-icon primary">💰</div>
-            <div class="stat-content">
-                <div class="stat-value">{{ number_format($monthTotal, 2, ',', '.') }} ₺</div>
-                <div class="stat-label">Bu Ay Toplam</div>
-            </div>
+    <section class="tab-hero mb-3" aria-labelledby="adisyon-ay">
+        <div class="tab-hero-head">
+            <span id="adisyon-ay" class="tab-hero-month">☕ {{ $monthLabel }}</span>
+            @if($table)<span class="tab-hero-table">{{ $table->name }}</span>@endif
         </div>
-        <div class="stat-card">
-            <div class="stat-icon success">📦</div>
-            <div class="stat-content">
-                <div class="stat-value">{{ $monthItems }}</div>
-                <div class="stat-label">Ürün Adedi</div>
-            </div>
+        <div class="tab-hero-total">{{ $para($total) }}</div>
+        <div class="tab-hero-meta">{{ $itemCount }} ürün · {{ $lines->count() }} kalem</div>
+        <div class="tab-hero-row">
+            <span>Ödeme durumu</span>
+            @include('user._adisyon-odeme')
         </div>
-    </div>
+    </section>
 
-    @if($todayEntries->isNotEmpty())
+    @if($isCurrent)
+        <a href="{{ route('user.tab.add', $table ? ['masa' => $table->qr_code] : []) }}" class="btn btn-primary btn-lg btn-block mb-3">☕ Ürün ekle</a>
+    @else
+        <a href="{{ route('user.tab') }}" class="btn btn-secondary btn-block mb-3">← Bu ayın adisyonu</a>
+    @endif
+
+    {{-- Masadan gelindiyse calisma ikinci adim (DEV-506). --}}
+    @if($table)
         <div class="card mb-3">
-            <div class="card-header"><h4>Bugün eklediklerim</h4></div>
-            {{-- Tablo degil liste: 390px telefonda alti sutunlu tablo kutudan
-                 tasiyor, "Geri al" yatay kaydirmanin arkasinda kaliyordu. Satir:
-                 saat, urun ve tutar solda; geri al her zaman gorunur sagda. --}}
+            <div class="card-header"><h4>Çalışma</h4></div>
+            <div class="card-body">
+                @if($session && $session->study_table_id === $table->id)
+                    <p class="mb-2"><span class="live-dot"></span> <strong>Çalışma sürüyor</strong> · {{ $table->name }}</p>
+                    <a href="{{ route('session.timer') }}" class="btn btn-secondary btn-block">⏱ Sayaca git</a>
+                @else
+                    <p class="text-muted mb-2">
+                        @if($session)
+                            Şu anda {{ $session->table->name }} masasında açık bir çalışman var.
+                        @else
+                            Bu masada çalışmak istersen oturumu başlat.
+                        @endif
+                    </p>
+                    <a href="{{ route('table.session', $table->qr_code) }}" class="btn btn-secondary btn-block">Çalışma oturumuna geç →</a>
+                @endif
+            </div>
+        </div>
+    @endif
+
+    @if($latest->isNotEmpty())
+        <div class="card mb-3">
+            <div class="card-header"><h4>Son eklenenler</h4></div>
             <div class="card-body">
                 <ul class="log-list">
-                    @foreach($todayEntries as $kayit)
+                    @foreach($latest as $kayit)
                         <li>
-                            <span class="text-muted">{{ $kayit->consumed_at->timezone(config('kafe.timezone'))->format('H:i') }}</span>
+                            <span class="text-muted">{{ $kayit->consumed_at->timezone(config('kafe.timezone'))->format('d.m H:i') }}</span>
                             <span class="log-label">
-                                {{ $kayit->product->name }} ×{{ $kayit->quantity }}
-                                <small class="text-muted">· {{ $kayit->location->name }}</small>
+                                {{ $kayit->product?->name }} ×{{ $kayit->quantity }}
                                 <br>
                                 @if($kayit->isCoveredByPackage())
                                     <span class="badge badge-success">Paketinde</span>
@@ -49,7 +78,7 @@
                                 <form action="{{ route('user.tab.undo', $kayit) }}" method="POST">
                                     @csrf
                                     <button type="submit" class="btn btn-secondary"
-                                        aria-label="{{ $kayit->product->name }} ×{{ $kayit->quantity }} kaydını geri al">Geri al</button>
+                                        aria-label="{{ $kayit->product?->name }} ×{{ $kayit->quantity }} kaydını geri al">Geri al</button>
                                 </form>
                             @endif
                         </li>
@@ -59,51 +88,41 @@
         </div>
     @endif
 
-    <div class="card">
-        <div class="card-header">
-            <h4>Ne aldın?</h4>
-        </div>
-        <div class="card-body">
-            @if($products->isEmpty())
-                <div class="empty-state">
-                    <div class="empty-state-icon">🍫</div>
-                    <div class="empty-state-title">Tanımlı ürün yok</div>
-                </div>
-            @else
-                <div class="product-grid">
-                    @foreach($products as $product)
-                        <form action="{{ route('user.tab.store') }}" method="POST" class="product-card" style="cursor: default;">
-                            @csrf
-                            <input type="hidden" name="product_id" value="{{ $product->id }}">
-                            <div class="product-card-image">
-                                @if($product->image_url)
-                                    <img src="{{ $product->image_src }}" alt="{{ $product->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--r);">
-                                @else
-                                    {{ $product->emoji ?: '🍫' }}
-                                @endif
-                            </div>
-                            <div class="product-card-name">{{ $product->name }}</div>
-                            <div class="product-card-price">{{ $product->formatted_price }}</div>
-
-
-                            <div class="d-flex gap-1 justify-content-center align-items-center mt-2">
-                                <select name="quantity" class="form-control" style="width: 64px; padding: 4px;"
-                                    aria-label="{{ $product->name }} adet">
-                                    @for($i = 1; $i <= 5; $i++)
-                                        <option value="{{ $i }}">{{ $i }}</option>
-                                    @endfor
-                                </select>
-                                <button type="submit" class="btn btn-primary btn-sm">Ekle</button>
-                            </div>
-                        </form>
-                    @endforeach
-                </div>
-            @endif
-        </div>
+    <div class="card mb-3">
+        <div class="card-header"><h4>Kalemler</h4></div>
+        @if($lines->isEmpty())
+            <div class="card-body">
+                <p class="text-muted mb-0">{{ $isCurrent ? 'Bu ay henüz bir şey eklemedin.' : 'Bu ay adisyon yok.' }}</p>
+            </div>
+        @else
+            <div class="card-body p-0">
+                @foreach($lines as $kalem)
+                    <div class="list-row">
+                        <span class="list-row-main">
+                            <span class="list-row-title">{{ $kalem['emoji'] ? $kalem['emoji'] . ' ' : '' }}{{ $kalem['name'] }}</span>
+                            <span class="list-row-sub">×{{ $kalem['quantity'] }}@if($kalem['covered'] > 0) · {{ $kalem['covered'] }} paketten @endif</span>
+                        </span>
+                        <span class="list-row-value">{{ $para($kalem['total']) }}</span>
+                    </div>
+                @endforeach
+            </div>
+        @endif
     </div>
 
-    <div class="alert alert-info mt-3">
-        💡 Buradan eklediklerin doğrudan aylık hesabına yazılır ve rafın stoğundan düşülür.
-        Paketine dahil olanlar ücretsiz işlenir. Yanlış eklediysen 60 saniye içinde geri alabilirsin.
-    </div>
+    @if($history->isNotEmpty())
+        <div class="card">
+            <div class="card-header"><h4>Geçmiş adisyonlar</h4></div>
+            <div class="card-body p-0">
+                @foreach($history as $gecmis)
+                    <a href="{{ route('user.tab', ['ay' => $gecmis['key']]) }}" class="list-row">
+                        <span class="list-row-main">
+                            <span class="list-row-title">{{ $gecmis['label'] }}</span>
+                            <span class="list-row-sub">{{ $gecmis['itemCount'] }} ürün</span>
+                        </span>
+                        <span class="list-row-value">{{ $para($gecmis['total']) }}</span>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
 @endsection

@@ -153,7 +153,7 @@ class LocalTimeBucketsTest extends TestCase
     public function test_the_student_tab_summarises_the_local_month(): void
     {
         $this->actingAs($this->ogrenci)->get(route('user.tab'))
-            ->assertViewHas('monthTotal', fn ($toplam) => (float) $toplam === 45.0);
+            ->assertViewHas('total', fn ($toplam) => (float) $toplam === 45.0);
     }
 
     public function test_the_report_page_opens_on_the_local_month(): void

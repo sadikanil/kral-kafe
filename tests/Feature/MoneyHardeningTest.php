@@ -267,11 +267,14 @@ class MoneyHardeningTest extends TestCase
 
         $this->actingAs($ogrenci)->get(route('user.tab'))
             ->assertOk()
-            ->assertSee('Bugün eklediklerim')
+            // DEV-506: Adisyonum'da "Son eklenenler"; urun secme ayri sayfada.
+            ->assertSee('Son eklenenler')
             ->assertDontSee('<table', false)
             ->assertSee('<ul class="log-list">', false)
             ->assertSeeInOrder(['14:00', 'Çikolatalı Gofret ×2', '50,00 ₺', route('user.tab.undo', $kayit)], false)
-            ->assertSee('aria-label="Çikolatalı Gofret ×2 kaydını geri al"', false)
+            ->assertSee('aria-label="Çikolatalı Gofret ×2 kaydını geri al"', false);
+
+        $this->actingAs($ogrenci)->get(route('user.tab.add'))
             ->assertSee('aria-label="Çikolatalı Gofret adet"', false);
     }
 

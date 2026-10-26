@@ -55,7 +55,7 @@ final class Navigation
     {
         $tercih = match (true) {
             $u->hasRole(Role::Admin) => ['admin.dashboard', 'admin.live', 'admin.users.index', 'coach.plan.index'],
-            $u->hasRole(Role::Student) => ['user.dashboard', 'table.scanner', 'user.plan', 'user.tab'],
+            $u->hasRole(Role::Student) => ['user.tab', 'user.dashboard', 'table.scanner', 'user.plan'],
             default => [],
         };
 
@@ -121,9 +121,10 @@ final class Navigation
     {
         return [
             ['title' => 'Günlük', 'items' => array_values(array_filter([
+                // DEV-506 (26 Ekim 2026): Adisyonum ilk sirada; masa QR'i da once onu acar.
+                ['route' => 'user.tab', 'label' => 'Adisyonum', 'icon' => 'receipt', 'match' => 'user.tab*|table.scan'],
                 ['route' => 'user.dashboard', 'label' => 'Panel', 'icon' => 'house'],
-                $hak->table ? ['route' => 'table.scanner', 'label' => 'QR Okut', 'icon' => 'scan-line', 'match' => 'table.*'] : null,
-                ['route' => 'user.tab', 'label' => 'Adisyon', 'icon' => 'receipt', 'match' => 'user.tab*'],
+                $hak->table ? ['route' => 'table.scanner', 'label' => 'QR Okut', 'icon' => 'scan-line', 'match' => 'table.scanner|table.session'] : null,
                 ['route' => 'user.plan', 'label' => 'Planım', 'icon' => 'calendar-days'],
                 ['route' => 'user.report', 'label' => 'Haftalık Raporum', 'icon' => 'chart-no-axes-column'],
             ]))],
