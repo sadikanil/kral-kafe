@@ -23,7 +23,7 @@ class CoachAssignmentController extends Controller
 
         // Dalga 19-20: koclugu kapsamayan pakete (Tier 1) koc atanmaz.
         if (! $student->entitlements()->coaching) {
-            return back()->with('error', 'Öğrencinin paketi koçluk içermiyor.');
+            return back()->with('error', 'Üyenin paketi koçluk içermiyor.');
         }
 
         $request->validate([

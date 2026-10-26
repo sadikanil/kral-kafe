@@ -7,7 +7,7 @@
     <div class="session-card">
         <strong>Kafe konumu</strong>
         <p class="text-muted">
-            Çalışma oturumu başlatılırken öğrencinin konumu kaydediliyor. Kafenin
+            Çalışma oturumu başlatılırken üyenin konumu kaydediliyor. Kafenin
             koordinatı girilirse, onay kuyruğunda her oturumun kafeye uzaklığı
             görünür. Oturum <strong>engellenmez</strong> — bu yalnızca bir işaret.
         </p>

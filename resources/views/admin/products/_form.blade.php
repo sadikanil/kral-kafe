@@ -123,5 +123,5 @@
     <input type="hidden" name="is_active" value="0">
     <input type="checkbox" id="is_active" name="is_active" value="1" class="form-check-input"
         @checked(old('is_active', $product->exists ? $product->is_active : true))>
-    <label for="is_active" class="form-check-label">Satışta (öğrenci adisyonda görür)</label>
+    <label for="is_active" class="form-check-label">Satışta (üye adisyonda görür)</label>
 </div>

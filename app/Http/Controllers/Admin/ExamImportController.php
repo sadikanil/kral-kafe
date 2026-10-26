@@ -127,7 +127,7 @@ class ExamImportController extends Controller
         $veri = $request->validate([
             'student_id' => ['nullable', 'integer', Rule::exists('users', 'id')->where('role', Role::Student->value)],
             'skip' => ['nullable', 'boolean'],
-        ], [], ['student_id' => 'öğrenci']);
+        ], [], ['student_id' => 'üye']);
 
         if ($request->boolean('skip')) {
             $row->update(['student_id' => null, 'match' => ExamImportRow::SKIP]);
@@ -140,7 +140,7 @@ class ExamImportController extends Controller
         // Ayni ogrenci ayni PDF'te iki satira baglanmaz.
         if ($id !== null && $row->import->rows()->whereKeyNot($row->id)->where('student_id', $id)
             ->whereIn('match', [ExamImportRow::AUTO, ExamImportRow::MANUAL, ExamImportRow::SUGGESTED])->exists()) {
-            return back()->with('error', 'Bu öğrenci başka bir satıra bağlı.');
+            return back()->with('error', 'Bu üye başka bir satıra bağlı.');
         }
 
         $row->update(['student_id' => $id, 'match' => $id === null ? ExamImportRow::NONE : ExamImportRow::MANUAL]);
@@ -156,12 +156,12 @@ class ExamImportController extends Controller
 
         $bekleyen = $import->rows()->whereIn('match', [ExamImportRow::SUGGESTED, ExamImportRow::NONE])->count();
         if ($bekleyen > 0) {
-            return back()->with('error', "{$bekleyen} satır kontrol bekliyor: öğrenciyi seçin ya da atlayın.");
+            return back()->with('error', "{$bekleyen} satır kontrol bekliyor: üyeyi seçin ya da atlayın.");
         }
 
         $sayi = $this->isleyici->publish($import, auth()->user());
 
-        return back()->with('success', "{$sayi} öğrencinin sonucu yayınlandı; öğrenci, veli ve koçlara bildirim gitti.");
+        return back()->with('success', "{$sayi} üyenin sonucu yayınlandı; üye, veli ve koçlara bildirim gitti.");
     }
 
     /** PDF yalnizca yoneticiye: tum kurumun adlari ve puanlari icinde. */

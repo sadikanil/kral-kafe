@@ -15,8 +15,8 @@
 --}}
 @section('content')
     <p class="text-muted mb-3">
-        Ders saati paketten bağımsızdır: paketinde özel ders olmayan öğrenciye de saat tanımlayabilirsin.
-        Dersi veren koç, öğrencinin koçu olarak da atanır; ödev verebilir, kendi derslerini taşıyıp iptal edebilir.
+        Ders saati paketten bağımsızdır: paketinde özel ders olmayan üyeye de saat tanımlayabilirsin.
+        Dersi veren koç, üyenin koçu olarak da atanır; ödev verebilir, kendi derslerini taşıyıp iptal edebilir.
         Ücret ve ödeme koçlara görünmez.
     </p>
 
@@ -98,7 +98,7 @@
                     </div>
                     @include('admin.lessons._ogrenci-secimi', ['onek' => 'paket'])
                     <button type="submit" class="btn btn-primary">Seçilenlere paketi aç</button>
-                    <small class="text-muted d-block mt-1">Her öğrenciye ayrı paket dönemi açılır; ödeme takibi Ödemeler'de.</small>
+                    <small class="text-muted d-block mt-1">Her üyeye ayrı paket dönemi açılır; ödeme takibi Ödemeler'de.</small>
                 </form>
             @endif
         </div>

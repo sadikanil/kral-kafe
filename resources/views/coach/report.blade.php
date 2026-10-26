@@ -4,7 +4,7 @@
 @section('page-title', $student->name)
 
 @section('page-actions')
-    <a href="{{ route('coach.plan.index') }}" class="btn btn-sm btn-secondary">← Öğrenciler</a>
+    <a href="{{ route('coach.plan.index') }}" class="btn btn-sm btn-secondary">← Üyeler</a>
 @endsection
 
 @section('content')
@@ -17,7 +17,7 @@
             <div class="card-header"><h4>Koç yorumu</h4></div>
             <div class="card-body">
                 <p class="text-muted">
-                    Bu yorum veliye ve öğrenciye görünür. Sayıları sistem üretir,
+                    Bu yorum veliye ve üyeye görünür. Sayıları sistem üretir,
                     yorumu insan — rapordaki tek değerlendirme burası.
                 </p>
 

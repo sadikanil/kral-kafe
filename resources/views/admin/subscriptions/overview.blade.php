@@ -22,7 +22,7 @@
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
-                            <tr><th>Öğrenci</th><th class="hide-sm">Paket</th><th class="hide-sm">Dönem</th><th class="hide-sm">Tutar</th><th class="hide-sm">Ödenen</th><th>Kalan</th><th class="hide-sm">Vade</th><th>Durum</th><th></th></tr>
+                            <tr><th>Üye</th><th class="hide-sm">Paket</th><th class="hide-sm">Dönem</th><th class="hide-sm">Tutar</th><th class="hide-sm">Ödenen</th><th>Kalan</th><th class="hide-sm">Vade</th><th>Durum</th><th></th></tr>
                         </thead>
                         <tbody>
                             @foreach($subscriptions as $abonelik)

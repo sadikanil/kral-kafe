@@ -13,10 +13,10 @@
             <div class="card-body">
                 <div class="empty-state">
                     <div class="empty-state-icon">👨‍👩‍👧</div>
-                    <div class="empty-state-title">Hesabınıza bağlı öğrenci yok</div>
+                    <div class="empty-state-title">Hesabınıza bağlı üye yok</div>
                     <p class="text-muted">
                         Çocuğunuzun çalışma bilgilerini görebilmek için kafe yönetimi
-                        hesabınızı öğrenciyle eşleştirmeli. Lütfen yöneticiyle görüşün.
+                        hesabınızı üyeyle eşleştirmeli. Lütfen yöneticiyle görüşün.
                     </p>
                 </div>
             </div>

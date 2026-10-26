@@ -55,7 +55,7 @@
                     <input type="file" id="pdf" name="pdf" accept="application/pdf" required
                         class="form-control @error('pdf') is-invalid @enderror">
                     @error('pdf')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                    <small class="text-muted">Yükleme bitince yapay zeka PDF'i okur; başarılı ve zayıf alanlar öğrencinin sayfasında görünür.</small>
+                    <small class="text-muted">Yükleme bitince yapay zeka PDF'i okur; başarılı ve zayıf alanlar üyenin sayfasında görünür.</small>
                 </div>
                 <button type="submit" class="btn btn-primary">Yükle ve analiz et</button>
             </form>
@@ -92,6 +92,6 @@
             </div>
         </div>
     @empty
-        <div class="card"><div class="card-body text-center text-muted p-4">Bu öğrenci için henüz rapor yüklenmedi.</div></div>
+        <div class="card"><div class="card-body text-center text-muted p-4">Bu üye için henüz rapor yüklenmedi.</div></div>
     @endforelse
 @endsection

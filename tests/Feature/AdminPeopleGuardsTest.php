@@ -117,7 +117,7 @@ class AdminPeopleGuardsTest extends TestCase
         $this->actingAs($this->yonetici)->from(route('admin.users.edit', $veli))
             ->put(route('admin.users.update', $veli), $this->formVerisi($veli, ['name' => 'Yeni Ad', 'student_ids' => '']))
             ->assertRedirect(route('admin.users.edit', $veli))
-            ->assertSessionHasErrors(['student_ids' => 'Öğrencinin en az bir velisi olmalı: Zeynep Tek için tek veli bu. Önce öğrenciye başka bir veli bağlayın.']);
+            ->assertSessionHasErrors(['student_ids' => 'Üyenin en az bir velisi olmalı: Zeynep Tek için tek veli bu. Önce üyeye başka bir veli bağlayın.']);
 
         // Hicbir sey yarim kaydedilmez: ad da, iki velili ogrencinin bagi da yerinde.
         $this->assertSame('Gülşen Yıldız', $veli->fresh()->name);
@@ -150,7 +150,7 @@ class AdminPeopleGuardsTest extends TestCase
                 'name' => 'Yeni Ad', 'role' => Role::Coach->value, 'student_ids' => [$tek->id],
             ]))
             ->assertRedirect(route('admin.users.edit', $veli))
-            ->assertSessionHasErrors(['role' => 'Bu velinin rolü değiştirilemez: Zeynep Tek için tek veli. Önce öğrenciye başka bir veli bağlayın.']);
+            ->assertSessionHasErrors(['role' => 'Bu velinin rolü değiştirilemez: Zeynep Tek için tek veli. Önce üyeye başka bir veli bağlayın.']);
 
         $this->assertSame('parent', $veli->fresh()->role);
         $this->assertNotSame('Yeni Ad', $veli->fresh()->name);

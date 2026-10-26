@@ -136,13 +136,13 @@ class SubscriptionController extends Controller
     {
         $subscription->forceFill(['payment_status' => PaymentStatus::Cancelled])->save();
 
-        return back()->with('success', 'Abonelik iptal edildi. Öğrencinin abonelik durumu değiştirilmedi; gerekirse kullanıcı formundan kapatın.');
+        return back()->with('success', 'Üyelik iptal edildi. Üyenin üyelik durumu değiştirilmedi; gerekirse kullanıcı formundan kapatın.');
     }
 
     public function storePayment(Request $request, Subscription $subscription)
     {
         if ($subscription->isCancelled()) {
-            return back()->with('error', 'İptal edilmiş aboneliğe ödeme yazılamaz.');
+            return back()->with('error', 'İptal edilmiş üyeliğe ödeme yazılamaz.');
         }
 
         $veri = $request->validate([

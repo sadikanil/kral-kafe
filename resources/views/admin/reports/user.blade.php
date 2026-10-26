@@ -5,7 +5,7 @@
     $periodLabel = $summary['month_name'] . ' ' . $year;
 @endphp
 
-@section('title', $user->name . ' - Tüketim Raporu - Kral Kafe')
+@section('title', $user->name . ' - Adisyon Raporu - Kral Kafe')
 @section('page-title', $user->name . ' - ' . $periodLabel)
 
 @section('page-actions')
@@ -36,7 +36,7 @@
             <div class="stat-icon warning">📅</div>
             <div class="stat-content">
                 <div class="stat-value">{{ $summary['by_day']->count() }}</div>
-                <div class="stat-label">Tüketim Yapılan Gün</div>
+                <div class="stat-label">Sipariş Verilen Gün</div>
             </div>
         </div>
     </div>
@@ -65,7 +65,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <td class="text-muted">Abonelik Durumu</td>
+                    <td class="text-muted">Üyelik Durumu</td>
                     <td>
                         @switch($user->subscription_status)
                             @case('active')
@@ -139,7 +139,7 @@
                         @empty
                             <tr>
                                 <td colspan="3" class="text-center p-4 text-muted">
-                                    Bu dönemde ürün tüketimi bulunamadı.
+                                    Bu dönemde sipariş bulunamadı.
                                 </td>
                             </tr>
                         @endforelse
@@ -174,7 +174,7 @@
                         @empty
                             <tr>
                                 <td colspan="3" class="text-center p-4 text-muted">
-                                    Bu dönemde tüketim kaydı bulunmuyor.
+                                    Bu dönemde sipariş kaydı bulunmuyor.
                                 </td>
                             </tr>
                         @endforelse
@@ -184,10 +184,10 @@
         </div>
     </div>
 
-    <!-- Tüm Tüketimler -->
+    <!-- Tüm Siparişler -->
     <div class="card mt-4">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h4>🧾 Tüm Tüketimler</h4>
+            <h4>🧾 Tüm Siparişler</h4>
             <span class="badge badge-info">{{ $summary['consumptions']->count() }} kayıt</span>
         </div>
         <div class="card-body p-0">
@@ -197,7 +197,7 @@
                         <tr>
                             <th>Tarih</th>
                             <th>Ürün</th>
-                            <th>Lokasyon</th>
+                            <th>Bölüm</th>
                             <th class="text-center">Adet</th>
                             <th>Tutar</th>
                         </tr>
@@ -220,7 +220,7 @@
                         @empty
                             <tr>
                                 <td colspan="5" class="text-center p-4 text-muted">
-                                    {{ $periodLabel }} için tüketim kaydı bulunamadı.
+                                    {{ $periodLabel }} için sipariş kaydı bulunamadı.
                                 </td>
                             </tr>
                         @endforelse

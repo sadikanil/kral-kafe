@@ -3,8 +3,8 @@
     Beklenen: $students, $onek (id onegi, iki form ayni sayfada).
 --}}
 <fieldset class="form-group lesson-picker">
-    <legend class="form-label">Öğrenciler</legend>
-    <input type="search" class="form-control mb-2 js-ogrenci-ara" placeholder="Ada göre ara" aria-label="Öğrenci ara"
+    <legend class="form-label">Üyeler</legend>
+    <input type="search" class="form-control mb-2 js-ogrenci-ara" placeholder="Ada göre ara" aria-label="Üye ara"
            data-liste="{{ $onek }}-liste">
     <div id="{{ $onek }}-liste" class="lesson-student-list">
         @foreach($students as $ogrenci)

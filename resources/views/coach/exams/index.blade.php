@@ -10,9 +10,9 @@
 @section('content')
     <p class="text-muted mb-3">
         @if(auth()->user()->hasRole(\App\Enums\Role::Admin))
-            Sonucu yayınlanan denemeler. Bir denemeye girip öğrencileri yan yana ve en çok eksik çıkan konuları görebilirsin.
+            Sonucu yayınlanan denemeler. Bir denemeye girip üyeleri yan yana ve en çok eksik çıkan konuları görebilirsin.
         @else
-            Koçluk yaptığın öğrencilerin deneme sonuçları. Bir denemeye girip öğrencilerini yan yana ve en çok eksik çıkan konuları görebilirsin.
+            Koçluk yaptığın üyelerin deneme sonuçları. Bir denemeye girip üyelerini yan yana ve en çok eksik çıkan konuları görebilirsin.
         @endif
     </p>
 
@@ -33,7 +33,7 @@
                     <a href="{{ route('coach.exams.show', $deneme['event']) }}" class="list-row">
                         <span class="list-row-main">
                             <span class="list-row-title">{{ $deneme['event']->title }}</span>
-                            <span class="list-row-sub">{{ $deneme['event']->exam_date->format('d.m.Y') }} · {{ $deneme['count'] }} öğrenci</span>
+                            <span class="list-row-sub">{{ $deneme['event']->exam_date->format('d.m.Y') }} · {{ $deneme['count'] }} üye</span>
                         </span>
                         <span class="list-row-value">ort. <strong>{{ number_format($deneme['average'], 2, ',', '.') }}</strong> net</span>
                     </a>

@@ -4,7 +4,7 @@
 @section('page-title', $student->name)
 
 @section('page-actions')
-    <a href="{{ route('coach.plan.index') }}" class="btn btn-sm btn-secondary">← Öğrenciler</a>
+    <a href="{{ route('coach.plan.index') }}" class="btn btn-sm btn-secondary">← Üyeler</a>
 @endsection
 
 @section('content')
@@ -15,7 +15,7 @@
         <div class="card-header"><h4>Geliştirilmesi gereken konu ekle</h4></div>
         <div class="card-body">
             <p class="text-muted">
-                Açık konuları öğrenci ve velisi de görür. Kapatılan konu onların
+                Açık konuları üye ve velisi de görür. Kapatılan konu onların
                 listesinden çıkar ama burada kalır — "neyi hallettik" sorusunun cevabı.
             </p>
 

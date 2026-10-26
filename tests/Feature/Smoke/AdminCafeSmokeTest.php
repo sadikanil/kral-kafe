@@ -1184,7 +1184,7 @@ class AdminCafeSmokeTest extends TestCase
             ->assertOk()
             ->assertSee('0,00 ₺')
             ->assertSee('Henüz fatura oluşturulmamış.')
-            ->assertSee('Bu ay tüketim verisi yok.');
+            ->assertSee('Bu ay adisyon verisi yok.');
     }
 
     public function test_reports_index_sums_this_local_month_and_ranks_consumers(): void
@@ -1420,8 +1420,8 @@ class AdminCafeSmokeTest extends TestCase
         $this->actingAs($this->yonetici())->get(route('admin.reports.user', $veli))
             ->assertOk()
             ->assertSee('Hatice Doğan - Eylül 2026')
-            ->assertSee('Bu dönemde ürün tüketimi bulunamadı.')
-            ->assertSee('Eylül 2026 için tüketim kaydı bulunamadı.');
+            ->assertSee('Bu dönemde sipariş bulunamadı.')
+            ->assertSee('Eylül 2026 için sipariş kaydı bulunamadı.');
 
         $this->actingAs($this->yonetici())->get('/yonetim/raporlar/kullanici/99999')->assertNotFound();
     }

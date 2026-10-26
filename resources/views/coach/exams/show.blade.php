@@ -16,10 +16,10 @@
 @section('content')
     @php $sayi = fn ($n) => number_format((float) $n, 2, ',', '.'); @endphp
 
-    <p class="text-muted mb-3">{{ $event->exam_date->format('d.m.Y') }} · {{ $results->count() }} öğrenci · en yüksek netten düşüğe</p>
+    <p class="text-muted mb-3">{{ $event->exam_date->format('d.m.Y') }} · {{ $results->count() }} üye · en yüksek netten düşüğe</p>
 
     @if($results->isEmpty())
-        <div class="card"><div class="card-body"><p class="text-muted mb-0">Bu denemede görebildiğin öğrencinin sonucu yok.</p></div></div>
+        <div class="card"><div class="card-body"><p class="text-muted mb-0">Bu denemede görebildiğin üyenin sonucu yok.</p></div></div>
     @else
         <div class="stats-grid">
             <div class="stat-card">
@@ -40,13 +40,13 @@
         </div>
 
         <div class="card mb-3">
-            <div class="card-header"><h4>Öğrenciler</h4></div>
+            <div class="card-header"><h4>Üyeler</h4></div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
                             <tr>
-                                <th>Öğrenci</th>
+                                <th>Üye</th>
                                 <th>Net</th>
                                 <th>Puan</th>
                                 <th>Kurum</th>
@@ -81,7 +81,7 @@
                     @foreach($commonWeak as $konu => $kisi)
                         <div class="list-row">
                             <span class="list-row-main"><span class="list-row-title">{{ $konu }}</span></span>
-                            <span class="list-row-value">{{ $kisi }} öğrencide</span>
+                            <span class="list-row-value">{{ $kisi }} üyede</span>
                         </div>
                     @endforeach
                 </div>

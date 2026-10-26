@@ -7,10 +7,10 @@
 
     <p class="text-muted mb-3">
         @if(auth()->user()->assignsOnlyHomework())
-            Öğrenciyi seç, takvimde güne ödev ver. Öğrenci ödevi Planım'da senin adınla görür
+            Üyeyi seç, takvimde güne ödev ver. Üye ödevi Planım'da senin adınla görür
             ve işaretler; velisi aynı takvimi görür.
         @else
-            Öğrenciyi seç, takvimde güne ders ve konu ekle. Öğrenci maddeleri Planım'da
+            Üyeyi seç, takvimde güne ders ve konu ekle. Üye maddeleri Planım'da
             işaretler; velisi aynı takvimi görür.
         @endif
     </p>
@@ -20,10 +20,10 @@
             <div class="card-body">
                 <div class="empty-state">
                     <div class="empty-state-icon">🗓️</div>
-                    <div class="empty-state-title">Henüz öğrenciniz yok</div>
+                    <div class="empty-state-title">Henüz üyeniz yok</div>
                     <p class="text-muted">
-                        Koç–öğrenci ataması yönetim panelinden yapılır:
-                        Kullanıcılar → öğrenci → Koçlar.
+                        Koç–üye ataması yönetim panelinden yapılır:
+                        Kullanıcılar → üye → Koçlar.
                     </p>
                 </div>
             </div>
@@ -33,7 +33,7 @@
              plana goturur; notlar, rapor ve konular oradaki sekmelerde. --}}
         <div class="card">
             <div class="card-header">
-                <h4>Öğrenciler ({{ $ogrenciler->count() }})</h4>
+                <h4>Üyeler ({{ $ogrenciler->count() }})</h4>
             </div>
             <div class="card-body p-0">
                 @foreach($ogrenciler as $ogrenci)

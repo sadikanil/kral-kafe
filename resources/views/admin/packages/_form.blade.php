@@ -15,7 +15,7 @@
         <option value="2" {{ $seviye === '2' ? 'selected' : '' }}>Tier 2 · Orta</option>
         <option value="3" {{ $seviye === '3' ? 'selected' : '' }}>Tier 3 · Kral</option>
     </select>
-    <small class="text-muted">Yalnızca etiket. Öğrencinin neye erişeceğini aşağıdaki kutular belirler.</small>
+    <small class="text-muted">Yalnızca etiket. Üyenin neye erişeceğini aşağıdaki kutular belirler.</small>
     @error('tier')<span class="invalid-feedback">{{ $message }}</span>@enderror
 </div>
 
@@ -100,7 +100,7 @@
                 </div>
             @endforeach
         </div>
-        <small class="text-muted">Adet boş bırakılırsa sınırsız. Kapsamın tüketime uygulanması Dalga 8'de gelir; şimdilik tanım.</small>
+        <small class="text-muted">Adet boş bırakılırsa sınırsız. Kapsam üyenin siparişlerine uygulanır: dahil adetler ücretsiz işlenir.</small>
     @endif
     @error('items.*.quantity')<span class="invalid-feedback d-block">{{ $message }}</span>@enderror
 </div>

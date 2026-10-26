@@ -36,7 +36,7 @@ class NavigationTest extends TestCase
     {
         $basliklar = array_column(Navigation::groups(User::factory()->admin()->create()), 'title');
 
-        $this->assertSame(['Günlük', 'Öğrenciler', 'Kafe', 'Ayarlar'], $basliklar);
+        $this->assertSame(['Günlük', 'Üyeler', 'Kafe', 'Ayarlar'], $basliklar);
     }
 
     public function test_a_coach_sees_only_coaching_pages(): void

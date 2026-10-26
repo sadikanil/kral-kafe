@@ -827,7 +827,7 @@ class AdminExamsSmokeTest extends TestCase
     {
         $this->actingAs($this->yonetici())->get(route('admin.exam-reports.index', $this->ogrenci()))
             ->assertOk()
-            ->assertSee('Bu öğrenci için henüz rapor yüklenmedi.')
+            ->assertSee('Bu üye için henüz rapor yüklenmedi.')
             // Takvim bos: sonuc girisi yeni serbest denemeyle baslar (5 Ekim 2026).
             ->assertSee('Deneme sonucu gir')
             ->assertSee('<option value="yeni" selected', false);

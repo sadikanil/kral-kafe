@@ -131,7 +131,7 @@ class CoachSmokeTest extends TestCase
 
         $yanit = $this->actingAs($koc)->get(route('coach.plan.index'))->assertOk();
 
-        $yanit->assertSee('Öğrenciler (2)')
+        $yanit->assertSee('Üyeler (2)')
             ->assertSee('Ayşe Yılmaz')
             ->assertSee('Çağrı Öztürk')
             ->assertDontSee('Gökhan Işık')
@@ -148,7 +148,7 @@ class CoachSmokeTest extends TestCase
 
         $this->actingAs($koc)->get(route('coach.plan.index'))
             ->assertOk()
-            ->assertSee('Henüz öğrenciniz yok');
+            ->assertSee('Henüz üyeniz yok');
     }
 
     public function test_an_admin_sees_every_student_in_the_coach_list(): void

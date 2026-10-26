@@ -79,7 +79,7 @@
                         <button type="submit" class="btn btn-primary">Çalışmaya Başla</button>
                     </form>
                 @else
-                    <p class="text-muted mb-0">Çalışma oturumu yalnızca öğrenciler içindir.</p>
+                    <p class="text-muted mb-0">Çalışma oturumu yalnızca üyeler içindir.</p>
                 @endif
             </div>
         </div>

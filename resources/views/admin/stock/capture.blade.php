@@ -11,7 +11,7 @@
         <div class="card-body">
             <div class="alert alert-info mb-4">
                 <strong>Nasıl çalışır?</strong><br>
-                1. Lokasyondaki ürünlerin net görünen fotoğraflarını çekin<br>
+                1. Bölümdeki ürünlerin net görünen fotoğraflarını çekin<br>
                 2. Fotoğrafları yükleyin (birden fazla olabilir)<br>
                 3. AI analizi ile ürün sayılarını otomatik tespit edin<br>
                 4. Sonuçları gözden geçirip onaylayın

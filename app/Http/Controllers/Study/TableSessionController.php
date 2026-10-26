@@ -107,7 +107,7 @@ class TableSessionController extends Controller
         $kullanici = auth()->user();
 
         if (! $kullanici->hasRole(\App\Enums\Role::Student)) {
-            return back()->with('error', 'Çalışma oturumu yalnızca öğrenciler içindir.');
+            return back()->with('error', 'Çalışma oturumu yalnızca üyeler içindir.');
         }
 
         // Dalga 19: masa hakki paketten gelir ("sadece deneme" paketinde yok).

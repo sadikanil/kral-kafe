@@ -36,7 +36,7 @@ enum SessionEndReason: string
     public function label(): string
     {
         return match ($this) {
-            self::Manual => 'Öğrenci bitirdi',
+            self::Manual => 'Üye bitirdi',
             self::Switched => 'Masa değiştirdi',
             self::AutoClosed => 'Kapanışta otomatik',
             self::DayEnd => 'Gece 00:00\'da kapandı',

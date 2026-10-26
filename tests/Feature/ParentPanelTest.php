@@ -158,7 +158,7 @@ class ParentPanelTest extends TestCase
     {
         $this->actingAs(User::factory()->parent()->create())->get('/veli')
             ->assertOk()
-            ->assertSee('Hesabınıza bağlı öğrenci yok');
+            ->assertSee('Hesabınıza bağlı üye yok');
     }
 
     public function test_a_parent_cannot_open_an_unlinked_student(): void
@@ -312,7 +312,7 @@ class ParentPanelTest extends TestCase
         $this->actingAs($yonetici)
             ->get(route('admin.users.edit', $veli))
             ->assertOk()
-            ->assertSee('Velisi olduğu öğrenciler')
+            ->assertSee('Velisi olduğu üyeler')
             ->assertSee($cocuk1->name);
 
         $this->actingAs($yonetici)

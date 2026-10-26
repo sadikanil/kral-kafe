@@ -46,7 +46,7 @@
                             <input type="number" id="price" name="price" step="0.01" min="0" class="form-control @error('price') is-invalid @enderror"
                                 value="{{ old('price', $packages->first()->monthly_price) }}">
                             @error('price')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                            <small class="text-muted">Bu aboneliğe sabitlenir.</small>
+                            <small class="text-muted">Bu üyeliğe sabitlenir.</small>
                         </div>
                     </div>
                     <div class="form-group">
@@ -75,7 +75,7 @@
                     <span class="badge badge-{{ $abonelik->payment_status->badgeClass() }}">{{ $abonelik->payment_status->label() }}</span>
                     @if(!$abonelik->isCancelled())
                         <form action="{{ route('admin.subscriptions.cancel', $abonelik) }}" method="POST" class="d-inline-block"
-                            onsubmit="return confirm('Abonelik iptal edilsin mi?');">
+                            onsubmit="return confirm('Üyelik iptal edilsin mi?');">
                             @csrf
                             <button type="submit" class="btn btn-danger btn-sm">İptal</button>
                         </form>
@@ -141,6 +141,6 @@
             </div>
         </div>
     @empty
-        <div class="card"><div class="card-body text-center text-muted p-4">Bu öğrenciye henüz paket atanmadı.</div></div>
+        <div class="card"><div class="card-body text-center text-muted p-4">Bu üyeye henüz paket atanmadı.</div></div>
     @endforelse
 @endsection

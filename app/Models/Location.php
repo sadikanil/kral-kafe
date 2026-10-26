@@ -42,7 +42,7 @@ class Location extends Model
             [
                 'name' => 'Self Adisyon',
                 'type' => 'shelf',
-                'description' => 'Sistem lokasyonu: öğrencinin panelden kendi eklediği tüketimler. Kapalı kalmalı; QR ile okutulmaz.',
+                'description' => 'Sistem bölümü: üyenin panelden kendi eklediği siparişler. Kapalı kalmalı; QR ile okutulmaz.',
                 'is_active' => false,
             ]
         );

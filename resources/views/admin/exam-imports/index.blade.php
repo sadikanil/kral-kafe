@@ -10,8 +10,8 @@
 --}}
 @section('content')
     <p class="text-muted mb-3">
-        Yayın kuruluşunun gönderdiği toplu sonuç PDF'ini buradan bir kez yükle. Sistem net listesini ve öğrenci karnelerini okur,
-        adları öğrencilerle eşler; sen kontrol edip yayınlayınca her öğrenci yalnızca kendi sonucunu, eksik konularını ve sıralamasını görür.
+        Yayın kuruluşunun gönderdiği toplu sonuç PDF'ini buradan bir kez yükle. Sistem net listesini ve katılımcı karnelerini okur,
+        adları üyelerle eşler; sen kontrol edip yayınlayınca her üye yalnızca kendi sonucunu, eksik konularını ve sıralamasını görür.
         Velisine ve koçuna bildirim gider; koç eksik konuları tek dokunuşla plana ekler.
     </p>
 
@@ -42,7 +42,7 @@
                         <span class="list-row-title">{{ $aktarim->event->title }}</span>
                         <span class="list-row-sub">
                             {{ $aktarim->created_at->timezone(config('kafe.timezone'))->format('d.m.Y H:i') }}
-                            · {{ $aktarim->rows_count }} öğrenci
+                            · {{ $aktarim->rows_count }} katılımcı
                         </span>
                     </span>
                     {{-- Kuyruk: okunacaklardan ilki disindakiler "Sirada". --}}

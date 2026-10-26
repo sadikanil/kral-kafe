@@ -17,7 +17,7 @@
         <input type="checkbox" class="form-check-input" id="is_coach" name="is_coach" value="1" @checked($kocYetkili)>
         <label class="form-check-label" for="is_coach">Koçluk yetkisi de var</label>
     </div>
-    <small class="text-muted">Veli ya da öğretmen aynı zamanda koçsa işaretleyin. Koç sayfalarında yalnızca kendisine atanan öğrencileri görür, ödeme ve paket bilgisi görmez.</small>
+    <small class="text-muted">Veli ya da öğretmen aynı zamanda koçsa işaretleyin. Koç sayfalarında yalnızca kendisine atanan üyeleri görür, ödeme ve paket bilgisi görmez.</small>
 </div>
 
 <div class="form-group js-brans" data-roller="coach,admin">
@@ -26,7 +26,7 @@
         class="form-control @error('coach_subject') is-invalid @enderror"
         value="{{ old('coach_subject', $user?->coach_subject) }}" placeholder="Örn. Matematik">
     @error('coach_subject')<span class="invalid-feedback">{{ $message }}</span>@enderror
-    <small class="text-muted">Öğrenci ödevi ve özel dersi "İbrahim Acar · Matematik" diye görür.</small>
+    <small class="text-muted">Üye ödevi ve özel dersi "İbrahim Acar · Matematik" diye görür.</small>
 </div>
 
 @push('scripts')

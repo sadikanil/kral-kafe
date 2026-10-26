@@ -308,7 +308,7 @@ class StudentStudySmokeTest extends TestCase
         $this->actingAs($this->veli($this->ogrenci()))
             ->get(route('table.session', $masa->qr_code))
             ->assertOk()
-            ->assertSee('Çalışma oturumu yalnızca öğrenciler içindir.')
+            ->assertSee('Çalışma oturumu yalnızca üyeler içindir.')
             ->assertDontSee('Çalışmaya Başla');
     }
 
@@ -448,7 +448,7 @@ class StudentStudySmokeTest extends TestCase
         $this->actingAs($this->veli($this->ogrenci()))
             ->from(route('table.scan', $masa->qr_code))
             ->post(route('table.session.start', $masa->qr_code))
-            ->assertSessionHas('error', 'Çalışma oturumu yalnızca öğrenciler içindir.');
+            ->assertSessionHas('error', 'Çalışma oturumu yalnızca üyeler içindir.');
 
         $this->assertSame(0, StudySession::count());
     }

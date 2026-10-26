@@ -95,7 +95,7 @@ final class Navigation
                 ['route' => 'admin.dashboard', 'label' => 'Panel', 'icon' => 'house'],
                 ['route' => 'admin.live', 'label' => 'Canlı Ekran', 'icon' => 'activity'],
             ]],
-            ['title' => 'Öğrenciler', 'items' => [
+            ['title' => 'Üyeler', 'items' => [
                 ['route' => 'admin.users.index', 'label' => 'Kullanıcılar', 'icon' => 'users', 'match' => 'admin.users.*|admin.subscriptions.index|admin.exam-reports.*|admin.exam-results.*'],
                 self::planlar(),
                 ['route' => 'admin.lessons.index', 'label' => 'Özel Dersler', 'icon' => 'graduation-cap', 'match' => 'admin.lessons.*'],

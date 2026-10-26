@@ -245,7 +245,7 @@
                                 @empty
                                     <tr>
                                         <td colspan="7" class="text-center p-4 text-muted">
-                                            Bu lokasyona bağlı ürün bulunmuyor.
+                                            Bu bölüme bağlı ürün bulunmuyor.
                                         </td>
                                     </tr>
                                 @endforelse
@@ -267,7 +267,7 @@
         <div class="card mb-4">
             <div class="card-header">
                 <h4>🔍 Eşleştirilemeyen Tespitler</h4>
-                <span class="form-text">Bu ürünler lokasyon listesinde yok, kayda dahil edilmedi.</span>
+                <span class="form-text">Bu ürünler bölüm listesinde yok, kayda dahil edilmedi.</span>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">

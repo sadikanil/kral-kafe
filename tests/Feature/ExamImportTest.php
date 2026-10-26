@@ -337,7 +337,7 @@ class ExamImportTest extends TestCase
         $bildirim = Notification::where('user_id', $this->yonetici->id)->sole();
         $this->assertSame('Deneme okundu: Hız ve Renk TYT 2', $bildirim->title);
         // MERT CAN onerilen eslesme, DISARIDAN BIRI eslesmedi: iki satir kontrol bekliyor.
-        $this->assertSame('3 öğrenci okundu. 2 satır kontrol bekliyor; yayınlamadan önce bakın.', $bildirim->body);
+        $this->assertSame('3 katılımcı okundu. 2 satır kontrol bekliyor; yayınlamadan önce bakın.', $bildirim->body);
         $this->assertSame(route('admin.exam-imports.show', $aktarim), $bildirim->url($this->yonetici));
         $this->assertSame(1, Notification::where('user_id', $ikinciYonetici->id)->count());
         $this->assertNull($bildirim->url($this->elif));
@@ -474,7 +474,7 @@ class ExamImportTest extends TestCase
         $this->hepsiniOku($aktarim);
 
         $this->actingAs($this->yonetici)->post(route('admin.exam-imports.publish', $aktarim))
-            ->assertSessionHas('error', '2 satır kontrol bekliyor: öğrenciyi seçin ya da atlayın.');
+            ->assertSessionHas('error', '2 satır kontrol bekliyor: üyeyi seçin ya da atlayın.');
         $this->assertSame(0, ExamResult::count());
     }
 
@@ -485,7 +485,7 @@ class ExamImportTest extends TestCase
         $this->actingAs($this->yonetici)->patch(route('admin.exam-imports.rows.update', $satirlar['DIŞARIDAN BİRİ']), ['skip' => 1]);
 
         $this->actingAs($this->yonetici)->post(route('admin.exam-imports.publish', $aktarim))
-            ->assertSessionHas('success', '2 öğrencinin sonucu yayınlandı; öğrenci, veli ve koçlara bildirim gitti.');
+            ->assertSessionHas('success', '2 üyenin sonucu yayınlandı; üye, veli ve koçlara bildirim gitti.');
     }
 
     public function test_publishing_writes_results_ranks_topics_and_weak_topics(): void

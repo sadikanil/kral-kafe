@@ -251,7 +251,7 @@ class ExamImportProcessor
 
         $ogrenciler = collect($veri['students'] ?? [])->filter(fn ($o) => is_array($o) && filled($o['name'] ?? null));
         if ($ogrenciler->isEmpty()) {
-            throw new ExamPdfReadException('Belgede öğrenci listesi bulunamadı.');
+            throw new ExamPdfReadException('Belgede katılımcı listesi bulunamadı.');
         }
 
         DB::transaction(function () use ($aktarim, $veri, $ogrenciler, $dersler) {
