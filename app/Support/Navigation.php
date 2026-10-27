@@ -109,6 +109,8 @@ final class Navigation
                 ['route' => 'admin.products.index', 'label' => 'Ürünler ve Stok', 'icon' => 'coffee', 'match' => 'admin.products.*|admin.stock.*'],
                 ['route' => 'admin.packages.index', 'label' => 'Paketler', 'icon' => 'ticket', 'match' => 'admin.packages.*'],
                 ['route' => 'admin.subscriptions.overview', 'label' => 'Ödemeler', 'icon' => 'credit-card'],
+                // DEV-507: aylik adisyonlarin tahsilati (paket odemeleri Odemeler'de).
+                ['route' => 'admin.bills.index', 'label' => 'Adisyonlar', 'icon' => 'receipt', 'match' => 'admin.bills.*'],
                 ['route' => 'admin.reports.index', 'label' => 'Raporlar', 'icon' => 'chart-column', 'match' => 'admin.reports.*'],
             ]],
             ['title' => 'Ayarlar', 'items' => [

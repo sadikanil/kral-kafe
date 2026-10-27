@@ -38,6 +38,10 @@ class StatementController extends Controller
         return view('payments.statement', [
             'student' => $student,
             'statement' => PaymentStatement::for($student, $yil, $ay),
+            // Ayin adisyonunun tahsilat durumu (DEV-507).
+            'bill' => \App\Models\MonthlyBill::where('user_id', $student->id)
+                ->whereDate('bill_month', sprintf('%04d-%02d-01', $yil, $ay))->first(),
+            'isCurrentMonth' => [$yil, $ay] === \App\Support\LocalDay::yearMonth(),
             'monthLabel' => ExamCalendar::monthLabel($yil, $ay),
             'neighbours' => ExamCalendar::neighbours($yil, $ay),
             'route' => $rota,

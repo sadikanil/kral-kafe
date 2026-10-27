@@ -85,6 +85,7 @@
                             <th>Paket</th>
                             <th>Genel Toplam</th>
                             <th>Durum</th>
+                            <th>Ödeme</th>
                             <th>Oluşturulma</th>
                         </tr>
                     </thead>
@@ -108,11 +109,20 @@
                                         {{ $bill->status_name }}
                                     </span>
                                 </td>
+                                {{-- Tahsilat (DEV-507): ayrinti ve isaretleme Adisyonlar'da. --}}
+                                <td>
+                                    @if($bill->dueAmount() > 0)
+                                        <a href="{{ route('admin.bills.index', ['ay' => $bill->bill_month->format('Y-m'), 'durum' => 'tumu']) }}"
+                                            class="badge badge-{{ $bill->payment_status->badgeClass() }}">{{ $bill->payment_status->label() }}</a>
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
                                 <td class="text-muted">{{ $bill->generated_at?->timezone(config('kafe.timezone'))->format('d.m.Y H:i') ?? '—' }}</td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center p-4 text-muted">
+                                <td colspan="9" class="text-center p-4 text-muted">
                                     {{ $periodLabel }} için fatura bulunamadı.
                                     Raporlar sayfasından bu ayın faturalarını oluşturabilirsiniz.
                                 </td>
