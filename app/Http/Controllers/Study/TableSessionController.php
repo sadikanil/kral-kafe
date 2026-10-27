@@ -62,7 +62,30 @@ class TableSessionController extends Controller
         return redirect()->route('table.scan', $masa->qr_code);
     }
 
-    public function show(StudyTable $table): View
+    /**
+     * Masa QR'i (DEV-506, 26 Ekim 2026): uye once bu ayin adisyonunu gorur;
+     * "Urun ekle" masa bilgisini tasir, calisma oturumu ikinci adim
+     * (session). QR adresi degismedi - basili etiketler gecerli. Personel
+     * (yonetici, veli) dogrudan masa ekranina gider.
+     */
+    public function show(Request $request, StudyTable $table): View|RedirectResponse
+    {
+        $kullanici = $request->user();
+
+        if (! $kullanici->hasRole(\App\Enums\Role::Student)) {
+            return redirect()->route('table.session', $table->qr_code);
+        }
+
+        [$yil, $ay] = \App\Support\LocalDay::yearMonth();
+
+        return view('user.tab', \App\Support\TabSummary::for($kullanici, $yil, $ay) + [
+            'table' => $table,
+            'session' => $this->sessions->openFor($kullanici),
+        ]);
+    }
+
+    /** Masa ekrani: calisma oturumunu baslatma/surdurme (eski QR ekrani). */
+    public function session(StudyTable $table): View
     {
         $kullanici = auth()->user();
 
@@ -84,7 +107,7 @@ class TableSessionController extends Controller
         $kullanici = auth()->user();
 
         if (! $kullanici->hasRole(\App\Enums\Role::Student)) {
-            return back()->with('error', 'Çalışma oturumu yalnızca öğrenciler içindir.');
+            return back()->with('error', 'Çalışma oturumu yalnızca üyeler içindir.');
         }
 
         // Dalga 19: masa hakki paketten gelir ("sadece deneme" paketinde yok).

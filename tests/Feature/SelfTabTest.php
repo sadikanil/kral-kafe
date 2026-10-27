@@ -39,7 +39,8 @@ class SelfTabTest extends TestCase
         $urun = $this->urun();
         $this->urun('Pasif Ürün', 10, false);
 
-        $this->actingAs($ogrenci)->get('/kullanici/adisyon')
+        // DEV-506: urun secme Adisyonum'dan ayri sayfada.
+        $this->actingAs($ogrenci)->get('/kullanici/adisyon/ekle')
             ->assertOk()
             ->assertSee('Filtre Kahve')
             ->assertDontSee('Pasif Ürün');
@@ -58,7 +59,7 @@ class SelfTabTest extends TestCase
         // Aylik toplam ve Odemeler dokumu degisiklik olmadan bunu da sayar
         // (UX turu, 23 Eyl: tuketim listesi panelden Odemeler'e tasindi).
         $this->assertSame(50.0, (float) $ogrenci->getCurrentMonthTotal());
-        $this->actingAs($ogrenci)->get('/kullanici/adisyon')->assertOk()->assertSee('Bugün eklediklerim')->assertSee('Geri al');
+        $this->actingAs($ogrenci)->get('/kullanici/adisyon')->assertOk()->assertSee('Son eklenenler')->assertSee('Geri al');
         $this->actingAs($ogrenci)->get(route('user.payments'))->assertOk()->assertSee('Filtre Kahve ×2');
     }
 

@@ -26,7 +26,7 @@
         @error('field')<span class="invalid-feedback">{{ $message }}</span>@enderror
     </div>
 </div>
-<small class="text-muted d-block mb-3">Planlarda yalnızca öğrencinin sorumlu olduğu dersler çıkar. Alan 11. sınıftan itibaren.</small>
+<small class="text-muted d-block mb-3">Planlarda yalnızca üyenin sorumlu olduğu dersler çıkar. Alan 11. sınıftan itibaren.</small>
 
 @push('scripts')
 <script>

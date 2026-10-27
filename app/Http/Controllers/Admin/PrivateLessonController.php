@@ -75,7 +75,7 @@ class PrivateLessonController extends Controller
             }
         });
 
-        return back()->with('success', $ogrenciler->count() . ' öğrenciye özel ders saati eklendi.');
+        return back()->with('success', $ogrenciler->count() . ' üyeye özel ders saati eklendi.');
     }
 
     /**
@@ -92,8 +92,8 @@ class PrivateLessonController extends Controller
             'starts_on' => ['required', 'date_format:Y-m-d'],
         ], [
             'package_id.exists' => 'Özel ders içeren, satıştaki bir paket seçin.',
-            'student_ids.required' => 'En az bir öğrenci seçin.',
-        ], ['student_ids' => 'öğrenciler', 'starts_on' => 'başlangıç']);
+            'student_ids.required' => 'En az bir üye seçin.',
+        ], ['student_ids' => 'üyeler', 'starts_on' => 'başlangıç']);
 
         $paket = Package::findOrFail($veri['package_id']);
         $ogrenciler = User::whereIn('id', $veri['student_ids'])->get();
@@ -104,7 +104,7 @@ class PrivateLessonController extends Controller
             }
         });
 
-        return back()->with('success', "{$paket->name}: {$ogrenciler->count()} öğrenciye açıldı.");
+        return back()->with('success', "{$paket->name}: {$ogrenciler->count()} üyeye açıldı.");
     }
 
     public function cancel(Request $request, PrivateLessonSlot $slot): RedirectResponse
@@ -151,8 +151,8 @@ class PrivateLessonController extends Controller
         ], [
             'ends_at.after' => 'Bitiş saati başlangıçtan sonra olmalı.',
             'teacher_id.in' => 'Dersi veren kişi koç ya da yönetici olmalı.',
-            'student_ids.required' => 'En az bir öğrenci seçin.',
-        ], ['student_ids' => 'öğrenciler']);
+            'student_ids.required' => 'En az bir üye seçin.',
+        ], ['student_ids' => 'üyeler']);
     }
 
     private function tarih(Request $request): string

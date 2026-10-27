@@ -30,7 +30,7 @@ class ScanLocationWaitTest extends TestCase
         $ogrenci = User::factory()->student()->withPackage(Package::factory()->tier3()->create())->create();
         $masa = StudyTable::create(['name' => 'Masa 1']);
 
-        $html = $this->actingAs($ogrenci)->get(route('table.scan', $masa->qr_code))->assertOk()->getContent();
+        $html = $this->actingAs($ogrenci)->get(route('table.session', $masa->qr_code))->assertOk()->getContent();
         $this->assertStringContainsString('class="js-konumlu-form"', $html);
         preg_match('~// konum:bas(.*?)// konum:son~s', $html, $eslesme);
         $this->assertNotEmpty($eslesme, 'konum betigi sayfada bulunamadi');

@@ -81,7 +81,7 @@
                             <th>Kullanıcı</th>
                             <th>E-posta</th>
                             <th class="text-center">Ürün</th>
-                            <th>Tüketim</th>
+                            <th>Adisyon</th>
                             <th>Paket</th>
                             <th>Genel Toplam</th>
                             <th>Durum</th>

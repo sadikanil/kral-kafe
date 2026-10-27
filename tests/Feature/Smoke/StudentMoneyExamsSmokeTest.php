@@ -143,24 +143,32 @@ class StudentMoneyExamsSmokeTest extends TestCase
             'quantity' => 2, 'unit_price' => 30, 'consumed_at' => now()->subDays(3),
         ]);
 
+        // DEV-506: Adisyonum ozet + kalemler; urun secme ayri sayfada.
         $this->actingAs($ogrenci)->get(route('user.tab'))
+            ->assertOk()
+            ->assertSee('60,00 ₺')          // bu ay toplam
+            ->assertSee('2 ürün')
+            ->assertSeeInOrder(['Kalemler', 'Şalgam Suyu', '×2'])
+            ->assertSee('Ürün ekle');
+
+        $this->actingAs($ogrenci)->get(route('user.tab.add'))
             ->assertOk()
             ->assertSee('Ne aldın?')
             ->assertSee('Çikolatalı Gofret')
             ->assertSee('Şalgam Suyu')
             ->assertSee('25,00 ₺')
-            ->assertDontSee('Satıştan Kalkmış Ürün')
-            ->assertSee('60,00 ₺')          // bu ay toplam
-            ->assertSee('Bu Ay Toplam')
-            ->assertDontSee('Bugün eklediklerim');
+            ->assertDontSee('Satıştan Kalkmış Ürün');
     }
 
     public function test_the_tab_page_with_no_products_shows_the_empty_state(): void
     {
+        $this->actingAs($this->ogrenci())->get(route('user.tab.add'))
+            ->assertOk()
+            ->assertSee('Menüde ürün yok');
         $this->actingAs($this->ogrenci())->get(route('user.tab'))
             ->assertOk()
-            ->assertSee('Tanımlı ürün yok')
-            ->assertSee('0,00 ₺');
+            ->assertSee('0,00 ₺')
+            ->assertSee('Bu ay henüz bir şey eklemedin.');
     }
 
     public function test_adding_a_product_charges_the_tab_decrements_stock_and_reaches_payments(): void
@@ -185,7 +193,7 @@ class StudentMoneyExamsSmokeTest extends TestCase
 
         $this->actingAs($ogrenci)->get(route('user.tab'))
             ->assertOk()
-            ->assertSee('Bugün eklediklerim')
+            ->assertSee('Son eklenenler')
             ->assertSee('14:00')
             ->assertSee('Geri al')
             ->assertSee(route('user.tab.undo', $kayit), false);
@@ -287,7 +295,7 @@ class StudentMoneyExamsSmokeTest extends TestCase
         $this->assertSame(5, $urun->fresh()->stock_quantity);
         $this->assertSame(0.0, (float) $ogrenci->getCurrentMonthTotal());
 
-        $this->actingAs($ogrenci)->get(route('user.tab'))->assertOk()->assertDontSee('Bugün eklediklerim');
+        $this->actingAs($ogrenci)->get(route('user.tab'))->assertOk()->assertDontSee('Son eklenenler');
         $this->actingAs($ogrenci)->get(route('user.payments'))->assertOk()->assertSee('Bu ay adisyon yok.');
     }
 
@@ -304,7 +312,7 @@ class StudentMoneyExamsSmokeTest extends TestCase
         // Sayfa artik geri al dugmesi gostermiyor
         $this->actingAs($ogrenci)->get(route('user.tab'))
             ->assertOk()
-            ->assertSee('Bugün eklediklerim')
+            ->assertSee('Son eklenenler')
             ->assertDontSee(route('user.tab.undo', $kayit), false);
 
         $this->actingAs($ogrenci)->from(route('user.tab'))
@@ -345,7 +353,7 @@ class StudentMoneyExamsSmokeTest extends TestCase
         $this->assertSame(9, $urun->fresh()->stock_quantity);
 
         // Ayse'nin sayfasi Ali'nin kaydini gostermez
-        $this->actingAs($ayse)->get(route('user.tab'))->assertOk()->assertDontSee('Bugün eklediklerim');
+        $this->actingAs($ayse)->get(route('user.tab'))->assertOk()->assertDontSee('Son eklenenler');
     }
 
     public function test_the_tab_refuses_bad_input_and_inactive_products(): void
@@ -392,11 +400,13 @@ class StudentMoneyExamsSmokeTest extends TestCase
         Consumption::create(['user_id' => $ogrenci->id, 'product_id' => $urun->id, 'location_id' => $raf->id,
             'quantity' => 1, 'unit_price' => 30, 'consumed_at' => Carbon::parse('2026-09-28 20:30', 'UTC')]);
 
+        // DEV-506: "Son eklenenler" ayin son kayitlari, gun.ay saat kafe saatiyle.
         $this->actingAs($ogrenci)->get(route('user.tab'))
             ->assertOk()
-            ->assertSee('Bugün eklediklerim')
-            ->assertSee('01:30')
-            ->assertDontSee('23:30');
+            ->assertSee('Son eklenenler')
+            ->assertSeeInOrder(['29.09 01:30', '28.09 23:30'])
+            ->assertDontSee('22:30')
+            ->assertDontSee('20:30');
     }
 
     public function test_guests_and_suspended_students_are_kept_out_of_the_tab(): void

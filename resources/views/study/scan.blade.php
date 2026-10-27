@@ -3,6 +3,13 @@
 @section('title', $table->name . ' - Kral Kafe')
 @section('page-title', $table->name)
 
+{{-- DEV-506: masa QR'i once Adisyonum'u acar; bu ekran ikinci adim. --}}
+@if(auth()->user()->hasRole(\App\Enums\Role::Student))
+    @section('page-actions')
+        <a href="{{ route('table.scan', $table->qr_code) }}" class="btn btn-secondary btn-sm">← Adisyonum</a>
+    @endsection
+@endif
+
 @section('content')
     @php
         $buMasada = $session && $session->study_table_id === $table->id;
@@ -72,7 +79,7 @@
                         <button type="submit" class="btn btn-primary">Çalışmaya Başla</button>
                     </form>
                 @else
-                    <p class="text-muted mb-0">Çalışma oturumu yalnızca öğrenciler içindir.</p>
+                    <p class="text-muted mb-0">Çalışma oturumu yalnızca üyeler içindir.</p>
                 @endif
             </div>
         </div>

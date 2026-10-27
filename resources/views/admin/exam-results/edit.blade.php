@@ -79,7 +79,7 @@
             <h2 class="mt-4">Değerlendirme</h2>
             <p class="text-muted" id="note-ipucu">
                 Yüklediğin PDF raporunun özetini okuyup buraya yaz. Bu not
-                öğrencinin ve velisinin panelinde görünür.
+                üyenin ve velisinin panelinde görünür.
             </p>
             <label for="note" class="form-label">Değerlendirme notu</label>
             <textarea id="note" name="note" class="form-control @error('note') is-invalid @enderror" rows="4" maxlength="1000"

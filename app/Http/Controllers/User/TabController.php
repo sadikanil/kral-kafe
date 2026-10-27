@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Consumption;
 use App\Models\Location;
 use App\Models\Product;
+use App\Models\StudyTable;
 use App\Services\PackageCoverage;
-use App\Support\LocalDay;
+use App\Support\MonthParameter;
+use App\Support\TabSummary;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -29,26 +31,27 @@ use Illuminate\Support\Facades\DB;
  */
 class TabController extends Controller
 {
-    public function index()
+    /**
+     * Adisyonum (DEV-506, 26 Ekim 2026): bu ayin ya da ?ay=YYYY-MM ile
+     * gecmis bir ayin adisyonu. Urun secme ayri sayfada (add); masa QR'i
+     * da ayni gorunumu masa bilgisiyle acar (TableSessionController::show).
+     */
+    public function index(Request $request)
     {
-        $user = Auth::user();
-        [$gunBasi, $gunSonu] = LocalDay::bounds(LocalDay::today());
+        [$yil, $ay] = MonthParameter::resolve($request->query('ay'));
 
-        $urunler = Product::where('is_active', true)
-            ->orderBy('category')
-            ->orderBy('name')
-            ->get();
+        return view('user.tab', TabSummary::for(Auth::user(), $yil, $ay) + ['table' => null, 'session' => null]);
+    }
 
-        return view('user.tab', [
-            'products' => $urunler,
-            'todayEntries' => Consumption::with(['product', 'location'])
-                ->where('user_id', $user->id)
-                ->where('is_undone', false)
-                ->whereBetween('consumed_at', [$gunBasi, $gunSonu])
-                ->orderByDesc('consumed_at')
+    /** Urun secme ekrani. ?masa=KOD masadan gelindiyse; donus o masanin adisyonu. */
+    public function add(Request $request)
+    {
+        return view('user.tab-add', [
+            'products' => Product::where('is_active', true)
+                ->orderBy('category')
+                ->orderBy('name')
                 ->get(),
-            'monthTotal' => $user->getCurrentMonthTotal(),
-            'monthItems' => $user->getCurrentMonthItemCount(),
+            'table' => $this->masa($request->query('masa')),
         ]);
     }
 
@@ -57,6 +60,7 @@ class TabController extends Controller
         $veri = $request->validate([
             'product_id' => ['required', 'integer', 'exists:products,id'],
             'quantity' => ['required', 'integer', 'min:1', 'max:10'],
+            'masa' => ['nullable', 'string', 'max:50'],
         ]);
 
         $urun = Product::findOrFail($veri['product_id']);
@@ -92,7 +96,12 @@ class TabController extends Controller
             return $kayit;
         });
 
-        return redirect()->route('user.tab')->with('success', $this->receipt($kayit, $urun));
+        // Masadan gelindiyse ayni masanin adisyonuna doner (DEV-506).
+        $masa = $this->masa($veri['masa'] ?? null);
+
+        return redirect()
+            ->to($masa ? route('table.scan', $masa->qr_code) : route('user.tab'))
+            ->with('success', $this->receipt($kayit, $urun));
     }
 
     /**
@@ -111,6 +120,12 @@ class TabController extends Controller
         $consumption->product?->adjustStock($consumption->quantity);
 
         return back()->with('success', 'Kayıt geri alındı.');
+    }
+
+    /** Gecerli masa kodu ya da null (uydurma kod yonlendirmeyi degistirmez). */
+    private function masa(mixed $kod): ?StudyTable
+    {
+        return is_string($kod) && $kod !== '' ? StudyTable::where('qr_code', $kod)->first() : null;
     }
 
     /**

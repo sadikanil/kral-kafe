@@ -128,7 +128,7 @@ class ExamResultViewTest extends TestCase
     public function test_the_coach_sees_only_assigned_students_in_the_analysis(): void
     {
         $this->actingAs($this->koc)->get(route('coach.exams.index'))
-            ->assertOk()->assertSee('TYT Deneme 2')->assertSee('1 öğrenci');
+            ->assertOk()->assertSee('TYT Deneme 2')->assertSee('1 üye');
 
         $this->actingAs($this->koc)->get(route('coach.exams.show', $this->yeni))
             ->assertOk()
@@ -222,7 +222,7 @@ class ExamResultViewTest extends TestCase
         $this->actingAs($this->yonetici)->get(route('coach.exams.show', $this->yeni))
             ->assertOk()
             ->assertSeeInOrder(['Ayşe Tan', 'Burak Er'])
-            ->assertSee('2 öğrencide');
+            ->assertSee('2 üyede');
     }
 
     public function test_students_and_plain_parents_cannot_open_the_analysis(): void

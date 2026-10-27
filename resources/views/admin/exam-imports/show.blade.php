@@ -46,7 +46,7 @@
                         @elseif($progress['total'] > 0)
                             Karneler: {{ $progress['done'] }} / {{ $progress['total'] }}
                         @else
-                            Öğrenci listesi okunacak.
+                            Katılımcı listesi okunacak.
                         @endif
                     </p>
                 @endif
@@ -68,7 +68,7 @@
                 @endif
                 <a href="{{ route('admin.exam-imports.pdf', $import) }}" class="btn btn-sm btn-secondary" target="_blank">PDF'i aç</a>
                 <form method="POST" action="{{ route('admin.exam-imports.destroy', $import) }}"
-                      onsubmit="return confirm('Aktarım ve PDF silinsin mi? Yayınlanmış sonuçlar öğrencide kalır.')">
+                      onsubmit="return confirm('Aktarım ve PDF silinsin mi? Yayınlanmış sonuçlar üyede kalır.')">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-sm btn-danger">Sil</button>
                 </form>
@@ -78,7 +78,7 @@
 
     @if($import->rows->isNotEmpty())
         <div class="card mb-3">
-            <div class="card-header"><h4>Öğrenciler ({{ $import->rows->count() }})</h4></div>
+            <div class="card-header"><h4>Katılımcılar ({{ $import->rows->count() }})</h4></div>
             <div class="card-body p-0">
                 @foreach($import->rows as $satir)
                     @php
@@ -108,8 +108,8 @@
                             @if($import->status !== \App\Models\ExamImport::UPLOADED)
                                 <form method="POST" action="{{ route('admin.exam-imports.rows.update', $satir) }}" class="d-flex gap-1 mt-1" style="flex-wrap: wrap;">
                                     @csrf @method('PATCH')
-                                    <select name="student_id" class="form-control" style="max-width: 260px;" aria-label="{{ $satir->name }} için öğrenci">
-                                        <option value="">— öğrenci seç —</option>
+                                    <select name="student_id" class="form-control" style="max-width: 260px;" aria-label="{{ $satir->name }} için üye">
+                                        <option value="">— üye seç —</option>
                                         @foreach($students as $ogrenci)
                                             <option value="{{ $ogrenci->id }}" @selected($satir->student_id === $ogrenci->id)>{{ $ogrenci->name }}</option>
                                         @endforeach
@@ -128,7 +128,7 @@
 
         @if(in_array($import->status, [\App\Models\ExamImport::REVIEW, \App\Models\ExamImport::PUBLISHED], true))
             <form method="POST" action="{{ route('admin.exam-imports.publish', $import) }}"
-                  onsubmit="return confirm('Sonuçlar öğrenci panellerine yazılsın ve bildirim gönderilsin mi?')">
+                  onsubmit="return confirm('Sonuçlar üye panellerine yazılsın ve bildirim gönderilsin mi?')">
                 @csrf
                 <button type="submit" class="btn btn-primary btn-block">
                     {{ $import->status === \App\Models\ExamImport::PUBLISHED ? 'Düzeltmeleri yeniden yayınla' : 'Sonuçları yayınla' }}
@@ -158,7 +158,7 @@
     // Gecici hatalar sunucuda tekrarlanir; mesaj okunurken gosterilir.
     function yaz(d) {
         if (!ilerleme) { return; }
-        let metin = d.total > 0 ? 'Karneler: ' + d.done + ' / ' + d.total : 'Öğrenci listesi okunacak.';
+        let metin = d.total > 0 ? 'Karneler: ' + d.done + ' / ' + d.total : 'Katılımcı listesi okunacak.';
         if (d.queue > 0 && d.ahead) {
             metin = 'Sırada (önünde ' + d.queue + ' deneme): şu an «' + d.ahead.title + '» okunuyor'
                 + (d.ahead.total > 0 ? ' · ' + d.ahead.done + ' / ' + d.ahead.total : '') + '. Bitince bu deneme kendiliğinden okunur.';

@@ -52,7 +52,10 @@ Route::middleware(['auth', 'subscription'])->group(function () {
     Route::get('/masa-okut', [TableSessionController::class, 'scanner'])->name('table.scanner');
     Route::post('/masa-bul', [TableSessionController::class, 'find'])->name('table.find');
 
+    // DEV-506 (26 Ekim 2026): QR adresi AYNI; once Adisyonum, calisma
+    // oturumu ikinci adim (/calisma).
     Route::get('/masa/{table:qr_code}', [TableSessionController::class, 'show'])->name('table.scan');
+    Route::get('/masa/{table:qr_code}/calisma', [TableSessionController::class, 'session'])->name('table.session');
     Route::post('/masa/{table:qr_code}/basla', [TableSessionController::class, 'start'])->name('table.session.start');
     Route::post('/oturum/bitir', [SessionController::class, 'end'])->name('session.end');
     // Calisma sayaci (Dalga 23): duraklat, 15 dk mola, ogle arasi, devam
@@ -100,6 +103,7 @@ Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')-
 
         // Self adisyon: QR'siz, panelden urun ekleme
         Route::get('/adisyon', [TabController::class, 'index'])->name('tab');
+        Route::get('/adisyon/ekle', [TabController::class, 'add'])->name('tab.add');
         Route::post('/adisyon', [TabController::class, 'store'])->name('tab.store');
         Route::post('/adisyon/{consumption}/geri-al', [TabController::class, 'undo'])->name('tab.undo');
     });

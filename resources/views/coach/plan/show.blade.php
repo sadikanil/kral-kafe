@@ -4,7 +4,7 @@
 @section('page-title', $student->name)
 
 @section('page-actions')
-    <a href="{{ route('coach.plan.index') }}" class="btn btn-sm btn-secondary">← Öğrenciler</a>
+    <a href="{{ route('coach.plan.index') }}" class="btn btn-sm btn-secondary">← Üyeler</a>
 @endsection
 
 {{--
@@ -57,7 +57,7 @@
         <summary class="card-header"><h4>➕ {{ $yalnizOdev ? 'Ödev ver' : 'Plana ekle' }}</h4></summary>
         <div class="card-body">
             @if($yalnizOdev)
-                <p class="text-muted text-sm">Eklediğin her madde öğrencinin planına <strong>Ödev</strong> etiketiyle ve senin adınla düşer. Planın geri kalanını yönetici kurar.</p>
+                <p class="text-muted text-sm">Eklediğin her madde üyenin planına <strong>Ödev</strong> etiketiyle ve senin adınla düşer. Planın geri kalanını yönetici kurar.</p>
             @endif
             <form method="POST" action="{{ route('coach.plan.store', $student) }}" class="plan-form">
                 @csrf

@@ -136,8 +136,8 @@ class CoachRolesAndLessonsTest extends TestCase
 
         $this->actingAs($this->cahit)->get(route('admin.users.edit', $this->ibrahim))
             ->assertOk()
-            ->assertSee('Velisi olduğu öğrenciler')
-            ->assertSee('Koçluk / özel ders verdiği öğrenciler')
+            ->assertSee('Velisi olduğu üyeler')
+            ->assertSee('Koçluk / özel ders verdiği üyeler')
             ->assertSee('name="coach_student_ids[]" value="' . $this->ogrenci->id . '"', false);
 
         $this->actingAs($this->cahit)->put(route('admin.users.update', $this->ibrahim), [
@@ -175,7 +175,7 @@ class CoachRolesAndLessonsTest extends TestCase
             ->assertOk()
             ->assertSee('İbrahim Acar')
             ->assertSee('Veli · 1 çocuk')
-            ->assertSee('1 öğrenci · Matematik')
+            ->assertSee('1 üye · Matematik')
             ->assertDontSee('Sade Veli');
 
         $this->assertSame(Role::Coach, $this->ibrahim->displayRole());
@@ -190,7 +190,7 @@ class CoachRolesAndLessonsTest extends TestCase
         $this->actingAs($this->cahit)->get(route('admin.users.edit', $this->ogrenci))
             ->assertOk()
             ->assertSeeInOrder(['Velileri', 'İbrahim Acar', 'Koç · Matematik'])->assertSee('Sade Veli')
-            ->assertSee('Özel ders ya da koçluk verdiği öğrenci için aşağıdaki', false)
+            ->assertSee('Özel ders ya da koçluk verdiği üye için aşağıdaki', false)
             // Koclar karti: atanan koc bransi ve asil roluyle
             ->assertSee('Koç · Matematik · Veli')
             // Atanabilir listede brans
@@ -283,7 +283,7 @@ class CoachRolesAndLessonsTest extends TestCase
             'teacher_id' => $this->ibrahim->id, 'branch' => '', 'weekday' => 4,
             'starts_at' => '17:00', 'ends_at' => '18:00',
             'student_ids' => [$this->ogrenci->id, $diger->id],
-        ])->assertSessionHas('success', '2 öğrenciye özel ders saati eklendi.');
+        ])->assertSessionHas('success', '2 üyeye özel ders saati eklendi.');
 
         $this->assertSame(2, PrivateLessonSlot::count());
         // Ders adi bossa ogretmenin bransi.

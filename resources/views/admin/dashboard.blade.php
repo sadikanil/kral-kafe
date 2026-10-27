@@ -85,16 +85,16 @@
     </div>
 
     <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));">
-        <!-- Bugünkü Tüketimler -->
+        <!-- Bugünkü Siparişler -->
         <div class="card animate-slide-up" style="animation-delay: 200ms">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h4>Bugünkü Tüketimler</h4>
+                <h4>Bugünkü Siparişler</h4>
                 <span class="badge badge-primary">{{ $todayConsumptions->count() }} kayıt</span>
             </div>
             <div class="card-body p-0">
                 @if($todayConsumptions->isEmpty())
                     <div class="p-4 text-center text-muted">
-                        Bugün henüz tüketim kaydı yok.
+                        Bugün henüz sipariş yok.
                     </div>
                 @else
                     <div class="table-responsive">
@@ -132,7 +132,7 @@
             <div class="card-body p-0">
                 @if($topProducts->isEmpty())
                     <div class="p-4 text-center text-muted">
-                        Bu ay henüz tüketim kaydı yok.
+                        Bu ay henüz sipariş yok.
                     </div>
                 @else
                     <div class="table-responsive">

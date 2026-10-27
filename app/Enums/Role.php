@@ -45,7 +45,7 @@ enum Role: string
             self::Admin => 'Yönetici',
             self::Coach => 'Koç',
             self::Teacher => 'Öğretmen',
-            self::Student => 'Öğrenci',
+            self::Student => 'Üye',
             self::Parent => 'Veli',
             self::Staff => 'Görevli',
         };

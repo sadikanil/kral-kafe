@@ -14,14 +14,14 @@
                 <div class="empty-state">
                     <div class="empty-state-icon">🎫</div>
                     <div class="empty-state-title">Henüz paket yok</div>
-                    <p class="text-muted">İlk paketi tanımlayın; öğrencilere kullanıcı listesindeki 💳 düğmesinden atanır.</p>
+                    <p class="text-muted">İlk paketi tanımlayın; üyelere kullanıcı listesindeki 💳 düğmesinden atanır.</p>
                     <a href="{{ route('admin.packages.create') }}" class="btn btn-primary btn-sm">+ Yeni Paket</a>
                 </div>
             @else
                 <div class="table-responsive">
                     <table class="table">
                         <thead>
-                            <tr><th>Paket</th><th>Aylık Fiyat</th><th class="hide-sm">Kapsam</th><th class="hide-sm">Abonelik</th><th class="hide-sm">Durum</th><th class="text-right">İşlem</th></tr>
+                            <tr><th>Paket</th><th>Aylık Fiyat</th><th class="hide-sm">Kapsam</th><th class="hide-sm">Üyelik</th><th class="hide-sm">Durum</th><th class="text-right">İşlem</th></tr>
                         </thead>
                         <tbody>
                             @foreach($packages as $paket)
@@ -65,6 +65,6 @@
         </div>
     </div>
     <div class="alert alert-info mt-3">
-        💡 Fiyatı değiştirmek mevcut abonelikleri ve geçmiş faturaları <strong>değiştirmez</strong>; fiyat atama anında aboneliğe kopyalanır.
+        💡 Fiyatı değiştirmek mevcut üyelikleri ve geçmiş faturaları <strong>değiştirmez</strong>; fiyat atama anında üyeliğe kopyalanır.
     </div>
 @endsection

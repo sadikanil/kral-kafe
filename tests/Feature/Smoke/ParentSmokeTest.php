@@ -269,7 +269,7 @@ class ParentSmokeTest extends TestCase
     {
         $this->actingAs($this->veli())->get(route('parent.dashboard'))
             ->assertOk()
-            ->assertSee('Hesabınıza bağlı öğrenci yok');
+            ->assertSee('Hesabınıza bağlı üye yok');
     }
 
     public function test_dashboard_is_only_for_parents(): void

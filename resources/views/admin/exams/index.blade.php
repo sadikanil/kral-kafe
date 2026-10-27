@@ -23,7 +23,7 @@
                 <div class="empty-state">
                     <div class="empty-state-icon">📝</div>
                     <div class="empty-state-title">Planlanmış deneme yok</div>
-                    <p class="text-muted">Eklenen denemeler öğrenci ve veli panellerinde hatırlatıcı olarak görünür.</p>
+                    <p class="text-muted">Eklenen denemeler üye ve veli panellerinde hatırlatıcı olarak görünür.</p>
                     <a href="{{ route('admin.exams.create') }}" class="btn btn-primary btn-sm">+ Yeni Deneme</a>
                 </div>
             @else

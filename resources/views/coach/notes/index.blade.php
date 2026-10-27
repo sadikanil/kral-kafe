@@ -4,7 +4,7 @@
 @section('page-title', $student->name)
 
 @section('page-actions')
-    <a href="{{ route('coach.plan.index') }}" class="btn btn-sm btn-secondary">← Öğrenciler</a>
+    <a href="{{ route('coach.plan.index') }}" class="btn btn-sm btn-secondary">← Üyeler</a>
 @endsection
 
 @section('content')
@@ -20,9 +20,9 @@
         <div class="card-header"><h4>Yeni kayıt</h4></div>
         <div class="card-body">
             <p class="text-muted">
-                Yazdığın not <strong>varsayılan olarak veliyle paylaşılır</strong> ve öğrenci de görür.
+                Yazdığın not <strong>varsayılan olarak veliyle paylaşılır</strong> ve üye de görür.
                 Ham gözlemini kayıt altına almak istiyorsan görünürlüğü "yalnız koç ve yönetici" yap —
-                o notu veli de öğrenci de görmez.
+                o notu veli de üye de görmez.
             </p>
 
             <form method="POST" action="{{ route('coach.notes.store', $student) }}">

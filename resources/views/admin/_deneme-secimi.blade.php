@@ -66,7 +66,7 @@
             @error('new_exam_date')<span class="invalid-feedback">{{ $message }}</span>@enderror
         </div>
     </div>
-    <small class="text-muted">Takvime serbest deneme olarak, yalnızca bu güne eklenir; öğrencilerin açık serbest denemeler listesinde sonradan durmaz.</small>
+    <small class="text-muted">Takvime serbest deneme olarak, yalnızca bu güne eklenir; üyelerin açık serbest denemeler listesinde sonradan durmaz.</small>
 </fieldset>
 
 @pushOnce('scripts')

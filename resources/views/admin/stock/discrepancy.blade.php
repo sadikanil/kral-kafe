@@ -58,7 +58,7 @@
         <div class="card-body">
             <table class="table">
                 <tr>
-                    <td class="text-muted">Lokasyon</td>
+                    <td class="text-muted">Bölüm</td>
                     <td>
                         <span style="font-size: 1.25rem;">
                             @switch($discrepancy->location?->type)

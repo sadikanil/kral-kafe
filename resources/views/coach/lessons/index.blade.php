@@ -13,7 +13,7 @@
 @section('content')
     <p class="text-muted mb-3">
         Verdiğin özel dersler. Tek dersi iptal edebilir ya da taşıyabilir, haftalık saati değiştirebilirsin.
-        Yeni öğrenci ya da ders eklemek için yöneticiye yaz.
+        Yeni üye ya da ders eklemek için yöneticiye yaz.
     </p>
 
     @if($slots->isEmpty())

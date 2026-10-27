@@ -96,7 +96,7 @@
         <div class="empty-state">
             <div class="empty-state-icon">🪑</div>
             <div class="empty-state-title">Şu anda içeride kimse yok</div>
-            <p class="text-muted">Bir öğrenci masadaki QR'ı okutunca burada görünür.</p>
+            <p class="text-muted">Bir üye masadaki QR'ı okutunca burada görünür.</p>
         </div>
     @endif
 
@@ -112,7 +112,7 @@
 --}}
 @if($pending->isNotEmpty())
     <h2 class="mt-4" id="onay">Onay bekleyen oturumlar ({{ $pending->count() }})</h2>
-    <p class="text-muted">Onaylanana kadar bu süreler öğrencinin toplamına ve velinin paneline girmez.</p>
+    <p class="text-muted">Onaylanana kadar bu süreler üyenin toplamına ve velinin paneline girmez.</p>
 
     @if($bulkIds->count() < $pending->count())
         <p class="text-muted">Sistemin kapattığı oturumlar (gece 00:00, süre aşımı) toplu onaya girmez; her birini tek tek onaylayın ya da reddedin.</p>

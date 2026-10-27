@@ -216,7 +216,7 @@ class StudentStudySmokeTest extends TestCase
     }
 
     // =========================================================================
-    // Masa ekrani: GET /masa/{kod}
+    // Masa ekrani: GET /masa/{kod}/calisma (DEV-506: QR once Adisyonum'u acar)
     // =========================================================================
 
     public function test_the_scan_page_greets_an_entitled_student_with_the_start_button(): void
@@ -224,7 +224,7 @@ class StudentStudySmokeTest extends TestCase
         $masa = $this->masa('Pencere Kenarı 3A');
 
         $this->actingAs($this->ogrenci())
-            ->get(route('table.scan', $masa->qr_code))
+            ->get(route('table.session', $masa->qr_code))
             ->assertOk()
             ->assertSee('Pencere Kenarı 3A')
             ->assertSee('Hoş geldin Ayşe Yılmaz!')
@@ -242,7 +242,7 @@ class StudentStudySmokeTest extends TestCase
         $masa = $this->masa();
 
         $this->actingAs($this->ogrenci(Package::factory()->examOnly()->create()))
-            ->get(route('table.scan', $masa->qr_code))
+            ->get(route('table.session', $masa->qr_code))
             ->assertOk()
             ->assertSee('Paketin masa kullanımını kapsamıyor')
             ->assertDontSee('Çalışmaya Başla');
@@ -253,7 +253,7 @@ class StudentStudySmokeTest extends TestCase
         $masa = $this->masa('Masa 9', null, false);
 
         $this->actingAs($this->ogrenci())
-            ->get(route('table.scan', $masa->qr_code))
+            ->get(route('table.session', $masa->qr_code))
             ->assertOk()
             ->assertSee('Bu masa şu anda kullanımda değil.')
             ->assertDontSee('Çalışmaya Başla');
@@ -266,7 +266,7 @@ class StudentStudySmokeTest extends TestCase
         $this->acikOturum($ogrenci, $masa, '2026-09-29 13:00');
 
         $this->actingAs($ogrenci)
-            ->get(route('table.scan', $masa->qr_code))
+            ->get(route('table.session', $masa->qr_code))
             ->assertOk()
             ->assertSee('Çalışma sürüyor — Masa 4')
             ->assertSee('Başlangıç: 13:00')
@@ -283,7 +283,7 @@ class StudentStudySmokeTest extends TestCase
         $yeni = $this->masa('Masa 7');
 
         $this->actingAs($ogrenci)
-            ->get(route('table.scan', $yeni->qr_code))
+            ->get(route('table.session', $yeni->qr_code))
             ->assertOk()
             ->assertSee('Masa 4')
             ->assertSee('Bu Masaya Geç');
@@ -295,7 +295,7 @@ class StudentStudySmokeTest extends TestCase
         $this->acikOturum($this->ogrenci(null, ['name' => 'Şükrü Öztürk']), $masa);
 
         $this->actingAs($this->ogrenci(null, ['name' => 'İpek Çağlar']))
-            ->get(route('table.scan', $masa->qr_code))
+            ->get(route('table.session', $masa->qr_code))
             ->assertOk()
             ->assertSee('Bu masada')
             ->assertSee('Şükrü Öztürk');
@@ -306,9 +306,9 @@ class StudentStudySmokeTest extends TestCase
         $masa = $this->masa();
 
         $this->actingAs($this->veli($this->ogrenci()))
-            ->get(route('table.scan', $masa->qr_code))
+            ->get(route('table.session', $masa->qr_code))
             ->assertOk()
-            ->assertSee('Çalışma oturumu yalnızca öğrenciler içindir.')
+            ->assertSee('Çalışma oturumu yalnızca üyeler içindir.')
             ->assertDontSee('Çalışmaya Başla');
     }
 
@@ -448,7 +448,7 @@ class StudentStudySmokeTest extends TestCase
         $this->actingAs($this->veli($this->ogrenci()))
             ->from(route('table.scan', $masa->qr_code))
             ->post(route('table.session.start', $masa->qr_code))
-            ->assertSessionHas('error', 'Çalışma oturumu yalnızca öğrenciler içindir.');
+            ->assertSessionHas('error', 'Çalışma oturumu yalnızca üyeler içindir.');
 
         $this->assertSame(0, StudySession::count());
     }

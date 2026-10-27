@@ -207,14 +207,14 @@ class UserController extends Controller
             'new_parent_phone' => ['nullable', 'required_with:new_parent_name', 'regex:/^5\d{9}$/',
                 Rule::unique('users', 'phone'), 'different:phone'],
         ], [
-            'package_id.required' => 'Öğrenci için paket seçin.',
+            'package_id.required' => 'Üye için paket seçin.',
             'package_id.exists' => 'Ana paket olarak satıştaki bir paket seçin (ek paket olamaz).',
             'coach_id.in' => 'Seçilen kişi koç ya da yönetici değil.',
             'parent_ids.*.exists' => 'Seçilen kişi veli değil.',
             'new_parent_phone.required_with' => 'Yeni velinin telefonu gerekli.',
             'new_parent_phone.regex' => 'Geçerli bir cep telefonu girin (05XX XXX XX XX).',
             'new_parent_phone.unique' => 'Bu telefon başka bir kullanıcıda kayıtlı; listeden seçin.',
-            'new_parent_phone.different' => 'Velinin telefonu öğrencininkiyle aynı olamaz.',
+            'new_parent_phone.different' => 'Velinin telefonu üyeninkiyle aynı olamaz.',
         ]);
 
         $paket = Package::findOrFail($veri['package_id']);
@@ -226,7 +226,7 @@ class UserController extends Controller
         }
 
         if (empty($veri['parent_ids']) && empty($veri['new_parent_name'])) {
-            throw ValidationException::withMessages(['parent_ids' => 'Öğrencinin en az bir velisi olmalı.']);
+            throw ValidationException::withMessages(['parent_ids' => 'Üyenin en az bir velisi olmalı.']);
         }
 
         return [
@@ -367,7 +367,7 @@ class UserController extends Controller
         // bag degismiyor demektir (bolum o rol icin cizilmemis).
         if ($validated['role'] === Role::Student->value
             && $request->has('parent_ids') && empty($validated['parent_ids'])) {
-            throw ValidationException::withMessages(['parent_ids' => 'Öğrencinin en az bir velisi olmalı.']);
+            throw ValidationException::withMessages(['parent_ids' => 'Üyenin en az bir velisi olmalı.']);
         }
 
         // Ayni kural veli tarafindan: veli formunda isareti kaldirilan ogrencinin
@@ -379,8 +379,8 @@ class UserController extends Controller
                 ->withCount('parents')->get()->where('parents_count', 1);
 
             if ($yetim->isNotEmpty()) {
-                throw ValidationException::withMessages(['student_ids' => 'Öğrencinin en az bir velisi olmalı: '
-                    . $yetim->pluck('name')->join(', ') . ' için tek veli bu. Önce öğrenciye başka bir veli bağlayın.']);
+                throw ValidationException::withMessages(['student_ids' => 'Üyenin en az bir velisi olmalı: '
+                    . $yetim->pluck('name')->join(', ') . ' için tek veli bu. Önce üyeye başka bir veli bağlayın.']);
             }
         }
 
@@ -393,7 +393,7 @@ class UserController extends Controller
 
             if ($yetim->isNotEmpty()) {
                 throw ValidationException::withMessages(['role' => 'Bu velinin rolü değiştirilemez: '
-                    . $yetim->pluck('name')->join(', ') . ' için tek veli. Önce öğrenciye başka bir veli bağlayın.']);
+                    . $yetim->pluck('name')->join(', ') . ' için tek veli. Önce üyeye başka bir veli bağlayın.']);
             }
         }
 
@@ -468,7 +468,7 @@ class UserController extends Controller
         $yetim = $user->students()->withCount('parents')->get()->where('parents_count', 1);
         if ($yetim->isNotEmpty()) {
             return back()->with('error', 'Bu veli silinemez: ' . $yetim->pluck('name')->join(', ')
-                . ' için tek veli. Önce öğrenciye başka bir veli bağlayın.');
+                . ' için tek veli. Önce üyeye başka bir veli bağlayın.');
         }
 
         $user->delete();
@@ -519,7 +519,7 @@ class UserController extends Controller
 
         $statusText = $newStatus === 'active' ? 'aktifleştirildi' : 'askıya alındı';
 
-        return back()->with('success', "Kullanıcı aboneliği {$statusText}.");
+        return back()->with('success', "Kullanıcı üyeliği {$statusText}.");
     }
 
     /**

@@ -44,6 +44,11 @@
     --success-tint: rgba(52, 199, 89, 0.14);
     --warning: #9a4500;
     --warning-tint: rgba(255, 149, 0, 0.16);
+    /* Kafe tonu (DEV-506): sicak amber, uyari renginin uzerinden; karanlik
+       temada onunla birlikte degisir. Yalnizca vurgu, metin kontrasti
+       --warning'in (4.5:1 ustu). */
+    --cafe: var(--warning);
+    --cafe-tint: var(--warning-tint);
     --danger: #c9000f;
     --danger-tint: rgba(255, 59, 48, 0.12);
     /* Dolu kirmizi yalnizca son onayda; beyaz yazi iki temada da 5.4:1. */
@@ -1819,6 +1824,62 @@ input[type="file"].form-control {
     .mini-stats-3 .mini-stat-value {
         font-size: 1.0625rem;
     }
+}
+
+/* ============================================================
+   ADISYONUM (DEV-506)
+   Masa QR'inin actigi ilk ekran: ayin toplami sicak bir kartta, altinda
+   tek buyuk "Urun ekle". Telefonda tek bakista okunur.
+   ============================================================ */
+.tab-hero {
+    background: var(--cafe-tint);
+    border-radius: var(--r-lg);
+    padding: 18px var(--gutter);
+}
+
+.tab-hero-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tab-hero-month {
+    font-weight: 600;
+    color: var(--cafe);
+}
+
+.tab-hero-table {
+    font-size: 0.875rem;
+    color: var(--label-2);
+}
+
+.tab-hero-total {
+    font-family: var(--font-rounded);
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--label);
+    font-variant-numeric: tabular-nums;
+    margin-top: 6px;
+}
+
+.tab-hero-meta {
+    color: var(--label-2);
+    font-size: 0.875rem;
+}
+
+.tab-hero-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 0.5px solid var(--separator);
+    font-size: 0.9375rem;
 }
 
 /* ============================================================

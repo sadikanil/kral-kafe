@@ -118,7 +118,7 @@
                                     </span>
                                     {{-- Koc yetkili veli: etiket "Koc", velilik alt satirda. --}}
                                     @if($user->displayRole() === \App\Enums\Role::Coach && $user->coach_students_count)
-                                        <small class="text-muted d-block">{{ $user->coach_students_count }} öğrenci{{ $user->coach_subject ? ' · ' . $user->coach_subject : '' }}</small>
+                                        <small class="text-muted d-block">{{ $user->coach_students_count }} üye{{ $user->coach_subject ? ' · ' . $user->coach_subject : '' }}</small>
                                     @endif
                                     @if($user->role() === \App\Enums\Role::Parent)
                                         <small class="text-muted d-block">{{ $user->is_coach ? 'Veli · ' : '' }}{{ $user->students_count }} çocuk</small>

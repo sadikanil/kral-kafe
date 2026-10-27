@@ -36,7 +36,7 @@ class NavigationTest extends TestCase
     {
         $basliklar = array_column(Navigation::groups(User::factory()->admin()->create()), 'title');
 
-        $this->assertSame(['Günlük', 'Öğrenciler', 'Kafe', 'Ayarlar'], $basliklar);
+        $this->assertSame(['Günlük', 'Üyeler', 'Kafe', 'Ayarlar'], $basliklar);
     }
 
     public function test_a_coach_sees_only_coaching_pages(): void
@@ -90,11 +90,12 @@ class NavigationTest extends TestCase
         }
     }
 
-    public function test_the_student_quick_bar_starts_with_the_panel_and_scanner(): void
+    /** DEV-506 (26 Ekim 2026): Adisyonum ilk sirada, sonra panel ve QR okut. */
+    public function test_the_student_quick_bar_starts_with_the_tab_then_the_panel_and_scanner(): void
     {
         $ogrenci = User::factory()->student()->withPackage(Package::factory()->tier1())->create();
 
-        $this->assertSame(['user.dashboard', 'table.scanner'], array_slice(array_column(Navigation::quick($ogrenci), 'route'), 0, 2));
+        $this->assertSame(['user.tab', 'user.dashboard', 'table.scanner'], array_slice(array_column(Navigation::quick($ogrenci), 'route'), 0, 3));
     }
 
     /**
@@ -106,7 +107,7 @@ class NavigationTest extends TestCase
         $ogrenci = User::factory()->student()->withPackage(Package::factory()->tier1())->create();
 
         $this->assertSame(
-            ['user.dashboard', 'table.scanner', 'user.plan', 'user.tab'],
+            ['user.tab', 'user.dashboard', 'table.scanner', 'user.plan'],
             array_column(Navigation::quick($ogrenci), 'route'),
         );
     }

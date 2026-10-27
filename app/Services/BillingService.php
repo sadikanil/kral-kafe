@@ -95,7 +95,7 @@ class BillingService
             ->orderBy('user_id')
             ->get();
 
-        $csv = $this->csvSatiri(['Kullanıcı ID', 'İsim', 'E-posta', 'Toplam Ürün', 'Tüketim Tutarı', 'Paket Tutarı', 'Genel Toplam']);
+        $csv = $this->csvSatiri(['Kullanıcı ID', 'İsim', 'E-posta', 'Toplam Ürün', 'Adisyon Tutarı', 'Paket Tutarı', 'Genel Toplam']);
 
         foreach ($bills as $bill) {
             $csv .= $this->csvSatiri([
@@ -123,7 +123,7 @@ class BillingService
             ->orderBy('consumed_at')
             ->get();
 
-        $csv = $this->csvSatiri(['Tarih', 'Kullanıcı', 'Ürün', 'Lokasyon', 'Adet', 'Birim Fiyat', 'Toplam']);
+        $csv = $this->csvSatiri(['Tarih', 'Kullanıcı', 'Ürün', 'Bölüm', 'Adet', 'Birim Fiyat', 'Toplam']);
 
         foreach ($consumptions as $c) {
             $csv .= $this->csvSatiri([

@@ -263,8 +263,8 @@ class AdminPeopleSmokeTest extends TestCase
     {
         $this->actingAs($this->yonetici)->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertSee('Bugün henüz tüketim kaydı yok.')
-            ->assertSee('Bu ay henüz tüketim kaydı yok.')
+            ->assertSee('Bugün henüz sipariş yok.')
+            ->assertSee('Bu ay henüz sipariş yok.')
             ->assertDontSee('stok tutarsızlığı')
             ->assertDontSee('Bekleyen işler')
             ->assertSee('Kısayollar');
@@ -711,7 +711,7 @@ class AdminPeopleSmokeTest extends TestCase
             ->assertOk()
             ->assertSee('Şu an yürürlükte bir paketi yok.')
             ->assertSee('Sistemde kayıtlı veli yok.')
-            ->assertSee('Bu öğrenciye atanmış koç yok.')
+            ->assertSee('Bu üyeye atanmış koç yok.')
             ->assertDontSee('Önümüzdeki 4 hafta');
     }
 
@@ -722,10 +722,10 @@ class AdminPeopleSmokeTest extends TestCase
         $this->bagla($ogrenci, $veli);
 
         $this->actingAs($this->yonetici)->get(route('admin.users.edit', $veli))
-            ->assertOk()->assertSee('Velisi olduğu öğrenciler')->assertSee('Bora Öztürk')->assertDontSee('Paketi değiştir');
+            ->assertOk()->assertSee('Velisi olduğu üyeler')->assertSee('Bora Öztürk')->assertDontSee('Paketi değiştir');
 
         $this->actingAs($this->yonetici)->get(route('admin.users.edit', $this->koc()))
-            ->assertOk()->assertDontSee('Velisi olduğu öğrenciler')->assertDontSee('Koçlar');
+            ->assertOk()->assertDontSee('Velisi olduğu üyeler')->assertDontSee('Koçlar');
 
         $this->actingAs($this->yonetici)->get(route('admin.users.edit', $this->yonetici))
             ->assertOk()->assertDontSee('Şifreyi sıfırla');
@@ -814,7 +814,7 @@ class AdminPeopleSmokeTest extends TestCase
 
         $this->actingAs($this->yonetici)->from(route('admin.users.edit', $ogrenci))
             ->put(route('admin.users.update', $ogrenci), $this->formVerisi($ogrenci, ['parent_ids' => '']))
-            ->assertSessionHasErrors(['parent_ids' => 'Öğrencinin en az bir velisi olmalı.']);
+            ->assertSessionHasErrors(['parent_ids' => 'Üyenin en az bir velisi olmalı.']);
 
         $this->assertTrue($ogrenci->parents->contains($veli));
     }
@@ -895,12 +895,12 @@ class AdminPeopleSmokeTest extends TestCase
         $this->actingAs($this->yonetici)->from(route('admin.users.index'))
             ->post(route('admin.users.toggle-status', $ogrenci))
             ->assertRedirect(route('admin.users.index'))
-            ->assertSessionHas('success', 'Kullanıcı aboneliği askıya alındı.');
+            ->assertSessionHas('success', 'Kullanıcı üyeliği askıya alındı.');
         $this->assertSame('suspended', $ogrenci->fresh()->subscription_status);
 
         $this->actingAs($this->yonetici)->from(route('admin.users.index'))
             ->post(route('admin.users.toggle-status', $ogrenci))
-            ->assertSessionHas('success', 'Kullanıcı aboneliği aktifleştirildi.');
+            ->assertSessionHas('success', 'Kullanıcı üyeliği aktifleştirildi.');
         $this->assertSame('active', $ogrenci->fresh()->subscription_status);
     }
 
@@ -1050,7 +1050,7 @@ class AdminPeopleSmokeTest extends TestCase
         $this->actingAs($this->yonetici)->get(route('admin.subscriptions.index', $ogrenci))
             ->assertOk()
             ->assertSee('Satışta paket yok.')
-            ->assertSee('Bu öğrenciye henüz paket atanmadı.')
+            ->assertSee('Bu üyeye henüz paket atanmadı.')
             ->assertSee(route('admin.packages.create'), false);
 
         $this->actingAs($this->yonetici)->get(route('admin.subscriptions.index', $this->veli()))->assertNotFound();
@@ -1201,7 +1201,7 @@ class AdminPeopleSmokeTest extends TestCase
         $this->actingAs($this->yonetici)->from(route('admin.subscriptions.index', $ogrenci))
             ->post(route('admin.subscriptions.cancel', $abonelik))
             ->assertRedirect(route('admin.subscriptions.index', $ogrenci))
-            ->assertSessionHas('success', fn ($m) => str_starts_with($m, 'Abonelik iptal edildi.'));
+            ->assertSessionHas('success', fn ($m) => str_starts_with($m, 'Üyelik iptal edildi.'));
 
         $this->assertSame(PaymentStatus::Cancelled, $abonelik->fresh()->payment_status);
         $this->assertSame('active', $ogrenci->fresh()->subscription_status);
@@ -1209,7 +1209,7 @@ class AdminPeopleSmokeTest extends TestCase
         $this->actingAs($this->yonetici)->from(route('admin.subscriptions.index', $ogrenci))
             ->post(route('admin.subscriptions.payments.store', $abonelik), [
                 'amount' => '100', 'paid_at' => '2026-09-29', 'method' => 'cash',
-            ])->assertSessionHas('error', 'İptal edilmiş aboneliğe ödeme yazılamaz.');
+            ])->assertSessionHas('error', 'İptal edilmiş üyeliğe ödeme yazılamaz.');
 
         $this->assertSame(0, $abonelik->payments()->count());
         $this->assertSame(PaymentStatus::Cancelled, $abonelik->fresh()->payment_status);
@@ -1355,7 +1355,7 @@ class AdminPeopleSmokeTest extends TestCase
 
         $this->actingAs($this->yonetici)->from(route('admin.users.edit', $standart))
             ->post(route('admin.coaches.attach', $standart), ['coach_id' => $koc->id])
-            ->assertSessionHas('error', 'Öğrencinin paketi koçluk içermiyor.');
+            ->assertSessionHas('error', 'Üyenin paketi koçluk içermiyor.');
         $this->assertSame(0, $standart->coaches()->count());
 
         $orta = $this->ogrenci(Package::factory()->tier2());

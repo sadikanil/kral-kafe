@@ -40,7 +40,7 @@
         class="form-control @error('note') is-invalid @enderror"
         value="{{ old('note', $exam?->note) }}" placeholder="Örn. Optik form getirin; salon: üst kat">
     @error('note')<span class="invalid-feedback">{{ $message }}</span>@enderror
-    <small class="text-muted">Öğrenci ve veli panelinde hatırlatıcıda görünür.</small>
+    <small class="text-muted">Üye ve veli panelinde hatırlatıcıda görünür.</small>
 </div>
 
 {{-- Serbest deneme (Dalga 30a): ogrenci tarihi kendisi secer. --}}
@@ -48,7 +48,7 @@
     <input type="hidden" name="is_flexible" value="0">
     <input type="checkbox" id="is_flexible" name="is_flexible" value="1" class="form-check-input"
         @checked(old('is_flexible', $exam?->is_flexible))>
-    <label for="is_flexible" class="form-check-label">Serbest: öğrenci tarihi kendisi seçer (Tarih = ilk gün)</label>
+    <label for="is_flexible" class="form-check-label">Serbest: üye tarihi kendisi seçer (Tarih = ilk gün)</label>
 </div>
 <div class="form-group">
     <label for="available_until" class="form-label">Serbest ise son gün</label>

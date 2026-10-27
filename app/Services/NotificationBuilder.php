@@ -283,7 +283,7 @@ class NotificationBuilder
 
             $tur = 'review';
             $baslik = "Deneme okundu: {$baslik}";
-            $govde = "{$satirlar->count()} öğrenci okundu. "
+            $govde = "{$satirlar->count()} katılımcı okundu. "
                 . ($bakilacak > 0 ? "{$bakilacak} satır kontrol bekliyor; yayınlamadan önce bakın." : 'Kontrol edip yayınlayabilirsiniz.');
             $an = '';
         } else {

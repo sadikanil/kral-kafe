@@ -156,7 +156,7 @@
         <div class="card-body p-0">
             @if($topConsumers->isEmpty())
                 <div class="p-4 text-center text-muted">
-                    Bu ay tüketim verisi yok.
+                    Bu ay adisyon verisi yok.
                 </div>
             @else
                 <div class="table-responsive">

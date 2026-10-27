@@ -80,12 +80,12 @@
 
                 @if($user->hasRole(\App\Enums\Role::Parent))
                     <div class="form-group">
-                        <label class="form-label">Velisi olduğu öğrenciler</label>
+                        <label class="form-label">Velisi olduğu üyeler</label>
                         {{-- Gizli alan: hicbir kutu isaretli degilse de anahtar gitsin,
                              kontrolcu "hepsini kaldir" ile "bolum yoktu"yu ayirt edebilsin. --}}
                         <input type="hidden" name="student_ids" value="">
                         @if($linkableStudents->isEmpty())
-                            <p class="text-muted mb-0">Sistemde kayıtlı öğrenci yok.</p>
+                            <p class="text-muted mb-0">Sistemde kayıtlı üye yok.</p>
                         @else
                             <div class="rounded p-2 js-aranabilir" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--separator);">
                                 @foreach($linkableStudents as $ogrenci)
@@ -106,7 +106,7 @@
                         @error('student_ids.*')
                             <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
-                        <small class="text-muted">Yalnızca kendi çocukları. Veli bu öğrencilerin çalışma, ödeme ve paket bilgilerini görür.@if($user->isCoach()) Özel ders verdiği ya da koçluk yaptığı öğrencileri aşağıdaki listeden seçin.@endif</small>
+                        <small class="text-muted">Yalnızca kendi çocukları. Veli bu üyelerin çalışma, ödeme ve paket bilgilerini görür.@if($user->isCoach()) Özel ders verdiği ya da koçluk yaptığı üyeleri aşağıdaki listeden seçin.@endif</small>
                     </div>
                 @endif
 
@@ -118,10 +118,10 @@
                 --}}
                 @if($user->isCoach() && ! $user->hasRole(\App\Enums\Role::Admin))
                     <div class="form-group">
-                        <label class="form-label">Koçluk / özel ders verdiği öğrenciler</label>
+                        <label class="form-label">Koçluk / özel ders verdiği üyeler</label>
                         <input type="hidden" name="coach_student_ids" value="">
                         @if($coachableStudents->isEmpty())
-                            <p class="text-muted mb-0">Sistemde kayıtlı öğrenci yok.</p>
+                            <p class="text-muted mb-0">Sistemde kayıtlı üye yok.</p>
                         @else
                             <div class="rounded p-2 js-aranabilir" style="max-height: 220px; overflow-y: auto; border: 1px solid var(--separator);">
                                 @foreach($coachableStudents as $ogrenci)
@@ -137,7 +137,7 @@
                         @error('coach_student_ids.*')
                             <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
-                        <small class="text-muted">Koç bu öğrencileri Çalışma Planları ve Özel Derslerim sayfalarında görür; plana yalnızca ödev ekler, ödeme ve paket bilgisi görmez.</small>
+                        <small class="text-muted">Koç bu üyeleri Çalışma Planları ve Özel Derslerim sayfalarında görür; plana yalnızca ödev ekler, ödeme ve paket bilgisi görmez.</small>
                     </div>
                 @endif
 
@@ -171,7 +171,7 @@
                         {{-- 5 Ekim 2026: koc yetkili veli burada yalnizca KENDI cocugunu
                              isaretler; ozel ders/kocluk bagi asagidaki Koclar kartinda. --}}
                         @if($linkableParents->contains('is_coach', true))
-                            <small class="text-muted">Koç etiketli veliler yalnızca kendi çocuklarıysa işaretlenir. Özel ders ya da koçluk verdiği öğrenci için aşağıdaki <strong>Koçlar</strong> kartını kullanın; veli bağı ödeme ve paket bilgisini de açar.</small>
+                            <small class="text-muted">Koç etiketli veliler yalnızca kendi çocuklarıysa işaretlenir. Özel ders ya da koçluk verdiği üye için aşağıdaki <strong>Koçlar</strong> kartını kullanın; veli bağı ödeme ve paket bilgisini de açar.</small>
                         @endif
                     </div>
                 @endif
@@ -199,7 +199,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="subscription_status" class="form-label">Abonelik Durumu *</label>
+                    <label for="subscription_status" class="form-label">Üyelik Durumu *</label>
                     <select id="subscription_status" name="subscription_status"
                         class="form-control @error('subscription_status') is-invalid @enderror" required>
                         <option value="active" {{ old('subscription_status', $user->subscription_status) == 'active' ? 'selected' : '' }}>Aktif</option>
@@ -295,9 +295,9 @@
             </div>
             <div class="card-body">
                 <p class="text-muted">
-                    Koç, atandığı öğrencinin çalışma planını hazırlar ve verilerini görür.
-                    Bir öğrencinin birden fazla koçu olabilir; yönetici zaten tüm
-                    öğrencileri görür, atanması gerekmez.
+                    Koç, atandığı üyenin çalışma planını hazırlar ve verilerini görür.
+                    Bir üyenin birden fazla koçu olabilir; yönetici zaten tüm
+                    üyeleri görür, atanması gerekmez.
                 </p>
 
                 <form method="POST" action="{{ route('admin.coaches.attach', $user) }}"
@@ -332,7 +332,7 @@
                         </form>
                     </div>
                 @empty
-                    <p class="text-muted">Bu öğrenciye atanmış koç yok.</p>
+                    <p class="text-muted">Bu üyeye atanmış koç yok.</p>
                 @endforelse
             </div>
         </div>

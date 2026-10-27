@@ -62,7 +62,7 @@ class PackageGateTest extends TestCase
         $masa = StudyTable::create(['name' => 'Masa 1']);
 
         $this->actingAs($ogrenci)
-            ->get(route('table.scan', $masa->qr_code))
+            ->get(route('table.session', $masa->qr_code))
             ->assertSee('Paketin masa kullanımını kapsamıyor');
     }
 

@@ -35,12 +35,12 @@ class ActiveSubscription
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Aboneliğiniz aktif değil.',
+                    'message' => 'Üyeliğiniz aktif değil.',
                 ], 403);
             }
 
             return redirect()->route('user.dashboard')
-                ->with('error', 'Aboneliğiniz aktif değil. Lütfen yönetici ile iletişime geçin.');
+                ->with('error', 'Üyeliğiniz aktif değil. Lütfen yönetici ile iletişime geçin.');
         }
 
         return $next($request);
