@@ -1335,7 +1335,9 @@ class AdminCafeSmokeTest extends TestCase
 
         $satirlar = array_map('str_getcsv', array_filter(explode("\n", $yanit->getContent())));
         $this->assertSame('İsim', $satirlar[0][1]);
-        $this->assertSame([(string) $ayse->id, 'Ayşe Yılmaz', 'ayse@example.com', '4', '110.00', '1500.00', '1610.00'], $satirlar[1]);
+        // DEV-507: tahsilat sutunlari sonda; mevcutlarin yeri degismedi.
+        $this->assertSame([(string) $ayse->id, 'Ayşe Yılmaz', 'ayse@example.com', '4', '110.00', '1500.00', '1610.00',
+            'Ödenmedi', '0.00', '110.00', '', ''], $satirlar[1]);
     }
 
     public function test_detailed_csv_uses_local_time_and_the_local_month(): void
@@ -1372,7 +1374,7 @@ class AdminCafeSmokeTest extends TestCase
 
         $ozet = $this->actingAs($yonetici)->get(route('admin.reports.export-summary', ['year' => 2026, 'month' => 9]))->getContent();
         $satir = str_getcsv(array_values(array_filter(explode("\n", $ozet)))[1]);
-        $this->assertCount(7, $satir);
+        $this->assertCount(12, $satir); // DEV-507: +5 tahsilat sutunu
         $this->assertSame('Ali "Kral" Öztürk', $satir[1]);
     }
 

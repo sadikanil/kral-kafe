@@ -1873,6 +1873,7 @@ input[type="file"].form-control {
 
 .tab-hero-row {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     gap: 8px;
@@ -1880,6 +1881,12 @@ input[type="file"].form-control {
     padding-top: 12px;
     border-top: 0.5px solid var(--separator);
     font-size: 0.9375rem;
+}
+
+/* "Odeme durumu" kirilmaz; uzun rozet (DEV-507: "Kismen odendi · 120,00 ₺
+   kaldi") gerekirse alt satira iner. */
+.tab-hero-row > span:first-child {
+    white-space: nowrap;
 }
 
 /* ============================================================

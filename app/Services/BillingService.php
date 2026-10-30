@@ -95,7 +95,10 @@ class BillingService
             ->orderBy('user_id')
             ->get();
 
-        $csv = $this->csvSatiri(['Kullanıcı ID', 'İsim', 'E-posta', 'Toplam Ürün', 'Adisyon Tutarı', 'Paket Tutarı', 'Genel Toplam']);
+        // Tahsilat sutunlari sonda (DEV-507): mevcut sutunlarin yeri degismez,
+        // tabloyu sutun sirasiyla okuyan dosya bozulmaz.
+        $csv = $this->csvSatiri(['Kullanıcı ID', 'İsim', 'E-posta', 'Toplam Ürün', 'Adisyon Tutarı', 'Paket Tutarı', 'Genel Toplam',
+            'Ödeme Durumu', 'Ödenen', 'Kalan', 'Ödeme Tarihi', 'Ödeme Yöntemi']);
 
         foreach ($bills as $bill) {
             $csv .= $this->csvSatiri([
@@ -106,6 +109,11 @@ class BillingService
                 number_format($bill->total_amount, 2, '.', ''),
                 number_format((float) $bill->package_amount, 2, '.', ''),
                 number_format($bill->grandTotal(), 2, '.', ''),
+                $bill->dueAmount() > 0 ? $bill->payment_status->label() : 'Ödenecek tutar yok',
+                number_format((float) $bill->paid_amount, 2, '.', ''),
+                number_format($bill->remaining(), 2, '.', ''),
+                $bill->paid_at?->format('d.m.Y') ?? '',
+                $bill->payment_method?->label() ?? '',
             ]);
         }
 

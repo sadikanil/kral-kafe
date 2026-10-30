@@ -286,6 +286,12 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     Route::post('/abonelikler/{subscription}/odeme', [SubscriptionController::class, 'storePayment'])->name('subscriptions.payments.store');
     Route::delete('/odemeler/{payment}', [SubscriptionController::class, 'destroyPayment'])->name('subscriptions.payments.destroy');
 
+    // Adisyon tahsilati (DEV-507, 27 Ekim 2026): aylik adisyona odeme
+    // alindi, geri alma; her ikisi de kayit altinda.
+    Route::get('/adisyonlar', [\App\Http\Controllers\Admin\BillController::class, 'index'])->name('bills.index');
+    Route::post('/adisyonlar/{bill}/odeme', [\App\Http\Controllers\Admin\BillController::class, 'storePayment'])->name('bills.payments.store');
+    Route::post('/adisyon-odemeleri/{payment}/geri-al', [\App\Http\Controllers\Admin\BillController::class, 'reversePayment'])->name('bills.payments.reverse');
+
     // Kurum geneli deneme sonuc PDF'i (1 Ekim 2026): tek PDF, sayfa sayfa
     // okuma, ogrenciye esleme, kontrol ve yayin. PDF yalnizca yoneticide.
     Route::get('/deneme-sonuclari', [\App\Http\Controllers\Admin\ExamImportController::class, 'index'])->name('exam-imports.index');

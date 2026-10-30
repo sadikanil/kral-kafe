@@ -45,7 +45,11 @@
     </div>
 
     <div class="card mb-3">
-        <div class="card-header"><h4>Adisyon</h4></div>
+        {{-- Tahsilat durumu (DEV-507): Adisyonum'daki rozetin aynisi; veli de gorur. --}}
+        <div class="card-header d-flex justify-content-between align-items-center gap-2">
+            <h4>Adisyon</h4>
+            @include('user._adisyon-odeme', ['bill' => $bill, 'isCurrent' => $isCurrentMonth])
+        </div>
         <div class="card-body p-0">
             @if($statement->consumptions()->isEmpty())
                 <div class="p-4 text-center text-muted">Bu ay adisyon yok.</div>
