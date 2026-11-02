@@ -81,7 +81,23 @@ class TableSessionController extends Controller
         return view('user.tab', \App\Support\TabSummary::for($kullanici, $yil, $ay) + [
             'table' => $table,
             'session' => $this->sessions->openFor($kullanici),
+            'backupUrl' => $this->yedekAdres($request),
         ]);
+    }
+
+    /**
+     * QR acilmazsa gidilecek adres (config kafe.yedek_adres). Uye zaten o
+     * adresteyse not adres vermez: "kralkafe.com'u ac" orada anlamsiz.
+     */
+    private function yedekAdres(Request $request): ?string
+    {
+        $adres = (string) config('kafe.yedek_adres');
+
+        if ($adres === '' || parse_url($adres, PHP_URL_HOST) === $request->getHost()) {
+            return null;
+        }
+
+        return $adres;
     }
 
     /** Masa ekrani: calisma oturumunu baslatma/surdurme (eski QR ekrani). */

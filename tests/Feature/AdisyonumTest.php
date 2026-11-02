@@ -111,6 +111,36 @@ class AdisyonumTest extends TestCase
         $this->actingAs($this->uye)->get('/masa/MASA-YOKBOYLE')->assertNotFound();
     }
 
+    // --- QR acilmazsa notu (2 Kasim 2026) ----------------------------------
+
+    public function test_the_tab_from_a_table_explains_what_to_do_if_the_qr_does_not_open(): void
+    {
+        $this->actingAs($this->uye)->get(route('table.scan', $this->masa->qr_code))
+            ->assertOk()
+            ->assertSeeInOrder(['QR açılmazsa', 'QR Okut', 'masa kodunu yaz', $this->masa->qr_code])
+            ->assertSee(route('table.scanner'), false)
+            ->assertDontSee('adresini aç');
+
+        // Menuden acilan Adisyonum'da masa yok, not da yok.
+        $this->actingAs($this->uye)->get(route('user.tab'))->assertOk()->assertDontSee('QR açılmazsa');
+    }
+
+    public function test_the_note_names_the_backup_address_when_one_is_set(): void
+    {
+        config(['kafe.yedek_adres' => 'https://kralkafe.com']);
+
+        $this->actingAs($this->uye)->get(route('table.scan', $this->masa->qr_code))
+            ->assertOk()
+            ->assertSeeInOrder(['QR açılmazsa', 'kralkafe.com', 'adresini aç', 'QR Okut', 'masa kodunu yaz', $this->masa->qr_code])
+            ->assertSee('href="https://kralkafe.com/masa-okut"', false);
+
+        // Uye zaten yedek adresteyse "bu adresi ac" denmez.
+        $this->actingAs($this->uye)->get('https://kralkafe.com/masa/' . $this->masa->qr_code)
+            ->assertOk()
+            ->assertSee('QR açılmazsa')
+            ->assertDontSee('adresini aç');
+    }
+
     // --- Giris sonrasi donus ------------------------------------------------
 
     public function test_a_signed_out_scan_returns_to_the_tab_after_login(): void

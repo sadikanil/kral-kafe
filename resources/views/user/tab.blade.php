@@ -52,6 +52,22 @@
                 @endif
             </div>
         </div>
+
+        {{-- QR kamerayla acilmazsa (2 Kasim 2026): bazi operatorlerde vercel.app
+             acilmiyor. Uygulamadaki QR Okut yalnizca masa kodunu alip acik
+             adreste acar; yedek adres config kafe.yedek_adres'ten. --}}
+        <div class="alert alert-info mb-3">
+            <strong>QR açılmazsa</strong><br>
+            @if(! empty($backupUrl))
+                Masadaki QR bazı mobil hatlarda açılmayabilir. Öyle olursa
+                <a href="{{ $backupUrl }}/masa-okut"><strong>{{ parse_url($backupUrl, PHP_URL_HOST) }}</strong></a>
+                adresini aç, ana ekranına ekle ve masada telefonun kamerası yerine uygulamadaki <strong>QR Okut</strong>'u kullan.
+            @else
+                Masadaki QR telefon kamerasıyla açılmazsa uygulamadaki
+                <a href="{{ route('table.scanner') }}"><strong>QR Okut</strong></a>'u kullan.
+            @endif
+            Kamera da açılmazsa masa kodunu yaz: <strong>{{ $table->qr_code }}</strong>
+        </div>
     @endif
 
     @if($latest->isNotEmpty())

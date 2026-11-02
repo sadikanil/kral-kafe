@@ -154,6 +154,22 @@ return [
     'izinli_ipler' => array_filter(explode(',', (string) env('KAFE_IPLER', ''))),
     'ip_zorunlu' => (bool) env('KAFE_IP_ZORUNLU', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Yedek adres (2 Kasim 2026)
+    |--------------------------------------------------------------------------
+    |
+    | Bazi mobil operatorlerde *.vercel.app acilmiyor (ERR_CONNECTION_RESET).
+    | Masadaki QR'lar o adresi tasidigi icin kamerayla okutan uye sayfaya hic
+    | ulasamaz; uygulamadaki "QR Okut" ise yalnizca masa kodunu alip acik
+    | olan adreste acar (study/scanner, masaAdresi). Kendi alan adi baglaninca
+    | buraya yazilir (orn. https://kralkafe.com) ve QR'dan acilan Adisyonum'daki
+    | not "bu adresi ac, QR Okut'u kullan" der. Bos: not adres vermez.
+    |
+    */
+
+    'yedek_adres' => rtrim((string) env('KAFE_YEDEK_ADRES', ''), '/'),
+
 
     /*
     |--------------------------------------------------------------------------
