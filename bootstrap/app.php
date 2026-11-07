@@ -21,6 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Olcum (SERVER_TIMING=true iken): en basta, oturum sorgulari da sayilsin.
         $middleware->prepend(\App\Http\Middleware\ServerTiming::class);
 
+        // Guvenlik basliklari her yanitta (php2shell sertlestirmesi).
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+
         // Bayat calisma oturumlarini, biri onlara bakmadan once kapatir.
         // "Tembel kapatma birincil" karari: cron kacsa da veri dogru gorunur.
         $middleware->appendToGroup('web', \App\Http\Middleware\SettleStaleSessions::class);

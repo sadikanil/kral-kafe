@@ -21,6 +21,9 @@ class SettingsController extends Controller
     {
         return view('admin.settings', [
             'cafeLocation' => Setting::cafeLocation(),
+            // expose_php kapali: surum yanit basliginda yok, burada gorunur (php2shell).
+            'phpVersion' => \App\Support\PhpSurumu::simdiki(),
+            'phpPatched' => \App\Support\PhpSurumu::yamaliMi(),
         ]);
     }
 

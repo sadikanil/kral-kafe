@@ -240,7 +240,7 @@ yazar), veli salt okunur.
 | Deneme takvimi + "sıradaki deneme, N gün kaldı" hatırlatıcısı | Yönetici planlar; öğrenci, veli görür | Yönetim → Deneme Takvimi, `/kullanici/denemeler`, `/veli/denemeler` |
 | Deneme sonuç PDF'i + yapay zekâ analizi | Yönetici yükler, öğrenci görür | Öğrenci sayfası |
 
-**Altyapı:** Laravel 12 · PHP 8.2 · Vercel (`main`'den otomatik dağıtım) ·
+**Altyapı:** Laravel 12 · PHP 8.4.27+ (`vercel-php@0.8.0`; php2shell yaması, bkz. [`docs/security/php2shell.md`](docs/security/php2shell.md)) · Vercel (`main`'den otomatik dağıtım) ·
 Supabase Postgres (session pooler) · elle yazılmış CSS (Tailwind yok).
 
 | Dalga | İçerik | Canlıda |

@@ -13,6 +13,11 @@
     RewriteCond %{HTTP:x-xsrf-token} .
     RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
+    # php2shell sertlestirmesi (7 Kasim 2026): yuklenen dosyalarin durdugu
+    # yerlerde (public/storage -> storage/app/public, public/uploads) PHP
+    # betigi asla calistirilmaz ve indirilmez.
+    RewriteRule ^(storage|uploads)/.*\.(php[0-9]?|phtml|phar|pht)$ - [F,L,NC]
+
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_URI} (.+)/$
@@ -22,4 +27,9 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
+</IfModule>
+
+# php2shell sertlestirmesi: surum bilgisi basliga yazilmaz (mod_headers varsa).
+<IfModule mod_headers.c>
+    Header always unset X-Powered-By
 </IfModule>

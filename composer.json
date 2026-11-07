@@ -9,7 +9,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "~8.4.27 || ^8.5.12",
         "anthropic-ai/sdk": "^0.54.0",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
@@ -73,7 +73,8 @@
         ],
         "vercel": [
             "@php -r \"foreach ([getenv('APP_PACKAGES_CACHE'), getenv('APP_SERVICES_CACHE'), 'bootstrap/cache/x'] as \\$p) { if (\\$p) { @mkdir(dirname(\\$p), 0755, true); } }\"",
-            "@php artisan package:discover --ansi"
+            "@php artisan package:discover --ansi",
+            "@php artisan kafe:php-surumu --kesin"
         ]
     },
     "extra": {
@@ -83,6 +84,9 @@
     },
     "config": {
         "optimize-autoloader": true,
+        "platform": {
+            "php": "8.4.27"
+        },
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
