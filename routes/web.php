@@ -80,6 +80,11 @@ Route::middleware(['auth', 'subscription'])->prefix('kullanici')->name('user.')-
     Route::redirect('/gecmis', '/kullanici/odemeler')->name('history');
     Route::get('/denemeler', [ExamCalendarController::class, 'student'])->name('exams');
 
+    // Liderlik tablosu (7 Kasim 2026): uye ve yonetici. Veli/koc gormez -
+    // uyeler birbiriyle yalnizca kafe icinde, toplam puanla karsilasir.
+    Route::get('/liderlik', [\App\Http\Controllers\User\LeaderboardController::class, 'index'])
+        ->middleware('role:student,admin')->name('leaderboard');
+
     // Ogrencinin KENDI verisi: plan, haftalik rapor, adisyon. Rol kapisi
     // yalnizca bu uclarda, grubun tamaminda degil: panel ogretmen ve
     // gorevlinin ana sayfasi (Role::homeRoute), deneme raporunu da koc ve

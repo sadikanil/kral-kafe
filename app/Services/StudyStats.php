@@ -72,6 +72,29 @@ class StudyStats
     }
 
     /**
+     * minutesBetween()'in coklu hali (liderlik tablosu, 7 Kasim 2026): tek
+     * sorgu, ayni kurallar (onayli, esikten uzun, molalar dusulmus, [from, to)).
+     *
+     * @param  list<int>  $studentIds
+     * @return array<int,int> ogrenci id => dakika (oturumu olmayan 0)
+     */
+    public function minutesBetweenForMany(array $studentIds, Carbon $from, Carbon $to): array
+    {
+        if ($studentIds === []) {
+            return [];
+        }
+
+        $ogrenciye = $this->overlapping($studentIds, $from, $to)->groupBy(fn (StudySession $o) => (int) $o->student_id);
+
+        $sonuc = [];
+        foreach ($studentIds as $id) {
+            $sonuc[(int) $id] = $this->sumMinutes($ogrenciye->get((int) $id, collect()), $from, $to);
+        }
+
+        return $sonuc;
+    }
+
+    /**
      * Araliktaki dakikalarin DERS KIRILIMI (Dalga 17a).
      *
      * Etiketsiz oturum "Genel" kovasina duser - kaybolmaz. Toplam,

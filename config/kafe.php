@@ -183,6 +183,33 @@ return [
 
     'csp' => env('KAFE_CSP', 'enforce'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Liderlik puanlari (7 Kasim 2026)
+    |--------------------------------------------------------------------------
+    |
+    | App\Services\Leaderboard. Haftalik (pazartesi-pazar) ve aylik toplanir;
+    | saklanmaz, her acilista onayli verilerden hesaplanir.
+    |
+    | - Calisma: onayli, esikten uzun, molasi dusulmus her X dakika 1 puan.
+    | - Deneme (o donemde yapilan her deneme): katilim + basari (net / soru
+    |   orani x azami) + gelisim (ayni turdeki onceki denemesinden yuksek net).
+    |   Agirlik katilim ve gelisimde: net zayif uye de puan toplar.
+    | - Alisveris: odenen tutarin (pakete dahil olanlar haric) her X TL'si
+    |   1 puan, gunluk tavanli: kafe ici satisi tesvik eder ama tabloyu
+    |   satin alarak kazanilmaz.
+    |
+    */
+
+    'puan' => [
+        'calisma_dakika' => 10,
+        'deneme_katilim' => 20,
+        'deneme_basari_azami' => 30,
+        'deneme_gelisim' => 10,
+        'alisveris_tl' => 25,
+        'alisveris_gunluk_azami' => 4,
+    ],
+
 
     /*
     |--------------------------------------------------------------------------

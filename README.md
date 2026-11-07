@@ -379,9 +379,13 @@ Teknik kararların tamamı ve gerekçeleri §9'da.
    değerlendirme aynı şey değil; özel seçeneği olmayan bir sistemde koç ham
    gözlemini hiç yazmaz.
 3. **Öğrenci, veliye ne gittiğini kendi panelinde görür.** Gizli izleme yok.
-4. **Sıralama, karşılaştırma, yüzdelik dilim yok** — öğrenciler birbiriyle
-   karşılaştırılmaz. Denemenin kurum/il/TR sıralaması bunun istisnası değil:
-   o, sınavın kendi verisidir, sistemin ürettiği bir kıyas değil.
+4. ~~**Sıralama, karşılaştırma, yüzdelik dilim yok**~~ — **7 Kasım 2026'da
+   sahibin isteğiyle değişti:** haftalık/aylık **liderlik tablosu** var
+   (`/kullanici/liderlik`). Sınırları: diğer üyeler yalnızca kısaltılmış adı
+   ("Ayşe K.") ve **toplam puanı** görür; netler ve puan dökümü yalnızca üyenin
+   kendisine ve yöneticiye. Veli, koç, görevli görmez. Deneme puanının ağırlığı
+   katılım ve gelişimde (net zayıf üye de puan toplar). Yüzdelik dilim ve net
+   kıyası hâlâ yok. Denemenin kurum/il/TR sıralaması sınavın kendi verisidir.
 5. **Düşüş sinyalleri önce koça/yöneticiye**, veliye ancak yorumla birlikte.
 6. **Yorum üreten tek kişi insandır.** Sistem ve yapay zekâ sayı ve alan
    gösterir, sıfat üretmez. Deneme PDF'i analizinin prompt'u kişilik ve
@@ -428,6 +432,21 @@ yalnızca ödev, yalnızca kendi maddesini değiştirir (`StudyPlanItem::canBeCh
 ---
 
 ## 7. Özellik kartları
+
+### P · Liderlik tablosu · ✅ (7 Kasım 2026)
+
+Haftalık (pazartesi–pazar) ve aylık; ilk üç podyumda (2-1-3), kalanlar puanla
+altta. Puan **saklanmaz**, her açılışta onaylı veriden hesaplanır
+(`App\Services\Leaderboard`, ağırlıklar `config('kafe.puan')`):
+
+| Kaynak | Puan |
+|---|---|
+| Çalışma | Onaylı, eşikten uzun, molası düşülmüş her 10 dk = 1 (`StudyStats` ile aynı dakika) |
+| Deneme (o dönemde yapılan) | Katılım 20 + başarı (net / soru × 30) + aynı türdeki önceki denemeyi geçerse 10 |
+| Adisyon | Ödenen her 25 ₺ = 1, günde en fazla 4; pakete dahil ve geri alınan sayılmaz |
+
+Eşitlikte çok çalışan önde. Askıdaki üye ve puanı 0 olan listede yok. Gizlilik
+sınırları §6.1-4'te.
 
 Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlandığı**.
 
