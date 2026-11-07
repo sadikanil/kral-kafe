@@ -33,6 +33,13 @@ final class Navigation
                 ]] : null,
                 $u->hasRole(Role::Coach) ? ['title' => 'Koçluk', 'items' => self::kocluk()] : null,
             ])),
+            // Gorevli (7 Kasim 2026): masa yonetimi (SS6.2). Silme yoneticide.
+            $u->hasRole(Role::Staff) => [
+                ['title' => 'Kafe', 'items' => [
+                    ['route' => 'admin.tables.index', 'label' => 'Masalar', 'icon' => 'armchair', 'match' => 'admin.tables.*'],
+                    ['route' => 'user.dashboard', 'label' => 'Panel', 'icon' => 'house'],
+                ]],
+            ],
             default => [
                 ['title' => 'Menü', 'items' => [
                     ['route' => 'user.dashboard', 'label' => 'Panel', 'icon' => 'house'],

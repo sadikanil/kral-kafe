@@ -134,15 +134,20 @@ class AuthShellSmokeTest extends TestCase
         }
     }
 
-    /** Ogretmen/gorevlinin ayri paneli yok; ogrenci paneline iner ve acilmali. */
+    /**
+     * Ogretmenin ayri paneli yok; ogrenci paneline iner ve acilmali. Gorevli
+     * (7 Kasim 2026) masalara iner; paneli de acilir.
+     */
     public function test_teacher_and_staff_land_on_a_page_that_opens(): void
     {
-        foreach ([Role::Teacher, Role::Staff] as $rol) {
-            $kisi = $this->kisi($rol, ['name' => 'Görevli ' . $rol->value]);
+        $ogretmen = $this->kisi(Role::Teacher, ['name' => 'Görevli teacher']);
+        $this->actingAs($ogretmen)->get('/')->assertRedirect(route('user.dashboard'));
+        $this->actingAs($ogretmen)->get(route('user.dashboard'))->assertOk();
 
-            $this->actingAs($kisi)->get('/')->assertRedirect(route('user.dashboard'));
-            $this->actingAs($kisi)->get(route('user.dashboard'))->assertOk();
-        }
+        $gorevli = $this->kisi(Role::Staff, ['name' => 'Görevli staff']);
+        $this->actingAs($gorevli)->get('/')->assertRedirect(route('admin.tables.index'));
+        $this->actingAs($gorevli)->get(route('admin.tables.index'))->assertOk()->assertSee('Masalar');
+        $this->actingAs($gorevli)->get(route('user.dashboard'))->assertOk();
     }
 
     // --- Giris sayfasi -----------------------------------------------------

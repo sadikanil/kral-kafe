@@ -302,9 +302,9 @@ Bu tablodaki dalgaların hepsi 22 Eylül'de bitti. Sıradaki iş §0'da.
 | **Supabase'i Frankfurt'a taşı** | M | **Karar verildi (22 Eyl), henüz yapılmadı.** Giriş sayfası 0,9 sn; Frankfurt ~0,2 sn getirir. Çalıştırılabilir plan §12.7'de — kesinti gerektirir, kafe kapalıyken yapılmalı |
 | Üretimde `LOG_CHANNEL` kontrolü | XS | Panelde `stack` duruyorsa salt okunur diske log yazılıp **ikinci bir 500** üretiliyor; üretim ortam dökümü hiç doğrulanmadı — §12 "Doğrulanmamış" |
 | `brashlab` remote'unu kaldır | XS | Yerel depoyu 21 MiB'de tutuyor, kazara merge yolu açık — §13 |
-| Anomaliye "gördüm" işareti | S | Yedi günlük pencere sessizce kapanıyor; `discrepancy_logs` çözümleme akışı örnek alınabilir |
-| `study_tables` ertelenen sütunları | S | `status`, `assigned_student_id`, `location_id` — anlamları paket ve raf/masa kararıyla geliyor |
-| Görevliye masa yönetimi erişimi | S | Yetki matrisi açık diyor, `AdminMiddleware` kapalı tutuyor |
+| ~~Anomaliye "gördüm" işareti~~ | S | ✅ 7 Kasım 2026: anomali görülene kadar canlı ekranda; "Gördüm" / "Tümünü gördüm" (kim, ne zaman). Süreye ve onaya dokunmaz |
+| ~~`study_tables` ertelenen sütunları~~ | S | ✅ 7 Kasım 2026: `assigned_student_id` (sabit üye; başkasına uyarı, engel yok), `location_id` yerine `area` (bölüm; `locations` stok yeri), `status` bilerek yok (listede açık oturumdan Boş/Dolu) |
+| ~~Görevliye masa yönetimi erişimi~~ | S | ✅ 7 Kasım 2026: masa rotaları `role:admin,staff`; görevli girişte Masalar'a iner. Silme yalnızca yöneticide |
 | Gerçek e-posta sağlayıcısı | S | `MAIL_MAILER=log`; Dalga 11'in önkoşulu |
 
 ### 4.3 Rafta
@@ -931,8 +931,8 @@ yazdırma ve QR ekranları "henüz yayında değil" uyarısı gösteriyor. Uyar�
 **varlığına** bağlı — Dalga 3 rotayı ekleyince kendiliğinden kaybolur, kimsenin
 eski bir metni silmesi gerekmez.
 
-**Erişim:** §6.2 matrisinde masa yönetimi görevliye de açık ama `AdminMiddleware`
-yalnızca yöneticiyi geçiriyor; görevli erişimi kendi paneliyle gelecek.
+**Erişim:** §6.2 matrisinde masa yönetimi görevliye de açık. 7 Kasım 2026'dan beri
+masa rotaları `role:admin,staff` (silme yalnızca yöneticide).
 
 #### Dalga 3 — Oturum + canlı ekran (MVP #2, #9) · ✅ bitti
 

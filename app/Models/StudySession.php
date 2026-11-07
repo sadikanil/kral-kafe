@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ApprovalStatus;
 use App\Support\GeoDistance;
+use App\Support\LocalDay;
 use App\Enums\SessionEndReason;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -43,6 +44,7 @@ class StudySession extends Model
         'end_reason' => SessionEndReason::class,
         'approval_status' => ApprovalStatus::class,
         'reviewed_at' => 'datetime',
+        'anomaly_seen_at' => 'datetime',
     ];
 
     /**
@@ -363,5 +365,37 @@ class StudySession extends Model
         $this->refresh();
 
         return $etkilenen === 1;
+    }
+    /**
+     * Gorulmemis sure asimi anomalileri (7 Kasim 2026). Gorulene kadar canli
+     * ekranda kalir; eskiden 7 gunluk pencere sessizce kapaniyordu. Ozellik
+     * geldiginde 7 gunden eski olanlari migration "gorulmus" saydi (o
+     * pencereden zaten dusmuslerdi; anomaly_seen_by bos = sistem).
+     */
+    public function scopeUnseenAnomalies(Builder $query): Builder
+    {
+        return $query->where('end_reason', SessionEndReason::OverLimit)
+            ->whereNull('anomaly_seen_at');
+    }
+
+    public function isUnseenAnomaly(): bool
+    {
+        return $this->end_reason === SessionEndReason::OverLimit && $this->anomaly_seen_at === null;
+    }
+
+    /** Ilk isaretleyen kalir: iki yonetici ayni anda basarsa kayit ezilmez. */
+    public function markAnomalySeen(User $kim): void
+    {
+        static::whereKey($this->getKey())
+            ->where('end_reason', SessionEndReason::OverLimit)
+            ->whereNull('anomaly_seen_at')
+            ->update(['anomaly_seen_at' => now(), 'anomaly_seen_by' => $kim->id]);
+
+        $this->refresh();
+    }
+
+    public function anomalySeenBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'anomaly_seen_by');
     }
 }

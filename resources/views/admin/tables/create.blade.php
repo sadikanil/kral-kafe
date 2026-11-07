@@ -23,6 +23,8 @@
                     </small>
                 </div>
 
+                @include('admin.tables._alanlar', ['table' => null])
+
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">Kaydet</button>
                     <a href="{{ route('admin.tables.index') }}" class="btn btn-secondary">Vazgeç</a>

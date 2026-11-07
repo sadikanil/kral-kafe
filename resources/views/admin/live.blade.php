@@ -34,13 +34,25 @@
         </div>
     </div>
 
+    {{-- Anomali gorulene kadar burada (7 Kasim 2026): eskiden yalniz son 7
+         gun gorunuyordu ve bakilmayan sessizce kayboluyordu. --}}
     @if($anomalies->isNotEmpty())
         <div class="card mb-3">
             <div class="card-body">
-                <h4 class="mb-2">Son 7 günün anomalileri</h4>
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                    <h4 class="mb-0">Görülmemiş anomaliler ({{ $anomalies->count() }})</h4>
+                    @if($anomalies->count() > 1)
+                        <form action="{{ route('admin.sessions.anomalies-seen') }}" method="POST"
+                              data-confirm="{{ $anomalies->count() }} anomalinin hepsi görüldü olarak işaretlensin mi?">
+                            @csrf
+                            <button type="submit" class="btn btn-secondary btn-sm">Tümünü gördüm</button>
+                        </form>
+                    @endif
+                </div>
                 <p class="text-muted mb-3" style="font-size: 0.8125rem;">
                     Bu oturumlar azami süreyi aştığı için otomatik kapatıldı. Çıkış
                     yapmayı unutmuş olabilirler; süreleri gerçek çalışmayı yansıtmayabilir.
+                    "Gördüm" süreyi ya da onayı değiştirmez; yalnızca listeden kaldırır.
                 </p>
 
                 @foreach($anomalies as $anomali)
@@ -49,12 +61,18 @@
                             <strong>{{ $anomali->student->name }}</strong>
                             <div class="text-muted" style="font-size: 0.8125rem;">
                                 {{ $anomali->table->name }} ·
-                                {{ $anomali->started_at->timezone(config('kafe.timezone'))->format('H:i') }}
+                                {{ $anomali->started_at->timezone(config('kafe.timezone'))->format('d.m H:i') }}
                                 –
-                                {{ $anomali->ended_at->timezone(config('kafe.timezone'))->format('H:i') }}
+                                {{ $anomali->ended_at->timezone(config('kafe.timezone'))->format('d.m H:i') }}
                             </div>
                         </div>
-                        <span class="badge badge-danger">Süre aşımı</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge badge-danger">Süre aşımı</span>
+                            <form action="{{ route('admin.sessions.anomaly-seen', $anomali) }}" method="POST">
+                                @csrf
+                                <button type="submit" class="btn btn-secondary btn-sm" aria-label="Gördüm: {{ $anomali->student->name }}">Gördüm</button>
+                            </form>
+                        </div>
                     </div>
                 @endforeach
             </div>

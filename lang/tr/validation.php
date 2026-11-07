@@ -190,6 +190,8 @@ return [
     */
 
     'attributes' => [
+        'area' => 'bölüm',
+        'assigned_student_id' => 'sabit üye',
         'lesson_count' => 'özel ders sayısı',
         'weekday' => 'gün',
         'is_coach' => 'koçluk yetkisi',

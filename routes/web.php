@@ -182,6 +182,24 @@ Route::middleware(['auth', 'role:coach,admin'])->prefix('koc')->name('coach.')->
 });
 
 // Admin Routes
+// Masa yonetimi yonetici VE gorevliye acik (README SS6.2 yetki matrisi; 7 Kasim
+// 2026). Adlar ve adresler yonetim paneliyle ayni; yalnizca kapi genis.
+// Silme yonetim grubunda kaldi: gecmisi olan masa zaten silinmez, gorevlinin
+// isi masayi kapatmak.
+Route::middleware(['auth', 'role:admin,staff'])->prefix('yonetim')->name('admin.')->group(function () {
+    // Masalar (locations'tan ayri: raf/dolap degil, ogrencinin oturdugu yer)
+    Route::get('/masalar-qr-yazdir', [StudyTableController::class, 'printQr'])->name('tables.print-qr');
+    Route::resource('masalar', StudyTableController::class)->except(['show', 'destroy'])->names([
+        'index' => 'tables.index',
+        'create' => 'tables.create',
+        'store' => 'tables.store',
+        'edit' => 'tables.edit',
+        'update' => 'tables.update',
+    ])->parameters(['masalar' => 'table']);
+    Route::get('/masalar/{table}/qr', [StudyTableController::class, 'qr'])->name('tables.qr');
+    Route::post('/masalar/{table}/durum', [StudyTableController::class, 'toggleStatus'])->name('tables.toggle-status');
+});
+
 Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(function () {
     // Dashboard
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
@@ -256,18 +274,14 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
     Route::post('/oturumlar/{session}/reddet', [SessionApprovalController::class, 'reject'])
         ->name('sessions.reject');
 
-    // Masalar (locations'tan ayri: raf/dolap degil, ogrencinin oturdugu yer)
-    Route::get('/masalar-qr-yazdir', [StudyTableController::class, 'printQr'])->name('tables.print-qr');
-    Route::resource('masalar', StudyTableController::class)->except(['show'])->names([
-        'index' => 'tables.index',
-        'create' => 'tables.create',
-        'store' => 'tables.store',
-        'edit' => 'tables.edit',
-        'update' => 'tables.update',
-        'destroy' => 'tables.destroy',
-    ])->parameters(['masalar' => 'table']);
-    Route::get('/masalar/{table}/qr', [StudyTableController::class, 'qr'])->name('tables.qr');
-    Route::post('/masalar/{table}/durum', [StudyTableController::class, 'toggleStatus'])->name('tables.toggle-status');
+    // Sure asimi anomalisine "gordum" (7 Kasim 2026)
+    Route::post('/oturumlar/anomaliler/goruldu', [\App\Http\Controllers\Admin\AnomalyController::class, 'seenAll'])
+        ->name('sessions.anomalies-seen');
+    Route::post('/oturumlar/{session}/anomali-goruldu', [\App\Http\Controllers\Admin\AnomalyController::class, 'seen'])
+        ->name('sessions.anomaly-seen');
+
+    // Masalar: silme yalnizca yoneticide; geri kalani gorevliyle ortak (asagida).
+    Route::delete('/masalar/{table}', [StudyTableController::class, 'destroy'])->name('tables.destroy');
 
     // Paketler ve odeme (Dalga 7)
     Route::resource('paketler', PackageController::class)->except(['show', 'destroy'])->names([
