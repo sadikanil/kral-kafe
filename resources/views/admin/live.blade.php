@@ -4,7 +4,7 @@
 @section('page-title', 'Canlı Ekran')
 
 @section('page-actions')
-    <button onclick="window.location.reload()" class="btn btn-secondary btn-sm">↻ Yenile</button>
+    <button type="button" data-yenile class="btn btn-secondary btn-sm">↻ Yenile</button>
 @endsection
 
 @section('content')
@@ -192,7 +192,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script @nonce>
     (function () {
         const durum = document.getElementById('canli-durum');
         const bekleme = Number(durum.dataset.kendiniYenile) * 1000;

@@ -330,7 +330,7 @@
 @endsection
 
 @push('scripts')
-    <script>
+    <script @nonce>
         document.querySelectorAll('.js-counted').forEach(function (input) {
             var target = document.getElementById(input.dataset.target);
 

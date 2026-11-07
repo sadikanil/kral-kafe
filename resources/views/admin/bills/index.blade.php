@@ -126,7 +126,7 @@
                                     </span>
                                     @unless($odeme->isReversed())
                                         <form method="POST" action="{{ route('admin.bills.payments.reverse', $odeme) }}"
-                                            onsubmit="return confirm('{{ $para($odeme->amount) }} ödeme geri alınsın mı? Kayıt geçmişte kalır.');">
+                                            data-confirm="{{ $para($odeme->amount) }} ödeme geri alınsın mı? Kayıt geçmişte kalır.">
                                             @csrf
                                             <button type="submit" class="btn btn-secondary" aria-label="{{ $para($odeme->amount) }} ödemeyi geri al">Geri al</button>
                                         </form>

@@ -170,6 +170,19 @@ return [
 
     'yedek_adres' => rtrim((string) env('KAFE_YEDEK_ADRES', ''), '/'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Content-Security-Policy (7 Kasim 2026)
+    |--------------------------------------------------------------------------
+    |
+    | enforce (varsayilan): nonce'suz betik calismaz. report: yalnizca
+    | tarayici konsoluna yazar, engellemez. off: baslik gonderilmez.
+    | Canlida bir sayfa kirilirsa "report" yapip yeniden dagit (App\Support\Csp).
+    |
+    */
+
+    'csp' => env('KAFE_CSP', 'enforce'),
+
 
     /*
     |--------------------------------------------------------------------------

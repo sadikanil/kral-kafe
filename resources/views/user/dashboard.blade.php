@@ -40,7 +40,7 @@
             <div class="session-actions">
                 <a href="{{ route('session.timer') }}" class="btn btn-primary">⏱ Sayaca git</a>
                 <form action="{{ route('session.end') }}" method="POST"
-                      onsubmit="return confirm('Bugünkü çalışmayı bitirmek istiyor musun?')">
+                      data-confirm="Bugünkü çalışmayı bitirmek istiyor musun?">
                     @csrf
                     <button type="submit" class="btn btn-secondary">Bitir</button>
                 </form>

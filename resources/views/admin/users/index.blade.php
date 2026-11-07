@@ -10,7 +10,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script @nonce>
     // Satir menusu: biri acilinca digerleri kapanir; disariya dokununca kapanir.
     (function () {
         const menuler = document.querySelectorAll('.row-menu');
@@ -154,18 +154,18 @@
                                                 <a href="{{ route('admin.exam-reports.index', $user) }}">Deneme raporları ve sonuç</a>
                                             @endif
                                             @if($user->id !== auth()->id())
-                                                {{-- A5: onay soran ve adi soyleyen askiya alma. Ad @js ile:
-                                                     kesme isaretli ad onay kutusunu bozmasin. --}}
+                                                {{-- A5: onay soran ve adi soyleyen askiya alma. Ad data-confirm'da
+                                                     (kabuk.js): kesme isaretli ad onay kutusunu bozmaz. --}}
                                                 @php $askiyaAl = $user->subscription_status == 'active'; @endphp
                                                 <form action="{{ route('admin.users.toggle-status', $user) }}" method="POST"
-                                                    onsubmit="return confirm(@js($user->name . ($askiyaAl ? ' askıya alınsın mı?' : ' aktifleştirilsin mi?')))">
+                                                    data-confirm="{{ $user->name . ($askiyaAl ? ' askıya alınsın mı?' : ' aktifleştirilsin mi?') }}">
                                                     @csrf
                                                     <button type="submit" aria-label="{{ ($askiyaAl ? 'Askıya al: ' : 'Aktifleştir: ') . $user->name }}">
                                                         {{ $askiyaAl ? 'Askıya al' : 'Aktifleştir' }}
                                                     </button>
                                                 </form>
                                                 <form action="{{ route('admin.users.destroy', $user) }}" method="POST"
-                                                    onsubmit="return confirm(@js($user->name . ' silinsin mi? Bu geri alınamaz.'))">
+                                                    data-confirm="{{ $user->name . ' silinsin mi? Bu geri alınamaz.' }}">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="text-danger" aria-label="Sil: {{ $user->name }}">Sil</button>
@@ -196,7 +196,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script @nonce>
     // Satir menusu: biri acilinca digerleri kapanir; disariya dokununca kapanir.
     (function () {
         const menuler = document.querySelectorAll('.row-menu');

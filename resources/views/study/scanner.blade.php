@@ -58,7 +58,7 @@
 @endsection
 
 @push('scripts')
-    <script>
+    <script @nonce>
         // Okuyucu bilerek "en iyi ihtimal" olarak yaziliyor: calisirsa bir
         // dokunus kazandirir, calismazsa asagidaki elle giris formu zaten
         // duruyor. Bu yuzden hicbir hata ogrenciyi ekranda kilitlemiyor.
@@ -66,9 +66,11 @@
         // Iki cozucu var (QA a11y A4): BarcodeDetector (Android Chrome) ve
         // YOKSA jsQR. iPhone Safari'de BarcodeDetector yok; yedek olmadan her
         // iPhone'lu ogrenci kodu elle yaziyordu. jsQR yalnizca gerektiginde,
-        // sabit surum ve butunluk ozetiyle yuklenir.
+        // sabit surum ve butunluk ozetiyle yuklenir. Dosya kendi sunucumuzda
+        // (public/js/vendor, jsqr@1.4.0, Apache-2.0): CSP disaridan betik
+        // almaz (7 Kasim 2026); ozet CDN'deki dosyayla ayni.
         (function () {
-            const JSQR_ADRESI = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+            const JSQR_ADRESI = @js(\App\Support\Asset::url('js/vendor/jsQR.js'));
             const JSQR_OZETI = 'sha384-b5Ya4Bq3qCyz39m2ISh+4DxjAIljdeFwK/BsXLuj9gugaNwAcj/ia15fxNZL9Nlx';
 
             const video = document.getElementById('js-scanner-video');

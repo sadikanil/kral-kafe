@@ -68,7 +68,7 @@
                 @endif
                 <a href="{{ route('admin.exam-imports.pdf', $import) }}" class="btn btn-sm btn-secondary" target="_blank">PDF'i aç</a>
                 <form method="POST" action="{{ route('admin.exam-imports.destroy', $import) }}"
-                      onsubmit="return confirm('Aktarım ve PDF silinsin mi? Yayınlanmış sonuçlar üyede kalır.')">
+                      data-confirm="Aktarım ve PDF silinsin mi? Yayınlanmış sonuçlar üyede kalır.">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-sm btn-danger">Sil</button>
                 </form>
@@ -128,7 +128,7 @@
 
         @if(in_array($import->status, [\App\Models\ExamImport::REVIEW, \App\Models\ExamImport::PUBLISHED], true))
             <form method="POST" action="{{ route('admin.exam-imports.publish', $import) }}"
-                  onsubmit="return confirm('Sonuçlar üye panellerine yazılsın ve bildirim gönderilsin mi?')">
+                  data-confirm="Sonuçlar üye panellerine yazılsın ve bildirim gönderilsin mi?">
                 @csrf
                 <button type="submit" class="btn btn-primary btn-block">
                     {{ $import->status === \App\Models\ExamImport::PUBLISHED ? 'Düzeltmeleri yeniden yayınla' : 'Sonuçları yayınla' }}
@@ -142,7 +142,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script @nonce>
 (function () {
     // Okuma dongusu: her istek tek adim (Vercel 60 sn). Hata olursa durur,
     // "Devam et" dugmesi kalir. Bitince sayfa yenilenir.

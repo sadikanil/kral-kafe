@@ -51,7 +51,7 @@
             </div>
             <p class="form-text mb-2">Eski paket geçiş gününden bir gün önce biter; yeni paket o gün başlar ve eskinin bitiş gününe kadar sürer.</p>
             <button type="submit" class="btn btn-primary"
-                    onclick="return confirm('Paket seçilen günden itibaren değişecek. Emin misin?')">Paketi değiştir</button>
+                    data-confirm="Paket seçilen günden itibaren değişecek. Emin misin?">Paketi değiştir</button>
         </form>
     </div>
 </div>

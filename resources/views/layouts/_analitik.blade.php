@@ -13,7 +13,7 @@
     Vercel'e gitmez.
 --}}
 @production
-    <script>
+    <script @nonce>
         (function () {
             function temizle(olay) {
                 var adres = new URL(olay.url);
@@ -32,6 +32,6 @@
             window.si('beforeSend', temizle);
         })();
     </script>
-    <script defer src="/_vercel/insights/script.js"></script>
-    <script defer src="/_vercel/speed-insights/script.js"></script>
+    <script @nonce defer src="/_vercel/insights/script.js"></script>
+    <script @nonce defer src="/_vercel/speed-insights/script.js"></script>
 @endproduction

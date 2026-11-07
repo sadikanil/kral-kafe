@@ -29,7 +29,7 @@
 <small class="text-muted d-block mb-3">Planlarda yalnızca üyenin sorumlu olduğu dersler çıkar. Alan 11. sınıftan itibaren.</small>
 
 @push('scripts')
-<script>
+<script @nonce>
     (function () {
         const sinif = document.getElementById('grade');
         const alan = document.getElementById('alanBolumu');

@@ -117,7 +117,7 @@
                             </span>
                             @if($kayit->session?->ended_at === null)
                                 <form action="{{ route('session.logs.destroy', $kayit) }}" method="POST"
-                                      onsubmit="return confirm('Bu kaydı silmek istiyor musun?')">
+                                      data-confirm="Bu kaydı silmek istiyor musun?">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-secondary" aria-label="Sil">✕</button>
                                 </form>
@@ -131,7 +131,7 @@
         </div>
     </div>
 
-    <form action="{{ route('session.end') }}" method="POST" onsubmit="return confirm('Bugünkü çalışmayı bitirmek istiyor musun?')">
+    <form action="{{ route('session.end') }}" method="POST" data-confirm="Bugünkü çalışmayı bitirmek istiyor musun?">
         @csrf
         <button type="submit" class="btn btn-danger btn-block">Çalışmayı bitir</button>
     </form>
@@ -153,7 +153,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script @nonce>
 (function () {
     const kutu = document.getElementById('sayac');
     const hatirlaticilar = @json($reminders);

@@ -153,7 +153,7 @@
             </div>
             <div class="card-body">
                 <form method="POST" action="{{ route('admin.stock.resolve-discrepancy', $discrepancy) }}"
-                      onsubmit="return confirm('Bu tutarsızlığı çözümlendi olarak işaretlemek istediğinize emin misiniz?')">
+                      data-confirm="Bu tutarsızlığı çözümlendi olarak işaretlemek istediğinize emin misiniz?">
                     @csrf
 
                     <div class="form-group">

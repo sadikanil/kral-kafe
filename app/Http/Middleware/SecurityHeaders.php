@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Csp;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,9 +19,11 @@ use Symfony\Component\HttpFoundation\Response;
  * barindirmada da surumun sizmamasi icin.
  *
  * HSTS burada yok: Vercel kendi alan adlarinda gonderiyor (canlida
- * "max-age=63072000; includeSubDomains; preload" goruldu). CSP de yok:
- * sayfalardaki satir ici betikler nonce'a tasinmadan acilirsa uygulama
- * kirilir (docs/security/php2shell.md, sonraki adimlar).
+ * "max-age=63072000; includeSubDomains; preload" goruldu).
+ *
+ * CSP (7 Kasim 2026): satir ici betikler nonce'a tasindi; politika ve mod
+ * App\Support\Csp'de. Hata ayiklama acikken 5xx sayfasinda gonderilmez:
+ * Laravel'in hata sayfasi kendi satir ici betikleriyle gelir.
  */
 class SecurityHeaders
 {
@@ -41,6 +44,8 @@ class SecurityHeaders
             }
         }
 
+        $this->csp($response);
+
         $response->headers->remove('X-Powered-By');
 
         if (! headers_sent()) {
@@ -48,5 +53,19 @@ class SecurityHeaders
         }
 
         return $response;
+    }
+
+    private function csp(Response $response): void
+    {
+        $ad = Csp::basliginAdi();
+
+        if ($ad === null
+            || $response->headers->has('Content-Security-Policy')
+            || $response->headers->has('Content-Security-Policy-Report-Only')
+            || (config('app.debug') && $response->getStatusCode() >= 500)) {
+            return;
+        }
+
+        $response->headers->set($ad, Csp::politika(Csp::nonce()));
     }
 }

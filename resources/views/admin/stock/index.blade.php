@@ -24,7 +24,7 @@
         <div class="card-body d-flex gap-2 align-items-end" style="flex-wrap: wrap;">
             <div class="form-group mb-0" style="min-width: 180px;">
                 <label for="konum" class="form-label">Konum</label>
-                <select id="konum" name="konum" class="form-control" onchange="this.form.submit()">
+                <select id="konum" name="konum" class="form-control" data-otomatik-gonder>
                     <option value="">Tümü</option>
                     @foreach($locations as $konum)
                         <option value="{{ $konum->id }}" @selected((int) ($filter['konum'] ?? 0) === $konum->id)>{{ $konum->name }}</option>
@@ -33,7 +33,7 @@
             </div>
             <div class="form-group mb-0" style="min-width: 180px;">
                 <label for="durum" class="form-label">Durum</label>
-                <select id="durum" name="durum" class="form-control" onchange="this.form.submit()">
+                <select id="durum" name="durum" class="form-control" data-otomatik-gonder>
                     <option value="">Tümü</option>
                     <option value="critical" @selected(($filter['durum'] ?? '') === 'critical')>Kritik ve tükenen</option>
                     <option value="ok" @selected(($filter['durum'] ?? '') === 'ok')>Yeterli</option>

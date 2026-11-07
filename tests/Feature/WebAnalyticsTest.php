@@ -15,10 +15,14 @@ class WebAnalyticsTest extends TestCase
 
         $this->app['env'] = 'production';
 
-        $this->get(route('login'))->assertOk()
-            ->assertSee('<script defer src="/_vercel/insights/script.js"></script>', false)
-            ->assertSee('<script defer src="/_vercel/speed-insights/script.js"></script>', false)
+        $yanit = $this->get(route('login'))->assertOk()
             ->assertSee("window.va('beforeSend', temizle)", false)
             ->assertSee("window.si('beforeSend', temizle)", false);
+
+        // Ayni kaynak (CSP 'self') ve istegin nonce'u (satir ici temizle bloku icin).
+        $html = $yanit->getContent();
+        $this->assertMatchesRegularExpression('#<script nonce="[^"]+" defer src="/_vercel/insights/script\.js"></script>#', $html);
+        $this->assertMatchesRegularExpression('#<script nonce="[^"]+" defer src="/_vercel/speed-insights/script\.js"></script>#', $html);
+        $this->assertMatchesRegularExpression('#<script nonce="[^"]+">\s*\(function \(\) \{\s*function temizle#', $html);
     }
 }

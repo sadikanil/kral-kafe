@@ -87,7 +87,7 @@
 @endsection
 
 @push('scripts')
-    <script>
+    <script @nonce>
         // konum:bas
         // Konum ISTEGE BAGLI. Izin reddedilirse ya da zaman asimina ugrarsa
         // alanlar bos kalir ve oturum yine baslar - sunucu tarafi da oyle

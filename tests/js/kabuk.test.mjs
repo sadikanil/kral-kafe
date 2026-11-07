@@ -433,3 +433,34 @@ test('acilista var olan balon metni yeniden yazilir ki ekran okuyucu duysun', ()
     bekleyen.splice(0).forEach((is) => is());
     assert.equal(mesaj.textContent, 'Adisyona eklendi');
 });
+
+// --- Satir ici olay yerine nitelik (CSP) -----------------------------------
+
+function nitelikli(etiket, nitelik, ata = null, form = null) {
+    const e = new Eleman(etiket, nitelik);
+    e.closest = (secici) => {
+        const ad = secici.slice(1, -1);
+        if (e.getAttribute(ad) !== null) return e;
+        return ata && ata.getAttribute(ad) !== null ? ata : null;
+    };
+    e.hasAttribute = (ad) => e.getAttribute(ad) !== null;
+    e.form = form;
+    return e;
+}
+
+test('data-yazdir ve data-yenile dugmeleri (ve icindeki simge) eylem verir', () => {
+    const yazdir = nitelikli('button', { 'data-yazdir': '' });
+    const simge = nitelikli('span', {}, yazdir);
+    assert.equal(k.eylem('click', yazdir), 'yazdir');
+    assert.equal(k.eylem('click', simge), 'yazdir');
+    assert.equal(k.eylem('click', nitelikli('button', { 'data-yenile': '' })), 'yenile');
+    assert.equal(k.eylem('click', nitelikli('button', {})), null);
+});
+
+test('data-otomatik-gonder yalnizca formdaki secimde ve change olayinda gonderir', () => {
+    const form = new Eleman('form');
+    assert.equal(k.eylem('change', nitelikli('select', { 'data-otomatik-gonder': '' }, null, form)), 'gonder');
+    assert.equal(k.eylem('change', nitelikli('select', { 'data-otomatik-gonder': '' })), null);
+    assert.equal(k.eylem('click', nitelikli('select', { 'data-otomatik-gonder': '' }, null, form)), null);
+    assert.equal(k.eylem('change', null), null);
+});

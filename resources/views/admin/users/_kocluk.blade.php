@@ -30,7 +30,7 @@
 </div>
 
 @push('scripts')
-<script>
+<script @nonce>
     (function () {
         const rol = document.getElementById('role');
         const yetki = document.querySelector('.js-koc-yetkisi');

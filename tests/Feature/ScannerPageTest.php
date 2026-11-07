@@ -47,15 +47,25 @@ class ScannerPageTest extends TestCase
 
     /**
      * Yedek cozucu yalnizca BarcodeDetector yoksa, sabit surum ve butunluk
-     * ozetiyle yuklenir; sayfada sabit bir <script src> olarak durmaz.
+     * ozetiyle yuklenir; sayfada sabit bir <script src> olarak durmaz. Dosya
+     * kendi sunucumuzda: CSP disaridan betik almaz (7 Kasim 2026).
      */
     public function test_the_fallback_decoder_is_loaded_lazily_with_integrity(): void
     {
         $html = $this->sayfa();
 
-        $this->assertStringContainsString("'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'", $html);
+        $this->assertMatchesRegularExpression("#JSQR_ADRESI = '[^']*\\\\/js\\\\/vendor\\\\/jsQR\\.js\\?v=[0-9a-f]{12}';#", $html);
+        $this->assertStringNotContainsString('cdn.jsdelivr.net', $html);
         $this->assertStringContainsString("'sha384-b5Ya4Bq3qCyz39m2ISh+4DxjAIljdeFwK/BsXLuj9gugaNwAcj/ia15fxNZL9Nlx'", $html);
-        $this->assertDoesNotMatchRegularExpression('/<script[^>]+src="https:\/\/cdn\.jsdelivr\.net\/npm\/jsqr/', $html);
+        $this->assertDoesNotMatchRegularExpression('/<script[^>]+src="[^"]*jsQR/', $html);
+    }
+
+    /** Kendi sunucumuzdaki dosya, ozetin hesaplandigi CDN dosyasiyla ayni. */
+    public function test_the_self_hosted_decoder_matches_the_integrity_hash(): void
+    {
+        $ozet = 'sha384-' . base64_encode(hash_file('sha384', public_path('js/vendor/jsQR.js'), true));
+
+        $this->assertSame('sha384-b5Ya4Bq3qCyz39m2ISh+4DxjAIljdeFwK/BsXLuj9gugaNwAcj/ia15fxNZL9Nlx', $ozet);
     }
 
     /** @return array<string,array{0:string,1:?string}> okunan deger, gidilecek adres */

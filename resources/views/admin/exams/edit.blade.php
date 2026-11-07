@@ -21,7 +21,7 @@
                  gostermedigi icin onlar baska hicbir yerden silinemiyordu.
                  Form ayri: PUT formunun icine gomulemez. --}}
             <form action="{{ route('admin.exams.destroy', $exam) }}" method="POST" class="mt-3"
-                onsubmit="return confirm('Bu deneme takvimden kaldırılsın mı? Girilmiş sonuçları da silinir.');">
+                data-confirm="Bu deneme takvimden kaldırılsın mı? Girilmiş sonuçları da silinir.">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn btn-danger">Kaldır</button>

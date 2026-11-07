@@ -1903,6 +1903,7 @@ Ardından `http://127.0.0.1:8000`. Hepsini birden (sunucu + kuyruk + log + vite)
 | `EXAM_AI_EFFORT` | Düşünme derinliği; aktarım işi olduğu için varsayılan `low`. Claude'da `effort`, Gemini 3 ve sonrasında `thinkingLevel` (`minimal`/`low`/`medium`/`high`) olur. Okuma hatası görülürse `medium`; karneler 50 sn'yi aşıyorsa `minimal`. |
 | `UPLOAD_DISK` | Yüklenen dosyaların gideceği disk. Yerelde `public`, serverless ortamda `s3`. |
 | `MAIL_MAILER` | Şifre sıfırlama e-postası. Varsayılan `log`; gerçek gönderim için SMTP gerekir. |
+| `KAFE_CSP` | Content-Security-Policy modu: `enforce` (varsayılan), `report` (yalnızca konsola yazar, engellemez), `off`. Canlıda bir düğme çalışmazsa `report` yapıp yeniden dağıt. Satır içi betik `<script @nonce>` ile yazılır; `onclick`/`onsubmit` yerine `data-confirm`, `data-yazdir`, `data-yenile`, `data-otomatik-gonder` (`public/js/kabuk.js`). |
 | `WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY` | İsteğe bağlı. Telefon bildirimi VAPID anahtarı (base64url açık anahtar + PEM özel anahtar). Boşsa ilk kullanımda üretilip `settings` tablosuna yazılır. |
 
 ### 11.2 Testler

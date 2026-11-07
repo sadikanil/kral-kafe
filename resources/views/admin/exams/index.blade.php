@@ -43,7 +43,7 @@
                                     <td class="text-right">
                                         <a href="{{ route('admin.exams.edit', $deneme) }}" class="btn btn-secondary btn-sm">Düzenle</a>
                                         <form action="{{ route('admin.exams.destroy', $deneme) }}" method="POST" class="d-inline-block"
-                                            onsubmit="return confirm('Bu deneme takvimden kaldırılsın mı?');">
+                                            data-confirm="Bu deneme takvimden kaldırılsın mı?">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-danger btn-sm">Kaldır</button>

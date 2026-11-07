@@ -115,7 +115,7 @@
                             <a href="{{ route('admin.users.edit', $saat->student) }}" class="list-row-title">{{ $saat->student->name }}</a>
                             <span class="list-row-sub">Her {{ $saat->label() }}{{ $saat->branch ? ' · ' . $saat->branch : '' }}</span>
                         </span>
-                        <form method="POST" action="{{ route('admin.lessons.destroy', $saat) }}" onsubmit="return confirm('Bu haftalık saat kaldırılsın mı?')">
+                        <form method="POST" action="{{ route('admin.lessons.destroy', $saat) }}" data-confirm="Bu haftalık saat kaldırılsın mı?">
                             @csrf @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-secondary">Kaldır</button>
                         </form>
@@ -129,7 +129,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script @nonce>
 (function () {
     document.querySelectorAll('.js-ogrenci-ara').forEach(function (ara) {
         const liste = document.getElementById(ara.dataset.liste);

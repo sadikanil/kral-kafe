@@ -4,7 +4,7 @@
 @section('page-title', 'Masa QR Kodlarını Yazdır')
 
 @section('page-actions')
-    <button onclick="window.print()" class="btn btn-primary btn-sm">🖨️ Yazdır</button>
+    <button type="button" data-yazdir class="btn btn-primary btn-sm">🖨️ Yazdır</button>
 @endsection
 
 @section('content')

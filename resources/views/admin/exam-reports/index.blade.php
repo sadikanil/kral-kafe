@@ -80,7 +80,7 @@
                         <button type="submit" class="btn btn-secondary btn-sm">{{ $report->isAnalyzed() ? 'Yeniden analiz et' : 'Analiz et' }}</button>
                     </form>
                     <form action="{{ route('admin.exam-reports.destroy', $report) }}" method="POST" class="d-inline-block"
-                        onsubmit="return confirm('Rapor ve PDF silinsin mi?');">
+                        data-confirm="Rapor ve PDF silinsin mi?">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger btn-sm">Kaldır</button>

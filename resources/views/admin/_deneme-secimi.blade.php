@@ -70,7 +70,7 @@
 </fieldset>
 
 @pushOnce('scripts')
-<script>
+<script @nonce>
     (function () {
         document.querySelectorAll('.js-deneme-secimi').forEach(function (secim) {
             const alan = secim.closest('form').querySelector('.js-yeni-deneme');

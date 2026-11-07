@@ -51,9 +51,9 @@
          ucuncu taraf baglantisi kadar bekletiyordu. --}}
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/app.css') }}">
     {{-- Cift gonderim kilidi, menu, zil, hata ozeti, onay, balon (bkz. dosya basi). --}}
-    <script src="{{ \App\Support\Asset::url('js/kabuk.js') }}" defer></script>
+    <script @nonce src="{{ \App\Support\Asset::url('js/kabuk.js') }}" defer></script>
     {{-- Telefon bildirimi (6 Ekim 2026): abonelik, zil onerisi, cikista birakma. --}}
-    <script src="{{ \App\Support\Asset::url('js/bildirim.js') }}" defer></script>
+    <script @nonce src="{{ \App\Support\Asset::url('js/bildirim.js') }}" defer></script>
 
     @stack('styles')
     @include('layouts._analitik')

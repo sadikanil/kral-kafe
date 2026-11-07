@@ -27,7 +27,7 @@
     {{-- Yazi tipi sistemden (app.css --font-sans); ucuncu taraf font yok. --}}
     <link rel="stylesheet" href="{{ \App\Support\Asset::url('css/app.css') }}">
     {{-- Cift gonderim kilidi: sifre sifirlama e-postasi iki kez gitmesin. --}}
-    <script src="{{ \App\Support\Asset::url('js/kabuk.js') }}" defer></script>
+    <script @nonce src="{{ \App\Support\Asset::url('js/kabuk.js') }}" defer></script>
     @include('layouts._analitik')
 </head>
 

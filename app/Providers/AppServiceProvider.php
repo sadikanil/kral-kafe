@@ -44,5 +44,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Dalga 30a: varsayilan sayfalama Tailwind'e gore; bizimki elle CSS.
         \Illuminate\Pagination\Paginator::defaultView('vendor.pagination.kafe');
+
+        // <script @nonce>: CSP'nin izin verdigi satir ici betik (App\Support\Csp).
+        \Illuminate\Support\Facades\Blade::directive('nonce', fn () => '<?php echo \'nonce="\' . e(\App\Support\Csp::nonce()) . \'"\'; ?>');
     }
 }

@@ -59,5 +59,5 @@
 </div>
 
 @push('scripts')
-    <script src="{{ \App\Support\Asset::url('js/odak.js') }}" defer></script>
+    <script @nonce src="{{ \App\Support\Asset::url('js/odak.js') }}" defer></script>
 @endpush
