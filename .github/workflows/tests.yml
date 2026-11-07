@@ -23,13 +23,13 @@ jobs:
           coverage: none
           tools: composer:v2
 
-      # Yalnizca bu is icin uretilen gecici anahtar; .env kopyalanmaz
-      # (phpunit.xml ortami yeterli, .env.example testlerin putenv'ini ezer).
-      - name: Gecici uygulama anahtari
-        run: echo "APP_KEY=base64:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
-
       - name: Composer bagimliliklari
         run: composer install --no-interaction --prefer-dist --no-progress
+
+      # "composer setup" ile ayni: testler .env'deki kafe ayarlarina dayaniyor
+      # (orn. SESSION_LIFETIME=900). Anahtar bu is icin uretilir, gizli degil.
+      - name: Ortam dosyasi
+        run: cp .env.example .env && php artisan key:generate --ansi
 
       - name: php2shell kapisi (PHP 8.4.27+)
         run: php artisan kafe:php-surumu --kesin

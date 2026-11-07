@@ -70,6 +70,7 @@ açığı. Yamalar 21 Ekim 2026'da çıktı ve sahada istismar ediliyor.
      - Kodda `$_SESSION`, `session_start` ve `PHP_SESSION_UPLOAD_PROGRESS` hiç geçmiyor.
 5. **Ortam şablonları**
    - **`.env.example`:** Yerel geliştirme için `APP_DEBUG=true` olarak kaldı; üretimde ne olması gerektiği yorum olarak eklendi. Boş `SESSION_SECURE_COOKIE=` yazılmasın: Laravel bunu `false` sayar ve HTTPS algılamasını kapatır.
+   - **`DB_EMULATE_PREPARES=false` satırı yoruma alındı:** Varsayılan zaten `false`. Satır dururken `composer setup` ile kurulan yeni ortamda iki test kırmızı kalıyordu; CI aynı şablonu kullanıyor.
    - **`.env.production.example`** (yeni, sır yok):
      - `APP_ENV=production`, `APP_DEBUG=false`.
      - `SESSION_SECURE_COOKIE=true`, `SESSION_ENCRYPT=true`, `LOG_CHANNEL=stderr`.
