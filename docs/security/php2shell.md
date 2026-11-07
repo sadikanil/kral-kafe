@@ -266,10 +266,10 @@ select routine_name from information_schema.routines where routine_schema = 'pub
 
 ## 5. Doğrulanamayanlar
 
-- **Testler PHP 8.4.27 üzerinde yerelde koşulamadı.** Çalışma ortamında PHP 8.3.6 vardı ve indirilen PHP ikilisini çalıştırma izni verilmedi.
-  - Testler 8.3.6'da yeşil.
-  - PHP 8.4 doğrulaması PR'daki CI'da yapılıyor.
-  - Derleme kapısı yine de yamasız bir PHP ile dağıtımı durdurur.
+- **Vercel'in kendi PHP 8.4.27 ikilisiyle test koşulmadı.** Çalışma ortamında PHP 8.3.6 vardı ve indirilen ikiliyi çalıştırma izni verilmedi.
+  - Testler yerelde 8.3.6'da yeşil.
+  - Testler GitHub Actions'ta, `shivammathur/setup-php` ile kurulan PHP 8.4.27'de de yeşil (1585/1585). `composer install` ve derleme kapısı da orada geçti.
+  - Vercel'in Amazon Linux 2023 derlemesi bundan farklı bir ikili. Fark ilk Vercel derlemesinde görülür; yamasızsa derleme kapısı dağıtımı durdurur.
 - **Vercel panel ayarları okunmadı** (kural gereği canlıya erişim yok): Node.js sürümü, `APP_DEBUG` ve oturum değişkenlerinin gerçek değerleri. §3.1 ve §3.5'te elle kontrol edilecek.
 - **libphp paketinin yamayı gerçekten içermesi:** Paketin içindeki ikili dosyanın `PHP/8.4.27` sürümünü taşıdığı görüldü. Yamanın içeriği ayrıca denetlenmedi.
 - **CVE ayrıntıları:** Bu belge yalnızca savunma ve tespit içeriyor; açığın teknik ayrıntısı bağımsız olarak doğrulanmadı.
