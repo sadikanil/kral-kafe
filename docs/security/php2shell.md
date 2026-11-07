@@ -294,4 +294,4 @@ Diğer işler:
 
 - **Content-Security-Policy:** Önce sayfalardaki satır içi betikler nonce'a taşınmalı; acele açılırsa uygulama kırılır.
 - **Kendi alan adı** (kralkafe.com) bağlanınca `curl -sI` ile HSTS başlığının orada da geldiğini kontrol et.
-- **Dependabot / haftalık `composer audit` + `npm audit`:** Bu sefer 11 Composer ve 5 npm bildirimi birikmişti.
+- ~~**Dependabot / haftalık `composer audit` + `npm audit`**~~ · ✅ 7 Kasım 2026: `.github/dependabot.yml` (haftalık, küçük sürümler tek PR'da, major kapalı) ve `.github/workflows/audit.yml` (Pazartesi 07:17, açık bulursa kırmızı). GitHub → Settings → Code security'de **Dependabot alerts** ve **security updates** açılmalı.

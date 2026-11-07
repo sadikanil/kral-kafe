@@ -1,0 +1,49 @@
+# Haftalik guvenlik denetimi (7 Kasim 2026): composer audit + npm audit.
+# Bir acik bulunursa is kirmiziya duser ve GitHub bildirim e-postasi gelir.
+# Major surume kapali Dependabot'un kacirabilecegini de bu yakalar.
+name: Bagimlilik denetimi
+
+on:
+  schedule:
+    # Pazartesi 04:17 UTC = 07:17 Istanbul (Dependabot 06:00'da PR acar)
+    - cron: '17 4 * * 1'
+  pull_request:
+    paths:
+      - composer.json
+      - composer.lock
+      - package.json
+      - package-lock.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  composer:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+          tools: composer:v2
+
+      # --locked: vendor kurmadan composer.lock'u denetler. Terk edilmis
+      # (abandoned) paket de hata sayilir (Composer varsayilani).
+      - name: composer audit
+        run: composer audit --locked --no-interaction
+
+  npm:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Gelistirme paketleri (Vite) de dahil: derleme bu araclarla yapiliyor.
+      - name: npm audit
+        run: npm audit --audit-level=low
