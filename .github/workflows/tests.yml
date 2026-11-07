@@ -1,0 +1,38 @@
+# Testler canlidaki PHP dalinda (8.4) kosar; once php2shell kapisi.
+# Ayrintilar: docs/security/php2shell.md
+name: Testler (PHP 8.4)
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite, sqlite3, intl, gd, zip
+          coverage: none
+          tools: composer:v2
+
+      # Yalnizca bu is icin uretilen gecici anahtar; .env kopyalanmaz
+      # (phpunit.xml ortami yeterli, .env.example testlerin putenv'ini ezer).
+      - name: Gecici uygulama anahtari
+        run: echo "APP_KEY=base64:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+
+      - name: Composer bagimliliklari
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: php2shell kapisi (PHP 8.4.27+)
+        run: php artisan kafe:php-surumu --kesin
+
+      - name: Testler
+        run: php artisan test

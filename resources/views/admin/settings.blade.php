@@ -52,6 +52,26 @@
             <p class="text-muted mt-2" id="js-konum-durum"></p>
         </form>
     </div>
+
+    {{-- php2shell (7 Kasim 2026): expose_php kapali oldugu icin surum yanit
+         basliginda yok; dagitimdan sonra buradan dogrulanir. --}}
+    <div class="session-card">
+        <strong>Sistem</strong>
+        <p class="mb-0">
+            PHP {{ $phpVersion }}
+            @if($phpPatched)
+                <span class="badge badge-success">Güvenlik yaması var</span>
+            @else
+                <span class="badge badge-danger">Güvenlik yaması yok</span>
+            @endif
+        </p>
+        @unless($phpPatched)
+            <p class="text-muted mt-2 mb-0">
+                Bu PHP sürümü php2shell (CVE-2026-109618 / CVE-2026-109619) yamasını taşımıyor.
+                Adımlar: docs/security/php2shell.md
+            </p>
+        @endunless
+    </div>
 @endsection
 
 @push('scripts')

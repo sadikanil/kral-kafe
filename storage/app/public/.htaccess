@@ -1,0 +1,10 @@
+# php2shell sertlestirmesi (7 Kasim 2026): bu dizin public/storage
+# baglantisiyla web'e acik ve yuklenen dosyalari tutar. Apache ile
+# barindirilirsa buradaki hicbir PHP betigi calistirilmaz ya da sunulmaz.
+<FilesMatch "\.(php[0-9]?|phtml|phar|pht)$">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
