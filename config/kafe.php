@@ -201,6 +201,25 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Onizleme veritabani (9 Kasim 2026)
+    |--------------------------------------------------------------------------
+    |
+    | Vercel onizlemeleri canli veritabanina DEGIL, ayri bir Supabase projesine
+    | (kral-kafe-onizleme) baglanir. kafe:onizleme-hazirla derleme sirasinda
+    | oraya migration ve bos ise demo verisi yazar. Iki kilit: VERCEL_ENV
+    | "preview" olmali VE KAFE_ONIZLEME_DB=1 (yalnizca Preview ortaminda
+    | tanimli). Canli projenin referansini tasiyan bir baglantida derleme durur.
+    |
+    */
+
+    'onizleme' => [
+        'acik' => (bool) env('KAFE_ONIZLEME_DB', false),
+        'vercel_ortami' => (string) env('VERCEL_ENV', ''),
+        'canli_ref' => 'hxlklrwbeeddbajiectt',
+    ],
+
     'puan' => [
         'calisma_dakika' => 10,
         'deneme_katilim' => 20,

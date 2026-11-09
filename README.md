@@ -2323,6 +2323,29 @@ taşınıp taşınmadığını ayrıca doğrulamak gerekirdi.
 > dakika; yine de kafenin kapalı olduğu bir saatte yapılmalı. Öğrenci çalışma
 > oturumu **açıkken** yapılmamalı — açık oturum taşınmazsa sayaç kaybolur.
 
+### 12.8 Önizleme veritabanı (9 Kasım 2026)
+
+Vercel önizlemeleri (PR'lar) **canlıya değil**, ayrı bir Supabase projesine
+bağlanır: `kral-kafe-onizleme` (ref `zycyhslicwgjtrxvranv`, Singapur — fonksiyonlar
+`sin1`'de). Önceden Preview ortamında hiç `DB_*` yoktu ve her önizleme 500 veriyordu.
+
+- **Preview ortamındaki değişkenler:** `KAFE_ONIZLEME_DB=1`, `DB_HOST`
+  (session pooler), `DB_PORT=5432`, `DB_DATABASE=postgres`,
+  `DB_USERNAME=postgres.zycyhslicwgjtrxvranv`, `DB_SSLMODE=require` ve
+  **`DB_PASSWORD`** (yalnızca Preview, *Sensitive*; Supabase → kral-kafe-onizleme →
+  Connect'ten). Production değişkenlerine dokunulmadı.
+- **Derleme:** `composer.json` → `scripts.vercel` son adım `kafe:onizleme-hazirla`.
+  Yalnızca `VERCEL_ENV=preview` **ve** `KAFE_ONIZLEME_DB=1` iken çalışır;
+  bağlantı canlı projenin referansını taşıyorsa derlemeyi durdurur. Migration'ları
+  uygular (yeni dalların migration'ları da kendiliğinden gelir); veritabanı boşsa
+  `OnizlemeSeeder` ile demo verisi yazar. Bağlanamazsa uyarır ve geçer.
+- **Demo girişleri (şifresiz; ilk girişte şifre belirlenir):** yönetici
+  `yonetici@onizleme.test` (e-postayla), görevli `0555 000 00 10`, veli
+  `0555 000 00 20`, üyeler `0555 000 01 01` … `0555 000 01 08`.
+- **Yüklemeler önizlemede çalışmaz** (`AWS_ENDPOINT`/`AWS_URL` yalnızca Production).
+- Demo verisini sıfırlamak: önizleme projesinde tabloları silmek yeter; sonraki
+  önizleme derlemesi yeniden kurar. Canlı veritabanında **asla** yapılmaz.
+
 ### 12.6 Bilinen kısıtlar
 
 - **Vercel Hobby katmanı ticari kullanıma kapalı.** Kafe gerçekten bu sistemi
