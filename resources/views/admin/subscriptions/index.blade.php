@@ -18,8 +18,7 @@
                     @csrf
                     <div class="form-group">
                         <label for="package_id" class="form-label">Paket *</label>
-                        <select id="package_id" name="package_id" class="form-control @error('package_id') is-invalid @enderror" required
-                            onchange="document.getElementById('price').value = this.options[this.selectedIndex].dataset.price">
+                        <select id="package_id" name="package_id" class="form-control @error('package_id') is-invalid @enderror" required>
                             @foreach($packages as $paket)
                                 <option value="{{ $paket->id }}" data-price="{{ $paket->monthly_price }}" {{ (string) old('package_id') === (string) $paket->id ? 'selected' : '' }}>
                                     {{ $paket->name }} — {{ $paket->formattedPrice() }}/ay
@@ -75,7 +74,7 @@
                     <span class="badge badge-{{ $abonelik->payment_status->badgeClass() }}">{{ $abonelik->payment_status->label() }}</span>
                     @if(!$abonelik->isCancelled())
                         <form action="{{ route('admin.subscriptions.cancel', $abonelik) }}" method="POST" class="d-inline-block"
-                            onsubmit="return confirm('Üyelik iptal edilsin mi?');">
+                            data-confirm="Üyelik iptal edilsin mi?">
                             @csrf
                             <button type="submit" class="btn btn-danger btn-sm">İptal</button>
                         </form>
@@ -96,7 +95,7 @@
                                         <td class="text-muted">{{ $odeme->note }}</td>
                                         <td class="text-right">
                                             <form action="{{ route('admin.subscriptions.payments.destroy', $odeme) }}" method="POST" class="d-inline-block"
-                                                onsubmit="return confirm('Ödeme kaydı silinsin mi?');">
+                                                data-confirm="Ödeme kaydı silinsin mi?">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-secondary btn-sm">Sil</button>
@@ -144,3 +143,15 @@
         <div class="card"><div class="card-body text-center text-muted p-4">Bu üyeye henüz paket atanmadı.</div></div>
     @endforelse
 @endsection
+
+@push('scripts')
+    <script @nonce>
+        // Paket secilince fiyat alani paketin aylik fiyatiyla dolar (elle degistirilebilir).
+        document.getElementById('package_id')?.addEventListener('change', function () {
+            const fiyat = document.getElementById('price');
+            if (fiyat) {
+                fiyat.value = this.options[this.selectedIndex].dataset.price;
+            }
+        });
+    </script>
+@endpush

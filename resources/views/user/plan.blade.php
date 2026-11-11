@@ -39,10 +39,9 @@
                                     <small class="text-muted">· Planında: {{ $planGunu->locale('tr')->translatedFormat('j F') }}</small>
                                 @endif
                             </span>
-                            {{-- Dugme ilk gonderimde kilitlenir: es zamanli cift
-                                 dokunusta iki istek de "yok" gorup iki satir acardi. --}}
-                            <form method="POST" action="{{ route('user.plan.exam') }}" class="d-flex gap-1"
-                                  onsubmit="this.querySelector('button').disabled = true">
+                            {{-- Dugme ilk gonderimde kilitlenir (kabuk.js cift gonderim kilidi): es
+                                 zamanli cift dokunusta iki istek de "yok" gorup iki satir acardi. --}}
+                            <form method="POST" action="{{ route('user.plan.exam') }}" class="d-flex gap-1">
                                 @csrf
                                 <input type="hidden" name="exam_event_id" value="{{ $deneme->id }}">
                                 <input type="date" name="plan_date" class="form-control" required

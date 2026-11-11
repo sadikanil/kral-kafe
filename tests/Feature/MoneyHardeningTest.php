@@ -295,8 +295,8 @@ class MoneyHardeningTest extends TestCase
             ->assertSee('aria-label="Pasifleştir: Kral&#039;ın Tostu"', false)
             ->assertSee('aria-label="Aktifleştir: Sahlep"', false)
             ->assertSee('aria-label="Sil: Sahlep"', false)
-            ->assertSee('onsubmit="return confirm(\'Kral\u0027\u0131n Tostu sat\u0131\u015ftan kald\u0131r\u0131ls\u0131n m\u0131?\')"', false)
-            ->assertSee('onsubmit="return confirm(\'Sahlep yeniden sat\u0131\u015fa a\u00e7\u0131ls\u0131n m\u0131?\')"', false);
+            ->assertSee('data-confirm="Kral&#039;ın Tostu satıştan kaldırılsın mı?"', false)
+            ->assertSee('data-confirm="Sahlep yeniden satışa açılsın mı?"', false);
     }
 
     // --- Urun silme ----------------------------------------------------------

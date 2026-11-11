@@ -77,7 +77,7 @@
                                  acik dururken liste dort haftada ekrani dolduruyordu. --}}
                             <span class="d-flex gap-1 align-items-center" style="flex-wrap: wrap;">
                                 <form method="POST" action="{{ route('coach.lessons.cancel', $ders['slot']) }}"
-                                      onsubmit="return confirm('Bu ders iptal edilsin mi?')">
+                                      data-confirm="Bu ders iptal edilsin mi?">
                                     @csrf <input type="hidden" name="date" value="{{ $ders['original_date'] }}">
                                     <button type="submit" class="btn btn-sm btn-secondary">İptal et</button>
                                 </form>

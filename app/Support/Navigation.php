@@ -33,6 +33,13 @@ final class Navigation
                 ]] : null,
                 $u->hasRole(Role::Coach) ? ['title' => 'Koçluk', 'items' => self::kocluk()] : null,
             ])),
+            // Gorevli (7 Kasim 2026): masa yonetimi (SS6.2). Silme yoneticide.
+            $u->hasRole(Role::Staff) => [
+                ['title' => 'Kafe', 'items' => [
+                    ['route' => 'admin.tables.index', 'label' => 'Masalar', 'icon' => 'armchair', 'match' => 'admin.tables.*'],
+                    ['route' => 'user.dashboard', 'label' => 'Panel', 'icon' => 'house'],
+                ]],
+            ],
             default => [
                 ['title' => 'Menü', 'items' => [
                     ['route' => 'user.dashboard', 'label' => 'Panel', 'icon' => 'house'],
@@ -97,6 +104,7 @@ final class Navigation
             ]],
             ['title' => 'Üyeler', 'items' => [
                 ['route' => 'admin.users.index', 'label' => 'Kullanıcılar', 'icon' => 'users', 'match' => 'admin.users.*|admin.subscriptions.index|admin.exam-reports.*|admin.exam-results.*'],
+                ['route' => 'user.leaderboard', 'label' => 'Liderlik', 'icon' => 'trophy'],
                 self::planlar(),
                 ['route' => 'admin.lessons.index', 'label' => 'Özel Dersler', 'icon' => 'graduation-cap', 'match' => 'admin.lessons.*'],
                 ['route' => 'admin.exams.index', 'label' => 'Deneme Takvimi', 'icon' => 'clipboard-list', 'match' => 'admin.exams.*'],
@@ -129,6 +137,7 @@ final class Navigation
                 $hak->table ? ['route' => 'table.scanner', 'label' => 'QR Okut', 'icon' => 'scan-line', 'match' => 'table.scanner|table.session'] : null,
                 ['route' => 'user.plan', 'label' => 'Planım', 'icon' => 'calendar-days'],
                 ['route' => 'user.report', 'label' => 'Haftalık Raporum', 'icon' => 'chart-no-axes-column'],
+                ['route' => 'user.leaderboard', 'label' => 'Liderlik', 'icon' => 'trophy'],
             ]))],
             ['title' => 'Denemeler', 'items' => array_values(array_filter([
                 ['route' => 'user.exams', 'label' => 'Deneme Takvimi', 'icon' => 'clipboard-list'],

@@ -88,6 +88,8 @@ class FlexibleExamPlanTest extends TestCase
     /**
      * Es zamanli cift dokunus: iki POST ayni anda gelirse ikisi de "yok"
      * gorur. Dugme ilk gonderimde kilitlenir; ikinci istek hic cikmaz.
+     * Kilidi kabuk.js'in cift gonderim kilidi yapar (satir ici onsubmit CSP
+     * yuzunden kalkti): form POST ve yeni sekmeye gitmiyor.
      */
     public function test_the_add_button_locks_on_the_first_submit(): void
     {
@@ -95,6 +97,7 @@ class FlexibleExamPlanTest extends TestCase
 
         $this->actingAs($this->ogrenci())->get(route('user.plan'))
             ->assertOk()
-            ->assertSee('onsubmit="this.querySelector(\'button\').disabled = true"', false);
+            ->assertSee('<form method="POST" action="' . route('user.plan.exam') . '" class="d-flex gap-1">', false)
+            ->assertSee('js/kabuk.js', false);
     }
 }

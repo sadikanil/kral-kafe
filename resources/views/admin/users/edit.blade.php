@@ -259,7 +259,7 @@
                          JS'ten once geri cevirir; "O'Neil" gibi bir ad onay kutusunu JS
                          hatasina dusurup formu ONAYSIZ gonderirdi. --}}
                     <form method="POST" action="{{ route('admin.users.reset-password', $user) }}"
-                        onsubmit="return confirm(@js($user->name . ' her cihazdan çıkarılacak ve yeni şifre belirlemesi gerekecek. Emin misin?'))">
+                        data-confirm="{{ $user->name . ' her cihazdan çıkarılacak ve yeni şifre belirlemesi gerekecek. Emin misin?' }}">
                         @csrf
                         <button type="submit" class="btn btn-secondary">Şifreyi sıfırla</button>
                     </form>
@@ -341,7 +341,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script @nonce>
     // Uzun ogrenci/veli listelerinde arama (5 Ekim 2026). Betik yoksa liste
     // oldugu gibi kalir; 8'den kisa listeye kutu eklenmez.
     (function () {

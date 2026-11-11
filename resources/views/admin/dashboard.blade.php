@@ -187,7 +187,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script @nonce>
     (function () {
         const bekleme = Number(document.querySelector('[data-kendini-yenile]').dataset.kendiniYenile) * 1000;
         const yuklendi = Date.now();

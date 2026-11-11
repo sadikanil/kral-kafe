@@ -64,6 +64,12 @@
                     </p>
                 @endif
 
+                {{-- Sabit uye (7 Kasim 2026): baskasina yalnizca uyari, engel yok.
+                     Ad yazilmaz: diger uyelerin adi bu ekranda gizli kalir. --}}
+                @if($table->assigned_student_id && ! $table->isReservedFor(auth()->user()) && ! $occupant)
+                    <p class="text-warning mb-3">Bu masa sabit bir üyeye ayrılmış. Boş bir masa varsa oraya geçmen iyi olur.</p>
+                @endif
+
                 @if(! $table->is_active)
                     <p class="text-danger mb-3">Bu masa şu anda kullanımda değil.</p>
                 @elseif(auth()->user()->hasRole(\App\Enums\Role::Student) && ! auth()->user()->entitlements()->table)
@@ -87,7 +93,7 @@
 @endsection
 
 @push('scripts')
-    <script>
+    <script @nonce>
         // konum:bas
         // Konum ISTEGE BAGLI. Izin reddedilirse ya da zaman asimina ugrarsa
         // alanlar bos kalir ve oturum yine baslar - sunucu tarafi da oyle

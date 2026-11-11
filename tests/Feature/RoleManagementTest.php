@@ -137,6 +137,7 @@ class RoleManagementTest extends TestCase
                 Role::Admin => 'admin.dashboard',
                 Role::Parent => 'parent.dashboard',
                 Role::Coach => 'coach.plan.index',
+                Role::Staff => 'admin.tables.index',
                 default => 'user.dashboard',
             });
 

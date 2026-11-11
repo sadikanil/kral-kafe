@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -23,6 +24,8 @@ class StudyTable extends Model
     protected $fillable = [
         'name',
         'is_active',
+        'area',
+        'assigned_student_id',
     ];
 
     protected $casts = [
@@ -54,6 +57,21 @@ class StudyTable extends Model
         return url("/masa/{$this->qr_code}");
     }
 
+    /**
+     * Sabit uye (7 Kasim 2026). Yalnizca bilgi ve uyari: baskasinin oturmasini
+     * ENGELLEMEZ - sabit uye gelmediginde masa bos kalmasin, QR'da kimse
+     * kilitlenmesin.
+     */
+    public function assignedStudent(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_student_id');
+    }
+
+    public function isReservedFor(?User $kim): bool
+    {
+        return $this->assigned_student_id !== null && $kim !== null && $this->assigned_student_id === $kim->id;
+    }
+
     public function sessions(): HasMany
     {
         return $this->hasMany(StudySession::class);
@@ -78,6 +96,18 @@ class StudyTable extends Model
     public static function sortedByNumber(Builder $query): Collection
     {
         return $query->get()->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)->values();
+    }
+
+    /**
+     * Bolumlere gore gruplu, her grup sayi sirasinda (7 Kasim 2026). Bolumsuz
+     * masalar en sonda, '' anahtariyla.
+     *
+     * @return Collection<string,Collection<int,StudyTable>>
+     */
+    public static function groupedByArea(Collection $masalar): Collection
+    {
+        return $masalar->groupBy(fn (StudyTable $m) => (string) $m->area)
+            ->sortKeysUsing(fn ($a, $b) => (($a === '') <=> ($b === '')) ?: strnatcasecmp($a, $b));
     }
 
     public function scopeActive(Builder $query): Builder

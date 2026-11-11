@@ -11,6 +11,8 @@
  *     acilan eylem sayfasiyla sorulur; dialog yoksa tarayicinin onayi.
  *  6. Bildirim balonu (Faz 3): kapat dugmesi, acilista sesli duyuru, ust
  *     cubukta kaydirinca kucuk baslik.
+ *  7. Satir ici olay yerine nitelik (CSP, 7 Kasim 2026): data-yazdir,
+ *     data-yenile, data-otomatik-gonder.
  *
  * Mantik asagidaki fonksiyonlarda; tests/js/kabuk.test.mjs onlari sahte
  * elemanlarla cagirir. Tarayicida yalnizca baslat() calisir (module yok).
@@ -362,11 +364,58 @@
         });
     }
 
+    // --- 7. Satir ici olay yerine nitelik (CSP) ---------------------------------
+
+    /**
+     * Content-Security-Policy satir ici onclick/onchange'i calistirmaz
+     * (App\Support\Csp). Yerine: data-yazdir (yazdir), data-yenile (sayfayi
+     * yenile), data-otomatik-gonder (secim degisince formu gonder). Onay
+     * sorusu zaten data-confirm (5). Doner: uygulanacak eylemin adi ya da null.
+     */
+    function eylem(olayTuru, hedef) {
+        if (!hedef || typeof hedef.closest !== 'function') {
+            return null;
+        }
+        if (olayTuru === 'click') {
+            if (hedef.closest('[data-yazdir]')) {
+                return 'yazdir';
+            }
+            if (hedef.closest('[data-yenile]')) {
+                return 'yenile';
+            }
+        }
+        if (olayTuru === 'change' && hedef.hasAttribute('data-otomatik-gonder') && hedef.form) {
+            return 'gonder';
+        }
+
+        return null;
+    }
+
     // --- Tarayici baglantisi -------------------------------------------------
 
     function baslat(pencere, belge) {
         var o = onay(sorucu(pencere, belge.getElementById('onay')));
         belge.addEventListener('submit', o.yakala, true);
+
+        belge.addEventListener('click', function (olay) {
+            var ad = eylem('click', olay.target);
+            if (ad === 'yazdir') {
+                pencere.print();
+            } else if (ad === 'yenile') {
+                pencere.location.reload();
+            }
+        });
+        belge.addEventListener('change', function (olay) {
+            if (eylem('change', olay.target) !== 'gonder') {
+                return;
+            }
+            var form = olay.target.form;
+            if (typeof form.requestSubmit === 'function') {
+                form.requestSubmit();
+            } else {
+                form.submit();
+            }
+        });
 
         var kilit = gonderimKilidi(function (is) { pencere.setTimeout(is, 0); });
         // Pencerede, kabarcik asamasinda: sayfanin kendi dinleyicileri once calisir.
@@ -471,6 +520,7 @@
         sorucu: sorucu,
         balonuKapat: balonuKapat,
         duyur: duyur,
+        eylem: eylem,
     };
 
     if (typeof module === 'object' && module && module.exports) {

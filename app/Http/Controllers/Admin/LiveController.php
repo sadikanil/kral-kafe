@@ -3,11 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Enums\SessionEndReason;
 use App\Models\StudySession;
 use App\Models\StudyTable;
-use App\Support\LocalDay;
-use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 /**
@@ -31,17 +28,10 @@ class LiveController extends Controller
         // "12 saati asan oturum yoneticiye anomali olarak duser" (FEATURE 1).
         // Sessizce kapatmak kurali uygulamak sayilmaz; birinin gormesi gerek.
         //
-        // Pencere YEDI GUN, "bugun" degil: yonetici her gun canli ekrana
-        // bakmak zorunda degil. Tek gunluk pencerede hafta sonuna ya da izin
-        // gunune dusen her anomali hic gorulmeden kaybolurdu - yani kural
-        // uygulanmis sayilmazdi.
-        [$gunBasi] = LocalDay::bounds(
-            Carbon::parse(LocalDay::today(), LocalDay::timezone())->subDays(6)->toDateString()
-        );
-        [, $gunSonu] = LocalDay::bounds(LocalDay::today());
-
-        $anomaliler = StudySession::where('end_reason', SessionEndReason::OverLimit)
-            ->whereBetween('ended_at', [$gunBasi, $gunSonu])
+        // Gorulene kadar kalir (7 Kasim 2026): eskiden 7 gunluk pencere vardi
+        // ve hafta sonu bakilmayan anomali sessizce kayboluyordu. "Gordum"
+        // isareti AnomalyController'da.
+        $anomaliler = StudySession::unseenAnomalies()
             ->with(['student', 'table'])
             ->orderByDesc('ended_at')
             ->get();

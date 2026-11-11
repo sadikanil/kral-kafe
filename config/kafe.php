@@ -170,6 +170,65 @@ return [
 
     'yedek_adres' => rtrim((string) env('KAFE_YEDEK_ADRES', ''), '/'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Content-Security-Policy (7 Kasim 2026)
+    |--------------------------------------------------------------------------
+    |
+    | enforce (varsayilan): nonce'suz betik calismaz. report: yalnizca
+    | tarayici konsoluna yazar, engellemez. off: baslik gonderilmez.
+    | Canlida bir sayfa kirilirsa "report" yapip yeniden dagit (App\Support\Csp).
+    |
+    */
+
+    'csp' => env('KAFE_CSP', 'enforce'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Liderlik puanlari (7 Kasim 2026)
+    |--------------------------------------------------------------------------
+    |
+    | App\Services\Leaderboard. Haftalik (pazartesi-pazar) ve aylik toplanir;
+    | saklanmaz, her acilista onayli verilerden hesaplanir.
+    |
+    | - Calisma: onayli, esikten uzun, molasi dusulmus her X dakika 1 puan.
+    | - Deneme (o donemde yapilan her deneme): katilim + basari (net / soru
+    |   orani x azami) + gelisim (ayni turdeki onceki denemesinden yuksek net).
+    |   Agirlik katilim ve gelisimde: net zayif uye de puan toplar.
+    | - Alisveris: odenen tutarin (pakete dahil olanlar haric) her X TL'si
+    |   1 puan, gunluk tavanli: kafe ici satisi tesvik eder ama tabloyu
+    |   satin alarak kazanilmaz.
+    |
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Onizleme veritabani (9 Kasim 2026)
+    |--------------------------------------------------------------------------
+    |
+    | Vercel onizlemeleri canli veritabanina DEGIL, ayri bir Supabase projesine
+    | (kral-kafe-onizleme) baglanir. kafe:onizleme-hazirla derleme sirasinda
+    | oraya migration ve bos ise demo verisi yazar. Iki kilit: VERCEL_ENV
+    | "preview" olmali VE KAFE_ONIZLEME_DB=1 (yalnizca Preview ortaminda
+    | tanimli). Canli projenin referansini tasiyan bir baglantida derleme durur.
+    |
+    */
+
+    'onizleme' => [
+        'acik' => (bool) env('KAFE_ONIZLEME_DB', false),
+        'vercel_ortami' => (string) env('VERCEL_ENV', ''),
+        'canli_ref' => 'hxlklrwbeeddbajiectt',
+    ],
+
+    'puan' => [
+        'calisma_dakika' => 10,
+        'deneme_katilim' => 20,
+        'deneme_basari_azami' => 30,
+        'deneme_gelisim' => 10,
+        'alisveris_tl' => 25,
+        'alisveris_gunluk_azami' => 4,
+    ],
+
 
     /*
     |--------------------------------------------------------------------------

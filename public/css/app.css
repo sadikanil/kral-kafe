@@ -3475,3 +3475,157 @@ body.is-focusing {
 .notif-link:hover {
     background: var(--hover);
 }
+
+/* ============================================================
+   Liderlik tablosu (7 Kasim 2026): podyum ve liste
+   ============================================================ */
+.podium {
+    --gold: #c99700;
+    --gold-tint: rgba(255, 204, 0, 0.22);
+    --silver: #8e8e93;
+    --silver-tint: rgba(142, 142, 147, 0.2);
+    --bronze: #b06a30;
+    --bronze-tint: rgba(176, 106, 48, 0.2);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 8px;
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.podium-place {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    max-width: 168px;
+    text-align: center;
+}
+
+/* Gorunum 2-1-3; DOM 1-2-3 kalir. */
+.podium-1 { order: 2; }
+.podium-2 { order: 1; }
+.podium-3 { order: 3; }
+
+.podium-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--r-full);
+    background: var(--fill);
+    color: var(--label);
+    font-family: var(--font-rounded);
+    font-size: 1.0625rem;
+    font-weight: 700;
+}
+
+.podium-1 .podium-avatar {
+    width: 64px;
+    height: 64px;
+    font-size: 1.25rem;
+    box-shadow: 0 0 0 3px var(--gold);
+}
+
+.podium-2 .podium-avatar { box-shadow: 0 0 0 3px var(--silver); }
+.podium-3 .podium-avatar { box-shadow: 0 0 0 3px var(--bronze); }
+
+.podium-name {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.podium-points {
+    color: var(--label-2);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.podium-step {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    width: 100%;
+    margin-top: 4px;
+    padding-top: 8px;
+    border-radius: var(--r-sm) var(--r-sm) 0 0;
+}
+
+.podium-1 .podium-step { height: 96px; background: var(--gold-tint); }
+.podium-2 .podium-step { height: 72px; background: var(--silver-tint); }
+.podium-3 .podium-step { height: 52px; background: var(--bronze-tint); }
+
+.podium-rank {
+    font-family: var(--font-rounded);
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.leader-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.leader-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-top: 0.5px solid var(--separator);
+}
+
+.leader-row:first-child { border-top: 0; }
+.leader-row.is-me { background: var(--fill); }
+
+.leader-rank {
+    flex: none;
+    width: 28px;
+    color: var(--label-2);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.leader-name {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.leader-points {
+    flex: none;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.leader-points small {
+    color: var(--label-2);
+    font-weight: 400;
+}
+
+.leader-detail {
+    display: block;
+    color: var(--label-2);
+    font-size: 0.8125rem;
+    font-weight: 400;
+}
+
+.leader-nav-bos { visibility: hidden; }
+
+.leader-help summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.leader-help-body { padding-top: 0; }

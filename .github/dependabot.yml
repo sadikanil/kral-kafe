@@ -1,0 +1,56 @@
+# Bagimlilik guncellemeleri (7 Kasim 2026). php2shell sirasinda 11 Composer ve
+# 5 npm guvenlik bildirimi birikmisti; bu dosya haftalik PR acar.
+#
+# - Kucuk/yama surumleri ekosistem basina TEK PR'da toplanir.
+# - Major surumler (Laravel 13, PHPUnit 13, Vite 8 ...) otomatik acilmaz:
+#   elle ve sakin bir zamanda yapilir (liste: docs/security/php2shell.md §6).
+#   Major'a kapali olmak guvenligi kapatmaz: haftalik "Bagimlilik denetimi"
+#   is akisi her acigi surumden bagimsiz yakalar ve kirmiziya duser.
+# - Guvenlik PR'lari icin ayrica: GitHub > Settings > Code security >
+#   "Dependabot alerts" ve "Dependabot security updates" acik olmali.
+version: 2
+updates:
+  - package-ecosystem: composer
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Istanbul
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "composer"
+    groups:
+      composer-kucuk:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Istanbul
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "npm"
+    groups:
+      npm-kucuk:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+      timezone: Europe/Istanbul
+    commit-message:
+      prefix: "actions"
+    groups:
+      actions:
+        patterns: ["*"]

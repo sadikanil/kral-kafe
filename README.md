@@ -302,9 +302,9 @@ Bu tablodaki dalgaların hepsi 22 Eylül'de bitti. Sıradaki iş §0'da.
 | **Supabase'i Frankfurt'a taşı** | M | **Karar verildi (22 Eyl), henüz yapılmadı.** Giriş sayfası 0,9 sn; Frankfurt ~0,2 sn getirir. Çalıştırılabilir plan §12.7'de — kesinti gerektirir, kafe kapalıyken yapılmalı |
 | Üretimde `LOG_CHANNEL` kontrolü | XS | Panelde `stack` duruyorsa salt okunur diske log yazılıp **ikinci bir 500** üretiliyor; üretim ortam dökümü hiç doğrulanmadı — §12 "Doğrulanmamış" |
 | `brashlab` remote'unu kaldır | XS | Yerel depoyu 21 MiB'de tutuyor, kazara merge yolu açık — §13 |
-| Anomaliye "gördüm" işareti | S | Yedi günlük pencere sessizce kapanıyor; `discrepancy_logs` çözümleme akışı örnek alınabilir |
-| `study_tables` ertelenen sütunları | S | `status`, `assigned_student_id`, `location_id` — anlamları paket ve raf/masa kararıyla geliyor |
-| Görevliye masa yönetimi erişimi | S | Yetki matrisi açık diyor, `AdminMiddleware` kapalı tutuyor |
+| ~~Anomaliye "gördüm" işareti~~ | S | ✅ 7 Kasım 2026: anomali görülene kadar canlı ekranda; "Gördüm" / "Tümünü gördüm" (kim, ne zaman). Süreye ve onaya dokunmaz |
+| ~~`study_tables` ertelenen sütunları~~ | S | ✅ 7 Kasım 2026: `assigned_student_id` (sabit üye; başkasına uyarı, engel yok), `location_id` yerine `area` (bölüm; `locations` stok yeri), `status` bilerek yok (listede açık oturumdan Boş/Dolu) |
+| ~~Görevliye masa yönetimi erişimi~~ | S | ✅ 7 Kasım 2026: masa rotaları `role:admin,staff`; görevli girişte Masalar'a iner. Silme yalnızca yöneticide |
 | Gerçek e-posta sağlayıcısı | S | `MAIL_MAILER=log`; Dalga 11'in önkoşulu |
 
 ### 4.3 Rafta
@@ -379,9 +379,13 @@ Teknik kararların tamamı ve gerekçeleri §9'da.
    değerlendirme aynı şey değil; özel seçeneği olmayan bir sistemde koç ham
    gözlemini hiç yazmaz.
 3. **Öğrenci, veliye ne gittiğini kendi panelinde görür.** Gizli izleme yok.
-4. **Sıralama, karşılaştırma, yüzdelik dilim yok** — öğrenciler birbiriyle
-   karşılaştırılmaz. Denemenin kurum/il/TR sıralaması bunun istisnası değil:
-   o, sınavın kendi verisidir, sistemin ürettiği bir kıyas değil.
+4. ~~**Sıralama, karşılaştırma, yüzdelik dilim yok**~~ — **7 Kasım 2026'da
+   sahibin isteğiyle değişti:** haftalık/aylık **liderlik tablosu** var
+   (`/kullanici/liderlik`). Sınırları: diğer üyeler yalnızca kısaltılmış adı
+   ("Ayşe K.") ve **toplam puanı** görür; netler ve puan dökümü yalnızca üyenin
+   kendisine ve yöneticiye. Veli, koç, görevli görmez. Deneme puanının ağırlığı
+   katılım ve gelişimde (net zayıf üye de puan toplar). Yüzdelik dilim ve net
+   kıyası hâlâ yok. Denemenin kurum/il/TR sıralaması sınavın kendi verisidir.
 5. **Düşüş sinyalleri önce koça/yöneticiye**, veliye ancak yorumla birlikte.
 6. **Yorum üreten tek kişi insandır.** Sistem ve yapay zekâ sayı ve alan
    gösterir, sıfat üretmez. Deneme PDF'i analizinin prompt'u kişilik ve
@@ -428,6 +432,21 @@ yalnızca ödev, yalnızca kendi maddesini değiştirir (`StudyPlanItem::canBeCh
 ---
 
 ## 7. Özellik kartları
+
+### P · Liderlik tablosu · ✅ (7 Kasım 2026)
+
+Haftalık (pazartesi–pazar) ve aylık; ilk üç podyumda (2-1-3), kalanlar puanla
+altta. Puan **saklanmaz**, her açılışta onaylı veriden hesaplanır
+(`App\Services\Leaderboard`, ağırlıklar `config('kafe.puan')`):
+
+| Kaynak | Puan |
+|---|---|
+| Çalışma | Onaylı, eşikten uzun, molası düşülmüş her 10 dk = 1 (`StudyStats` ile aynı dakika) |
+| Deneme (o dönemde yapılan) | Katılım 20 + başarı (net / soru × 30) + aynı türdeki önceki denemeyi geçerse 10 |
+| Adisyon | Ödenen her 25 ₺ = 1, günde en fazla 4; pakete dahil ve geri alınan sayılmaz |
+
+Eşitlikte çok çalışan önde. Askıdaki üye ve puanı 0 olan listede yok. Gizlilik
+sınırları §6.1-4'te.
 
 Sıra ve bağımlılıklar §4.1'de; burada **ne olduğu ve neden öyle tasarlandığı**.
 
@@ -931,8 +950,8 @@ yazdırma ve QR ekranları "henüz yayında değil" uyarısı gösteriyor. Uyar�
 **varlığına** bağlı — Dalga 3 rotayı ekleyince kendiliğinden kaybolur, kimsenin
 eski bir metni silmesi gerekmez.
 
-**Erişim:** §6.2 matrisinde masa yönetimi görevliye de açık ama `AdminMiddleware`
-yalnızca yöneticiyi geçiriyor; görevli erişimi kendi paneliyle gelecek.
+**Erişim:** §6.2 matrisinde masa yönetimi görevliye de açık. 7 Kasım 2026'dan beri
+masa rotaları `role:admin,staff` (silme yalnızca yöneticide).
 
 #### Dalga 3 — Oturum + canlı ekran (MVP #2, #9) · ✅ bitti
 
@@ -1903,6 +1922,7 @@ Ardından `http://127.0.0.1:8000`. Hepsini birden (sunucu + kuyruk + log + vite)
 | `EXAM_AI_EFFORT` | Düşünme derinliği; aktarım işi olduğu için varsayılan `low`. Claude'da `effort`, Gemini 3 ve sonrasında `thinkingLevel` (`minimal`/`low`/`medium`/`high`) olur. Okuma hatası görülürse `medium`; karneler 50 sn'yi aşıyorsa `minimal`. |
 | `UPLOAD_DISK` | Yüklenen dosyaların gideceği disk. Yerelde `public`, serverless ortamda `s3`. |
 | `MAIL_MAILER` | Şifre sıfırlama e-postası. Varsayılan `log`; gerçek gönderim için SMTP gerekir. |
+| `KAFE_CSP` | Content-Security-Policy modu: `enforce` (varsayılan), `report` (yalnızca konsola yazar, engellemez), `off`. Canlıda bir düğme çalışmazsa `report` yapıp yeniden dağıt. Satır içi betik `<script @nonce>` ile yazılır; `onclick`/`onsubmit` yerine `data-confirm`, `data-yazdir`, `data-yenile`, `data-otomatik-gonder` (`public/js/kabuk.js`). |
 | `WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY` | İsteğe bağlı. Telefon bildirimi VAPID anahtarı (base64url açık anahtar + PEM özel anahtar). Boşsa ilk kullanımda üretilip `settings` tablosuna yazılır. |
 
 ### 11.2 Testler
@@ -2302,6 +2322,29 @@ taşınıp taşınmadığını ayrıca doğrulamak gerekirdi.
 > veritabanına yazılan her şey kaybolur. Veri bu kadar azken pencere birkaç
 > dakika; yine de kafenin kapalı olduğu bir saatte yapılmalı. Öğrenci çalışma
 > oturumu **açıkken** yapılmamalı — açık oturum taşınmazsa sayaç kaybolur.
+
+### 12.8 Önizleme veritabanı (9 Kasım 2026)
+
+Vercel önizlemeleri (PR'lar) **canlıya değil**, ayrı bir Supabase projesine
+bağlanır: `kral-kafe-onizleme` (ref `zycyhslicwgjtrxvranv`, Singapur — fonksiyonlar
+`sin1`'de). Önceden Preview ortamında hiç `DB_*` yoktu ve her önizleme 500 veriyordu.
+
+- **Preview ortamındaki değişkenler:** `KAFE_ONIZLEME_DB=1`, `DB_HOST`
+  (session pooler), `DB_PORT=5432`, `DB_DATABASE=postgres`,
+  `DB_USERNAME=postgres.zycyhslicwgjtrxvranv`, `DB_SSLMODE=require` ve
+  **`DB_PASSWORD`** (yalnızca Preview, *Sensitive*; Supabase → kral-kafe-onizleme →
+  Connect'ten). Production değişkenlerine dokunulmadı.
+- **Derleme:** `composer.json` → `scripts.vercel` son adım `kafe:onizleme-hazirla`.
+  Yalnızca `VERCEL_ENV=preview` **ve** `KAFE_ONIZLEME_DB=1` iken çalışır;
+  bağlantı canlı projenin referansını taşıyorsa derlemeyi durdurur. Migration'ları
+  uygular (yeni dalların migration'ları da kendiliğinden gelir); veritabanı boşsa
+  `OnizlemeSeeder` ile demo verisi yazar. Bağlanamazsa uyarır ve geçer.
+- **Demo girişleri (şifresiz; ilk girişte şifre belirlenir):** yönetici
+  `yonetici@onizleme.test` (e-postayla), görevli `0555 000 00 10`, veli
+  `0555 000 00 20`, üyeler `0555 000 01 01` … `0555 000 01 08`.
+- **Yüklemeler önizlemede çalışmaz** (`AWS_ENDPOINT`/`AWS_URL` yalnızca Production).
+- Demo verisini sıfırlamak: önizleme projesinde tabloları silmek yeter; sonraki
+  önizleme derlemesi yeniden kurar. Canlı veritabanında **asla** yapılmaz.
 
 ### 12.6 Bilinen kısıtlar
 

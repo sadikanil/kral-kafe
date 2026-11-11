@@ -151,7 +151,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script @nonce>
     (function () {
         const form = document.getElementById('kullaniciFormu');
         const rol = document.getElementById('role');

@@ -73,7 +73,7 @@
         @endif
         @if($mode === 'student' && $madde->exam_event_id && $madde->created_by === auth()->id())
             <form method="POST" action="{{ route('user.plan.exam.destroy', $madde) }}" class="mt-1"
-                  onsubmit="return confirm('Bu denemeyi planından çıkaralım mı?')">
+                  data-confirm="Bu denemeyi planından çıkaralım mı?">
                 @csrf @method('DELETE')
                 <button type="submit" class="btn btn-sm btn-secondary">Çıkar</button>
             </form>
@@ -88,7 +88,7 @@
                     <button type="submit" class="btn btn-sm btn-secondary">Taşı</button>
                 </form>
                 <form method="POST" action="{{ route('coach.plan.destroy', $madde) }}" class="mt-1"
-                      onsubmit="return confirm('Plandan silinsin mi?')">
+                      data-confirm="Plandan silinsin mi?">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-sm btn-danger">Sil</button>
                 </form>

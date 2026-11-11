@@ -17,7 +17,7 @@
 
 @once
     @push('scripts')
-        <script>
+        <script @nonce>
             window.NetSaat = (function () {
                 // net-saat:bas
                 function ikili(n) {

@@ -41,10 +41,10 @@ class AdminPeopleA11yTest extends TestCase
 
         $this->actingAs($this->yonetici)->get(route('admin.users.index'))
             ->assertOk()
-            // Ad JS dizesine guvenli girer (kesme isareti onay kutusunu bozmaz).
-            ->assertSee("onsubmit=\"return confirm('Ay\\u015fe O\\u0027Neil ask\\u0131ya al\\u0131ns\\u0131n m\\u0131?')\"", false)
+            // Ad onay metnine guvenli girer (kesme isareti onay kutusunu bozmaz).
+            ->assertSee('data-confirm="Ayşe O&#039;Neil askıya alınsın mı?"', false)
             ->assertSee('aria-label="Askıya al: Ayşe O&#039;Neil"', false)
-            ->assertSee("onsubmit=\"return confirm('Berk Ask\\u0131 aktifle\\u015ftirilsin mi?')\"", false)
+            ->assertSee('data-confirm="Berk Askı aktifleştirilsin mi?"', false)
             ->assertSee('aria-label="Aktifleştir: Berk Askı"', false);
     }
 
@@ -103,7 +103,7 @@ class AdminPeopleA11yTest extends TestCase
             ->assertSee('aria-label="Atanacak koç"', false)
             // Kesme isaretli ad sifre sifirlama onayini bozmaz (eskiden JS hatasi
             // verip onaysiz gonderiyordu).
-            ->assertSee("confirm('Ay\\u015fe O\\u0027Neil her cihazdan", false);
+            ->assertSee('data-confirm="Ayşe O&#039;Neil her cihazdan', false);
     }
 
     public function test_the_private_lesson_fields_are_named(): void

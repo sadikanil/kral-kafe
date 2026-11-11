@@ -15,7 +15,7 @@
                     @if($saat->ends_on)<span class="text-muted">· {{ $saat->ends_on->locale('tr')->translatedFormat('j F') }} bitti</span>@endif
                     @if($saat->branch || $saat->teacher)<br><small class="text-muted">{{ collect([$saat->branch, $saat->teacher?->name])->filter()->implode(' · ') }}</small>@endif
                 </span>
-                <form method="POST" action="{{ route('admin.lessons.destroy', $saat) }}" onsubmit="return confirm('Bu haftalık saat kaldırılsın mı?')">
+                <form method="POST" action="{{ route('admin.lessons.destroy', $saat) }}" data-confirm="Bu haftalık saat kaldırılsın mı?">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-sm btn-secondary">Kaldır</button>
                 </form>

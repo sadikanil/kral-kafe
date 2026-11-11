@@ -351,7 +351,8 @@ class AdminPeopleSmokeTest extends TestCase
             ->assertSee('Kafede (')
             ->assertSee('Kafeden uzak (')
             ->assertSee('Konum yok')
-            ->assertSee('Son 7 günün anomalileri')
+            ->assertSee('Görülmemiş anomaliler (1)')
+            ->assertSee(route('admin.sessions.anomaly-seen', StudySession::where('end_reason', SessionEndReason::OverLimit)->first()), false)
             ->assertSee('Uğur Unutkan')
             ->assertSee(route('admin.sessions.approve', $kafede), false)
             ->assertSee(route('admin.sessions.reject', $uzak), false)
@@ -364,7 +365,7 @@ class AdminPeopleSmokeTest extends TestCase
             ->assertOk()
             ->assertSee('Şu anda içeride kimse yok')
             ->assertDontSee('Onay bekleyen oturumlar')
-            ->assertDontSee('anomalileri');
+            ->assertDontSee('Görülmemiş anomaliler');
     }
 
     public function test_the_live_screen_shows_the_pending_queue_without_a_cafe_location(): void

@@ -169,7 +169,7 @@
                             <span class="log-label">{{ $program->kind->icon() }} {{ $program->label() }} · {{ $program->starts_at }}–{{ $program->ends_at }}</span>
                             @unless($yalnizOdev)
                                 <form method="POST" action="{{ route('coach.commitments.destroy', $program) }}"
-                                      onsubmit="return confirm('Bu satır silinsin mi?')">
+                                      data-confirm="Bu satır silinsin mi?">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-secondary" aria-label="Sil">✕</button>
                                 </form>
@@ -247,7 +247,7 @@
 @endsection
 
 @push('scripts')
-<script>
+<script @nonce>
 (function () {
     const konular = @json($konular);
     const ders = document.getElementById('subject_id');

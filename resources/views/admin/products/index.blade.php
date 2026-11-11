@@ -66,7 +66,7 @@
                                              Ad @js ile: kesme isaretli ad onay kutusunu bozmasin. --}}
                                         <form action="{{ route('admin.products.toggle-status', $product) }}" method="POST"
                                             class="d-inline-block"
-                                            onsubmit="return confirm(@js($product->name . ($product->is_active ? ' satıştan kaldırılsın mı?' : ' yeniden satışa açılsın mı?')))">
+                                            data-confirm="{{ $product->name . ($product->is_active ? ' satıştan kaldırılsın mı?' : ' yeniden satışa açılsın mı?') }}">
                                             @csrf
                                             <button type="submit"
                                                 class="btn btn-sm btn-{{ $product->is_active ? 'warning' : 'success' }}"
@@ -78,7 +78,7 @@
 
                                         <form action="{{ route('admin.products.destroy', $product) }}" method="POST"
                                             class="d-inline-block"
-                                            onsubmit="return confirm('Bu ürünü silmek istediğinize emin misiniz?')">
+                                            data-confirm="Bu ürünü silmek istediğinize emin misiniz?">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-danger" title="Sil"

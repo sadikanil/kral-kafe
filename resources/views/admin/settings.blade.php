@@ -75,7 +75,7 @@
 @endsection
 
 @push('scripts')
-    <script>
+    <script @nonce>
         // Ondalik virgul (Turkce klavye) sunucuya nokta olarak gitsin.
         document.getElementById('js-konum-formu').addEventListener('submit', function () {
             ['js-konum-enlem', 'js-konum-boylam'].forEach(function (id) {
