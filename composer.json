@@ -72,6 +72,7 @@
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
         ],
         "vercel": [
+            "Composer\\Config::disableProcessTimeout",
             "@php -r \"foreach ([getenv('APP_PACKAGES_CACHE'), getenv('APP_SERVICES_CACHE'), 'bootstrap/cache/x'] as \\$p) { if (\\$p) { @mkdir(dirname(\\$p), 0755, true); } }\"",
             "@php artisan package:discover --ansi",
             "@php artisan kafe:php-surumu --kesin",

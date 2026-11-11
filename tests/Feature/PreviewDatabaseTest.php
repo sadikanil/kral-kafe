@@ -101,5 +101,9 @@ class PreviewDatabaseTest extends TestCase
         $betik = json_decode(file_get_contents(base_path('composer.json')), true)['scripts']['vercel'];
 
         $this->assertSame('@php artisan kafe:onizleme-hazirla', end($betik));
+
+        // Composer betik adimlarini 300 sn'de keser; ilk kurulumda migration'lar
+        // uzak makineden bunu asti ve derleme yarida kaldi (11 Kasim 2026).
+        $this->assertSame('Composer\\Config::disableProcessTimeout', $betik[0]);
     }
 }
