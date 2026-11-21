@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class Consumption extends Model
 {
@@ -50,6 +51,35 @@ class Consumption extends Model
             // onkosulu olarak isaretliydi.
             $consumption->total_price = $consumption->chargeableQuantity() * (float) $consumption->unit_price;
         });
+
+        // Ayin adisyonu kendiliginden acilir ve guncellenir (21 Kas 2026):
+        // eskiden aylik kayit yalnizca Raporlar'daki dugmeyle olusuyordu,
+        // yonetici ekrani o andaki tutarda kaliyordu. Islem bittikten sonra
+        // (afterCommit) ve hata siparisi bozmadan: kayit Raporlar'daki
+        // "Yeniden hesapla" ile her zaman yeniden uretilebilir.
+        static::saved(function (Consumption $consumption) {
+            if (! $consumption->wasRecentlyCreated && ! $consumption->wasChanged(['is_undone', 'quantity', 'covered_quantity', 'unit_price', 'consumed_at', 'user_id'])) {
+                return;
+            }
+
+            DB::afterCommit(fn () => $consumption->syncMonthlyBill());
+        });
+    }
+
+    /** Siparisin ayindaki adisyon kaydini siparis kayitlarindan yeniden yazar. */
+    public function syncMonthlyBill(): void
+    {
+        try {
+            $uye = $this->user()->first();
+            if ($uye === null) {
+                return;
+            }
+
+            $yerel = $this->consumed_at->copy()->timezone(config('kafe.timezone'));
+            MonthlyBill::generateForUserMonth($uye, $yerel->year, $yerel->month);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     /**

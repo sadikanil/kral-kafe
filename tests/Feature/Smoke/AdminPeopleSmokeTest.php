@@ -610,8 +610,10 @@ class AdminPeopleSmokeTest extends TestCase
         $abonelik = $ogrenci->currentSubscription();
         $this->assertTrue($abonelik->package->is($paket));
         $this->assertSame('2026-09-29', $abonelik->starts_on->toDateString());
-        $this->assertSame('2026-10-28', $abonelik->ends_on->toDateString());
-        $this->assertEquals(9500, $abonelik->price);
+        // Takvim ayi (21 Kas 2026): ay sonunda biter, ilk ay gun orantili (2/30).
+        $this->assertSame('2026-09-30', $abonelik->ends_on->toDateString());
+        $this->assertEquals(9500, $abonelik->base_price);
+        $this->assertEquals(633, $abonelik->price);
     }
 
     public function test_a_ninth_or_tenth_grader_gets_no_field(): void
@@ -1069,7 +1071,7 @@ class AdminPeopleSmokeTest extends TestCase
             ])
             ->assertSessionHasNoErrors()
             ->assertRedirect(route('admin.subscriptions.index', $ogrenci))
-            ->assertSessionHas('success', 'Paket atandı.');
+            ->assertSessionHas('success', "Paket atandı: 01.10–31.10.2026 için 7.250,00 ₺. Her ayın 1'inde yenilenecek.");
 
         $abonelik = $ogrenci->subscriptions()->sole();
         $this->assertSame('2026-10-01', $abonelik->starts_on->toDateString());
@@ -1237,34 +1239,35 @@ class AdminPeopleSmokeTest extends TestCase
         $this->assertSame(PaymentStatus::Overdue, $abonelik->fresh()->payment_status);
     }
 
-    public function test_switching_the_package_from_a_date(): void
+    /** 18 Kas 2026: "bu donemden" degisiklik yeni donem acmaz, mevcut donemi duzeltir. */
+    public function test_switching_the_package_for_this_period(): void
     {
         $eski = Package::factory()->tier1()->create();
         $yeni = Package::factory()->tier3()->create(['monthly_price' => 12000]);
         $ogrenci = $this->ogrenci($eski);
         $this->bagla($ogrenci, $this->veli());
+        $donem = $ogrenci->subscriptions()->sole();
 
         $this->actingAs($this->yonetici)->from(route('admin.users.edit', $ogrenci))
             ->post(route('admin.subscriptions.switch', $ogrenci), [
-                'package_id' => $yeni->id, 'switch_on' => '2026-09-29', 'price' => '',
+                'package_id' => $yeni->id, 'when' => 'simdi', 'price' => '',
             ])
             ->assertSessionHasNoErrors()
             ->assertRedirect(route('admin.users.edit', $ogrenci))
-            ->assertSessionHas('success', 'Paket değiştirildi.');
+            ->assertSessionHas('success', fn ($m) => str_starts_with($m, 'Bu dönemin paketi Kral oldu.'));
 
-        $eskiAbonelik = $ogrenci->subscriptions()->where('package_id', $eski->id)->sole();
-        $this->assertSame('2026-09-28', $eskiAbonelik->ends_on->toDateString());
-
+        $this->assertSame(1, $ogrenci->subscriptions()->count(), 'yeni tam fiyatli donem acilmaz');
         $simdiki = $ogrenci->fresh()->currentSubscription();
+        $this->assertTrue($simdiki->is($donem));
         $this->assertTrue($simdiki->package->is($yeni));
-        $this->assertSame('2026-09-29', $simdiki->starts_on->toDateString());
-        $this->assertSame('2026-09-30', $simdiki->ends_on->toDateString());
-        $this->assertSame('Paket değişikliği', $simdiki->note);
+        $this->assertSame('12000.00', $simdiki->price);
+        $this->assertSame($donem->starts_on->toDateString(), $simdiki->starts_on->toDateString());
         $this->assertTrue($ogrenci->fresh()->entitlements()->privateLessons);
 
         // Kullanici sayfasi yeni paketi gosterir.
         $this->actingAs($this->yonetici)->get(route('admin.users.edit', $ogrenci))
-            ->assertOk()->assertSee('Kral')->assertSee('29.09.2026 – 30.09.2026');
+            ->assertOk()->assertSee('Kral')
+            ->assertSee($donem->starts_on->format('d.m.Y') . ' – ' . $donem->ends_on->format('d.m.Y'));
     }
 
     public function test_switching_refuses_an_addon_and_non_students(): void
@@ -1273,12 +1276,12 @@ class AdminPeopleSmokeTest extends TestCase
         $ek = Package::factory()->examClubAddon()->create();
 
         $this->actingAs($this->yonetici)->from(route('admin.users.edit', $ogrenci))
-            ->post(route('admin.subscriptions.switch', $ogrenci), ['package_id' => $ek->id, 'switch_on' => '2026-09-29'])
+            ->post(route('admin.subscriptions.switch', $ogrenci), ['package_id' => $ek->id, 'when' => 'sonraki'])
             ->assertSessionHasErrors(['package_id' => 'Ek paket ana paketin yerine geçemez; ödeme ekranından ekleyin.']);
         $this->assertSame(1, $ogrenci->subscriptions()->count());
 
         $this->actingAs($this->yonetici)
-            ->post(route('admin.subscriptions.switch', $this->veli()), ['package_id' => $ek->id, 'switch_on' => '2026-09-29'])
+            ->post(route('admin.subscriptions.switch', $this->veli()), ['package_id' => $ek->id, 'when' => 'sonraki'])
             ->assertNotFound();
     }
 

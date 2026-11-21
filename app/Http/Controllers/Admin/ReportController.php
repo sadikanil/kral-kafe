@@ -93,10 +93,16 @@ class ReportController extends Controller
             $validated['month']
         );
 
+        // Hesaplar sayfasindan basildiysa oraya, ayni aya doner.
+        if ($request->input('geri') === 'hesaplar') {
+            return redirect()->route('admin.accounts.index', ['ay' => sprintf('%04d-%02d', $validated['year'], $validated['month'])])
+                ->with('success', $bills->count() . ' üyenin adisyonu yeniden hesaplandı.');
+        }
+
         return redirect()->route('admin.reports.monthly', [
             'year' => $validated['year'],
             'month' => $validated['month'],
-        ])->with('success', $bills->count() . ' fatura oluşturuldu.');
+        ])->with('success', $bills->count() . ' üyenin adisyonu yeniden hesaplandı.');
     }
 
     /**

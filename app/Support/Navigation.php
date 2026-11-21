@@ -116,6 +116,7 @@ final class Navigation
                 // Dalga 29: urun, stok ve sayim tek girişte; sayfalar sekmeli.
                 ['route' => 'admin.products.index', 'label' => 'Ürünler ve Stok', 'icon' => 'coffee', 'match' => 'admin.products.*|admin.stock.*'],
                 ['route' => 'admin.packages.index', 'label' => 'Paketler', 'icon' => 'ticket', 'match' => 'admin.packages.*'],
+                ['route' => 'admin.accounts.index', 'label' => 'Hesaplar', 'icon' => 'wallet'],
                 ['route' => 'admin.subscriptions.overview', 'label' => 'Ödemeler', 'icon' => 'credit-card'],
                 // DEV-507: aylik adisyonlarin tahsilati (paket odemeleri Odemeler'de).
                 ['route' => 'admin.bills.index', 'label' => 'Adisyonlar', 'icon' => 'receipt', 'match' => 'admin.bills.*'],

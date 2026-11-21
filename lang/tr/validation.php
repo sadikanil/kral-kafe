@@ -192,6 +192,8 @@ return [
     'attributes' => [
         'area' => 'bölüm',
         'assigned_student_id' => 'sabit üye',
+        'when' => 'geçiş zamanı',
+        'auto_renew' => 'yenileme',
         'lesson_count' => 'özel ders sayısı',
         'weekday' => 'gün',
         'is_coach' => 'koçluk yetkisi',

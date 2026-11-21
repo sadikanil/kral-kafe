@@ -55,11 +55,11 @@ class MoneyHardeningTest extends TestCase
         $veri = ['package_id' => $paket->id, 'starts_on' => '2026-10-01'];
 
         $this->actingAs($yonetici)->post(route('admin.subscriptions.store', $ogrenci), $veri)
-            ->assertSessionHas('success', 'Paket atandı.');
+            ->assertSessionHas('success', "Paket atandı: 01.10–31.10.2026 için 7.500,00 ₺. Her ayın 1'inde yenilenecek.");
         $this->actingAs($yonetici)->post(route('admin.subscriptions.cancel', $ogrenci->subscriptions()->sole()));
 
         $this->actingAs($yonetici)->post(route('admin.subscriptions.store', $ogrenci), $veri)
-            ->assertSessionHas('success', 'Paket atandı.');
+            ->assertSessionHas('success', "Paket atandı: 01.10–31.10.2026 için 7.500,00 ₺. Her ayın 1'inde yenilenecek.");
 
         $this->assertSame(1, $ogrenci->subscriptions()->where('payment_status', '!=', PaymentStatus::Cancelled->value)->count());
         $this->assertSame(2, $ogrenci->subscriptions()->count());
@@ -213,7 +213,7 @@ class MoneyHardeningTest extends TestCase
 
         $this->actingAs($this->yonetici())
             ->post(route('admin.reports.generate-bills'), ['year' => 2026, 'month' => 8])
-            ->assertSessionHas('success', '1 fatura oluşturuldu.');
+            ->assertSessionHas('success', '1 üyenin adisyonu yeniden hesaplandı.');
 
         $fatura = MonthlyBill::sole();
         $this->assertSame($askida->id, $fatura->user_id);

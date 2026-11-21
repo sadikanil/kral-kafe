@@ -410,6 +410,10 @@ class User extends Authenticatable
      */
     public function entitlements(): Entitlements
     {
+        if ($this->entitlementsCache === null) {
+            $this->renewPackagesIfDue();
+        }
+
         return $this->entitlementsCache ??= match (true) {
             $this->isStudent() => Entitlements::fromPackages(
                 Package::whereIn('id', $this->subscriptions()->activeOn()->select('package_id'))->get()
@@ -424,6 +428,23 @@ class User extends Authenticatable
     }
 
     private ?Entitlements $entitlementsCache = null;
+
+    private bool $packagesRenewed = false;
+
+    /**
+     * Paket yenileme (18 Kas 2026): gece isi kacsa da uye sabah masayi
+     * okutabilsin diye haklar okunmadan once bitmis donem yenilenir. Istek
+     * basina bir kez; yenilenecek donem yoksa tek kucuk sorgu.
+     */
+    public function renewPackagesIfDue(): void
+    {
+        if ($this->packagesRenewed || ! $this->isStudent() || ! $this->exists) {
+            return;
+        }
+
+        $this->packagesRenewed = true;
+        app(\App\Services\SubscriptionRenewer::class)->renewForStudent($this);
+    }
 
     /** Dalga 25: haftalik ozel ders saatleri (Tier 3). */
     public function privateLessonSlots(): HasMany
@@ -450,6 +471,8 @@ class User extends Authenticatable
      */
     public function currentSubscription(): ?Subscription
     {
+        $this->renewPackagesIfDue();
+
         // Ekler (deneme kulubu eki gibi) "paketin" sayilmaz; haklar icin
         // entitlements() tum paketleri birlestirir.
         return $this->subscriptions()->activeOn()

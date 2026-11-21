@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Services\ExamImport\ExamImportRunner;
 use App\Services\NotificationBuilder;
 use App\Services\SessionCloser;
+use App\Services\SubscriptionRenewer;
 use App\Support\LocalDay;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -49,13 +50,18 @@ class CronController extends Controller
      * AYRI: o 23:00'te calisir ve "bugun"un devamsizligini hesaplar; gece
      * yarisindan sonra calissaydi yeni gunu bos sayardi.
      */
-    public function nightly(Request $request, SessionCloser $kapatici): JsonResponse
+    public function nightly(Request $request, SessionCloser $kapatici, SubscriptionRenewer $yenileyici): JsonResponse
     {
         $this->yetkili($request);
 
         ExamImportRunner::nudge();
 
-        return response()->json(['kapanan_oturum' => $kapatici->closeStale()]);
+        return response()->json([
+            'kapanan_oturum' => $kapatici->closeStale(),
+            // Paket yenileme (18 Kas 2026): gece yarisindan sonra calistigi
+            // icin dun biten donemler bugunden yenilenir.
+            'yenilenen_paket' => $yenileyici->renewDue(),
+        ]);
     }
 
     /**

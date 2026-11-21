@@ -130,7 +130,9 @@
             <div class="card-body d-flex justify-content-between align-items-center" style="flex-wrap: wrap; gap: 8px;">
                 <div>
                     🎫 <strong>{{ $subscription->package->name }}</strong>
-                    <span class="text-muted">· bitiş {{ $subscription->ends_on->locale('tr')->translatedFormat('j F') }}</span>
+                    <span class="text-muted">· {{ $subscription->auto_renew
+                        ? 'her ay yenilenir, yeni dönem ' . $subscription->renewsOn()->locale('tr')->translatedFormat('j F')
+                        : 'bitiş ' . $subscription->ends_on->locale('tr')->translatedFormat('j F') }}</span>
                 </div>
                 <span class="badge badge-{{ $subscription->payment_status->badgeClass() }}">
                     Ödeme: {{ $subscription->payment_status->label() }}

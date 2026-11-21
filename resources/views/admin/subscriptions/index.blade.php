@@ -38,19 +38,27 @@
                             <label for="ends_on" class="form-label">Bitiş</label>
                             <input type="date" id="ends_on" name="ends_on" class="form-control @error('ends_on') is-invalid @enderror" value="{{ old('ends_on') }}">
                             @error('ends_on')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                            <small class="text-muted">Boşsa bir ay.</small>
+                            <small class="text-muted">Boşsa ay sonu.</small>
                         </div>
                         <div class="form-group" style="flex: 1;">
-                            <label for="price" class="form-label">Tutar (₺)</label>
+                            <label for="price" class="form-label">Aylık tutar (₺)</label>
                             <input type="number" id="price" name="price" step="0.01" min="0" class="form-control @error('price') is-invalid @enderror"
                                 value="{{ old('price', $packages->first()->monthly_price) }}">
                             @error('price')<span class="invalid-feedback">{{ $message }}</span>@enderror
-                            <small class="text-muted">Bu üyeliğe sabitlenir.</small>
+                            <small class="text-muted">Bu üyeye sabitlenir. Ay ortasında başlarsa ilk ay gün orantılı.</small>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="note" class="form-label">Not</label>
                         <input type="text" id="note" name="note" maxlength="255" class="form-control" value="{{ old('note') }}">
+                    </div>
+                    <div class="form-group">
+                        <input type="hidden" name="auto_renew" value="0">
+                        <label>
+                            <input type="checkbox" name="auto_renew" value="1" @checked(old('auto_renew', '1') === '1')>
+                            Her ay kendiliğinden yenilensin
+                        </label>
+                        <small class="text-muted d-block">Her ayın 1'inde aynı paket ve aynı aylık tutarla; iptal edilene ya da değiştirilene kadar.</small>
                     </div>
                     <button type="submit" class="btn btn-primary">Paketi ata</button>
                 </form>
@@ -69,12 +77,13 @@
                         @if(!$abonelik->isCancelled() && $abonelik->balance() > 0) · Vade {{ $abonelik->dueOn()->format('d.m.Y') }} @endif
                         @if($abonelik->note) · {{ $abonelik->note }} @endif
                     </small>
+                    <div class="mt-1">@include('admin.subscriptions._yenileme')</div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge badge-{{ $abonelik->payment_status->badgeClass() }}">{{ $abonelik->payment_status->label() }}</span>
                     @if(!$abonelik->isCancelled())
                         <form action="{{ route('admin.subscriptions.cancel', $abonelik) }}" method="POST" class="d-inline-block"
-                            data-confirm="Üyelik iptal edilsin mi?">
+                            data-confirm="Bu dönem iptal edilsin mi? Borç olmaktan çıkar ve yenilenmez. Yalnız yenilemeyi durdurmak için 'Yenilemeyi durdur'u kullanın.">
                             @csrf
                             <button type="submit" class="btn btn-danger btn-sm">İptal</button>
                         </form>

@@ -11,7 +11,9 @@
 @if($summary['subscription'] ?? null)
     <p class="mb-2">
         🎫 {{ $summary['subscription']->package->name }}
-        <span class="text-muted">· bitiş {{ $summary['subscription']->ends_on->locale('tr')->translatedFormat('j F') }}</span>
+        <span class="text-muted">· {{ $summary['subscription']->auto_renew
+            ? 'her ay yenilenir, yeni dönem ' . $summary['subscription']->renewsOn()->locale('tr')->translatedFormat('j F')
+            : 'bitiş ' . $summary['subscription']->ends_on->locale('tr')->translatedFormat('j F') }}</span>
         <span class="badge badge-{{ $summary['subscription']->payment_status->badgeClass() }}">Ödeme: {{ $summary['subscription']->payment_status->label() }}</span>
     </p>
 @endif

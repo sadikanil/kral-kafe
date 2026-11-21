@@ -1235,12 +1235,14 @@ class AdminCafeSmokeTest extends TestCase
         $this->actingAs($yonetici)->post(route('admin.reports.generate-bills'), ['year' => 2026, 'month' => 9])
             ->assertSessionHasNoErrors()
             ->assertRedirect(route('admin.reports.monthly', ['year' => 2026, 'month' => 9]))
-            ->assertSessionHas('success', '1 fatura oluşturuldu.');
+            ->assertSessionHas('success', '1 üyenin adisyonu yeniden hesaplandı.');
 
         // Cift gonderim ikinci fatura acmaz.
         $this->actingAs($yonetici)->post(route('admin.reports.generate-bills'), ['year' => 2026, 'month' => 9]);
 
-        $fatura = MonthlyBill::sole();
+        // Agustos siparisi kendi ayinin adisyonunu zaten acti (21 Kas 2026).
+        $this->assertSame(2, MonthlyBill::count());
+        $fatura = MonthlyBill::whereDate('bill_month', '2026-09-01')->sole();
         $this->assertSame($ayse->id, $fatura->user_id);
         $this->assertSame(2, (int) $fatura->total_items);
         $this->assertEquals(80, $fatura->total_amount);

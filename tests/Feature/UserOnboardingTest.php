@@ -55,7 +55,11 @@ class UserOnboardingTest extends TestCase
         $this->assertTrue($ali->parents->contains($veli));
         $abonelik = $ali->currentSubscription();
         $this->assertTrue($abonelik->package->is($paket));
-        $this->assertEquals(7500, $abonelik->price);
+        // Aylik tutar sabitlenir; ilk donem ay sonuna kadar gun orantili (21 Kas 2026).
+        $this->assertEquals(7500, $abonelik->base_price);
+        $this->assertSame($abonelik->starts_on->copy()->endOfMonth()->toDateString(), $abonelik->ends_on->toDateString());
+        $this->assertSame(\App\Models\Subscription::priceFor(7500, $abonelik->starts_on, $abonelik->ends_on), $abonelik->price);
+        $this->assertTrue($abonelik->auto_renew);
     }
 
     public function test_a_student_needs_a_package(): void

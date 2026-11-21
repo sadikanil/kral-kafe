@@ -297,11 +297,14 @@ Route::middleware(['auth', 'admin'])->prefix('yonetim')->name('admin.')->group(f
         'update' => 'packages.update',
     ])->parameters(['paketler' => 'package']);
     Route::post('/paketler/{package}/durum', [PackageController::class, 'toggleStatus'])->name('packages.toggle-status');
+    // Hesaplar (21 Kas 2026): ay ay, uye uye paket ve adisyon ayri.
+    Route::get('/hesaplar', [\App\Http\Controllers\Admin\AccountController::class, 'index'])->name('accounts.index');
     Route::get('/odemeler', [SubscriptionController::class, 'overview'])->name('subscriptions.overview');
     Route::get('/kullanicilar/{user}/abonelikler', [SubscriptionController::class, 'index'])->name('subscriptions.index');
     Route::post('/kullanicilar/{user}/abonelikler', [SubscriptionController::class, 'store'])->name('subscriptions.store');
     Route::post('/kullanicilar/{user}/paket-degistir', [SubscriptionController::class, 'switch'])->name('subscriptions.switch');
     Route::post('/abonelikler/{subscription}/iptal', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+    Route::post('/abonelikler/{subscription}/yenileme', [SubscriptionController::class, 'renewal'])->name('subscriptions.renewal');
     Route::post('/abonelikler/{subscription}/odeme', [SubscriptionController::class, 'storePayment'])->name('subscriptions.payments.store');
     Route::delete('/odemeler/{payment}', [SubscriptionController::class, 'destroyPayment'])->name('subscriptions.payments.destroy');
 

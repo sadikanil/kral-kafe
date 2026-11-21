@@ -151,9 +151,11 @@ class PackageSubscriptionTest extends TestCase
             'starts_on' => '2026-09-20',
         ])->assertRedirect(route('admin.subscriptions.index', $ogrenci));
 
+        // Takvim ayi (21 Kas 2026): 20-30 Eylul, 11/30 gun = 2750; aylik tutar 7500 sabit.
         $abonelik = Subscription::sole();
-        $this->assertSame('7500.00', (string) $abonelik->price);
-        $this->assertSame('2026-10-19', $abonelik->ends_on->toDateString());
+        $this->assertSame('2750.00', (string) $abonelik->price);
+        $this->assertSame('7500.00', (string) $abonelik->base_price);
+        $this->assertSame('2026-09-30', $abonelik->ends_on->toDateString());
         $this->assertSame(PaymentStatus::Pending, $abonelik->payment_status);
 
         $ogrenci->refresh();
@@ -163,7 +165,8 @@ class PackageSubscriptionTest extends TestCase
 
         // Katalog fiyati degisir, abonelik degismez.
         $paket->update(['monthly_price' => 9000]);
-        $this->assertSame('7500.00', (string) $abonelik->fresh()->price);
+        $this->assertSame('2750.00', (string) $abonelik->fresh()->price);
+        $this->assertSame('7500.00', (string) $abonelik->fresh()->base_price);
     }
 
     public function test_payments_settle_the_subscription_and_overdue_is_derived_from_the_due_date(): void

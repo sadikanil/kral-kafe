@@ -1192,6 +1192,62 @@ Kullanıcı isteği: "deneme sınavı takvimi hatırlatıcı ve takvim görünü
 - Öğrenci panelinde paket + ödeme rozeti; veli kartında da, çünkü ödemeyi
   veli yapar.
 
+**Aylık yenileme (18–21 Kasım 2026, işletme kararı):** Paket iptal edilmedikçe
+ya da değiştirilmedikçe her ay tekrar eder; paket ve adisyon **her ayın
+başında** yenilenir; yönetici her ay yeni paket tanımlamaz.
+
+- Satır yine **bir dönemdir** ve dönemler **takvim ayıdır** (1'i – son gün).
+  `auto_renew` açık dönem bittiğinin ertesi günü aynı paketle ve **aynı aylık
+  tutarla** (`base_price`; indirim sürer) yeni ayı açar (`SubscriptionRenewer`).
+  Zincir `renewed_from_id` ile kurulur ve benzersizdir: bir dönem yalnız bir kez
+  yenilenir. Her dönemin ödemesi kendine yazılır.
+- **Ay ortasında başlayan dönem** (yeni üye, paketsiz üyeye atama) ay sonunda
+  biter ve tutarı gün orantısıyla yazılır (`Subscription::priceFor`, tam liraya
+  yuvarlanır): 18 Kasım'da 7.500 ₺'lik paket → 18–30 Kasım 3.250 ₺, 1 Aralık'tan
+  tam ay. Eski (ay ortasında biten) dönemin yenilemesi ay sonuna kadar kıst bir
+  köprüdür, sonrası ayın 1'i. Formda bitiş elle yazılırsa tutar orantılanmaz.
+- Üç yerden çalışır, hepsi idempotan: gece işi (`/zamanlanmis/gece`, 00:05
+  yerel), üyenin kendi isteği (`User::entitlements()` haklardan önce yeniler;
+  cron kaçsa da üye sabah masayı okutabilir), yönetimin paket ve ödeme sayfaları.
+  Gece işi günlerce çalışmadıysa kaçan aylar sırayla açılır.
+- **Yenilenmeyenler:** iptal edilen dönem; yönetimin "Yenilemeyi durdur"
+  dediği dönem (dönem sonunda biter); aktif olmayan (askıya alınmış/kapatılmış)
+  üye — zincir durur, geri gelince paket yeniden atanır, aradaki aylar borç
+  yazılmaz; aynı yuvada daha yeni bir dönemi olan (ana paket için başka ana
+  paket, ek paket için aynı ek paket). Biten dönemde yenileme açılamaz:
+  açılsaydı geçen aylar borç yazılırdı.
+- **Paket değiştir** artık yeni tam fiyatlı dönem açmaz. "Sonraki dönemden"
+  (varsayılan) seçimi `next_package_id`/`next_price` olarak saklanır ve yenileme
+  onu kullanır; "Bu dönemden" bu dönemin paketini ve tutarını yerinde değiştirir,
+  ödenen korunur. Eski "tarihten itibaren" akışı ay sonunu uzatmak için de
+  kullanıldı ve canlıda birkaç günlük tam fiyatlı parçalar biriktirdi (bir üyeye
+  iki ayda üç kez Kral).
+- **Paket ata** aynı tarihlerde ikinci bir ana paketi (ya da aynı ek paketi)
+  reddeder; canlıda aynı gün başlayan iki ana paket vardı.
+- **Migration öncesi satırlar yenilenmez** (`auto_renew` varsayılanı `false`).
+  Canlıdaki karışık dönemler düzeltilmeden yenilenseydi yanlış borçlar her ay
+  çoğalırdı; her üyenin güncel dönemi düzeltme adımında (ya da yönetimin
+  "Her ay yenile" düğmesiyle) yenilemeye alınır.
+
+**Hesaplar (21 Kasım 2026):** Yönetim → Kafe → Hesaplar (`admin.accounts.index`).
+Her üyenin her ayı için paket ve adisyon **ayrı** kutuda: yazılan, ödenen, kalan,
+durum.
+
+- Paket bedeli dönemin **başladığı** aya, adisyon siparişin ayına yazılır
+  (fatura ve Ödemelerim ile aynı kural, `MonthlyAccounts`).
+- Filtreler: ay (bu ay "açık", öncekiler "kapandı"), üye (seçilince "Tüm aylar"
+  o üyenin son 24 ayı), tür (paket + adisyon / yalnız paket / yalnız adisyon),
+  durum (borçlu / ödendi; seçili türe göre).
+- Ödeme sayfadan alınır ve sayfaya döner: paket → `subscriptions.payments.store`
+  (tek açık dönem varsa; birden fazlaysa paket sayfasından), adisyon →
+  `bills.payments.store`. Geçmiş ve geri alma Adisyonlar sayfasında.
+- **Adisyon kaydı kendiliğinden:** her sipariş (ve geri alma) kendi ayının
+  `monthly_bills` satırını açar ve günceller (`Consumption::saved`, işlem
+  bittikten sonra; hata siparişi bozmaz). Ödenmiş aya yeni sipariş gelirse ay
+  "Kısmen ödendi"ye döner. Kendiliğinden açılma öncesi aylar (Eylül) sayfa
+  açılınca kaydını alır. Raporlar'daki eski "Fatura oluştur" artık
+  **"Yeniden hesapla"**: ayı sipariş kayıtlarından baştan yazar, ödemeleri silmez.
+
 **Merge notu (22 Eylül):** Bu dalga 21 Eylül'de `claude/inspiring-pasteur-hul4gt`
 dalında yazıldı ve şeması canlıya uygulandı (batch 9), ama `main`'e alınmamıştı
 — canlı veritabanında tablolar ve iki paket kaydı varken canlı site o kodu

@@ -40,12 +40,13 @@
     </div>
 
     <div class="d-grid gap-3" style="grid-template-columns: repeat(auto-fit, minmax(min(400px, 100%), 1fr));">
-        <!-- Fatura Oluştur -->
+        <!-- Yeniden hesapla (21 Kas 2026: adisyon kaydi artik kendiliginden acilir) -->
         <div class="card">
             <div class="card-header">
-                <h4>📄 Aylık Fatura Oluştur</h4>
+                <h4>🔄 Ayın adisyonlarını yeniden hesapla</h4>
             </div>
             <div class="card-body">
+                <p class="text-muted">Adisyonlar her siparişte kendiliğinden güncellenir. Bu düğme seçilen ayı sipariş kayıtlarından baştan hesaplar; alınmış ödemeler silinmez.</p>
                 <form method="POST" action="{{ route('admin.reports.generate-bills') }}">
                     @csrf
 
@@ -73,7 +74,7 @@
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-block">
-                        Faturaları Oluştur
+                        Yeniden hesapla
                     </button>
                 </form>
             </div>

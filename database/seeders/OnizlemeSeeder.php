@@ -70,6 +70,7 @@ class OnizlemeSeeder extends Seeder
                 'ends_on' => $bugun->copy()->startOfMonth()->addMonthNoOverflow()->subDay()->toDateString(),
                 'price' => 7500,
                 'payment_status' => ($i % 3 === 0 ? PaymentStatus::Pending : PaymentStatus::Paid)->value,
+                'auto_renew' => true,
             ]);
 
             return $uye;
